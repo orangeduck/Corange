@@ -1,0 +1,17 @@
+Stringtable
+	- Set doesn't work properly for some reason.
+
+Fonts
+	- Render black for some reason.
+
+Asset Manager
+	- Automatic Deletion
+
+OBJ importer:
+	- Crashes with multiple objects.
+	
+Materials:
+	- Decide what to do.
+	
+Camera:
+	- Rotational Controls
