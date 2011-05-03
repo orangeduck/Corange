@@ -1,17 +1,17 @@
 Stringtable
-	- Set doesn't work properly for some reason.
+	- Set doesn't work properly because it needs to compare to strings in the buckets
 
 Fonts
-	- Render black for some reason.
+	- Render black for some reason
 
 Asset Manager
 	- Automatic Deletion
 
 OBJ importer:
-	- Crashes with multiple objects.
+	- Crashes with multiple objects
 	
 Materials:
-	- Decide what to do.
+	- Decide what to do
 	
 Camera:
 	- Rotational Controls

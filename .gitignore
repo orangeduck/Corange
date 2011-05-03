@@ -1,4 +1,6 @@
+*~
 obj/*
 logs/*
 corange.exe
 stdout.txt
+stderr.txt
