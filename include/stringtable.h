@@ -32,14 +32,17 @@ typedef struct {
 
 
 stringtable* stringtable_new(int table_size);
-void stringtable_delete(stringtable* st);
 
 int stringtable_hash(stringtable* st, char* string);
 
+int stringtable_contains(stringtable* st, char* string);
 void* stringtable_get(stringtable* st, char* string);
 void stringtable_set(stringtable* st, char* string, void* item);
 
+void stringtable_remove_with(stringtable* st, char* string, void func(void*));
+
 bucket* bucket_new(char* string, void* item);
-void bucket_delete(bucket* b);
+
+void bucket_delete_with(bucket* b, void func(void*) );
 
 #endif

@@ -50,14 +50,15 @@ font* font_load_file(char* filename) {
         memcpy(filename, tex, k);
         filename[k] = '\0';
         
-        root = realloc(root, sizeof(root) + k );
-        strcat(root, filename);
+        char* full = malloc(strlen(root) + strlen(filename) + 1 );
+        strcpy(full, root);
+        strcat(full, filename);
         
-        printf("Font Texture: %s\n", root);
-        f->texture_map = (texture*)dds_load_file(root);
+        f->texture_map = (texture*)dds_load_file(full);
         
         free(root);
         free(filename);
+        free(full);
         
       } else if (line[0] == 'c' && line[1] == 'o' && line[2] == 'm') {
       
@@ -67,8 +68,6 @@ font* font_load_file(char* filename) {
         
         sizeline = strstr(line, "scaleH=") + 7;
         f->height = strtoul(sizeline, NULL, 0);
-        
-        printf("Height: %i Width: %i\n", f->height, f->width);
         
       } else if (line[0] == 'c' && line[1] == 'h' && line[2] == 'a' && line[3] == 'r' && line[4] == ' ') {
         

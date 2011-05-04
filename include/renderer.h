@@ -19,7 +19,9 @@ void renderer_end_render();
 
 void renderer_render_model(render_model* m);
 
-void renderer_render_quad(texture* quad_texture);
+void renderer_render_quad(texture* quad_texture, vector2 pos, vector2 size);
+void renderer_render_screen_quad(texture* quad_texture);
+
 void renderer_render_char(char c, font* f, vector2 pos, float size);
 void renderer_render_string(char* s, font* f, vector2 pos, float size);
 

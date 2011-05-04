@@ -229,7 +229,7 @@ void renderer_render_model(render_model* m) {
 
 }
 
-void renderer_render_quad(texture* quad_texture) {
+void renderer_render_quad(texture* quad_texture, vector2 top_left, vector2 bottom_right) {
   
   glUseProgramObjectARB(0);
   
@@ -242,24 +242,24 @@ void renderer_render_quad(texture* quad_texture) {
   
   glDisable(GL_DEPTH_TEST);
   
-  //glEnable(GL_BLEND);
-  //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  
+  glActiveTexture(GL_TEXTURE0 + 0);
   glEnable(GL_TEXTURE_2D);
-  
   glBindTexture(GL_TEXTURE_2D, *quad_texture);
+  
 	glBegin(GL_QUADS);
-		glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.1f, -1.1f,  0.0f);
-		glTexCoord2f(1.0f, 0.0f); glVertex3f( 1.1f, -1.1f,  0.0f);
-		glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.1f,  1.1f,  0.0f);
-		glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.1f,  1.1f,  0.0f);
+		glTexCoord2f(0.0f, 0.0f); glVertex3f(top_left.x, top_left.y,  0.0f);
+		glTexCoord2f(1.0f, 0.0f); glVertex3f(bottom_right.x, top_left.y,  0.0f);
+		glTexCoord2f(1.0f, -1.0f); glVertex3f(bottom_right.x,  bottom_right.y,  0.0f);
+		glTexCoord2f(0.0f, -1.0f); glVertex3f(top_left.x,  bottom_right.y,  0.0f);
 	glEnd();
 
   glEnable(GL_DEPTH_TEST);
-  //glDisable(GL_BLEND);
   
   renderer_setup_camera();
-  
+}
+
+void renderer_render_screen_quad(texture* quad_texture) {
+  renderer_render_quad(quad_texture, v2(-1,-1), v2(1,1) );
 }
 
 void renderer_render_char(char c, font* f, vector2 pos, float size) {
@@ -303,8 +303,9 @@ void renderer_render_char(char c, font* f, vector2 pos, float size) {
   
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  glEnable(GL_TEXTURE_2D);
   
+  glActiveTexture(GL_TEXTURE0 + 0);
+  glEnable(GL_TEXTURE_2D);
   glBindTexture(GL_TEXTURE_2D, *f->texture_map);
 	glBegin(GL_QUADS);
 		glTexCoord2f(uv1_x, uv1_y); glVertex3f(pos1_x, pos1_y,  0.0f);
@@ -388,8 +389,8 @@ void renderer_render_string(char* s, font* f, vector2 pos, float size) {
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
   
-  glEnable(GL_TEXTURE_2D);
   glActiveTexture(GL_TEXTURE0 + 0);
+  glEnable(GL_TEXTURE_2D);
   glBindTexture(GL_TEXTURE_2D, *f->texture_map);
   
   glDisable(GL_DEPTH_TEST);

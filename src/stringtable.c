@@ -18,8 +18,6 @@ int stringtable_hash(stringtable* st, char* string) {
   
   total = abs(total % st->table_size);
   
-  printf("Hashing: \"%s\" -> %i\n", string, total); fflush(stdout);
-  
   return total;
 };
 
@@ -39,18 +37,23 @@ stringtable* stringtable_new(int table_size) {
   
 }
 
-/* This effectively deletes the stringtable, but will not correctly free any complex (containing pointers) data structures stored in it */
-void stringtable_delete(stringtable* st) {
-  
-  /* Loop over all entries in the table, delete buckets */
-  int i;
-  for(i=0; i < st->table_size; i++) {
-    bucket_delete(st->buckets[i]);
-  }
-  
-  free(st);
+int stringtable_contains(stringtable* st, char* string) {
 
-};
+  int index = stringtable_hash(st, string);
+  bucket* b = st->buckets[index];
+  
+  if(b == NULL) { return 0;}
+  
+  while(1) {
+    
+    if ( strcmp(b->string, string) == 0 ){ return 1; }
+    if (b->next == NULL) { return 0; }
+    
+    else { b = b->next; }
+    
+  }
+
+}
 
 void* stringtable_get(stringtable* st, char* string) {
   
@@ -79,32 +82,72 @@ void* stringtable_get(stringtable* st, char* string) {
 
 };
 
-
 void stringtable_set(stringtable* st, char* string, void* item) {
 
   int index = stringtable_hash(st, string);
-  
   bucket* b = st->buckets[index];
   
   /* If nothing already there add single bucket */
   if (b == NULL) {
-    
     bucket* new_bucket = bucket_new(string, item);
     st->buckets[index] = new_bucket;
+    return;
+  }
   
-  /* if something there, follow until next is NULL */
-  } else {
-  
-    bucket* next_b = b->next;
-    while (next_b->next != NULL) { next_b = next_b->next; }
+  while(1) {
     
-    /* Once next is null, create a new bucket and link it in the list */
-    bucket* new_bucket = bucket_new(string, item);
-    next_b->next = new_bucket;
-    new_bucket->prev = next_b;
+    if( strcmp(b->string, string) == 0) {
+      b->item = item;
+      return;
+    }
+  
+    if( b->next == NULL) {    
+      bucket* new_bucket = bucket_new(string, item);
+      b->next = new_bucket;
+      new_bucket->prev = b;
+      return;
+    }
+  
+    b = b->next;
   }
   
 }
+
+void stringtable_remove_with(stringtable* st, char* string, void func(void*)) {
+  
+  int index = stringtable_hash(st, string);
+  bucket* b = st->buckets[index];
+  
+  /* No buckets in list */
+  if (b == NULL) {
+    printf("Error: Cannot remove item %s as it doesn't exist!", string);
+    return;
+  }
+  
+  /* Single Bucket in list, remove */
+  if( strcmp(b->string, string) == 0) {
+    bucket_delete_with(b, func);
+    st->buckets[index] = NULL;
+    return;
+  }
+  
+  /* Multiple Buckets */
+  while(1) {
+  
+    if(b->next == NULL) {
+      printf("Error: Cannot remove item %s as it doesn't exist!", string);
+      return;
+    }
+  
+    if(strcmp(b->next->string, string) == 0) {
+      bucket_delete_with(b->next, func);
+      b->next = NULL;
+      return;
+    }
+    b = b->next;
+  }
+}
+
 
 bucket* bucket_new(char* string, void* item) {
   
@@ -120,15 +163,8 @@ bucket* bucket_new(char* string, void* item) {
   return b;
 }
 
-/* Deleting a bucket will call delete on all the next buckets linked */
-void bucket_delete(bucket* b) {
-  
-  if (b == NULL) { return; }
-  
-  if (b->next != NULL) { bucket_delete( b->next ); }
-  
-  free(b->item);
+void bucket_delete_with(bucket* b, void func(void*) ){
+  func(b->item);
   free(b->string);
   free(b);
-  
 }

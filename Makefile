@@ -11,7 +11,7 @@ INCS= -I $(SDLI) -I $(INC)
 LIBS= -L $(SDLL)
 
 CFLAGS= $(INCS)
-LFLAGS= $(LIBS) -lmingw32 -lSDLmain -lSDL -lopengl32 
+LFLAGS= $(LIBS) -lmingw32 -lSDLmain -lSDL -lSDL_Image -lopengl32 -mwindows
 
 C_FILES= $(wildcard src/*.c)
 OBJ_FILES= $(addprefix obj/,$(notdir $(C_FILES:.c=.o)))

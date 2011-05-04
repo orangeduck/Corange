@@ -35,16 +35,47 @@ void asset_handler_delete(asset_handler* h) {
 
 }
 
+/* Unloads all assets, clears the stringtable with the supplied handlers */
 void asset_manager_finish() {
 
-  stringtable_delete(asset_dictionary);
-  
   int i;
+  for(i=0; i <asset_dictionary->table_size; i++) {
+    bucket* b = asset_dictionary->buckets[i];
+    delete_bucket_list(b);
+  }
+  
   for(i=0; i < num_handlers; i++) {
     free(asset_handlers[num_handlers].extension);
   }
   
 }
+
+void delete_bucket_list(bucket* b) {
+  
+  if(b == NULL) {
+    return;
+  }
+  
+  delete_bucket_list(b->next);
+  
+  char* ext = asset_file_extension(b->string);
+  int i;
+  for(i=0; i < num_handlers; i++) {
+  
+    asset_handler handler = asset_handlers[i];
+    if (strcmp(ext, handler.extension) == 0) {
+      
+      bucket_delete_with(b, handler.del_func);
+      
+      break;
+    }
+    
+  }
+  
+  free(ext);
+  
+}
+
 
 void asset_manager_handler(char* extension, void* load_func(char*) , void del_func(void*) ) {
   
@@ -57,27 +88,27 @@ void asset_manager_handler(char* extension, void* load_func(char*) , void del_fu
 
   asset_handlers[num_handlers] = h;
   num_handlers++;
+  
 };
 
-void load_asset(char* filename) {
+void load_file(char* filename) {
+  
+  if (stringtable_contains(asset_dictionary, filename)) {
+    printf("Asset %s already loaded\n", filename);
+    return;
+  }
   
   char* ext = asset_file_extension(filename);
-  
   int i;
   for(i=0; i < num_handlers; i++) {
     
-    asset_handler hand = asset_handlers[i];
-    if (strcmp(ext, hand.extension) == 0) {
+    asset_handler handler = asset_handlers[i];
+    if (strcmp(ext, handler.extension) == 0) {
       
-      printf("Checking extension: %s\n", hand.extension); fflush(stdout);
-      
-      void* asset = hand.load_func(filename);
-      
+      void* asset = handler.load_func(filename);
       stringtable_set(asset_dictionary, filename, asset);
-      //printf("HELLO EVERYONE!\n");
-      
+      break;
     }
-    
   }
   
   free(ext);
@@ -88,25 +119,13 @@ void load_asset(char* filename) {
 
 void load_folder(char* folder) {
     
-    /*
-    
-    int str_size = strlen(folder);
-    if (folder[str_size-2] != '\\') {
-      folder = realloc(folder, str_size + 1);
-      folder[str_size-1] = '\\';
-      folder[str_size] = '\0';
-    };
-    
-    */
-    
-    printf(" \t---- Loading Folder %s ----\n\n", folder); fflush(stdout);
+    printf("\n\t---- Loading Folder %s ----\n\n", folder); fflush(stdout);
     
     DIR* dir = opendir(folder);
     struct dirent* ent;
     
     if (dir != NULL) {
       
-      /* print all the files and directories within directory */
       while ((ent = readdir(dir)) != NULL) {
       
         if ((strcmp(ent->d_name,".") != 0) && (strcmp(ent->d_name,"..") != 0)) {
@@ -115,38 +134,93 @@ void load_folder(char* folder) {
           strcpy(filename, folder);
           strcat(filename, ent->d_name);
           
-          printf("File: %s \n",ent->d_name); fflush(stdout);
-          
-          load_asset(filename);
+          load_file(filename);
           
           free(filename);
         } 
       }
       closedir(dir);
-      printf(" \n\t---- Done ----\n\n", folder); fflush(stdout);
+      printf("\n\n"); fflush(stdout);
     
     } else {
-      printf("Asset Load Error: Could not open directory %s\n", folder); fflush(stdout);
+      printf("Error: Could not open directory %s\n", folder); fflush(stdout);
     }
   
 };
 
-void reload_asset(char* filename) {
-  load_asset(filename);
+void reload_file(char* filename) {
+
+  if (stringtable_contains(asset_dictionary, filename)) {
+    unload_file(filename);
+  }
+  
+  load_file(filename);
+  
 };
 
 void reload_folder(char* folder) {
+  unload_folder(folder);
   load_folder(folder);
+};
+
+void unload_file(char* filename) {
+  
+  char* ext = asset_file_extension(filename);
+  int i;
+  for(i=0; i < num_handlers; i++) {
+  
+    asset_handler handler = asset_handlers[i];
+    if (strcmp(ext, handler.extension) == 0) {
+      stringtable_remove_with(asset_dictionary, filename, handler.del_func);
+      break;
+    }
+    
+  }
+  
+  free(ext);
+  
+};
+
+void unload_folder(char* folder) {
+    
+    DIR* dir = opendir(folder);
+    struct dirent* ent;
+    
+    if (dir != NULL) {
+      
+      while ((ent = readdir(dir)) != NULL) {
+      
+        if ((strcmp(ent->d_name,".") != 0) && (strcmp(ent->d_name,"..") != 0)) {
+        
+          char* filename = malloc(strlen(folder) + strlen(ent->d_name) + 1);
+          strcpy(filename, folder);
+          strcat(filename, ent->d_name);
+          
+          if(stringtable_contains(asset_dictionary, filename) ) {
+            unload_file(filename);
+          }
+          
+          free(filename);
+        } 
+      }
+      closedir(dir);
+      printf("\n\n"); fflush(stdout);
+    
+    } else {
+      printf("Error: Could not open directory %s\n", folder); fflush(stdout);
+    }
+
 };
 
 void* asset_get(char* path) {
   return stringtable_get(asset_dictionary, path);
 };
 
+/* Asset Loader helper commands */
 
 char* asset_load_file(char* filename) {
   
-  printf("Loading File: %s\n", filename); fflush(stdout);
+  printf("Loading: %s\n", filename); fflush(stdout);
   
   SDL_RWops* file = SDL_RWFromFile(filename, "r");
   

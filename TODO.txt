@@ -1,11 +1,5 @@
-Stringtable
-	- Set doesn't work properly because it needs to compare to strings in the buckets
-
-Fonts
-	- Render black for some reason
-
-Asset Manager
-	- Automatic Deletion
+Image Importer:
+	- PNG files at least don't seem to load properly when trying to be used in openGL
 
 OBJ importer:
 	- Crashes with multiple objects

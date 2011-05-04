@@ -7,6 +7,7 @@
 #define NO_SDL_GLEXT
 #include "SDL.h"
 #include "SDL_opengl.h"
+#include "SDL_image.h"
 
 #include "font.h"
 #include "texture.h"
@@ -16,8 +17,6 @@
 #include "geometry.h"
 
 #include "obj_loader.h"
-#include "dds_loader.h"
-#include "bmp_loader.h"
 
 #include "asset_manager.h"
 
@@ -59,10 +58,17 @@ main(int argc, char *argv[]) {
     return 1;
   }
   
+  int flags = IMG_INIT_JPG|IMG_INIT_PNG|IMG_INIT_TIF;
+  int initted = IMG_Init(flags);
+  if(initted&flags != flags) {
+      printf("IMG_Init: Failed to init required jpg and png support!\n");
+      printf("IMG_Init: %s\n", IMG_GetError());
+  }
+  
   /* Set Window properties */
   
-  SDL_WM_SetCaption("Corange","Corange");
-  SDL_Surface* image = SDL_LoadBMP("piano.bmp");      
+  SDL_WM_SetCaption("Corange","Corange");    
+  SDL_Surface* image = IMG_Load("icon.png");
   SDL_WM_SetIcon(image, NULL);
   
   SDL_GL_SetAttribute( SDL_GL_MULTISAMPLESAMPLES, 8 );
@@ -92,10 +98,13 @@ main(int argc, char *argv[]) {
   asset_manager_handler("obj", (void*(*)(char*))obj_load_file, (void(*)(void*))model_delete);
   asset_manager_handler("dds", (void*(*)(char*))dds_load_file, (void(*)(void*))texture_delete);
   asset_manager_handler("bmp", (void*(*)(char*))bmp_load_file, (void(*)(void*))texture_delete);
+  asset_manager_handler("png", (void*(*)(char*))png_load_file, (void(*)(void*))texture_delete);
+  asset_manager_handler("tif", (void*(*)(char*))tif_load_file, (void(*)(void*))texture_delete);
+  asset_manager_handler("jpg", (void*(*)(char*))jpg_load_file, (void(*)(void*))texture_delete);
   asset_manager_handler("fnt", (void*(*)(char*))font_load_file, (void(*)(void*))font_delete);
   
-  load_folder("./Engine/Assets/Meshes/");
   load_folder("./Engine/Assets/Textures/");
+  load_folder("./Engine/Assets/Meshes/");
   load_folder("./Engine/Assets/Fonts/");
   
   camera* cam = camera_new( v3(20.0, 0.0, 0.0) , v3_zero() );
@@ -151,7 +160,6 @@ main(int argc, char *argv[]) {
     renderer_begin_render();
     
     renderer_render_model(piano);
-    
     renderer_render_string(frame_rate_s, console_font, v2(-1.0,-1.0) , 1.25);
    
     renderer_end_render();
@@ -180,10 +188,8 @@ main(int argc, char *argv[]) {
   asset_manager_finish();
   
   camera_delete(cam);
-  render_model_delete(piano);
   
-  font_delete(console_font);
-  
+  IMG_Quit();
   SDL_Quit();
   
   return 0;
