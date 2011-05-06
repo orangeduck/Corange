@@ -46,7 +46,7 @@ font* font_load_file(char* filename) {
         
         char* root = asset_file_location(filename);
         
-        char* filename = malloc(k);
+        char* filename = malloc(k+1);
         memcpy(filename, tex, k);
         filename[k] = '\0';
         

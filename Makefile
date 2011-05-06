@@ -17,7 +17,7 @@ C_FILES= $(wildcard src/*.c)
 OBJ_FILES= $(addprefix obj/,$(notdir $(C_FILES:.c=.o)))
 
 corange.exe: $(OBJ_FILES)
-	$(CC) $(OBJ_FILES) $(LFLAGS) -o $@
+	$(CC) -g $(OBJ_FILES) $(LFLAGS) -o $@
 
 obj/%.o: src/%.c
 	$(CC) $< -c -g $(CFLAGS) -o $@ 

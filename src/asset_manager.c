@@ -97,20 +97,16 @@ void load_file(char* filename) {
     printf("Asset %s already loaded\n", filename);
     return;
   }
-  
   char* ext = asset_file_extension(filename);
   int i;
   for(i=0; i < num_handlers; i++) {
-    
     asset_handler handler = asset_handlers[i];
     if (strcmp(ext, handler.extension) == 0) {
-      
       void* asset = handler.load_func(filename);
       stringtable_set(asset_dictionary, filename, asset);
       break;
     }
   }
-  
   free(ext);
   
   return;
@@ -245,7 +241,7 @@ char* asset_file_extension(char* filename) {
   
   int ext_len = 0;
   int i = strlen(filename);
-  while( i > 0) {
+  while( i >= 0) {
     
     if (filename[i] != '.') { ext_len++; }
     if (filename[i] == '.') { break; }
@@ -254,12 +250,10 @@ char* asset_file_extension(char* filename) {
   }
   
   char* ext = malloc(ext_len);
-  int prev_len = strlen(filename) - ext_len + 1;
-  for (i = 0; i < ext_len; i++ ) {
-    ext[i] = filename[prev_len + i];
-  }
   
-  ext[i] = '\0';
+  int prev = strlen(filename) - ext_len + 1;
+  char* f_ext = filename + prev;
+  strcpy(ext, f_ext);
   
   return ext;
 };
@@ -278,7 +272,7 @@ char* asset_file_location(char* filename) {
   i++;
   len++;
   
-  char* main = malloc(len);
+  char* main = malloc(len+1);
   memcpy(main, filename, len);
   main[len] = '\0';
   

@@ -93,6 +93,7 @@ main(int argc, char *argv[]) {
   
   /* Load Assets */
   
+  
   asset_manager_init();
   
   asset_manager_handler("obj", (void*(*)(char*))obj_load_file, (void(*)(void*))model_delete);
@@ -180,6 +181,8 @@ main(int argc, char *argv[]) {
     }
   
   }	
+  
+  /* Finish */
   
   renderer_finish();
   
