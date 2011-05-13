@@ -71,7 +71,7 @@ main(int argc, char *argv[]) {
   SDL_Surface* image = IMG_Load("icon.png");
   SDL_WM_SetIcon(image, NULL);
   
-  SDL_GL_SetAttribute( SDL_GL_MULTISAMPLESAMPLES, 8 );
+  SDL_GL_SetAttribute( SDL_GL_MULTISAMPLESAMPLES, 16 );
   
   screen = SDL_SetVideoMode(DEFAULT_WIDTH, DEFAULT_HEIGHT, 0, SDL_HWSURFACE | SDL_GL_DOUBLEBUFFER | SDL_OPENGL);
   if (screen == NULL) {
