@@ -27,6 +27,7 @@ typedef struct {
 
 vector2 v2(float x, float y);
 vector2 v2_zero();
+vector2 v2_one();
 
 vector2 v2_add(vector2 v1, vector2 v2);
 vector2 v2_sub(vector2 v1, vector2 v2);
@@ -52,6 +53,7 @@ void v2_to_array(vector2 v, float* out);
 
 vector3 v3(float x, float y, float z);
 vector3 v3_zero();
+vector3 v3_one();
 
 vector3 v3_add(vector3 v1, vector3 v2);
 vector3 v3_sub(vector3 v1, vector3 v2);
@@ -72,12 +74,14 @@ void v3_print(vector3 v);
 
 void v3_to_array(vector3 v, float* out);
 
+vector3 v3_from_homogeneous(vector4 v);
 
 /* Vector4 */
 
 
 vector4 v4(float w, float x, float y, float z);
 vector4 v4_zero();
+vector4 v4_one();
 
 vector4 v4_add(vector4 v1, vector4 v2);
 vector4 v4_sub(vector4 v1, vector4 v2);
@@ -96,5 +100,7 @@ vector4 v4_from_string(char* s);
 void v4_print(vector4 v);
 
 void v4_to_array(vector4 v, float* out);
+
+vector4 v4_to_homogeneous(vector3 v);
 
 #endif

@@ -9,3 +9,9 @@ Materials:
 	
 Camera:
 	- Rotational Controls
+	
+Here are some ideas:
+	
+	- Python script to convert obj file to easy processed binary file.
+	- Why not do the same with materials.
+	- Why not write a pymark parser for C?

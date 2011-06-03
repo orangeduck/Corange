@@ -2,10 +2,10 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "stringtable.h"
+#include "dictionary.h"
 
 /* This is just a simple hash for now. Not great but can be improved later */
-int stringtable_hash(stringtable* st, char* string) {
+int dictionary_hash(dictionary* dict, char* string) {
   
   int total = 1;
   
@@ -16,31 +16,38 @@ int stringtable_hash(stringtable* st, char* string) {
     i++;
   }
   
-  total = abs(total % st->table_size);
+  total = abs(total % dict->table_size);
   
   return total;
 };
 
-stringtable* stringtable_new(int table_size) {
+dictionary* dictionary_new(int table_size) {
   
-  stringtable* st = malloc( sizeof(stringtable) );
+  dictionary* dict = malloc( sizeof(dictionary) );
   
-  st->table_size = table_size;
-  st->buckets = malloc( sizeof(bucket*) * st->table_size );
+  dict->table_size = table_size;
+  dict->buckets = malloc( sizeof(bucket*) * dict->table_size );
   
   int i;
   for(i = 0; i < table_size; i++) {
-    st->buckets[i] = NULL;
+    dict->buckets[i] = NULL;
   }
   
-  return st;
+  return dict;
   
 }
 
-int stringtable_contains(stringtable* st, char* string) {
+void dictionary_delete(dictionary* dict) {
+  int i;
+  for(i=0; i< dict->table_size; i++) {
+    bucket_delete_recursive(dict->buckets[i]);
+  }
+}
 
-  int index = stringtable_hash(st, string);
-  bucket* b = st->buckets[index];
+int dictionary_contains(dictionary* dict, char* string) {
+
+  int index = dictionary_hash(dict, string);
+  bucket* b = dict->buckets[index];
   
   if(b == NULL) { return 0;}
   
@@ -55,14 +62,13 @@ int stringtable_contains(stringtable* st, char* string) {
 
 }
 
-void* stringtable_get(stringtable* st, char* string) {
+void* dictionary_get(dictionary* dict, char* string) {
   
-  int index = stringtable_hash(st, string);
-  bucket* b = st->buckets[index];
+  int index = dictionary_hash(dict, string);
+  bucket* b = dict->buckets[index];
   
   /* If empty (no bucket) return NULL */
   if (b == NULL) {
-    printf("Error: Couldn't find asset %s\n", string); fflush(stdout);
     return NULL;
   }
   
@@ -82,15 +88,15 @@ void* stringtable_get(stringtable* st, char* string) {
 
 };
 
-void stringtable_set(stringtable* st, char* string, void* item) {
+void dictionary_set(dictionary* dict, char* string, void* item) {
 
-  int index = stringtable_hash(st, string);
-  bucket* b = st->buckets[index];
+  int index = dictionary_hash(dict, string);
+  bucket* b = dict->buckets[index];
   
   /* If nothing already there add single bucket */
   if (b == NULL) {
     bucket* new_bucket = bucket_new(string, item);
-    st->buckets[index] = new_bucket;
+    dict->buckets[index] = new_bucket;
     return;
   }
   
@@ -113,21 +119,20 @@ void stringtable_set(stringtable* st, char* string, void* item) {
   
 }
 
-void stringtable_remove_with(stringtable* st, char* string, void func(void*)) {
+void dictionary_remove_with(dictionary* dict, char* string, void func(void*)) {
   
-  int index = stringtable_hash(st, string);
-  bucket* b = st->buckets[index];
+  int index = dictionary_hash(dict, string);
+  bucket* b = dict->buckets[index];
   
   /* No buckets in list */
   if (b == NULL) {
-    printf("Error: Cannot remove item %s as it doesn't exist!", string);
     return;
   }
   
   /* Single Bucket in list, remove */
   if( strcmp(b->string, string) == 0) {
     bucket_delete_with(b, func);
-    st->buckets[index] = NULL;
+    dict->buckets[index] = NULL;
     return;
   }
   
@@ -135,7 +140,6 @@ void stringtable_remove_with(stringtable* st, char* string, void func(void*)) {
   while(1) {
   
     if(b->next == NULL) {
-      printf("Error: Cannot remove item %s as it doesn't exist!", string);
       return;
     }
   
@@ -167,4 +171,15 @@ void bucket_delete_with(bucket* b, void func(void*) ){
   func(b->item);
   free(b->string);
   free(b);
+}
+
+void bucket_delete_recursive(bucket* b) {
+  
+  if(b == NULL) { return; }
+  bucket_delete_recursive(b->next);
+  
+  free(b->item);
+  free(b->string);
+  free(b);
+  
 }

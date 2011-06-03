@@ -2,13 +2,13 @@
 #include <dirent.h>
 #include <stdio.h>
 
-#include "SDL_rwops.h"
+#include "SDL/SDL_rwops.h"
 
-#include "stringtable.h"
+#include "dictionary.h"
 
 #include "asset_manager.h"
 
-static stringtable* asset_dictionary;
+static dictionary* asset_dictionary;
 
 typedef struct {
 
@@ -24,7 +24,7 @@ static int num_handlers = 0;
 void asset_manager_init() {
 
   printf("Creating new asset manager\n");
-  asset_dictionary = stringtable_new(1024);
+  asset_dictionary = dictionary_new(1024);
 
 }
 
@@ -93,7 +93,7 @@ void asset_manager_handler(char* extension, void* load_func(char*) , void del_fu
 
 void load_file(char* filename) {
   
-  if (stringtable_contains(asset_dictionary, filename)) {
+  if (dictionary_contains(asset_dictionary, filename)) {
     printf("Asset %s already loaded\n", filename);
     return;
   }
@@ -103,7 +103,7 @@ void load_file(char* filename) {
     asset_handler handler = asset_handlers[i];
     if (strcmp(ext, handler.extension) == 0) {
       void* asset = handler.load_func(filename);
-      stringtable_set(asset_dictionary, filename, asset);
+      dictionary_set(asset_dictionary, filename, asset);
       break;
     }
   }
@@ -146,7 +146,7 @@ void load_folder(char* folder) {
 
 void reload_file(char* filename) {
 
-  if (stringtable_contains(asset_dictionary, filename)) {
+  if (dictionary_contains(asset_dictionary, filename)) {
     unload_file(filename);
   }
   
@@ -167,7 +167,7 @@ void unload_file(char* filename) {
   
     asset_handler handler = asset_handlers[i];
     if (strcmp(ext, handler.extension) == 0) {
-      stringtable_remove_with(asset_dictionary, filename, handler.del_func);
+      dictionary_remove_with(asset_dictionary, filename, handler.del_func);
       break;
     }
     
@@ -192,7 +192,7 @@ void unload_folder(char* folder) {
           strcpy(filename, folder);
           strcat(filename, ent->d_name);
           
-          if(stringtable_contains(asset_dictionary, filename) ) {
+          if(dictionary_contains(asset_dictionary, filename) ) {
             unload_file(filename);
           }
           
@@ -209,8 +209,12 @@ void unload_folder(char* folder) {
 };
 
 void* asset_get(char* path) {
-  return stringtable_get(asset_dictionary, path);
+  return dictionary_get(asset_dictionary, path);
 };
+
+int asset_loaded(char* path) {
+  return dictionary_contains(asset_dictionary, path);
+}
 
 /* Asset Loader helper commands */
 

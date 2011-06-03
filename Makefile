@@ -2,13 +2,8 @@
 
 CC=gcc
 
-SDLI=./SDL/include
-SDLL=./SDL/lib
-
-INC=./include
-
-INCS= -I $(SDLI) -I $(INC)
-LIBS= -L $(SDLL)
+INCS= -I ./include
+LIBS= -L ./lib
 
 CFLAGS= $(INCS)
 LFLAGS= $(LIBS) -lmingw32 -lSDLmain -lSDL -lSDL_Image -lopengl32 -mwindows

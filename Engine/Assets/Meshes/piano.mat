@@ -1,0 +1,12 @@
+name : piano
+
+vertex_shader : ./Engine/Assets/Shaders/normal_spec.vs
+pixel_shader : ./Engine/Assets/Shaders/normal_spec.fs
+
+diffuse_map : ./Engine/Assets/Textures/piano.dds 
+bump_map : ./Engine/Assets/Textures/piano_nm.dds
+spec_map : ./Engine/Assets/Textures/piano_s.dds
+
+glossiness : 7.0
+bumpiness : 1.0
+specular_level : 2.0

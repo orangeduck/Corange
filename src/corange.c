@@ -1,20 +1,22 @@
 #include <stdlib.h>
-#include <time.h>
 
 #define GLEW_STATIC
 #include "GL/glew.h"
 
 #define NO_SDL_GLEXT
-#include "SDL.h"
-#include "SDL_opengl.h"
-#include "SDL_image.h"
+#include "SDL/SDL.h"
+#include "SDL/SDL_opengl.h"
+#include "SDL/SDL_image.h"
 
+#include "frame.h"
 #include "font.h"
 #include "texture.h"
 #include "camera.h"
 #include "vector.h"
 #include "renderer.h"
+#include "text_renderer.h"
 #include "geometry.h"
+#include "material.h"
 
 #include "obj_loader.h"
 
@@ -22,6 +24,28 @@
 
 #define DEFAULT_WIDTH 800
 #define DEFAULT_HEIGHT 600
+
+void PrintGL_Error() {
+  
+  GLenum error_code = glGetError();
+  
+  if (error_code == GL_NO_ERROR) {
+    printf("OpenGL Error: No Error\n");
+  } else if (error_code == GL_INVALID_ENUM) {
+    printf("OpenGL Error: Invalid Enum\n");
+  } else if (error_code == GL_INVALID_VALUE) {
+    printf("OpenGL Error: Invalid Value\n");
+  } else if (error_code == GL_INVALID_OPERATION) {
+    printf("OpenGL Error: Invalid Operation\n");
+  } else if (error_code == GL_STACK_OVERFLOW) {
+    printf("OpenGL Error: Stack Overflow\n");
+  } else if (error_code == GL_STACK_UNDERFLOW) {
+    printf("OpenGL Error: Stack Underflow\n");
+  } else if (error_code == GL_OUT_OF_MEMORY) {
+    printf("OpenGL Error: Out of Memory\n");
+  }
+  
+}
 
 void DisplayState(SDL_KeyboardEvent *key) {
   if (key->type == SDL_KEYUP)
@@ -86,13 +110,15 @@ main(int argc, char *argv[]) {
     printf("Glew Error: %s\n", glewGetErrorString(err));
   }
   
-  renderer_setup();
-  renderer_set_dimensions(DEFAULT_WIDTH, DEFAULT_HEIGHT);
+  forward_renderer_init();
+  forward_renderer_set_dimensions(DEFAULT_WIDTH, DEFAULT_HEIGHT);
+  
+  camera* cam = camera_new( v3(20.0, 0.0, 0.0) , v3_zero() );
+  forward_renderer_set_camera(cam);
   
   /* End openGL setup */
   
   /* Load Assets */
-  
   
   asset_manager_init();
   
@@ -103,27 +129,26 @@ main(int argc, char *argv[]) {
   asset_manager_handler("tif", (void*(*)(char*))tif_load_file, (void(*)(void*))texture_delete);
   asset_manager_handler("jpg", (void*(*)(char*))jpg_load_file, (void(*)(void*))texture_delete);
   asset_manager_handler("fnt", (void*(*)(char*))font_load_file, (void(*)(void*))font_delete);
+  asset_manager_handler("mat", (void*(*)(char*))mat_load_file, (void(*)(void*))material_delete);
   
   load_folder("./Engine/Assets/Textures/");
   load_folder("./Engine/Assets/Meshes/");
   load_folder("./Engine/Assets/Fonts/");
   
-  camera* cam = camera_new( v3(20.0, 0.0, 0.0) , v3_zero() );
-  renderer_set_camera(cam);
-  
   render_model* piano = (render_model*)asset_get("./Engine/Assets/Meshes/piano.obj");
   font* console_font = (font*)asset_get("./Engine/Assets/Fonts/console_font.fnt");
   
+  render_text* rt_framerate = render_text_new("hello", 10, console_font);
+  rt_framerate->position = v2(-1.0,-1.0);
+  rt_framerate->scale = v2(1.0,1.0);
+  render_text_update(rt_framerate);
+  
+  render_text* rt_test_text = render_text_new("Corange v0.1", 512, console_font);
+  rt_test_text->position = v2(-1.0,-0.95);
+  rt_test_text->color = v4(0,0,1,1);
+  render_text_update(rt_test_text);
+  
   /* Setup Framerate variables */
-  
-  long start_time, end_time;
-  float acc_time;
-  
-  int frame_count = 0;
-  int frame_rate = 0;
-  char frame_rate_s[10] = "";
-
-  float frame_update_rate = 0.5;
   
   /* Start */
   
@@ -132,7 +157,7 @@ main(int argc, char *argv[]) {
   
   while(running) {
   
-  start_time = clock();
+    frame_begin();
   
     while(SDL_PollEvent(&event)) {
       switch(event.type){
@@ -141,14 +166,14 @@ main(int argc, char *argv[]) {
         
         if (event.key.keysym.sym == SDLK_ESCAPE) { running = 0; }
         
-        if (event.key.keysym.sym == SDLK_UP) { cam->position.x -= 1.0;}
-        if (event.key.keysym.sym == SDLK_DOWN) { cam->position.x += 1.0;}
+        if (event.key.keysym.sym == SDLK_UP) { cam->position.y += 1; }
+        if (event.key.keysym.sym == SDLK_DOWN) { cam->position.y -= 1; }
         
-        if (event.key.keysym.sym == SDLK_LEFT) { cam->position.z -= 1.0;}
-        if (event.key.keysym.sym == SDLK_RIGHT) { cam->position.z += 1.0;}
+        if (event.key.keysym.sym == SDLK_LEFT) { cam->position.z -= 1; }
+        if (event.key.keysym.sym == SDLK_RIGHT) { cam->position.z += 1; }
 
-        if (event.key.keysym.sym == SDLK_LEFTBRACKET) { cam->position.y += 1.0;}
-        if (event.key.keysym.sym == SDLK_RIGHTBRACKET) { cam->position.y -= 1.0;}
+        if (event.key.keysym.sym == SDLK_LEFTBRACKET) { cam->position.x += 1; }
+        if (event.key.keysym.sym == SDLK_RIGHTBRACKET) { cam->position.x -= 1;}
         
         break;
       case SDL_QUIT:
@@ -158,37 +183,31 @@ main(int argc, char *argv[]) {
     }
     
     /* Begin Rendering */
-    renderer_begin_render();
+    forward_renderer_begin();
     
-    renderer_render_model(piano);
-    renderer_render_string(frame_rate_s, console_font, v2(-1.0,-1.0) , 1.25);
+    forward_renderer_render_model(piano);
+    
+    render_text_update_string(rt_framerate, frame_rate_string());
+    render_text_render(rt_framerate);
+    render_text_render(rt_test_text);
    
-    renderer_end_render();
+    forward_renderer_end();
     /* End Rendering */
     
-    /* Calculate Framerate */
-    
-    frame_count++;
-    
-    end_time = clock();
-    acc_time = acc_time + ((float)(end_time - start_time) / (float)CLOCKS_PER_SEC);
-    
-    if (acc_time > frame_update_rate) {  
-      frame_rate = (int)(frame_count / frame_update_rate);
-      itoa(frame_rate, frame_rate_s, 10);
-      frame_count = 0;
-      acc_time = 0.0;  
-    }
+    frame_end();
   
   }	
   
   /* Finish */
   
-  renderer_finish();
+  forward_renderer_finish();
   
   /* Unload assets */
   
   asset_manager_finish();
+  
+  render_text_delete(rt_framerate);
+  render_text_delete(rt_test_text);
   
   camera_delete(cam);
   

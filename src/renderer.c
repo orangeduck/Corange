@@ -4,8 +4,8 @@
 #include "GL/glew.h"
 
 #define NO_SDL_GLEXT
-#include "SDL.h"
-#include "SDL_opengl.h"
+#include "SDL/SDL.h"
+#include "SDL/SDL_opengl.h"
 
 #include "camera.h"
 #include "matrix.h"
@@ -49,7 +49,7 @@ float ASPECT_RATIO(){
   return (float)HEIGHT / (float)WIDTH;
 }
 
-void renderer_setup() {
+void forward_renderer_init() {
   
   /* Clear Colors */
   glClearColor(1.0f, 0.769f, 0.0f, 0.0f);
@@ -86,7 +86,7 @@ void renderer_setup() {
   
 }
 
-void renderer_finish() {  
+void forward_renderer_finish() {  
   
   texture_delete(PIANO_DIFFUSE);
   texture_delete(PIANO_NORMAL);
@@ -96,26 +96,26 @@ void renderer_finish() {
   
 }
 
-void renderer_set_camera(camera* c) {
+void forward_renderer_set_camera(camera* c) {
   CAMERA = c;
 }
 
-void renderer_set_dimensions(int width, int height) {
+void forward_renderer_set_dimensions(int width, int height) {
   WIDTH = width;
   HEIGHT = height;
   glViewport(0, 0, width, height);
 }
 
-void renderer_begin_render() {
+void forward_renderer_begin() {
   
-  renderer_setup_camera();
+  forward_renderer_setup_camera();
   
   /* Clear Backbuffer */
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 }
 
-void renderer_setup_camera() {
+void forward_renderer_setup_camera() {
 
   /* Load camera data */
   if (CAMERA != NULL) {
@@ -136,7 +136,7 @@ void renderer_setup_camera() {
   
 }
 
-void renderer_end_render() {
+void forward_renderer_end() {
 
   glFlush();
   
@@ -144,7 +144,7 @@ void renderer_end_render() {
   
 }
 
-void renderer_render_model(render_model* m) {
+void forward_renderer_render_model(render_model* m) {
   
   glEnableClientState(GL_VERTEX_ARRAY);
   glEnableClientState(GL_NORMAL_ARRAY);
@@ -229,7 +229,7 @@ void renderer_render_model(render_model* m) {
 
 }
 
-void renderer_render_quad(texture* quad_texture, vector2 top_left, vector2 bottom_right) {
+void forward_renderer_render_quad(texture* quad_texture, vector2 top_left, vector2 bottom_right) {
   
   glUseProgramObjectARB(0);
   
@@ -255,186 +255,10 @@ void renderer_render_quad(texture* quad_texture, vector2 top_left, vector2 botto
 
   glEnable(GL_DEPTH_TEST);
   
-  renderer_setup_camera();
+  forward_renderer_setup_camera();
 }
 
-void renderer_render_screen_quad(texture* quad_texture) {
-  renderer_render_quad(quad_texture, v2(-1,-1), v2(1,1) );
-}
-
-void renderer_render_char(char c, font* f, vector2 pos, float size) {
-  
-  short i = (short)c;
-  
-  float uv1_x = f->locations[i].x;
-  float uv1_y = f->locations[i].y;
-  
-  float uv2_x = f->locations[i].x + f->sizes[i].x;
-  float uv2_y = f->locations[i].y;
-  
-  float uv3_x = f->locations[i].x + f->sizes[i].x;
-  float uv3_y = f->locations[i].y + f->sizes[i].y;
-  
-  float uv4_x = f->locations[i].x;
-  float uv4_y = f->locations[i].y + f->sizes[i].y;
-  
-  float pos1_x = pos.x;
-  float pos1_y = pos.y;
-  
-  float pos2_x = pos.x + (f->sizes[i].x * size);
-  float pos2_y = pos.y;
-  
-  float pos3_x = pos.x + (f->sizes[i].x * size);
-  float pos3_y = pos.y - (f->sizes[i].y * size);
-  
-  float pos4_x = pos.x;
-  float pos4_y = pos.y - (f->sizes[i].y * size);
-  
-  glUseProgramObjectARB(0);
-  
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	glOrtho(-1.0, 1.0, -1.0, 1.0, -1, 1);
-  
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-  
-  glDisable(GL_DEPTH_TEST);
-  
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  
-  glActiveTexture(GL_TEXTURE0 + 0);
-  glEnable(GL_TEXTURE_2D);
-  glBindTexture(GL_TEXTURE_2D, *f->texture_map);
-	glBegin(GL_QUADS);
-		glTexCoord2f(uv1_x, uv1_y); glVertex3f(pos1_x, pos1_y,  0.0f);
-		glTexCoord2f(uv2_x, uv2_y); glVertex3f(pos2_x, pos2_y,  0.0f);
-		glTexCoord2f(uv3_x, uv3_y); glVertex3f(pos3_x, pos3_y,  0.0f);
-		glTexCoord2f(uv4_x, uv4_y); glVertex3f(pos4_x,  pos4_y,  0.0f);
-	glEnd();
-
-  glEnable(GL_DEPTH_TEST);
-  glDisable(GL_BLEND);
-  
-  renderer_setup_camera();
-
-}
-
-
-/* Maximum 2048 characters in string */
-
-static float string_pos[2048 * 3];
-static float string_uvs[2048 * 2];
-
-void renderer_render_string(char* s, font* f, vector2 pos, float size) {
-  
-  int num_chars = strlen(s);
-  
-  int pos_i = 0;
-  int uv_i = 0;
-  
-  float x = pos.x;
-  float y = -pos.y;
-  
-  int i = 0;
-  while( s[i] != '\0'){
-  
-    int ord = (int)s[i];
-    
-    string_uvs[uv_i] = f->locations[ord].x; uv_i++;
-    string_uvs[uv_i] = f->locations[ord].y; uv_i++;
-    
-    string_uvs[uv_i] = f->locations[ord].x + f->sizes[ord].x; uv_i++;
-    string_uvs[uv_i] = f->locations[ord].y; uv_i++;
-    
-    string_uvs[uv_i] = f->locations[ord].x + f->sizes[ord].x; uv_i++;
-    string_uvs[uv_i] = f->locations[ord].y + f->sizes[ord].y; uv_i++;
-    
-    string_uvs[uv_i] = f->locations[ord].x; uv_i++;
-    string_uvs[uv_i] = f->locations[ord].y + f->sizes[ord].y; uv_i++;
-    
-    /* Positions */
-    
-    float o_x = x + f->offsets[ord].x;
-    float o_y = y - f->offsets[ord].y;
-    
-    string_pos[pos_i] = o_x; pos_i++;
-    string_pos[pos_i] = o_y; pos_i++;
-    string_pos[pos_i] = 0; pos_i++;
-    
-    string_pos[pos_i] = o_x + (f->sizes[ord].x * size); pos_i++;
-    string_pos[pos_i] = o_y; pos_i++;
-    string_pos[pos_i] = 0; pos_i++;
-    
-    string_pos[pos_i] = o_x + (f->sizes[ord].x * size); pos_i++;
-    string_pos[pos_i] = o_y - (f->sizes[ord].y * size); pos_i++;
-    string_pos[pos_i] = 0; pos_i++;
-    
-    string_pos[pos_i] = o_x; pos_i++;
-    string_pos[pos_i] = o_y - (f->sizes[ord].y * size); pos_i++;
-    string_pos[pos_i] = 0; pos_i++;
-    
-    x = o_x + (f->sizes[ord].x * size);
-    
-    i++;
-  }
-  
-  glUseProgramObjectARB(0);
-  
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	glOrtho(-1.0, 1.0, -1.0, 1.0, -1, 1);
-  
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-  
-  glActiveTexture(GL_TEXTURE0 + 0);
-  glEnable(GL_TEXTURE_2D);
-  glBindTexture(GL_TEXTURE_2D, *f->texture_map);
-  
-  glDisable(GL_DEPTH_TEST);
-  
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  
-  glEnableClientState(GL_VERTEX_ARRAY);
-  glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-  
-      glVertexPointer(3, GL_FLOAT, 0, string_pos);
-      glTexCoordPointer(2, GL_FLOAT, 0, string_uvs);
-      
-      glDrawArrays(GL_QUADS, 0, num_chars * 4);
-  
-  glDisableClientState(GL_VERTEX_ARRAY);
-  glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-  
-  glEnable(GL_DEPTH_TEST);
-  glDisable(GL_BLEND);
-  
-  renderer_setup_camera();
-  
-}
-
-void renderer_print_gl_error() {
-  
-  GLenum error_code = glGetError();
-  
-  if (error_code == GL_NO_ERROR) {
-    printf("OpenGL Error: No Error\n");
-  } else if (error_code == GL_INVALID_ENUM) {
-    printf("OpenGL Error: Invalid Enum\n");
-  } else if (error_code == GL_INVALID_VALUE) {
-    printf("OpenGL Error: Invalid Value\n");
-  } else if (error_code == GL_INVALID_OPERATION) {
-    printf("OpenGL Error: Invalid Operation\n");
-  } else if (error_code == GL_STACK_OVERFLOW) {
-    printf("OpenGL Error: Stack Overflow\n");
-  } else if (error_code == GL_STACK_UNDERFLOW) {
-    printf("OpenGL Error: Stack Underflow\n");
-  } else if (error_code == GL_OUT_OF_MEMORY) {
-    printf("OpenGL Error: Out of Memory\n");
-  }
-  
+void forward_renderer_render_screen_quad(texture* quad_texture) {
+  forward_renderer_render_quad(quad_texture, v2(-1,-1), v2(1,1) );
 }
 

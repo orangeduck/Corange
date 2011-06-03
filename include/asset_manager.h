@@ -1,7 +1,7 @@
 #ifndef asset_manager_h
 #define asset_manager_h
 
-#include "stringtable.h"
+#include "dictionary.h"
 
 void asset_manager_init();
 void asset_manager_finish();
@@ -20,6 +20,7 @@ void unload_file(char* filename);
 void unload_folder(char* folder);
 
 void* asset_get(char* path);
+int asset_loaded(char* path);
 
 char* asset_load_file(char* filename);
 char* asset_file_extension(char* filename);

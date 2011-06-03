@@ -40,7 +40,9 @@ matrix_4x4 m44_zero();
 matrix_4x4 m44_transpose(matrix_4x4 m);
 
 matrix_4x4 m44_mul_m44(matrix_4x4 m1, matrix_4x4 m2);
-matrix_4x4 m44_mul_v4(matrix_4x4 m, vector4 v);
+
+vector4 m44_mul_v4(matrix_4x4 m, vector4 v);
+
 
 matrix_3x3 m44_to_m33(matrix_4x4 m);
 

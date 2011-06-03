@@ -1,8 +1,8 @@
 #ifndef glsl_loader_h
 #define glsl_loader_h
 
-#include "SDL.h"
-#include "SDL_opengl.h"
+#include "SDL/SDL.h"
+#include "SDL/SDL_opengl.h"
 
 typedef GLenum glsl_shader;
 typedef GLhandleARB glsl_program;

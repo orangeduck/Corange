@@ -17,6 +17,10 @@ vector2 v2_zero() {
   return v2(0, 0);
 }
 
+vector2 v2_one() {
+  return v2(1, 1);
+}
+
 vector2 v2_add(vector2 v1, vector2 v2) {
   vector2 v;
   v.x = v1.x + v2.x;
@@ -112,6 +116,10 @@ vector3 v3(float x, float y, float z) {
 
 vector3 v3_zero() {
   return v3(0, 0, 0);
+}
+
+vector3 v3_one() {
+  return v3(1, 1, 1);
 }
 
 vector3 v3_add(vector3 v1, vector3 v2) {
@@ -223,6 +231,11 @@ void v3_to_array(vector3 v, float* out) {
   
 }
 
+vector3 v3_from_homogeneous(vector4 v) {
+  vector3 vec = v3(v.x,v.y,v.z);
+  return v3_div(vec, v.w);
+};
+
 /* Vector4 */
 
 vector4 v4(float w, float x, float y, float z) {
@@ -236,6 +249,10 @@ vector4 v4(float w, float x, float y, float z) {
 
 vector4 v4_zero() {
   return v4(0, 0, 0, 0);
+}
+
+vector4 v4_one() {
+  return v4(1.0, 1.0, 1.0, 1.0);
 }
 
 vector4 v4_add(vector4 v1, vector4 v2) {
@@ -349,3 +366,7 @@ void v4_to_array(vector4 v, float* out) {
   out[3] = v.z;
   
 }
+
+vector4 v4_to_homogeneous(vector3 v){
+  return v4(1.0, v.x, v.y, v.z);
+};

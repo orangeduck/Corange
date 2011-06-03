@@ -33,7 +33,7 @@ font* font_load_file(char* filename) {
     if( c[i] == '\n') {
     
       /* Null terminate line buffer */
-      line[j] = '\0';
+      line[j-1] = '\0';
       
       //printf("LINE: %s \n",line);
       
@@ -54,7 +54,13 @@ font* font_load_file(char* filename) {
         strcpy(full, root);
         strcat(full, filename);
         
-        f->texture_map = (texture*)dds_load_file(full);
+        if(asset_loaded(full)) {
+          f->texture_map = (texture*)asset_get(full);
+        } else {
+          load_file(full);
+          f->texture_map = (texture*)asset_get(full);
+        }
+        
         
         free(root);
         free(filename);
