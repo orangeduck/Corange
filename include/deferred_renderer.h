@@ -16,7 +16,7 @@ void deferred_renderer_setup_camera();
 void deferred_renderer_begin();
 void deferred_renderer_end();
 
-void deferred_renderer_render_model(model* m);
+void deferred_renderer_render_model(render_model* m);
 
 
 #endif

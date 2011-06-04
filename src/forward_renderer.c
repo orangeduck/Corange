@@ -14,7 +14,7 @@
 #include "font.h"
 #include "texture.h"
 
-#include "renderer.h"
+#include "forward_renderer.h"
 
 static camera* CAMERA = NULL;
 
@@ -45,11 +45,14 @@ static int TANGENT;
 static int BINORMAL;
 static int COLOR;
 
-float ASPECT_RATIO(){
+static float ASPECT_RATIO(){
   return (float)HEIGHT / (float)WIDTH;
 }
 
-void forward_renderer_init() {
+void forward_renderer_init(int width, int height) {
+  
+  WIDTH = width;
+  HEIGHT = height;
   
   /* Clear Colors */
   glClearColor(1.0f, 0.769f, 0.0f, 0.0f);
@@ -57,7 +60,7 @@ void forward_renderer_init() {
   
   /* Enables */
   glEnable(GL_TEXTURE_2D);
-  glEnable(GL_MULTISAMPLE_ARB);
+  glEnable(GL_MULTISAMPLE);
   glEnable(GL_DEPTH_TEST);
   
   /* Loading testing stuff */
@@ -67,14 +70,14 @@ void forward_renderer_init() {
   PIANO_NORMAL = (texture*)dds_load_file("./Engine/Assets/Textures/piano_nm.dds");
   PIANO_SPECULAR = (texture*)dds_load_file("./Engine/Assets/Textures/piano_s.dds");
   
-  TANGENT = glGetAttribLocationARB(*PROGRAM, "tangent");
-  BINORMAL = glGetAttribLocationARB(*PROGRAM, "binormal");
-  COLOR = glGetAttribLocationARB(*PROGRAM, "color");
+  TANGENT = glGetAttribLocation(*PROGRAM, "tangent");
+  BINORMAL = glGetAttribLocation(*PROGRAM, "binormal");
+  COLOR = glGetAttribLocation(*PROGRAM, "color");
   
   EYE_POSITION = malloc(sizeof(float) * 3);
   LIGHT_POSITION = malloc(sizeof(float) * 3);
   
-  LIGHT_POSITION[0] = 100.0f; LIGHT_POSITION[1] = 100.0f; LIGHT_POSITION[2] = 100.0f;
+  LIGHT_POSITION[0] = 150.0f; LIGHT_POSITION[1] = 250.0f; LIGHT_POSITION[2] = 0.0f;
   
   DIFFUSE_LIGHT = malloc(sizeof(float) * 3);
   SPECULAR_LIGHT = malloc(sizeof(float) * 3);
@@ -150,9 +153,9 @@ void forward_renderer_render_model(render_model* m) {
   glEnableClientState(GL_NORMAL_ARRAY);
   glEnableClientState(GL_TEXTURE_COORD_ARRAY);
   
-  glEnableVertexAttribArrayARB(TANGENT);
-  glEnableVertexAttribArrayARB(BINORMAL);
-  glEnableVertexAttribArrayARB(COLOR);
+  glEnableVertexAttribArray(TANGENT);
+  glEnableVertexAttribArray(BINORMAL);
+  glEnableVertexAttribArray(COLOR);
   
     int i;
     for(i=0; i < m->num_meshes; i++) {
@@ -178,9 +181,9 @@ void forward_renderer_render_model(render_model* m) {
       GLint bumpiness = glGetUniformLocation(*PROGRAM, "bumpiness");
       GLint specular_level = glGetUniformLocation(*PROGRAM, "specular_level");
       
-      glUniform1iARB(diffuse_loc, 0);
-      glUniform1iARB(bump_loc, 1);
-      glUniform1iARB(spec_loc, 2);
+      glUniform1i(diffuse_loc, 0);
+      glUniform1i(bump_loc, 1);
+      glUniform1i(spec_loc, 2);
       
       glActiveTexture(GL_TEXTURE0 + 0);
       glBindTexture(GL_TEXTURE_2D, *PIANO_DIFFUSE);
@@ -191,16 +194,16 @@ void forward_renderer_render_model(render_model* m) {
       
       v3_to_array(CAMERA->position, EYE_POSITION);
       
-      glUniform3fvARB(light_position, 1, LIGHT_POSITION);
-      glUniform3fvARB(eye_position, 1, EYE_POSITION);
+      glUniform3fv(light_position, 1, LIGHT_POSITION);
+      glUniform3fv(eye_position, 1, EYE_POSITION);
       
-      glUniform3fvARB(diffuse_light, 1, DIFFUSE_LIGHT);
-      glUniform3fvARB(specular_light, 1, SPECULAR_LIGHT);
-      glUniform3fvARB(ambient_light, 1, AMBIENT_LIGHT);
+      glUniform3fv(diffuse_light, 1, DIFFUSE_LIGHT);
+      glUniform3fv(specular_light, 1, SPECULAR_LIGHT);
+      glUniform3fv(ambient_light, 1, AMBIENT_LIGHT);
       
-      glUniform1fARB(glossiness, GLOSSINESS);
-      glUniform1fARB(bumpiness, BUMPINESS);
-      glUniform1fARB(specular_level, SPECULAR_LEVEL);
+      glUniform1f(glossiness, GLOSSINESS);
+      glUniform1f(bumpiness, BUMPINESS);
+      glUniform1f(specular_level, SPECULAR_LEVEL);
       
       /* END HARD CODED MATERIAL SETTINGS */
       
@@ -223,9 +226,9 @@ void forward_renderer_render_model(render_model* m) {
   glDisableClientState(GL_NORMAL_ARRAY);
   glDisableClientState(GL_TEXTURE_COORD_ARRAY);
   
-  glDisableVertexAttribArrayARB(TANGENT);
-  glDisableVertexAttribArrayARB(BINORMAL);
-  glDisableVertexAttribArrayARB(COLOR);
+  glDisableVertexAttribArray(TANGENT);
+  glDisableVertexAttribArray(BINORMAL);
+  glDisableVertexAttribArray(COLOR);
 
 }
 

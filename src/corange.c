@@ -13,14 +13,15 @@
 #include "texture.h"
 #include "camera.h"
 #include "vector.h"
-#include "renderer.h"
-#include "text_renderer.h"
 #include "geometry.h"
 #include "material.h"
 
-#include "obj_loader.h"
+#include "deferred_renderer.h"
+#include "forward_renderer.h"
+#include "text_renderer.h"
 
 #include "asset_manager.h"
+#include "obj_loader.h"
 
 #define DEFAULT_WIDTH 800
 #define DEFAULT_HEIGHT 600
@@ -110,11 +111,12 @@ main(int argc, char *argv[]) {
     printf("Glew Error: %s\n", glewGetErrorString(err));
   }
   
-  forward_renderer_init();
-  forward_renderer_set_dimensions(DEFAULT_WIDTH, DEFAULT_HEIGHT);
+  //forward_renderer_init(DEFAULT_WIDTH, DEFAULT_HEIGHT);
+  deferred_renderer_init(DEFAULT_WIDTH, DEFAULT_HEIGHT);
   
   camera* cam = camera_new( v3(20.0, 0.0, 0.0) , v3_zero() );
-  forward_renderer_set_camera(cam);
+  //forward_renderer_set_camera(cam);
+  deferred_renderer_set_camera(cam);
   
   /* End openGL setup */
   
@@ -141,6 +143,7 @@ main(int argc, char *argv[]) {
   render_text* rt_framerate = render_text_new("hello", 10, console_font);
   rt_framerate->position = v2(-1.0,-1.0);
   rt_framerate->scale = v2(1.0,1.0);
+  rt_framerate->color = v4(0,0,0,1);
   render_text_update(rt_framerate);
   
   render_text* rt_test_text = render_text_new("Corange v0.1", 512, console_font);
@@ -183,16 +186,23 @@ main(int argc, char *argv[]) {
     }
     
     /* Begin Rendering */
-    forward_renderer_begin();
+    //forward_renderer_begin();
+    deferred_renderer_begin();
     
-    forward_renderer_render_model(piano);
+    //forward_renderer_render_model(piano);
+    deferred_renderer_render_model(piano);
+    
+    //forward_renderer_end();
+    deferred_renderer_end();
     
     render_text_update_string(rt_framerate, frame_rate_string());
     render_text_render(rt_framerate);
     render_text_render(rt_test_text);
-   
-    forward_renderer_end();
-    /* End Rendering */
+    
+    glFlush();
+    SDL_GL_SwapBuffers();    
+    
+    /* End Rendering */    
     
     frame_end();
   
@@ -200,7 +210,8 @@ main(int argc, char *argv[]) {
   
   /* Finish */
   
-  forward_renderer_finish();
+  //forward_renderer_finish();
+  deferred_renderer_finish();
   
   /* Unload assets */
   

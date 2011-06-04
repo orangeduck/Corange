@@ -1,10 +1,10 @@
-#ifndef renderer_h
-#define renderer_h
+#ifndef forward_renderer_h
+#define forward_renderer_h
 
 #include "geometry.h"
 #include "texture.h"
 
-void forward_renderer_init();
+void forward_renderer_init(int width, int height);
 void forward_renderer_finish();
 
 void forward_renderer_set_camera(camera* c);

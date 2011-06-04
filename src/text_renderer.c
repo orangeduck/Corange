@@ -138,6 +138,8 @@ void render_text_render(render_text* rt) {
 
   glUseProgramObjectARB(0);
   
+  /* Setup 2D camera */
+  
 	glMatrixMode(GL_PROJECTION);
   glPushMatrix();
 	glLoadIdentity();
@@ -147,14 +149,20 @@ void render_text_render(render_text* rt) {
   glPushMatrix();
 	glLoadIdentity();
   
+  /* Bind font texture */
+  
   glActiveTexture(GL_TEXTURE0 + 0);
   glEnable(GL_TEXTURE_2D);
   glBindTexture(GL_TEXTURE_2D, *(rt->font->texture_map) );
   
+  /* Disable lighting, enable blending */
+  
+  glDisable(GL_LIGHTING);
   glDisable(GL_DEPTH_TEST);
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   
+  glColor4f(1.0,1.0,1.0,1.0);
   glColor4f(rt->color.w, rt->color.x, rt->color.y, rt->color.z);
   
   glEnableClientState(GL_VERTEX_ARRAY);
@@ -168,8 +176,12 @@ void render_text_render(render_text* rt) {
   glDisableClientState(GL_VERTEX_ARRAY);
   glDisableClientState(GL_TEXTURE_COORD_ARRAY);
   
-  glEnable(GL_DEPTH_TEST);
+  /* Set Back */
+  
   glDisable(GL_BLEND);
+  glEnable(GL_DEPTH_TEST);
+  glEnable(GL_LIGHTING);
+  
   
   glMatrixMode(GL_PROJECTION);
   glPopMatrix();
@@ -177,5 +189,6 @@ void render_text_render(render_text* rt) {
 	glMatrixMode(GL_MODELVIEW);
   glPopMatrix();
 
+  glColor4f(1.0,1.0,1.0,1.0);
   
 };
