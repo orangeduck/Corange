@@ -12,7 +12,7 @@ void main( void )
 	
 	vec4 normal = texture2D(tBumpMap, uvs);
 	normal = mix(normal, vec4( 0.5, 0.5, 1.0, 1.0 ), bumpiness);
-	normal = (normal * 2 - vec4(1,1,1,0)) * TBN;
+	normal = (normal * 2 - vec4(1.0,1.0,1.0,0.0)) * TBN;
 	
 	gl_FragData[0].rgb = texture2D(tDiffuse, uvs).rgb;
 	gl_FragData[0].a = spec;
@@ -20,6 +20,6 @@ void main( void )
 	gl_FragData[1].rgb = position.xyz;
 	gl_FragData[1].a = 1.0;
 	
-	gl_FragData[2] = normal;
+	gl_FragData[2] = normal * 128;
 	gl_FragData[2].a = glossiness;
 }

@@ -15,6 +15,7 @@
 #include "vector.h"
 #include "geometry.h"
 #include "material.h"
+#include "scripting.h"
 
 #include "deferred_renderer.h"
 #include "forward_renderer.h"
@@ -22,6 +23,8 @@
 
 #include "asset_manager.h"
 #include "obj_loader.h"
+
+#include "logger.h"
 
 #define DEFAULT_WIDTH 800
 #define DEFAULT_HEIGHT 600
@@ -31,63 +34,47 @@ void PrintGL_Error() {
   GLenum error_code = glGetError();
   
   if (error_code == GL_NO_ERROR) {
-    printf("OpenGL Error: No Error\n");
+    log_error("OpenGL Error: No Error\n",0);
   } else if (error_code == GL_INVALID_ENUM) {
-    printf("OpenGL Error: Invalid Enum\n");
+    log_error("OpenGL Error: Invalid Enum\n",0);
   } else if (error_code == GL_INVALID_VALUE) {
-    printf("OpenGL Error: Invalid Value\n");
+    log_error("OpenGL Error: Invalid Value\n",0);
   } else if (error_code == GL_INVALID_OPERATION) {
-    printf("OpenGL Error: Invalid Operation\n");
+    log_error("OpenGL Error: Invalid Operation\n",0);
   } else if (error_code == GL_STACK_OVERFLOW) {
-    printf("OpenGL Error: Stack Overflow\n");
+    log_error("OpenGL Error: Stack Overflow\n",0);
   } else if (error_code == GL_STACK_UNDERFLOW) {
-    printf("OpenGL Error: Stack Underflow\n");
+    log_error("OpenGL Error: Stack Underflow\n",0);
   } else if (error_code == GL_OUT_OF_MEMORY) {
-    printf("OpenGL Error: Out of Memory\n");
+    log_error("OpenGL Error: Out of Memory\n",0);
   }
   
-}
-
-void DisplayState(SDL_KeyboardEvent *key) {
-  if (key->type == SDL_KEYUP)
-    printf("RELEASED: ");
-  else
-    printf("PRESSED: ");
-}
-
-void DisplayModifiers(SDL_KeyboardEvent *key) {
-  SDLMod modifier = key->keysym.mod;
-  if( modifier & KMOD_NUM ) printf( "NUMLOCK " );
-  if( modifier & KMOD_CAPS ) printf( "CAPSLOCK " );
-  if( modifier & KMOD_MODE ) printf( "MODE " );
-  if( modifier & KMOD_LCTRL ) printf( "LCTRL " );
-  if( modifier & KMOD_RCTRL ) printf( "RCTRL " );
-  if( modifier & KMOD_LSHIFT ) printf( "LSHIFT " );
-  if( modifier & KMOD_RSHIFT ) printf( "RSHIFT " );
-  if( modifier & KMOD_LALT ) printf( "LALT " );
-  if( modifier & KMOD_RALT ) printf( "RALT " );
-  if( modifier & KMOD_LMETA ) printf( "LMETA " );
-  if( modifier & KMOD_RMETA ) printf( "RMETA " );
-}
-
-void DisplayKey(SDL_KeyboardEvent *key) {
-  printf( "%s\n", SDL_GetKeyName(key->keysym.sym));
 }
 
 main(int argc, char *argv[]) {
   
+  /* Stop Redirect of stdout and stderr */
+  
+  FILE * ctt = fopen("CON", "w" );
+  freopen( "CON", "w", stdout );
+  freopen( "CON", "w", stderr );
+  
+  /* SDL Setup */
+  
   SDL_Surface *screen;
   
   if (SDL_Init(SDL_INIT_VIDEO) != 0) {
-    printf("Unable to initialize SDL: %s\n", SDL_GetError());
+    log_error("Unable to initialize SDL: %s\n", SDL_GetError());
     return 1;
   }
+  
+  /* Init SDL image */
   
   int flags = IMG_INIT_JPG|IMG_INIT_PNG|IMG_INIT_TIF;
   int initted = IMG_Init(flags);
   if(initted&flags != flags) {
-      printf("IMG_Init: Failed to init required jpg and png support!\n");
-      printf("IMG_Init: %s\n", IMG_GetError());
+      log_error("IMG_Init: Failed to init required jpg and png support!\n",0);
+      log_error("IMG_Init: %s\n", IMG_GetError());
   }
   
   /* Set Window properties */
@@ -100,25 +87,34 @@ main(int argc, char *argv[]) {
   
   screen = SDL_SetVideoMode(DEFAULT_WIDTH, DEFAULT_HEIGHT, 0, SDL_HWSURFACE | SDL_GL_DOUBLEBUFFER | SDL_OPENGL);
   if (screen == NULL) {
-    printf("Unable to set video mode: %s\n", SDL_GetError());
+    log_error("Unable to set video mode: %s\n", SDL_GetError());
     return 1;
   }
   
-  /* openGL setup */
+  /* OpenGL setup */
   
   GLenum err = glewInit();
   if (GLEW_OK != err) {
-    printf("Glew Error: %s\n", glewGetErrorString(err));
+    log_error("Glew Error: %s\n", glewGetErrorString(err));
   }
+  
+  /* Renderer Setup */
   
   //forward_renderer_init(DEFAULT_WIDTH, DEFAULT_HEIGHT);
   deferred_renderer_init(DEFAULT_WIDTH, DEFAULT_HEIGHT);
   
+  /* New Camera */
+  
   camera* cam = camera_new( v3(20.0, 0.0, 0.0) , v3_zero() );
+  
   //forward_renderer_set_camera(cam);
   deferred_renderer_set_camera(cam);
   
   /* End openGL setup */
+  
+  /* Setup Scripting */
+  
+  scripting_init();
   
   /* Load Assets */
   
@@ -130,14 +126,21 @@ main(int argc, char *argv[]) {
   asset_manager_handler("png", (void*(*)(char*))png_load_file, (void(*)(void*))texture_delete);
   asset_manager_handler("tif", (void*(*)(char*))tif_load_file, (void(*)(void*))texture_delete);
   asset_manager_handler("jpg", (void*(*)(char*))jpg_load_file, (void(*)(void*))texture_delete);
-  asset_manager_handler("fnt", (void*(*)(char*))font_load_file, (void(*)(void*))font_delete);
+  asset_manager_handler("fnt", (void*(*)(char*))font_load_file,(void(*)(void*))font_delete);
   asset_manager_handler("mat", (void*(*)(char*))mat_load_file, (void(*)(void*))material_delete);
+  asset_manager_handler("lua", (void*(*)(char*))lua_load_file, (void(*)(void*))script_delete);
   
   load_folder("./Engine/Assets/Textures/");
   load_folder("./Engine/Assets/Meshes/");
   load_folder("./Engine/Assets/Fonts/");
+  load_folder("./Engine/Scripts/");
+  
+  /* Get reference to the Piano */
   
   render_model* piano = (render_model*)asset_get("./Engine/Assets/Meshes/piano.obj");
+  
+  /* Put some text on the screen */
+  
   font* console_font = (font*)asset_get("./Engine/Assets/Fonts/console_font.fnt");
   
   render_text* rt_framerate = render_text_new("hello", 10, console_font);
@@ -151,7 +154,8 @@ main(int argc, char *argv[]) {
   rt_test_text->color = v4(0,0,1,1);
   render_text_update(rt_test_text);
   
-  /* Setup Framerate variables */
+  script* s = (script*)asset_get("./Engine/Scripts/hello_world.lua");
+  scripting_run_script(s);
   
   /* Start */
   
@@ -186,6 +190,7 @@ main(int argc, char *argv[]) {
     }
     
     /* Begin Rendering */
+    
     //forward_renderer_begin();
     deferred_renderer_begin();
     
@@ -195,7 +200,10 @@ main(int argc, char *argv[]) {
     //forward_renderer_end();
     deferred_renderer_end();
     
+    /* Render text */
+    
     render_text_update_string(rt_framerate, frame_rate_string());
+    
     render_text_render(rt_framerate);
     render_text_render(rt_test_text);
     
@@ -216,6 +224,8 @@ main(int argc, char *argv[]) {
   /* Unload assets */
   
   asset_manager_finish();
+  
+  scripting_finish();
   
   render_text_delete(rt_framerate);
   render_text_delete(rt_test_text);

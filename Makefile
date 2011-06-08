@@ -6,7 +6,7 @@ INCS= -I ./include
 LIBS= -L ./lib
 
 CFLAGS= $(INCS)
-LFLAGS= $(LIBS) -lmingw32 -lSDLmain -lSDL -lSDL_Image -lopengl32 -mwindows
+LFLAGS= $(LIBS) -lmingw32 -lSDLmain -lSDL -lSDL_Image -lopengl32 -llua5.1
 
 C_FILES= $(wildcard src/*.c)
 OBJ_FILES= $(addprefix obj/,$(notdir $(C_FILES:.c=.o)))

@@ -18,7 +18,7 @@ typedef struct {
   
   bucket** buckets;
   int table_size;
-
+  
 } dictionary;
 
 

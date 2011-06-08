@@ -41,7 +41,7 @@ material* mat_load_file(char* filename) {
       /* Null terminate line buffer */
       line[j-1] = '\0';
       
-      printf("LINE: %s \n",line);
+      //printf("LINE: %s \n",line);
 
       /* Reset line buffer index */
       j = 0;

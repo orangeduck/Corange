@@ -42,6 +42,7 @@ static GLuint normals_buffer;
 static GLuint diffuse_texture;
 static GLuint positions_texture;
 static GLuint normals_texture;
+static GLuint depth_texture;
 
 static float ASPECT_RATIO(){
   return (float)HEIGHT / (float)WIDTH;
@@ -113,6 +114,15 @@ void deferred_renderer_init(int width, int height) {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, normals_texture, 0);
+  
+  glGenTextures(1, &depth_texture);
+  glBindTexture(GL_TEXTURE_2D, depth_texture);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, WIDTH, HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth_texture, 0);
  
 };
 
@@ -128,6 +138,7 @@ void deferred_renderer_finish() {
   glDeleteTextures(1,&diffuse_texture);
   glDeleteTextures(1,&positions_texture);
   glDeleteTextures(1,&normals_texture);
+  glDeleteTextures(1,&depth_texture);
   
   texture_delete(PIANO_DIFFUSE);
   texture_delete(PIANO_NORMAL);
@@ -202,22 +213,28 @@ void deferred_renderer_end() {
   glPushMatrix();
 	glLoadIdentity();
   
+  glDepthMask(GL_FALSE);
   glDisable(GL_DEPTH_TEST);
   
   glActiveTexture(GL_TEXTURE0 + 0 );
   glBindTexture(GL_TEXTURE_2D, diffuse_texture);
   glEnable(GL_TEXTURE_2D);
-  glUniform1iARB(glGetUniformLocation(*SCREEN_PROGRAM, "tImage0"), 0);
+  glUniform1iARB(glGetUniformLocation(*SCREEN_PROGRAM, "diffuse_texture"), 0);
   
   glActiveTexture(GL_TEXTURE0 + 1 );
   glBindTexture(GL_TEXTURE_2D, positions_texture);
   glEnable(GL_TEXTURE_2D);
-  glUniform1iARB(glGetUniformLocation(*SCREEN_PROGRAM, "tImage1"), 1);
+  glUniform1iARB(glGetUniformLocation(*SCREEN_PROGRAM, "positions_texture"), 1);
   
   glActiveTexture(GL_TEXTURE0 + 2 );
   glBindTexture(GL_TEXTURE_2D, normals_texture);
   glEnable(GL_TEXTURE_2D);
-  glUniform1iARB(glGetUniformLocation(*SCREEN_PROGRAM, "tImage2"), 2);
+  glUniform1iARB(glGetUniformLocation(*SCREEN_PROGRAM, "normals_texture"), 2);
+  
+  glActiveTexture(GL_TEXTURE0 + 3 );
+  glBindTexture(GL_TEXTURE_2D, depth_texture);
+  glEnable(GL_TEXTURE_2D);
+  glUniform1iARB(glGetUniformLocation(*SCREEN_PROGRAM, "depth_texture"), 3);
   
   GLint cam_position = glGetUniformLocation(*SCREEN_PROGRAM, "cameraPosition");
   v3_to_array(CAMERA->position, CAM_POSITION);
@@ -239,6 +256,9 @@ void deferred_renderer_end() {
   glActiveTexture(GL_TEXTURE0 + 2 );
   glDisable(GL_TEXTURE_2D);
   
+  glActiveTexture(GL_TEXTURE0 + 3 );
+  glDisable(GL_TEXTURE_2D);
+  
   glMatrixMode(GL_PROJECTION);
   glPopMatrix();
 
@@ -247,6 +267,7 @@ void deferred_renderer_end() {
   
   glUseProgramObjectARB(0);
   
+  glDepthMask(GL_TRUE);
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_LIGHTING);
 
