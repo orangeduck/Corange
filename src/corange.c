@@ -135,7 +135,6 @@ main(int argc, char *argv[]) {
   
   /* Renderer Setup */
 
-#define DEFERRED_RENDER
 #ifdef DEFERRED_RENDER
   deferred_renderer_init(DEFAULT_WIDTH, DEFAULT_HEIGHT);
   deferred_renderer_set_camera(cam);
@@ -148,10 +147,13 @@ main(int argc, char *argv[]) {
   
   /* Get reference to the Piano */
   
-  render_model* piano = (render_model*)asset_get("./Engine/Assets/Meshes/piano.obj");
-  material* piano_mat = (material*)asset_get("./Engine/Assets/Meshes/piano.mat");
+  render_model* piano = asset_get("./Engine/Assets/Meshes/piano.obj");
+  material* piano_mat = asset_get("./Engine/Assets/Meshes/piano.mat");
   
-  render_model* cello = (render_model*)asset_get("./Engine/Assets/Meshes/cello.obj");
+  render_model* cello = asset_get("./Engine/Assets/Meshes/cello.obj");
+  material* cello_mat = asset_get("./Engine/Assets/Meshes/cello.mat");
+  
+  //render_model_print(cello);
   
   /* Put some text on the screen */
   
@@ -190,8 +192,8 @@ main(int argc, char *argv[]) {
         if (event.key.keysym.sym == SDLK_UP) { cam->position.y += 1; }
         if (event.key.keysym.sym == SDLK_DOWN) { cam->position.y -= 1; }
         
-        if (event.key.keysym.sym == SDLK_LEFT) { cam->position.z -= 1; }
-        if (event.key.keysym.sym == SDLK_RIGHT) { cam->position.z += 1; }
+        if (event.key.keysym.sym == SDLK_LEFT) { cam->position.z += 1; }
+        if (event.key.keysym.sym == SDLK_RIGHT) { cam->position.z -= 1; }
 
         if (event.key.keysym.sym == SDLK_LEFTBRACKET) { cam->position.x += 1; }
         if (event.key.keysym.sym == SDLK_RIGHTBRACKET) { cam->position.x -= 1;}
@@ -208,13 +210,13 @@ main(int argc, char *argv[]) {
     
 #ifdef DEFERRED_RENDER
   deferred_renderer_begin();
-  deferred_renderer_render_model(piano, piano_mat);
-  //deferred_renderer_render_model(cello);
+  //deferred_renderer_render_model(piano, piano_mat);
+  deferred_renderer_render_model(cello, cello_mat);
   deferred_renderer_end();
 #else
   forward_renderer_begin();
-  forward_renderer_render_model(piano, piano_mat);
-  //forward_renderer_render_model(cello);
+  //forward_renderer_render_model(piano, piano_mat);
+  forward_renderer_render_model(cello, cello_mat);
   forward_renderer_end();
 #endif
     

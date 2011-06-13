@@ -332,36 +332,14 @@ matrix_4x4 m44_view_look_at(vector3 position, vector3 target, vector3 up) {
 
 matrix_4x4 m44_perspective(float fov, float near_clip, float far_clip, float ratio) {
   
-  /*
-  float height, width, q, p;
-  
-  width = 1.0f / tan(fov * 0.5);
-  height = 1.0f / tan(fov * 0.5);
-  q = (far_clip + near_clip) / (far_clip - near_clip);
-  p = -2.0 * far_clip * near_clip / (far_clip - near_clip);
-  
-  matrix_4x4 proj_matrix = m44_zero();
-  proj_matrix.ww = width;
-  proj_matrix.xx = height;
-  proj_matrix.yy = q;
-  proj_matrix.zy = p;
-  proj_matrix.yz = 1.0f;
-  
-  return proj_matrix;
-  */
-  
-  /*
-  
-  The above seems to work file, but I've copied this from the Glu source:
-  
+  /*  
     http://www.opengl.org/wiki/GluPerspective_code
     
-    It also works.
   */
   
   float right, left, bottom, top;
   
-  right = near_clip * tanf(fov);
+  right = -(near_clip * tanf(fov));
   left = -right;
   
   top = ratio * near_clip * tanf(fov);
