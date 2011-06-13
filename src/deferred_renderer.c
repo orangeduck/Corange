@@ -6,9 +6,10 @@
 #include "SDL/SDL.h"
 #include "SDL/SDL_opengl.h"
 
-#include "glsl.h"
+#include "shader.h"
 #include "camera.h"
 #include "texture.h"
+#include "material.h"
 
 #include "deferred_renderer.h"
 
@@ -17,8 +18,8 @@ static camera* CAMERA = NULL;
 static float proj_matrix[16];
 static float view_matrix[16];
 
-static glsl_program* PROGRAM;
-static glsl_program* SCREEN_PROGRAM;
+static shader_program* PROGRAM;
+static shader_program* SCREEN_PROGRAM;
 
 static int WIDTH;
 static int HEIGHT;
@@ -53,8 +54,25 @@ void deferred_renderer_init(int width, int height) {
   WIDTH = width;
   HEIGHT = height;
 
-  PROGRAM = (glsl_program*)glsl_load_shaders("./Engine/Assets/Shaders/deferred.vs","./Engine/Assets/Shaders/deferred.fs");
-  SCREEN_PROGRAM = (glsl_program*)glsl_load_shaders("./Engine/Assets/Shaders/deferred_screen.vs","./Engine/Assets/Shaders/deferred_screen.fs");
+  shader* deferred_vs = vs_load_file("./Engine/Assets/Shaders/deferred.vs");
+  shader* deferred_fs = fs_load_file("./Engine/Assets/Shaders/deferred.fs");
+  PROGRAM = shader_program_new();
+  shader_program_attach_shader(PROGRAM, deferred_vs);
+  shader_program_attach_shader(PROGRAM, deferred_fs);
+  shader_program_link(PROGRAM);
+  
+  shader_delete(deferred_vs);
+  shader_delete(deferred_fs);
+  
+  shader* deferred_screen_vs = vs_load_file("./Engine/Assets/Shaders/deferred_screen.vs");
+  shader* deferred_screen_fs = fs_load_file("./Engine/Assets/Shaders/deferred_screen.fs");
+  SCREEN_PROGRAM = shader_program_new();
+  shader_program_attach_shader(SCREEN_PROGRAM, deferred_screen_vs);
+  shader_program_attach_shader(SCREEN_PROGRAM, deferred_screen_fs);
+  shader_program_link(SCREEN_PROGRAM);
+  
+  shader_delete(deferred_screen_vs);
+  shader_delete(deferred_screen_fs);
   
   PIANO_DIFFUSE = (texture*)dds_load_file("./Engine/Assets/Textures/piano.dds");
   PIANO_NORMAL = (texture*)dds_load_file("./Engine/Assets/Textures/piano_nm.dds");
@@ -144,8 +162,8 @@ void deferred_renderer_finish() {
   texture_delete(PIANO_NORMAL);
   texture_delete(PIANO_SPECULAR);  
   
-  glsl_program_delete(PROGRAM);
-  glsl_program_delete(SCREEN_PROGRAM);
+  shader_program_delete(PROGRAM);
+  shader_program_delete(SCREEN_PROGRAM);
   
 };
 
@@ -273,7 +291,7 @@ void deferred_renderer_end() {
 
 };
 
-void deferred_renderer_render_model(render_model* m) {
+void deferred_renderer_render_model(render_model* m, material* mat) {
 
   glEnableClientState(GL_VERTEX_ARRAY);
   glEnableClientState(GL_TEXTURE_COORD_ARRAY);

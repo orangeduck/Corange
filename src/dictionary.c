@@ -42,6 +42,8 @@ void dictionary_delete(dictionary* dict) {
   for(i=0; i< dict->table_size; i++) {
     bucket_delete_recursive(dict->buckets[i]);
   }
+  free(dict->buckets);
+  free(dict);
 }
 
 int dictionary_contains(dictionary* dict, char* string) {
@@ -91,8 +93,9 @@ void* dictionary_get(dictionary* dict, char* string) {
 void dictionary_set(dictionary* dict, char* string, void* item) {
 
   int index = dictionary_hash(dict, string);
+    
   bucket* b = dict->buckets[index];
-  
+    
   /* If nothing already there add single bucket */
   if (b == NULL) {
     bucket* new_bucket = bucket_new(string, item);
@@ -178,7 +181,7 @@ void bucket_delete_recursive(bucket* b) {
   if(b == NULL) { return; }
   bucket_delete_recursive(b->next);
   
-  free(b->item);
+  //free(b->item);
   free(b->string);
   free(b);
   

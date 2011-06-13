@@ -10,9 +10,11 @@
 #include "camera.h"
 #include "matrix.h"
 #include "geometry.h"
-#include "glsl.h"
+#include "shader.h"
 #include "font.h"
 #include "texture.h"
+#include "logger.h"
+#include "dictionary.h"
 
 #include "forward_renderer.h"
 
@@ -24,22 +26,12 @@ static float view_matrix[16];
 static int WIDTH;
 static int HEIGHT;
 
-static glsl_program* PROGRAM;
-
-static texture* PIANO_DIFFUSE;
-static texture* PIANO_NORMAL;
-static texture* PIANO_SPECULAR;
-
 static float* EYE_POSITION;
 static float* LIGHT_POSITION;
 
 static float* DIFFUSE_LIGHT;
 static float* SPECULAR_LIGHT;
 static float* AMBIENT_LIGHT;
-
-static float GLOSSINESS = 7.0f;
-static float BUMPINESS = 1.0f;
-static float SPECULAR_LEVEL = 2.0f;
 
 static int TANGENT;
 static int BINORMAL;
@@ -63,17 +55,6 @@ void forward_renderer_init(int width, int height) {
   glEnable(GL_MULTISAMPLE);
   glEnable(GL_DEPTH_TEST);
   
-  /* Loading testing stuff */
-  PROGRAM = (glsl_program*)glsl_load_shaders("./Engine/Assets/Shaders/normal_spec.vs","./Engine/Assets/Shaders/normal_spec.fs");
-  
-  PIANO_DIFFUSE = (texture*)dds_load_file("./Engine/Assets/Textures/piano.dds");
-  PIANO_NORMAL = (texture*)dds_load_file("./Engine/Assets/Textures/piano_nm.dds");
-  PIANO_SPECULAR = (texture*)dds_load_file("./Engine/Assets/Textures/piano_s.dds");
-  
-  TANGENT = glGetAttribLocation(*PROGRAM, "tangent");
-  BINORMAL = glGetAttribLocation(*PROGRAM, "binormal");
-  COLOR = glGetAttribLocation(*PROGRAM, "color");
-  
   EYE_POSITION = malloc(sizeof(float) * 3);
   LIGHT_POSITION = malloc(sizeof(float) * 3);
   
@@ -85,17 +66,11 @@ void forward_renderer_init(int width, int height) {
   
   DIFFUSE_LIGHT[0] = 1.0f; DIFFUSE_LIGHT[1] = 1.0f; DIFFUSE_LIGHT[2] = 1.0f;
   SPECULAR_LIGHT[0] = 1.0f; SPECULAR_LIGHT[1] = 1.0f; SPECULAR_LIGHT[2] = 1.0f;
-  AMBIENT_LIGHT[0] = 0.25f; AMBIENT_LIGHT[1] = 0.25f; AMBIENT_LIGHT[2] = 0.25f;
+  AMBIENT_LIGHT[0] = 0.5f; AMBIENT_LIGHT[1] = 0.5f; AMBIENT_LIGHT[2] = 0.5f;
   
 }
 
 void forward_renderer_finish() {  
-  
-  texture_delete(PIANO_DIFFUSE);
-  texture_delete(PIANO_NORMAL);
-  texture_delete(PIANO_SPECULAR);
-  
-  glsl_program_delete(PROGRAM);
   
 }
 
@@ -140,72 +115,25 @@ void forward_renderer_setup_camera() {
 }
 
 void forward_renderer_end() {
-
-  glFlush();
-  
-  SDL_GL_SwapBuffers();
   
 }
 
-void forward_renderer_render_model(render_model* m) {
+void forward_renderer_render_model(render_model* m, material* mat) {
   
   glEnableClientState(GL_VERTEX_ARRAY);
   glEnableClientState(GL_NORMAL_ARRAY);
   glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-  
-  glEnableVertexAttribArray(TANGENT);
-  glEnableVertexAttribArray(BINORMAL);
-  glEnableVertexAttribArray(COLOR);
   
     int i;
     for(i=0; i < m->num_meshes; i++) {
       
       render_mesh* me = m->meshes[i];
       
-      /* BEGIN HARD CODED MATERIAL SETTINGS */
+      forward_renderer_use_material(mat);
       
-      glUseProgramObjectARB(*PROGRAM);
-      
-      GLint diffuse_loc = glGetUniformLocation(*PROGRAM, "diffuse_map");
-      GLint bump_loc = glGetUniformLocation(*PROGRAM, "bump_map");
-      GLint spec_loc = glGetUniformLocation(*PROGRAM, "spec_map");
-      
-      GLint light_position = glGetUniformLocation(*PROGRAM, "light_position");
-      GLint eye_position = glGetUniformLocation(*PROGRAM, "eye_position");
-      
-      GLint diffuse_light = glGetUniformLocation(*PROGRAM, "diffuse_light");
-      GLint ambient_light = glGetUniformLocation(*PROGRAM, "ambient_light");
-      GLint specular_light = glGetUniformLocation(*PROGRAM, "specular_light");
-      
-      GLint glossiness = glGetUniformLocation(*PROGRAM, "glossiness");
-      GLint bumpiness = glGetUniformLocation(*PROGRAM, "bumpiness");
-      GLint specular_level = glGetUniformLocation(*PROGRAM, "specular_level");
-      
-      glUniform1i(diffuse_loc, 0);
-      glUniform1i(bump_loc, 1);
-      glUniform1i(spec_loc, 2);
-      
-      glActiveTexture(GL_TEXTURE0 + 0);
-      glBindTexture(GL_TEXTURE_2D, *PIANO_DIFFUSE);
-      glActiveTexture(GL_TEXTURE0 + 1);
-      glBindTexture(GL_TEXTURE_2D, *PIANO_NORMAL);
-      glActiveTexture(GL_TEXTURE0 + 2);
-      glBindTexture(GL_TEXTURE_2D, *PIANO_SPECULAR);
-      
-      v3_to_array(CAMERA->position, EYE_POSITION);
-      
-      glUniform3fv(light_position, 1, LIGHT_POSITION);
-      glUniform3fv(eye_position, 1, EYE_POSITION);
-      
-      glUniform3fv(diffuse_light, 1, DIFFUSE_LIGHT);
-      glUniform3fv(specular_light, 1, SPECULAR_LIGHT);
-      glUniform3fv(ambient_light, 1, AMBIENT_LIGHT);
-      
-      glUniform1f(glossiness, GLOSSINESS);
-      glUniform1f(bumpiness, BUMPINESS);
-      glUniform1f(specular_level, SPECULAR_LEVEL);
-      
-      /* END HARD CODED MATERIAL SETTINGS */
+      glEnableVertexAttribArray(TANGENT);
+      glEnableVertexAttribArray(BINORMAL);
+      glEnableVertexAttribArray(COLOR);
       
       glVertexPointer(3, GL_FLOAT, 0, me->vertex_positions);
       glNormalPointer(GL_FLOAT, 0, me->vertex_normals);
@@ -217,6 +145,10 @@ void forward_renderer_render_model(render_model* m) {
       
       glDrawElements(GL_TRIANGLES, me->num_triangles_3, GL_UNSIGNED_INT, me->triangles);
   
+      glDisableVertexAttribArray(TANGENT);
+      glDisableVertexAttribArray(BINORMAL);
+      glDisableVertexAttribArray(COLOR);  
+  
       /* DISABLE PROGRAM */
       glUseProgramObjectARB(0);
   
@@ -225,43 +157,85 @@ void forward_renderer_render_model(render_model* m) {
   glDisableClientState(GL_VERTEX_ARRAY);
   glDisableClientState(GL_NORMAL_ARRAY);
   glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-  
-  glDisableVertexAttribArray(TANGENT);
-  glDisableVertexAttribArray(BINORMAL);
-  glDisableVertexAttribArray(COLOR);
 
 }
 
-void forward_renderer_render_quad(texture* quad_texture, vector2 top_left, vector2 bottom_right) {
-  
-  glUseProgramObjectARB(0);
-  
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	glOrtho(-1.0, 1.0, -1.0, 1.0, -1, 1);
-  
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-  
-  glDisable(GL_DEPTH_TEST);
-  
-  glActiveTexture(GL_TEXTURE0 + 0);
-  glEnable(GL_TEXTURE_2D);
-  glBindTexture(GL_TEXTURE_2D, *quad_texture);
-  
-	glBegin(GL_QUADS);
-		glTexCoord2f(0.0f, 0.0f); glVertex3f(top_left.x, top_left.y,  0.0f);
-		glTexCoord2f(1.0f, 0.0f); glVertex3f(bottom_right.x, top_left.y,  0.0f);
-		glTexCoord2f(1.0f, -1.0f); glVertex3f(bottom_right.x,  bottom_right.y,  0.0f);
-		glTexCoord2f(0.0f, -1.0f); glVertex3f(top_left.x,  bottom_right.y,  0.0f);
-	glEnd();
+void forward_renderer_use_material(material* mat) {
 
-  glEnable(GL_DEPTH_TEST);
+  shader_program* prog = dictionary_get(mat->properties, "program");
   
-  forward_renderer_setup_camera();
-}
+  glUseProgramObjectARB(*prog);
+  
+  /* Set global parameters */
+  
+  TANGENT = glGetAttribLocation(*prog, "tangent");
+  BINORMAL = glGetAttribLocation(*prog, "binormal");
+  COLOR = glGetAttribLocation(*prog, "color");
+  
+  GLint light_position = glGetUniformLocation(*prog, "light_position");
+  GLint eye_position = glGetUniformLocation(*prog, "eye_position");
+  
+  GLint diffuse_light = glGetUniformLocation(*prog, "diffuse_light");
+  GLint ambient_light = glGetUniformLocation(*prog, "ambient_light");
+  GLint specular_light = glGetUniformLocation(*prog, "specular_light");
+  
+  v3_to_array(CAMERA->position, EYE_POSITION);
+  
+  glUniform3fv(light_position, 1, LIGHT_POSITION);
+  glUniform3fv(eye_position, 1, EYE_POSITION);
+  
+  glUniform3fv(diffuse_light, 1, DIFFUSE_LIGHT);
+  glUniform3fv(specular_light, 1, SPECULAR_LIGHT);
+  glUniform3fv(ambient_light, 1, AMBIENT_LIGHT);
+  
+  /* Set material parameters */
+  
+  int tex_counter = 0;
+  
+  int i;
+  for(i = 0; i < mat->keys->num_items; i++) {
+    char* key = list_get(mat->keys, i);
+    
+    int* type = dictionary_get(mat->types, key);
+    void* property = dictionary_get(mat->properties, key);
+    
+    GLint loc = glGetUniformLocation(*prog, key);
+    
+    if (*type == mat_type_texture) {
+    
+      glUniform1i(loc, tex_counter);
+      glActiveTexture(GL_TEXTURE0 + tex_counter);
+      glBindTexture(GL_TEXTURE_2D, *((texture*)property));
+      tex_counter++;
+    
+    } else if (*type == mat_type_int) {
+    
+      glUniform1i(loc, *((float*)property));
+    
+    } else if (*type == mat_type_float) {
+    
+      glUniform1f(loc, *((float*)property));
+      
+    } else if (*type == mat_type_vector2) {
+    
+      vector2 v = *((vector2*)property);
+      glUniform2f(loc, v.x, v.y);
+    
+    } else if (*type == mat_type_vector3) {
+    
+      vector3 v = *((vector3*)property);
+      glUniform3f(loc, v.x, v.y, v.z);
+  
+    } else if (*type == mat_type_vector4) {
+    
+      vector4 v = *((vector4*)property);
+      glUniform4f(loc, v.w, v.x, v.y, v.z);
+    
+    } else {
+      /* Do nothing */
+    }
+     
+  }
 
-void forward_renderer_render_screen_quad(texture* quad_texture) {
-  forward_renderer_render_quad(quad_texture, v2(-1,-1), v2(1,1) );
 }
 

@@ -16,6 +16,7 @@
 #include "geometry.h"
 #include "material.h"
 #include "scripting.h"
+#include "shader.h"
 
 #include "deferred_renderer.h"
 #include "forward_renderer.h"
@@ -98,17 +99,19 @@ main(int argc, char *argv[]) {
     log_error("Glew Error: %s\n", glewGetErrorString(err));
   }
   
-  /* Renderer Setup */
-  
-  //forward_renderer_init(DEFAULT_WIDTH, DEFAULT_HEIGHT);
-  deferred_renderer_init(DEFAULT_WIDTH, DEFAULT_HEIGHT);
-  
   /* New Camera */
   
   camera* cam = camera_new( v3(20.0, 0.0, 0.0) , v3_zero() );
   
-  //forward_renderer_set_camera(cam);
+  /* Renderer Setup */
+  
+#ifdef DEFERRED_RENDER
+  deferred_renderer_init(DEFAULT_WIDTH, DEFAULT_HEIGHT);
   deferred_renderer_set_camera(cam);
+#else
+  forward_renderer_init(DEFAULT_WIDTH, DEFAULT_HEIGHT);
+  forward_renderer_set_camera(cam);
+#endif
   
   /* End openGL setup */
   
@@ -121,15 +124,22 @@ main(int argc, char *argv[]) {
   asset_manager_init();
   
   asset_manager_handler("obj", (void*(*)(char*))obj_load_file, (void(*)(void*))model_delete);
+  
   asset_manager_handler("dds", (void*(*)(char*))dds_load_file, (void(*)(void*))texture_delete);
   asset_manager_handler("bmp", (void*(*)(char*))bmp_load_file, (void(*)(void*))texture_delete);
   asset_manager_handler("png", (void*(*)(char*))png_load_file, (void(*)(void*))texture_delete);
   asset_manager_handler("tif", (void*(*)(char*))tif_load_file, (void(*)(void*))texture_delete);
   asset_manager_handler("jpg", (void*(*)(char*))jpg_load_file, (void(*)(void*))texture_delete);
+  
+  asset_manager_handler("vs" , (void*(*)(char*))vs_load_file,  (void(*)(void*))shader_delete);
+  asset_manager_handler("fs" , (void*(*)(char*))fs_load_file,  (void(*)(void*))shader_delete);
+  asset_manager_handler("prog",(void*(*)(char*))prog_load_file,(void(*)(void*))shader_program_delete);
+  
   asset_manager_handler("fnt", (void*(*)(char*))font_load_file,(void(*)(void*))font_delete);
   asset_manager_handler("mat", (void*(*)(char*))mat_load_file, (void(*)(void*))material_delete);
   asset_manager_handler("lua", (void*(*)(char*))lua_load_file, (void(*)(void*))script_delete);
   
+  load_folder("./Engine/Assets/Shaders/");
   load_folder("./Engine/Assets/Textures/");
   load_folder("./Engine/Assets/Meshes/");
   load_folder("./Engine/Assets/Fonts/");
@@ -138,6 +148,9 @@ main(int argc, char *argv[]) {
   /* Get reference to the Piano */
   
   render_model* piano = (render_model*)asset_get("./Engine/Assets/Meshes/piano.obj");
+  material* piano_mat = (material*)asset_get("./Engine/Assets/Meshes/piano.mat");
+  
+  render_model* cello = (render_model*)asset_get("./Engine/Assets/Meshes/cello.obj");
   
   /* Put some text on the screen */
   
@@ -191,14 +204,19 @@ main(int argc, char *argv[]) {
     
     /* Begin Rendering */
     
-    //forward_renderer_begin();
-    deferred_renderer_begin();
     
-    //forward_renderer_render_model(piano);
-    deferred_renderer_render_model(piano);
+#ifdef DEFERRED_RENDER
+  deferred_renderer_begin();
+  deferred_renderer_render_model(piano, piano_mat);
+  //deferred_renderer_render_model(cello);
+  deferred_renderer_end();
+#else
+  forward_renderer_begin();
+  forward_renderer_render_model(piano, piano_mat);
+  //forward_renderer_render_model(cello);
+  forward_renderer_end();
+#endif
     
-    //forward_renderer_end();
-    deferred_renderer_end();
     
     /* Render text */
     
@@ -218,8 +236,11 @@ main(int argc, char *argv[]) {
   
   /* Finish */
   
-  //forward_renderer_finish();
+#ifdef DEFERRED_RENDER
   deferred_renderer_finish();
+#else
+  forward_renderer_finish();
+#endif
   
   /* Unload assets */
   

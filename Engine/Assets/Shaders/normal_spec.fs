@@ -12,8 +12,8 @@ uniform sampler2D diffuse_map;
 uniform sampler2D bump_map;
 uniform sampler2D spec_map;
 
-varying vec3 light_vector; 
-varying vec3 half_angle;
+varying vec4 light_vector; 
+varying vec4 half_angle;
 varying vec2 uvs;
 
 void main() {
@@ -27,8 +27,8 @@ void main() {
   bump = mix( vec3( 0.5f, 0.5f, 1.0f ), bump, bumpiness );
   bump = normalize( ( bump * 2.0f ) - 1.0f );
   
-  vec3 normalized_light_vector = normalize( light_vector );
-  vec3 normalized_half_angle = normalize( half_angle );
+  vec3 normalized_light_vector = normalize(light_vector.xyz / half_angle.w);
+  vec3 normalized_half_angle = normalize(half_angle.xyz / half_angle.w);
   
   float n_dot_l = max(dot( bump, normalized_light_vector ) , 0.0f);
   float n_dot_h = max(dot( bump, normalized_half_angle ) , 0.0f);

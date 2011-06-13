@@ -6,6 +6,8 @@
 
 #include "dictionary.h"
 
+#include "shader.h"
+
 #include "asset_manager.h"
 
 static dictionary* asset_dictionary;
@@ -58,7 +60,10 @@ void delete_bucket_list(bucket* b) {
   
   delete_bucket_list(b->next);
   
+  printf("Deleting %s...\n", b->string); fflush(stdout);
+  
   char* ext = asset_file_extension(b->string);
+  
   int i;
   for(i=0; i < num_handlers; i++) {
   

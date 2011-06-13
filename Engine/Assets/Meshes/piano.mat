@@ -1,12 +1,10 @@
-name : piano
+string name = piano
+program prog = ./Engine/Assets/Shaders/normal_spec.prog
 
-vertex_shader : ./Engine/Assets/Shaders/normal_spec.vs
-pixel_shader : ./Engine/Assets/Shaders/normal_spec.fs
+texture diffuse_map = ./Engine/Assets/Textures/piano.dds
+texture bump_map = ./Engine/Assets/Textures/piano_nm.dds
+texture spec_map = ./Engine/Assets/Textures/piano_s.dds
 
-diffuse_map : ./Engine/Assets/Textures/piano.dds 
-bump_map : ./Engine/Assets/Textures/piano_nm.dds
-spec_map : ./Engine/Assets/Textures/piano_s.dds
-
-glossiness : 7.0
-bumpiness : 1.0
-specular_level : 2.0
+float glossiness = 10.0
+float bumpiness = 2.0
+float specular_level = 2.0

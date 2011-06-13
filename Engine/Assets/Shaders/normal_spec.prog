@@ -1,0 +1,2 @@
+vertex_shader : ./Engine/Assets/Shaders/normal_spec.vs
+fragment_shader : ./Engine/Assets/Shaders/normal_spec.fs

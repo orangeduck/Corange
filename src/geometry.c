@@ -1,7 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "arraylist.h"
 #include "vector.h"
 #include "geometry.h"
 
