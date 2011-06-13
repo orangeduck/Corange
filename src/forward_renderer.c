@@ -13,7 +13,6 @@
 #include "shader.h"
 #include "font.h"
 #include "texture.h"
-#include "logger.h"
 #include "dictionary.h"
 
 #include "forward_renderer.h"

@@ -10,6 +10,7 @@
 #include "camera.h"
 #include "texture.h"
 #include "material.h"
+#include "asset_manager.h"
 
 #include "deferred_renderer.h"
 
@@ -53,30 +54,13 @@ void deferred_renderer_init(int width, int height) {
 
   WIDTH = width;
   HEIGHT = height;
-
-  shader* deferred_vs = vs_load_file("./Engine/Assets/Shaders/deferred.vs");
-  shader* deferred_fs = fs_load_file("./Engine/Assets/Shaders/deferred.fs");
-  PROGRAM = shader_program_new();
-  shader_program_attach_shader(PROGRAM, deferred_vs);
-  shader_program_attach_shader(PROGRAM, deferred_fs);
-  shader_program_link(PROGRAM);
   
-  shader_delete(deferred_vs);
-  shader_delete(deferred_fs);
-  
-  shader* deferred_screen_vs = vs_load_file("./Engine/Assets/Shaders/deferred_screen.vs");
-  shader* deferred_screen_fs = fs_load_file("./Engine/Assets/Shaders/deferred_screen.fs");
-  SCREEN_PROGRAM = shader_program_new();
-  shader_program_attach_shader(SCREEN_PROGRAM, deferred_screen_vs);
-  shader_program_attach_shader(SCREEN_PROGRAM, deferred_screen_fs);
-  shader_program_link(SCREEN_PROGRAM);
-  
-  shader_delete(deferred_screen_vs);
-  shader_delete(deferred_screen_fs);
-  
-  PIANO_DIFFUSE = (texture*)dds_load_file("./Engine/Assets/Textures/piano.dds");
-  PIANO_NORMAL = (texture*)dds_load_file("./Engine/Assets/Textures/piano_nm.dds");
-  PIANO_SPECULAR = (texture*)dds_load_file("./Engine/Assets/Textures/piano_s.dds");  
+  PROGRAM = asset_get("./Engine/Assets/Shaders/deferred.prog");
+  SCREEN_PROGRAM = asset_get("./Engine/Assets/Shaders/deferred_screen.prog");
+    
+  PIANO_DIFFUSE = asset_get("./Engine/Assets/Textures/piano.dds");
+  PIANO_NORMAL = asset_get("./Engine/Assets/Textures/piano_nm.dds");
+  PIANO_SPECULAR = asset_get("./Engine/Assets/Textures/piano_s.dds");  
   
   NORMAL = glGetAttribLocation(*PROGRAM, "vNormal");
   TANGENT = glGetAttribLocation(*PROGRAM, "vTangent");
@@ -157,13 +141,6 @@ void deferred_renderer_finish() {
   glDeleteTextures(1,&positions_texture);
   glDeleteTextures(1,&normals_texture);
   glDeleteTextures(1,&depth_texture);
-  
-  texture_delete(PIANO_DIFFUSE);
-  texture_delete(PIANO_NORMAL);
-  texture_delete(PIANO_SPECULAR);  
-  
-  shader_program_delete(PROGRAM);
-  shader_program_delete(SCREEN_PROGRAM);
   
 };
 
@@ -307,29 +284,7 @@ void deferred_renderer_render_model(render_model* m, material* mat) {
             
       glUseProgramObjectARB(*PROGRAM);
       
-      GLint diffuse_loc = glGetUniformLocation(*PROGRAM, "tDiffuse");
-      GLint bump_loc = glGetUniformLocation(*PROGRAM, "tBumpMap");
-      GLint spec_loc = glGetUniformLocation(*PROGRAM, "tSpecMap");
-      
-      glUniform1i(diffuse_loc, 0);
-      glUniform1i(bump_loc, 1);
-      glUniform1i(spec_loc, 2);
-      
-      glActiveTexture(GL_TEXTURE0 + 0);
-      glBindTexture(GL_TEXTURE_2D, *PIANO_DIFFUSE);
-      glActiveTexture(GL_TEXTURE0 + 1);
-      glBindTexture(GL_TEXTURE_2D, *PIANO_NORMAL);
-      glActiveTexture(GL_TEXTURE0 + 2);
-      glBindTexture(GL_TEXTURE_2D, *PIANO_SPECULAR);
-      
-      GLint specular_level = glGetUniformLocation(*PROGRAM, "specular_level");
-      glUniform1f(specular_level, 2.0);
-      
-      GLint glossiness = glGetUniformLocation(*PROGRAM, "glossiness");
-      glUniform1f(glossiness, 20.0);
-      
-      GLint bumpiness = glGetUniformLocation(*PROGRAM, "bumpiness");
-      glUniform1f(bumpiness, 2.0);
+      deferred_renderer_use_material(mat);
       
       glVertexPointer(3, GL_FLOAT, 0, me->vertex_positions);
       glTexCoordPointer(2, GL_FLOAT, 0, me->vertex_uvs);
@@ -352,5 +307,58 @@ void deferred_renderer_render_model(render_model* m, material* mat) {
   glDisableVertexAttribArray(BINORMAL);
 
 };
+
+void deferred_renderer_use_material(material* mat) {
+  
+  /* Set material parameters */
+  
+  int tex_counter = 0;
+  
+  int i;
+  for(i = 0; i < mat->keys->num_items; i++) {
+    char* key = list_get(mat->keys, i);
+    
+    int* type = dictionary_get(mat->types, key);
+    void* property = dictionary_get(mat->properties, key);
+    
+    GLint loc = glGetUniformLocation(*PROGRAM, key);
+    
+    if (*type == mat_type_texture) {
+    
+      glUniform1i(loc, tex_counter);
+      glActiveTexture(GL_TEXTURE0 + tex_counter);
+      glBindTexture(GL_TEXTURE_2D, *((texture*)property));
+      tex_counter++;
+    
+    } else if (*type == mat_type_int) {
+    
+      glUniform1i(loc, *((float*)property));
+    
+    } else if (*type == mat_type_float) {
+    
+      glUniform1f(loc, *((float*)property));
+      
+    } else if (*type == mat_type_vector2) {
+    
+      vector2 v = *((vector2*)property);
+      glUniform2f(loc, v.x, v.y);
+    
+    } else if (*type == mat_type_vector3) {
+    
+      vector3 v = *((vector3*)property);
+      glUniform3f(loc, v.x, v.y, v.z);
+  
+    } else if (*type == mat_type_vector4) {
+    
+      vector4 v = *((vector4*)property);
+      glUniform4f(loc, v.w, v.x, v.y, v.z);
+    
+    } else {
+      /* Do nothing */
+    }
+     
+  }  
+
+}
 
 

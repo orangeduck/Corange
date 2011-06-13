@@ -99,22 +99,6 @@ main(int argc, char *argv[]) {
     log_error("Glew Error: %s\n", glewGetErrorString(err));
   }
   
-  /* New Camera */
-  
-  camera* cam = camera_new( v3(20.0, 0.0, 0.0) , v3_zero() );
-  
-  /* Renderer Setup */
-  
-#ifdef DEFERRED_RENDER
-  deferred_renderer_init(DEFAULT_WIDTH, DEFAULT_HEIGHT);
-  deferred_renderer_set_camera(cam);
-#else
-  forward_renderer_init(DEFAULT_WIDTH, DEFAULT_HEIGHT);
-  forward_renderer_set_camera(cam);
-#endif
-  
-  /* End openGL setup */
-  
   /* Setup Scripting */
   
   scripting_init();
@@ -144,6 +128,23 @@ main(int argc, char *argv[]) {
   load_folder("./Engine/Assets/Meshes/");
   load_folder("./Engine/Assets/Fonts/");
   load_folder("./Engine/Scripts/");
+  
+  /* New Camera */
+  
+  camera* cam = camera_new( v3(20.0, 0.0, 0.0) , v3_zero() );
+  
+  /* Renderer Setup */
+
+#define DEFERRED_RENDER
+#ifdef DEFERRED_RENDER
+  deferred_renderer_init(DEFAULT_WIDTH, DEFAULT_HEIGHT);
+  deferred_renderer_set_camera(cam);
+#else
+  forward_renderer_init(DEFAULT_WIDTH, DEFAULT_HEIGHT);
+  forward_renderer_set_camera(cam);
+#endif
+  
+  /* End openGL setup */
   
   /* Get reference to the Piano */
   
