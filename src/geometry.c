@@ -5,13 +5,12 @@
 #include "geometry.h"
 
 int vertex_equal(vertex v1, vertex v2) {
-
-  int pos_equal = v3_equ(v1.position, v2.position);
-  int norm_equal = v3_equ(v1.normal, v2.normal);
-  int uv_equal = v2_equ(v1.uvs, v2.uvs);
   
-  return (pos_equal && norm_equal && uv_equal);
+  if(!v3_equ(v1.position, v2.position)) { return 0; }
+  if(!v3_equ(v1.normal, v2.normal)) { return 0; }
+  if(!v2_equ(v1.uvs, v2.uvs)) { return 0; }
   
+  return 1;  
 };
 
 void vertex_print(vertex v) {
@@ -28,14 +27,15 @@ void vertex_print(vertex v) {
 
 int mesh_contains_vert(mesh* m, vertex v, int* position) {
   
-  int contains = 0;
-  int i = 0;
-  
+  int i = 0;  
   for (i = 0; i < m->num_verts; i++) {
-    if (vertex_equal(v, m->verticies[i])) { contains = 1; *position = i; break;}
+    if (vertex_equal(v, m->verticies[i])) { 
+      *position = i;
+      return 1;
+      }
   }
   
-  return contains;
+  return 0;
 }
 
 static int pos;
@@ -142,6 +142,61 @@ void mesh_generate_tangents(mesh* m) {
   
 }
 
+void mesh_generate_orthagonal_tangents(mesh* m) {
+  
+  int i;
+  
+  /* Clear all tangents to 0,0,0 */
+  
+  for(i = 0; i < m->num_verts; i++) {
+    m->verticies[i].tangent = v3_zero();
+    m->verticies[i].binormal = v3_zero();
+  }
+  
+  /* Loop over faces, calculate tangent and append to verticies of that face */
+  
+  i = 0;
+  while( i < m->num_triangles_3) {
+    
+    int t_i1 = m->triangles[i];
+    int t_i2 = m->triangles[i+1];
+    int t_i3 = m->triangles[i+2];
+    
+    vertex v1 = m->verticies[t_i1];
+    vertex v2 = m->verticies[t_i2];
+    vertex v3 = m->verticies[t_i3];
+    
+    vector3 face_normal = triangle_normal(v1, v2, v3);    
+    vector3 face_binormal_temp = triangle_binormal(v1, v2, v3);
+    
+    vector3 face_tangent = v3_normalize( v3_cross(face_binormal_temp, face_normal) );
+    vector3 face_binormal = v3_normalize( v3_cross(face_tangent, face_normal) );
+    
+    v1.tangent = v3_add(face_tangent, v1.tangent);
+    v2.tangent = v3_add(face_tangent, v2.tangent);
+    v3.tangent = v3_add(face_tangent, v3.tangent);
+    
+    v1.binormal = v3_add(face_binormal, v1.binormal);
+    v2.binormal = v3_add(face_binormal, v2.binormal);
+    v3.binormal = v3_add(face_binormal, v3.binormal);
+    
+    m->verticies[t_i1] = v1;
+    m->verticies[t_i2] = v2;
+    m->verticies[t_i3] = v3;
+    
+    i = i + 3;
+  }
+  
+  
+  /* normalize all tangents */
+  
+  for(i = 0; i < m->num_verts; i++) {
+    m->verticies[i].tangent = v3_normalize( m->verticies[i].tangent );
+    m->verticies[i].binormal = v3_normalize( m->verticies[i].binormal );
+  }
+  
+}
+
 void model_add_mesh(model* main_model, mesh* sub_mesh) {
           
   /* Re fit the vertex and triangle memory sizes */ 
@@ -202,6 +257,15 @@ void model_generate_tangents(model* m) {
     mesh_generate_tangents( m->meshes[i] );
   }
   
+}
+
+void model_generate_orthagonal_tangents(model* m) {
+
+  int i;
+  for(i=0; i<m->num_meshes; i++) {
+    mesh_generate_orthagonal_tangents( m->meshes[i] );
+  }
+
 }
 
 render_mesh* to_render_mesh(mesh* old_mesh){

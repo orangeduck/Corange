@@ -94,9 +94,9 @@ vector2 v2_from_string(char* s) {
 }
 
 int v2_equ(vector2 v1, vector2 v2) {
-  int x_equ = (v1.x == v2.x);
-  int y_equ = (v1.y == v2.y);
-  return (x_equ && y_equ);
+  if(!(v1.x == v2.x)) { return 0; }
+  if(!(v1.y == v2.y)) { return 0; }
+  return 1;
 }
 
 void v2_to_array(vector2 v, float* out) {
@@ -217,10 +217,10 @@ vector3 v3_from_string(char* s) {
 }
 
 int v3_equ(vector3 v1, vector3 v2) {
-  int x_equ = (v1.x == v2.x);
-  int y_equ = (v1.y == v2.y);
-  int z_equ = (v1.z == v2.z);
-  return (x_equ && y_equ && z_equ);
+  if(!(v1.x == v2.x)) { return 0; }
+  if(!(v1.y == v2.y)) { return 0; }
+  if(!(v1.z == v2.z)) { return 0; }
+  return 1;
 }
 
 void v3_to_array(vector3 v, float* out) {
@@ -351,11 +351,11 @@ vector4 v4_from_string(char* s) {
 }
 
 int v4_equ(vector4 v1, vector4 v2) {
-  int w_equ = (v1.w == v2.w);
-  int x_equ = (v1.x == v2.x);
-  int y_equ = (v1.y == v2.y);
-  int z_equ = (v1.z == v2.z);
-  return (w_equ && x_equ && y_equ && z_equ);
+  if(!(v1.w == v2.w)) { return 0; }
+  if(!(v1.x == v2.x)) { return 0; }
+  if(!(v1.y == v2.y)) { return 0; }
+  if(!(v1.z == v2.z)) { return 0; }
+  return 1;
 }
 
 void v4_to_array(vector4 v, float* out) {

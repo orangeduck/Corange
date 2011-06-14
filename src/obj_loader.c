@@ -4,6 +4,7 @@
 
 #include "asset_manager.h"
 #include "geometry.h"
+#include "timing.h"
 
 #include "obj_loader.h"
 
@@ -67,7 +68,8 @@ render_model* obj_load_file(char* filename) {
   
   free(contents);
   
-  model_generate_tangents(obj_model);
+  //model_generate_tangents(obj_model);
+  model_generate_orthagonal_tangents(obj_model);
   
   return to_render_model(obj_model);
 };
@@ -79,6 +81,8 @@ model* obj_load_object(char* c) {
      To avoid errors later on, shifting pointer onwards one.
      This is because it probably is currently on an "o" character, which will boot it out of processing.
   */
+  
+  timer_start();
   
   c++;
   
@@ -158,7 +162,7 @@ model* obj_load_object(char* c) {
         
         - Reallocate vertex structure to appropriate size.
     */
-
+    
   while(1) {
   
     /* If end of string or we've reached a new object then exit. */
@@ -272,6 +276,8 @@ model* obj_load_object(char* c) {
   free(positions);
   free(normals);
   free(uvs);
+  
+  timer_stop();
   
   return obj_model;
 

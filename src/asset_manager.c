@@ -238,7 +238,7 @@ char* asset_load_file(char* filename) {
   char* contents = malloc(size+1);
   contents[size] = '\0';
   SDL_RWseek(file, 0, SEEK_SET);
-  SDL_RWread(file, contents, 1, size);
+  SDL_RWread(file, contents, size, 1);
   
   SDL_RWclose(file);
   

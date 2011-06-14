@@ -41,6 +41,7 @@ typedef struct {
 void mesh_delete(mesh* m);
 int mesh_contains_vert(mesh* m, vertex v, int* position);
 void mesh_generate_tangents(mesh* m);
+void mesh_generate_orthagonal_tangents(mesh* m);
 void mesh_print(mesh* m);
 
 /* Model */
@@ -55,6 +56,7 @@ typedef struct {
 
 void model_delete(model* m);
 void model_generate_tangents(model* m);
+void model_generate_orthagonal_tangents(model* m);
 void model_add_mesh(model* main_model, mesh* sub_mesh);
 void model_print(model* m);
 

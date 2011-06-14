@@ -8,7 +8,7 @@
 #include "SDL/SDL_opengl.h"
 #include "SDL/SDL_image.h"
 
-#include "frame.h"
+#include "timing.h"
 #include "font.h"
 #include "texture.h"
 #include "camera.h"
