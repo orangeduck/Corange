@@ -61,20 +61,14 @@ void list_set(list* l, int index, void* item) {
 }
 
 void list_delete(list* l) {
-  while( l->num_items > 0) {
-    void* item = list_pop_back(l);
-    free(item);
-  }
-  
   free(l->ptrs);
   free(l);
 }
 
 void list_clear(list* l) {
-  while( l->num_items > 0) {
-    void* item = list_pop_back(l);
-    free(item);
-  }
+  int block_size = l->block_size;
+  list_delete(l);
+  l = list_new_blocksize(block_size);
 }
 
 void list_delete_with(list* l, void func(void*)) {

@@ -1,17 +1,1 @@
-Image Importer:
-	- PNG files at least don't seem to load properly when trying to be used in openGL
-
-OBJ importer:
-	- Crashes with multiple objects
-	
-Materials:
-	- Decide what to do
-	
-Camera:
-	- Rotational Controls
-	
-Here are some ideas:
-	
-	- Python script to convert obj file to easy processed binary file.
-	- Why not do the same with materials.
-	- Why not write a pymark parser for C?
+Renderables - materials linked to VBO objects.

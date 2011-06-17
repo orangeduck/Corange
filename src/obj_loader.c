@@ -6,6 +6,8 @@
 #include "geometry.h"
 #include "timing.h"
 
+#include "vertex_hashtable.h"
+
 #include "obj_loader.h"
 
 /* Loads contents of file into a model structure
@@ -162,7 +164,9 @@ model* obj_load_object(char* c) {
         
         - Reallocate vertex structure to appropriate size.
     */
-    
+  
+  vertex_hashtable* hashes = NULL;
+  
   while(1) {
   
     /* If end of string or we've reached a new object then exit. */
@@ -224,6 +228,12 @@ model* obj_load_object(char* c) {
           current_mesh->triangles = malloc(sizeof(int) * mesh_tri_counts[obj_model->num_meshes] * 3 );
           current_mesh->verticies = malloc(sizeof(vertex) * mesh_tri_counts[obj_model->num_meshes] * 3);
           
+          if(hashes != NULL) {
+            vertex_hashtable_delete(hashes);
+          }
+          
+          hashes = vertex_hashtable_new(1000);
+          
         } else if (line[0] == 'f') {
           
           vertex v1;
@@ -232,9 +242,29 @@ model* obj_load_object(char* c) {
           
           obj_parse_triangle( line+1, positions, normals, uvs, &v1, &v2, &v3);
           
-          mesh_add_vertex(current_mesh, v1);
-          mesh_add_vertex(current_mesh, v2);
-          mesh_add_vertex(current_mesh, v3);
+          int v1_pos = vertex_hashtable_get(hashes, v1);
+          if(v1_pos == -1) {
+            int pos = mesh_append_vertex(current_mesh, v1);
+            vertex_hashtable_set(hashes, v1, pos);
+          } else {
+            mesh_append_triangle_entry(current_mesh, v1_pos);
+          }
+          
+          int v2_pos = vertex_hashtable_get(hashes, v2);
+          if(v2_pos == -1) {
+            int pos = mesh_append_vertex(current_mesh, v2);
+            vertex_hashtable_set(hashes, v2, pos);
+          } else {
+            mesh_append_triangle_entry(current_mesh, v2_pos);
+          }
+          
+          int v3_pos = vertex_hashtable_get(hashes, v3);
+          if(v3_pos == -1) {
+            int pos = mesh_append_vertex(current_mesh, v3);
+            vertex_hashtable_set(hashes, v3, pos);
+          } else {
+            mesh_append_triangle_entry(current_mesh, v3_pos);
+          }
           
         } else if ( strstr(line, "usemtl") ) {
           
@@ -271,6 +301,8 @@ model* obj_load_object(char* c) {
   }
   
   /* Free vertex tables */
+  
+  vertex_hashtable_delete(hashes);
   
   free(mesh_tri_counts);
   free(positions);

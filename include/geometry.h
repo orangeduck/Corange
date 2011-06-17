@@ -44,6 +44,9 @@ void mesh_generate_tangents(mesh* m);
 void mesh_generate_orthagonal_tangents(mesh* m);
 void mesh_print(mesh* m);
 
+int mesh_append_vertex(mesh* m, vertex v);
+int mesh_append_triangle_entry(mesh* m, int pos);
+
 /* Model */
 typedef struct {
   
@@ -107,5 +110,8 @@ model* from_render_model(render_model* m);
 vector3 triangle_tangent(vertex v1, vertex v2, vertex v3);
 vector3 triangle_binormal(vertex v1, vertex v2, vertex v3);
 vector3 triangle_normal(vertex v1, vertex v2, vertex v3);
+
+render_model* cbm_load_file(char* filename);
+void cbm_write_file(render_model* model);
 
 #endif

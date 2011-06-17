@@ -7,12 +7,15 @@
 	
 	With SDL and OpenGL.
 	
-	No real features for the moment, still WIP
+	:: Features ::
 	
-	Stuff Coming soon though...
-	
+		* Clean and simple asset management
+		* Deferred and forward renderers
+		* LUA scripting
+		* Loads obj files and a host of texture formats
+		* Small and Simple
 	
 	:: Installation ::
 	
-	To install on Windows you need MinGW with gcc and from that it should just compile
-	To install on Unix you need probably lots of things including a new Makefile.
+		To install on Windows you need MinGW with gcc and from that it should just be make and make install
+		To install on Unix you need probably lots of things including a new Makefile.

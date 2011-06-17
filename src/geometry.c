@@ -11,7 +11,7 @@ int vertex_equal(vertex v1, vertex v2) {
   if(!v2_equ(v1.uvs, v2.uvs)) { return 0; }
   
   return 1;  
-};
+}
 
 void vertex_print(vertex v) {
 
@@ -55,10 +55,29 @@ void mesh_add_vertex(mesh* m, vertex v) {
     
     m->num_triangles_3++;
     m->num_verts++;
-
+    
   }
 
 }
+
+int mesh_append_vertex(mesh* m, vertex v) {
+
+    m->verticies[m->num_verts] = v;
+    m->triangles[m->num_triangles_3] = m->num_verts;
+    
+    m->num_triangles_3++;
+    m->num_verts++;
+
+    return (m->num_verts - 1);
+}
+
+int mesh_append_triangle_entry(mesh* m, int pos) {
+
+    m->triangles[m->num_triangles_3] = pos;
+    m->num_triangles_3++;
+    
+    return (m->num_triangles_3 - 1);
+} 
 
 void mesh_print(mesh* m) {
   
@@ -540,7 +559,7 @@ vector3 triangle_binormal(vertex vert1, vertex vert2, vertex vert3) {
   
   return v3_normalize(sdir);
 
-};
+}
 
 vector3 triangle_normal(vertex v1, vertex v2, vertex v3) {
   
@@ -550,4 +569,41 @@ vector3 triangle_normal(vertex v1, vertex v2, vertex v3) {
   
   return v3_normalize(normal);
   
-};
+}
+
+
+/* CBM format - Corange Binary Model */
+
+/* TODO: Change all int values in the model specification and loaders to longs */
+
+/*
+  
+  -- Details --
+  
+  CBM
+  [num_objects : int]
+  [object list]
+  
+  -- Object --
+  
+  [name_len : int][name]
+  [mat_name_len : int][mat_name]
+  [num_verts : long]
+    [verts : position, normal, tangent, binormal, uv, color]
+  [num_triangles : long]
+    [triangle_indicies : long]
+    
+*/
+
+render_model* cbm_load_file(char* filename) {
+
+
+
+}
+
+
+void cbm_write_file(render_model* model) {
+
+
+
+}

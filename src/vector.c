@@ -6,6 +6,17 @@
 
 #include "vector.h"
 
+int rawcast(float x)
+{
+  union {
+    float f;
+    int i;
+  } u;
+
+  u.f = x;
+  return u.i;
+}
+
 vector2 v2(float x, float y) {
   vector2 v;
   v.x = x;
@@ -103,6 +114,11 @@ void v2_to_array(vector2 v, float* out) {
   out[0] = v.x;
   out[1] = v.y;
 }
+
+int v2_hash(vector2 v) {
+  return abs(rawcast(v.x) ^ rawcast(v.y));
+}
+
 
 /* Vector3 */
 
@@ -235,6 +251,10 @@ vector3 v3_from_homogeneous(vector4 v) {
   vector3 vec = v3(v.x,v.y,v.z);
   return v3_div(vec, v.w);
 };
+
+int v3_hash(vector3 v) {
+  return abs( rawcast(v.x) ^ rawcast(v.y) ^ rawcast(v.z) );
+}
 
 /* Vector4 */
 
@@ -370,3 +390,7 @@ void v4_to_array(vector4 v, float* out) {
 vector4 v4_to_homogeneous(vector3 v){
   return v4(1.0, v.x, v.y, v.z);
 };
+
+int v4_hash(vector4 v) {
+  return abs( rawcast(v.w) ^ rawcast(v.x) ^ rawcast(v.y) ^ rawcast(v.z) );
+}
