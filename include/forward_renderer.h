@@ -1,6 +1,7 @@
 #ifndef forward_renderer_h
 #define forward_renderer_h
 
+#include "camera.h"
 #include "geometry.h"
 #include "texture.h"
 #include "material.h"

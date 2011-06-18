@@ -23,8 +23,42 @@ typedef struct {
 static asset_handler asset_handlers[512];
 static int num_handlers = 0;
 
-void asset_manager_init() {
+static char* asset_manager_game_name;
 
+char* asset_map_filename(char* filename) {
+  
+  /* Dot in front means relative path - use as is */
+  
+  if (filename[0] == '.') { return filename; }
+  
+  /* Slash means absolute path, assume to be in game directory */
+  
+  if (filename[0] == '/') {
+    
+    char* new_filename = malloc( strlen("./games/") + strlen(filename) +
+                                 strlen(asset_manager_game_name) + 1);
+    
+    strcpy(new_filename, "./games/");
+    strcat(new_filename, asset_manager_game_name);
+    strcat(new_filename, filename);
+    
+    free(filename);
+    filename = new_filename;
+        
+    //printf("Mapped to: %s\n", new_filename);
+        
+    return new_filename;
+    
+  } else {
+    printf("Warning: Unsure how to convert path '%s' into a real path.\n");
+    return filename;
+  }
+
+}
+
+void asset_manager_init(char* game_name) {
+
+  asset_manager_game_name = game_name;
   printf("Creating new asset manager\n");
   asset_dictionary = dictionary_new(1024);
 
@@ -98,6 +132,8 @@ void asset_manager_handler(char* extension, void* load_func(char*) , void del_fu
 
 void load_file(char* filename) {
   
+  filename = asset_map_filename(filename);
+  
   if (dictionary_contains(asset_dictionary, filename)) {
     printf("Asset %s already loaded\n", filename);
     return;
@@ -120,36 +156,40 @@ void load_file(char* filename) {
 
 void load_folder(char* folder) {
     
-    printf("\n\t---- Loading Folder %s ----\n\n", folder); fflush(stdout);
+  folder = asset_map_filename(folder);
     
-    DIR* dir = opendir(folder);
-    struct dirent* ent;
+  printf("\n\t---- Loading Folder %s ----\n\n", folder); fflush(stdout);
+  
+  DIR* dir = opendir(folder);
+  struct dirent* ent;
+  
+  if (dir != NULL) {
     
-    if (dir != NULL) {
+    while ((ent = readdir(dir)) != NULL) {
+    
+      if ((strcmp(ent->d_name,".") != 0) && (strcmp(ent->d_name,"..") != 0)) {
       
-      while ((ent = readdir(dir)) != NULL) {
-      
-        if ((strcmp(ent->d_name,".") != 0) && (strcmp(ent->d_name,"..") != 0)) {
+        char* filename = malloc(strlen(folder) + strlen(ent->d_name) + 1);
+        strcpy(filename, folder);
+        strcat(filename, ent->d_name);
         
-          char* filename = malloc(strlen(folder) + strlen(ent->d_name) + 1);
-          strcpy(filename, folder);
-          strcat(filename, ent->d_name);
-          
-          load_file(filename);
-          
-          free(filename);
-        } 
-      }
-      closedir(dir);
-      printf("\n\n"); fflush(stdout);
-    
-    } else {
-      printf("Error: Could not open directory %s\n", folder); fflush(stdout);
+        load_file(filename);
+        
+        free(filename);
+      } 
     }
+    closedir(dir);
+    printf("\n\n"); fflush(stdout);
+  
+  } else {
+    printf("Error: Could not open directory %s\n", folder); fflush(stdout);
+  }
   
 };
 
 void reload_file(char* filename) {
+
+  filename = asset_map_filename(filename);
 
   if (dictionary_contains(asset_dictionary, filename)) {
     unload_file(filename);
@@ -160,11 +200,16 @@ void reload_file(char* filename) {
 };
 
 void reload_folder(char* folder) {
+
+  folder = asset_map_filename(folder);
+
   unload_folder(folder);
   load_folder(folder);
 };
 
 void unload_file(char* filename) {
+  
+  filename = asset_map_filename(filename);
   
   char* ext = asset_file_extension(filename);
   int i;
@@ -184,46 +229,52 @@ void unload_file(char* filename) {
 
 void unload_folder(char* folder) {
     
-    DIR* dir = opendir(folder);
-    struct dirent* ent;
+  folder = asset_map_filename(folder);
+  
+  DIR* dir = opendir(folder);
+  struct dirent* ent;
+  
+  if (dir != NULL) {
     
-    if (dir != NULL) {
+    while ((ent = readdir(dir)) != NULL) {
+    
+      if ((strcmp(ent->d_name,".") != 0) && (strcmp(ent->d_name,"..") != 0)) {
       
-      while ((ent = readdir(dir)) != NULL) {
-      
-        if ((strcmp(ent->d_name,".") != 0) && (strcmp(ent->d_name,"..") != 0)) {
+        char* filename = malloc(strlen(folder) + strlen(ent->d_name) + 1);
+        strcpy(filename, folder);
+        strcat(filename, ent->d_name);
         
-          char* filename = malloc(strlen(folder) + strlen(ent->d_name) + 1);
-          strcpy(filename, folder);
-          strcat(filename, ent->d_name);
-          
-          if(dictionary_contains(asset_dictionary, filename) ) {
-            unload_file(filename);
-          }
-          
-          free(filename);
-        } 
-      }
-      closedir(dir);
-      printf("\n\n"); fflush(stdout);
-    
-    } else {
-      printf("Error: Could not open directory %s\n", folder); fflush(stdout);
+        if(dictionary_contains(asset_dictionary, filename) ) {
+          unload_file(filename);
+        }
+        
+        free(filename);
+      } 
     }
+    closedir(dir);
+    printf("\n\n"); fflush(stdout);
+  
+  } else {
+    printf("Error: Could not open directory %s\n", folder); fflush(stdout);
+  }
 
 };
 
 void* asset_get(char* path) {
+  path = asset_map_filename(path);
   return dictionary_get(asset_dictionary, path);
 };
 
 int asset_loaded(char* path) {
+  path = asset_map_filename(path);
   return dictionary_contains(asset_dictionary, path);
 }
 
 /* Asset Loader helper commands */
 
 char* asset_load_file(char* filename) {
+  
+  filename = asset_map_filename(filename);
   
   printf("Loading: %s\n", filename); fflush(stdout);
   
@@ -248,6 +299,8 @@ char* asset_load_file(char* filename) {
 
 char* asset_file_extension(char* filename) {
   
+  filename = asset_map_filename(filename);
+  
   int ext_len = 0;
   int i = strlen(filename);
   while( i >= 0) {
@@ -268,6 +321,8 @@ char* asset_file_extension(char* filename) {
 };
 
 char* asset_file_location(char* filename) {
+
+  filename = asset_map_filename(filename);
 
   int len = strlen(filename);
   int i = len;

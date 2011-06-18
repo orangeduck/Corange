@@ -4,7 +4,6 @@
 
 #include "asset_manager.h"
 #include "geometry.h"
-#include "timing.h"
 
 #include "vertex_hashtable.h"
 
@@ -83,9 +82,7 @@ model* obj_load_object(char* c) {
      To avoid errors later on, shifting pointer onwards one.
      This is because it probably is currently on an "o" character, which will boot it out of processing.
   */
-  
-  timer_start();
-  
+    
   c++;
   
   /* Allocate a new model */
@@ -308,9 +305,7 @@ model* obj_load_object(char* c) {
   free(positions);
   free(normals);
   free(uvs);
-  
-  timer_stop();
-  
+    
   return obj_model;
 
 }

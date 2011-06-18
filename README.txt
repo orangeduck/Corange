@@ -7,6 +7,15 @@
 	
 	With SDL and OpenGL.
 	
+	:: Running ::
+	
+		To run a game call corange from the command line with the first arg being the name of the game to play. For example if you wish to play the "cello" demo run the command:
+			
+			$ corange cello
+			
+		Otherwise it will default to the blank game called "empty" which will just display a blank screen.
+	
+	
 	:: Features ::
 	
 		* Clean and simple asset management
@@ -14,6 +23,7 @@
 		* LUA scripting
 		* Loads obj files and a host of texture formats
 		* Small and Simple
+	
 	
 	:: Installation ::
 	

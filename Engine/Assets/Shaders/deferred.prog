@@ -1,2 +1,0 @@
-vertex_shader : ./Engine/Assets/Shaders/deferred.vs
-fragment_shader : ./Engine/Assets/Shaders/deferred.fs

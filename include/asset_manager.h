@@ -3,10 +3,12 @@
 
 #include "dictionary.h"
 
-void asset_manager_init();
+void asset_manager_init(char* game_name);
 void asset_manager_finish();
 
 void delete_bucket_list(bucket* b);
+
+char* asset_map_filename(char* filename);
 
 void asset_manager_handler(char* extension, void* load_func(char*) , void del_func(void*) );
 

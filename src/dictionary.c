@@ -155,6 +155,27 @@ void dictionary_remove_with(dictionary* dict, char* string, void func(void*)) {
   }
 }
 
+void dictionary_map(dictionary* dict, void func(void*)) {
+  
+  int i;
+  for(i = 0; i < dict->table_size; i++) {
+    bucket* b = dict->buckets[i];
+    bucket_map(b, func);
+  }
+  
+}
+
+void dictionary_filter_map(dictionary* dict, int filter(void*) , void func(void*) ) {
+  
+  int i;
+  for(i = 0; i < dict->table_size; i++) {
+    bucket* b = dict->buckets[i];
+    bucket_filter_map(b, filter, func);
+  }
+  
+}
+
+
 
 bucket* bucket_new(char* string, void* item) {
   
@@ -168,6 +189,25 @@ bucket* bucket_new(char* string, void* item) {
   b->prev = NULL;
   
   return b;
+}
+
+void bucket_map(bucket* b, void func(void*) ) {
+  
+  if( b == NULL) { return; }
+  
+  func(b->item);
+  bucket_map(b->next, func);
+}
+
+void bucket_filter_map(bucket* b, int filter(void*) , void func(void*) ) {
+
+  if( b == NULL) { return; }
+
+  if(filter(b->item) == 1) {
+    func(b->item);
+  }
+  
+  bucket_filter_map(b->next, filter, func);
 }
 
 void bucket_delete_with(bucket* b, void func(void*) ){

@@ -18,6 +18,10 @@ material* material_new() {
   mat->types = dictionary_new(20);
   mat->keys = list_new();
 
+  mat->use_blending = 0;
+  mat->src_blend_func = blend_src_alpha;
+  mat->dst_blend_func = blend_one_minus_src_alpha;
+  
   return mat;
   
 };
@@ -145,35 +149,35 @@ void material_parse_line(material* mat, char* line) {
     shader_program* program;
     
     if(asset_loaded(value)) {
-      program = (shader_program*)asset_get(value);
+      program = asset_get(value);
     } else {
       load_file(value);
-      program = (shader_program*)asset_get(value);
+      program = asset_get(value);
     }
         
     dictionary_set(mat->types, "program", &mat_type_program);
-    dictionary_set(mat->properties, "program", program);
+    dictionary_set(mat->properties, "program", program);    
     list_push_back(mat->keys, property);
     
     return;
   }
   
   if (strcmp(type, "texture") == 0) {
-    
+        
     char* property = malloc(strlen(name)+1);
     strcpy(property, name);
     
     texture* texture_ptr;
     
     if(asset_loaded(value)) {
-      texture_ptr = (texture*)asset_get(value);
+      texture_ptr = asset_get(value);
     } else {
       load_file(value);
-      texture_ptr = (texture*)asset_get(value);
+      texture_ptr = asset_get(value);
     }
     
     dictionary_set(mat->types, property, &mat_type_texture);
-    dictionary_set(mat->properties, property, texture_ptr);
+    dictionary_set(mat->properties, property, texture_ptr);    
     list_push_back(mat->keys, property);
     
     return;
@@ -188,7 +192,7 @@ void material_parse_line(material* mat, char* line) {
     strcpy(result, value);
             
     dictionary_set(mat->types, property, &mat_type_string);
-    dictionary_set(mat->properties, property, result);
+    dictionary_set(mat->properties, property, result);    
     list_push_back(mat->keys, property);
     
     return;
@@ -203,7 +207,7 @@ void material_parse_line(material* mat, char* line) {
     *result = atoi(value);
     
     dictionary_set(mat->types, property, &mat_type_int);
-    dictionary_set(mat->properties, property, result);
+    dictionary_set(mat->properties, property, result);    
     list_push_back(mat->keys, property);
     
     return;
@@ -218,7 +222,7 @@ void material_parse_line(material* mat, char* line) {
     *result = atof(value);
     
     dictionary_set(mat->types, property, &mat_type_float);
-    dictionary_set(mat->properties, property, result);
+    dictionary_set(mat->properties, property, result);    
     list_push_back(mat->keys, property);
     
     return;
@@ -238,7 +242,7 @@ void material_parse_line(material* mat, char* line) {
     *result = v2(f1, f2);
     
     dictionary_set(mat->types, property, &mat_type_vector2);
-    dictionary_set(mat->properties, property, result);
+    dictionary_set(mat->properties, property, result);    
     list_push_back(mat->keys, property);
     
     return;
@@ -259,7 +263,7 @@ void material_parse_line(material* mat, char* line) {
     *result = v3(f1, f2, f3);
     
     dictionary_set(mat->types, property, &mat_type_vector3);
-    dictionary_set(mat->properties, property, result);
+    dictionary_set(mat->properties, property, result);    
     list_push_back(mat->keys, property);
     
     return;
@@ -281,7 +285,7 @@ void material_parse_line(material* mat, char* line) {
     *result = v4(f1, f2, f3, f4);
     
     dictionary_set(mat->types, property, &mat_type_vector4);
-    dictionary_set(mat->properties, property, result);
+    dictionary_set(mat->properties, property, result);    
     list_push_back(mat->keys, property);
     
     return;
