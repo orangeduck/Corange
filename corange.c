@@ -76,13 +76,10 @@ main(int argc, char* argv[]) {
   }
   
   /* Start */
-  
-  printf("Args - Count: %i First: %s\n", argc, argv[1]);
-  
-  /* Default load cello game */
-  if (argc <= 1) {
+    
+  if (argc < 2) {
     game_name = malloc(strlen("empty") + 1);
-    game_name = "empty";
+    strcpy(game_name, "empty");
   } else {
     game_name = malloc(strlen(argv[1]) + 1);
     strcpy(game_name, argv[1]);
@@ -128,7 +125,9 @@ main(int argc, char* argv[]) {
   int running = 1;
   
   while(running) {
-  
+    
+    frame_begin();
+    
     while(SDL_PollEvent(&event)) {
       switch(event.type){
       case SDL_KEYDOWN:
@@ -139,21 +138,18 @@ main(int argc, char* argv[]) {
         running = 0;
         break;
       }
-      
-      game_event(event);
-      
+      game_event(event);  
     }
-  
-    frame_begin();
     
     game_update();
+    
     game_render();
     
     glFlush();
     SDL_GL_SwapBuffers();   
     
     frame_end();
-  }	
+  }
   
   game_finish();
   

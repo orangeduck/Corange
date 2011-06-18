@@ -4,7 +4,9 @@
 #include "font.h"
 #include "vector.h"
 
-enum align_type { left, center, right };
+int align_left = 0;
+int align_center = 1;
+int align_right = 2;
 
 /*
   After editing any properties of a render_text in this struct, please call the update function
@@ -29,7 +31,7 @@ typedef struct {
   vector2 scale;
   vector4 color;
   
-  enum align_type alignment;
+  int alignment;
   
   float line_spacing;
   float char_spacing;

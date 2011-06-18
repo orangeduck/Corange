@@ -28,7 +28,7 @@ render_text* render_text_new(char* string, int buffersize, font* text_font) {
   rt->scale = v2(1.0,1.0);
   rt->color = v4_one();
   
-  rt->alignment = left;
+  rt->alignment = align_left;
   rt->line_spacing = 0.0;
   rt->char_spacing = 0.0;
   rt->rotation = 0.0;
@@ -103,8 +103,8 @@ void render_text_update(render_text* rt) {
     
     /* Positions */
     
-    float o_x = x + f->offsets[ord].x;
-    float o_y = y - f->offsets[ord].y;
+    float o_x = x + (f->offsets[ord].x  * rt->scale.x);
+    float o_y = y - (f->offsets[ord].y  * rt->scale.y);
     
     rt->vert_positions[pos_i] = o_x; pos_i++;
     rt->vert_positions[pos_i] = o_y; pos_i++;

@@ -1,12 +1,6 @@
 #include <stdio.h>
 
-#define GLEW_STATIC
-#include "GL/glew.h"
-
-#define NO_SDL_GLEXT
 #include "SDL/SDL.h"
-#include "SDL/SDL_opengl.h"
-#include "SDL/SDL_image.h"
 
 #include "asset_manager.h"
 #include "geometry.h"
@@ -51,7 +45,7 @@ void cello_init() {
   /* Script stuff */
   
   script* s = asset_get("./engine/scripts/hello_world.lua");
-  scripting_run_script(s);  
+  scripting_run_script(s);
   
   /* Get reference to the Cello */
   

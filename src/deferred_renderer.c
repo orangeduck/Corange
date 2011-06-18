@@ -29,10 +29,6 @@ static int NORMAL;
 static int TANGENT;
 static int BINORMAL;
 
-static texture* PIANO_DIFFUSE;
-static texture* PIANO_NORMAL;
-static texture* PIANO_SPECULAR;
-
 static float CAM_POSITION[3];
 
 static GLuint fbo = 0;
@@ -57,10 +53,6 @@ void deferred_renderer_init(int width, int height) {
   
   PROGRAM = asset_get("./engine/shaders/deferred.prog");
   SCREEN_PROGRAM = asset_get("./engine/shaders/deferred_screen.prog");
-    
-  PIANO_DIFFUSE = asset_get("./engine/textures/piano.dds");
-  PIANO_NORMAL = asset_get("./engine/Assets/Textures/piano_nm.dds");
-  PIANO_SPECULAR = asset_get("./Engine/Assets/Textures/piano_s.dds");  
   
   NORMAL = glGetAttribLocation(*PROGRAM, "vNormal");
   TANGENT = glGetAttribLocation(*PROGRAM, "vTangent");
