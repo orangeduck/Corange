@@ -1,15 +1,16 @@
 
 attribute vec3 vNormal, vTangent, vBiNormal;
 
+uniform mat4 world_matrix;
+
 varying vec4 position;
 varying mat4 TBN;
 
 void main( void )
 {
-   gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
+   gl_Position = gl_ModelViewProjectionMatrix * world_matrix * gl_Vertex;
    gl_TexCoord[0] = gl_MultiTexCoord0;
-   //position = ModelMatrix * gl_Vertex;
-   position = gl_Vertex;
+   position = world_matrix * gl_Vertex;
 
 
    TBN = mat4( vTangent.x, vBiNormal.x, vNormal.x, 0.0,

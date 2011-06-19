@@ -306,10 +306,6 @@ void deferred_renderer_render_renderable(renderable* r) {
   matrix_4x4 r_world_matrix = m44_world( r->position, r->scale, r->rotation );
   m44_to_array(r_world_matrix, world_matrix);
   
-  glMatrixMode(GL_MODELVIEW);
-  glPushMatrix();
-  glMultMatrixf(world_matrix);
-  
   int i;
   for(i=0; i < r->num_surfaces; i++) {
     
@@ -371,6 +367,9 @@ void deferred_renderer_use_material(material* mat) {
     void* property = dictionary_get(mat->properties, key);
     
     GLint loc = glGetUniformLocation(*PROGRAM, key);
+    
+    GLint world_matrix_u = glGetUniformLocation(*PROGRAM, "world_matrix");
+    glUniformMatrix4fv(world_matrix_u, 1, 0, world_matrix);
     
     if (*type == mat_type_texture) {
     

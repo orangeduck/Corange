@@ -105,6 +105,10 @@ void cello_event(SDL_Event event) {
     if (event.key.keysym.sym == SDLK_q) { r_cello->scale = v3_add(r_cello->scale, v3(0.1, 0.1, 0.1)); }
     if (event.key.keysym.sym == SDLK_w) { r_cello->scale = v3_sub(r_cello->scale, v3(0.1, 0.1, 0.1)); }
     
+    if (event.key.keysym.sym == SDLK_z) { r_cello->rotation = v4_quaternion_mul(
+        v4_quaternion_yaw(0.1) , r_cello->rotation); }
+    if (event.key.keysym.sym == SDLK_x) { r_cello->rotation = v4_quaternion_mul(
+        v4_quaternion_yaw(-0.1) , r_cello->rotation); }        
     break;
   }
     

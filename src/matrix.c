@@ -428,61 +428,23 @@ matrix_4x4 m44_rotation(vector3 v) {
   
 };
 
-/*
-
-  Quaternion to Rotation matrix
-  
-  Taken from wikipedia:
-    http://en.wikipedia.org/wiki/Rotation_matrix
-
-  Nq = w^2 + x^2 + y^2 + z^2
-  if Nq > 0.0 then s = 2/Nq else s = 0.0
-  X = x*s; Y = y*s; Z = z*s
-  wX = w*X; wY = w*Y; wZ = w*Z
-  xX = x*X; xY = x*Y; xZ = x*Z
-  yY = y*Y; yZ = y*Z; zZ = z*Z
-  [ 1.0-(yY+zZ)       xY-wZ        xZ+wY  ]
-  [      xY+wZ   1.0-(xX+zZ)       yZ-wX  ]
-  [      xZ-wY        yZ+wX   1.0-(xX+yY) ]
-
-*/
-
 matrix_4x4 m44_rotation_quaternion(vector4 q) {
 
-  float nq = (q.w * q.w) + (q.x * q.x) + (q.y * q.y) + (q.z * q.z);
-  float s;
-  
-  if(nq > 0.0) { s = 2.0 / nq; } else { s = 0.0; } 
-  
-  float x = q.x * s;
-  float y = q.y * s;
-  float z = q.z * s;
-  
-  float wx = q.w * x;
-  float wy = q.w * y;
-  float wz = q.w * z;
-  
-  float xx = q.x * x;
-  float xy = q.x * x;
-  float xz = q.x * x;
-  
-  float yy = q.y * y;
-  float yz = q.y * z;
-  float zz = q.z * z;
+  q = v4_normalize(q);
   
   matrix_4x4 m = m44_id();
   
-  m.ww = 1.0 - (yy + zz);
-  m.wx = xy - wz;
-  m.wy = xz + wy;
+  m.ww = 1.0 - 2 * q.y * q.y - 2 * q.z * q.z;
+  m.wx =       2 * q.x * q.y - 2 * q.w * q.z;
+  m.wy =       2 * q.x * q.z + 2 * q.w * q.y;
   
-  m.xw = xy + wz;
-  m.xx = 1.0 - (xx + zz);
-  m.xy = yz - wz;
+  m.xw =       2 * q.x * q.y + 2 * q.w * q.z;
+  m.xx = 1.0 - 2 * q.x * q.x - 2 * q.z * q.z;
+  m.xy =       2 * q.y * q.z + 2 * q.w * q.x;
   
-  m.yw = xz - wy;
-  m.yx = yz + wx;
-  m.yy = 1.0 - (xx + yy);
+  m.yw =       2 * q.x * q.z - 2 * q.w * q.y;
+  m.yx =       2 * q.y * q.z - 2 * q.w * q.x;
+  m.yy = 1.0 - 2 * q.x * q.x - 2 * q.y * q.y;
   
   return m;
 };
@@ -497,8 +459,8 @@ matrix_4x4 m44_world(vector3 position, vector3 scale, vector4 rotation) {
   
   result = m44_id();
   result = m44_mul_m44( result, pos_m );
-  result = m44_mul_m44( result, rot_m );
   result = m44_mul_m44( result, sca_m );
+  result = m44_mul_m44( result, rot_m );
   
   return result;
   

@@ -164,9 +164,9 @@ void forward_renderer_render_renderable(renderable* r) {
   matrix_4x4 r_world_matrix = m44_world( r->position, r->scale, r->rotation );
   m44_to_array(r_world_matrix, world_matrix);
   
-  glMatrixMode(GL_MODELVIEW);
-  glPushMatrix();
-  glMultMatrixf(world_matrix);
+  //glMatrixMode(GL_MODELVIEW);
+  //glPushMatrix();
+  //glMultMatrixf(world_matrix);
   
   int i;
   for(i=0; i < r->num_surfaces; i++) {
@@ -248,6 +248,9 @@ void forward_renderer_use_material(material* mat) {
   glUniform3fv(diffuse_light, 1, DIFFUSE_LIGHT);
   glUniform3fv(specular_light, 1, SPECULAR_LIGHT);
   glUniform3fv(ambient_light, 1, AMBIENT_LIGHT);
+
+  GLint world_matrix_u = glGetUniformLocation(*prog, "world_matrix");
+  glUniformMatrix4fv(world_matrix_u, 1, 0, world_matrix);
   
   /* Set material parameters */
   

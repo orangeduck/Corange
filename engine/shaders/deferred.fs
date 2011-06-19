@@ -1,6 +1,8 @@
 varying vec4 position;
 varying mat4 TBN;
 
+uniform mat4 world_matrix;
+
 uniform float glossiness;
 uniform float bumpiness;
 
@@ -18,7 +20,7 @@ void main( void )
 	
 	vec4 normal = texture2D(bump_map, uvs);
 	normal = mix(normal, vec4( 0.5, 0.5, 1.0, 1.0 ), bumpiness);
-	normal = (normal * 2 - vec4(1.0,1.0,1.0,0.0)) * TBN;
+	normal = (normal * 2 - vec4(1.0,1.0,1.0,0.0)) * TBN * world_matrix;
 	
 	gl_FragData[0].rgb = texture2D(diffuse_map, uvs).rgb;
 	gl_FragData[0].a = spec;

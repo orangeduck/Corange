@@ -404,9 +404,9 @@ vector4 v4_quaternion_mul(vector4 v1, vector4 v2) {
   vector4 quat;
   
   quat.w = (v1.w * v2.w) - (v1.x * v2.x) - (v1.y * v2.y) - (v1.z * v2.z);
-  quat.w = (v1.w * v2.x) + (v1.x * v2.w) + (v1.y * v2.z) - (v1.z * v2.y);
-  quat.w = (v1.w * v2.y) - (v1.x * v2.z) + (v1.y * v2.w) + (v1.z * v2.x);
-  quat.w = (v1.w * v2.z) + (v1.x * v2.y) - (v1.y * v2.x) + (v1.z * v2.w);
+  quat.x = (v1.w * v2.x) + (v1.x * v2.w) + (v1.y * v2.z) - (v1.z * v2.y);
+  quat.y = (v1.w * v2.y) - (v1.x * v2.z) + (v1.y * v2.w) + (v1.z * v2.x);
+  quat.z = (v1.w * v2.z) + (v1.x * v2.y) - (v1.y * v2.x) + (v1.z * v2.w);
   
   return quat;
 }
@@ -421,4 +421,16 @@ vector4 v4_quaternion_angle_axis(float angle, vector3 axis) {
   quat.z = axis.y * sinf(angle / 2);
   
   return quat;
+}
+
+vector4 v4_quaternion_yaw(float a) {
+  return v4( cosf(a / 2.0), 0, sinf(a / 2.0), 0 );
+}
+
+vector4 v4_quaternion_pitch(float a) {
+  return v4( cosf(a / 2.0), sinf(a / 2.0), 0, 0 );
+}
+
+vector4 v4_quaternion_roll(float a) {
+  return v4( cosf(a / 2.0), 0, 0, sinf(a / 2.0) );
 }
