@@ -4,6 +4,7 @@
 #include "camera.h"
 #include "geometry.h"
 #include "material.h"
+#include "renderable.h"
 
 void deferred_renderer_init();
 
@@ -18,6 +19,7 @@ void deferred_renderer_begin();
 void deferred_renderer_end();
 
 void deferred_renderer_render_model(render_model* m, material* mat);
+void deferred_renderer_render_renderable(renderable* r);
 
 void deferred_renderer_use_material(material* mat);
 

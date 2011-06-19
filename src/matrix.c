@@ -373,7 +373,7 @@ matrix_4x4 m44_scale(vector3 v) {
   matrix_4x4 m = m44_id();
   m.ww = v.x;
   m.xx = v.y;
-  m.zz = v.z;
+  m.yy = v.z;
 
   return m;
 };
@@ -486,3 +486,20 @@ matrix_4x4 m44_rotation_quaternion(vector4 q) {
   
   return m;
 };
+
+matrix_4x4 m44_world(vector3 position, vector3 scale, vector4 rotation) {
+  
+  matrix_4x4 pos_m, sca_m, rot_m, result;
+  
+  pos_m = m44_translation(position);
+  rot_m = m44_rotation_quaternion(rotation);
+  sca_m = m44_scale(scale);
+  
+  result = m44_id();
+  result = m44_mul_m44( result, pos_m );
+  result = m44_mul_m44( result, rot_m );
+  result = m44_mul_m44( result, sca_m );
+  
+  return result;
+  
+}

@@ -21,6 +21,7 @@ static camera* CAMERA = NULL;
 
 static float proj_matrix[16];
 static float view_matrix[16];
+static float world_matrix[16];
 
 static int WIDTH;
 static int HEIGHT;
@@ -102,13 +103,12 @@ void forward_renderer_setup_camera() {
     
     m44_to_array(viewm, view_matrix);
     m44_to_array(projm, proj_matrix);
-    
+
     glMatrixMode(GL_MODELVIEW);
     glLoadMatrixf(view_matrix);
     
     glMatrixMode(GL_PROJECTION);
-    glLoadMatrixf(proj_matrix);
-  
+    glLoadMatrixf(proj_matrix);    
   }
   
 }
@@ -159,6 +159,68 @@ void forward_renderer_render_model(render_model* m, material* mat) {
 
 }
 
+void forward_renderer_render_renderable(renderable* r) {
+  
+  matrix_4x4 r_world_matrix = m44_world( r->position, r->scale, r->rotation );
+  m44_to_array(r_world_matrix, world_matrix);
+  
+  glMatrixMode(GL_MODELVIEW);
+  glPushMatrix();
+  glMultMatrixf(world_matrix);
+  
+  int i;
+  for(i=0; i < r->num_surfaces; i++) {
+    
+    renderable_surface* s = r->surfaces[i];
+        
+    forward_renderer_use_material(s->base);    
+    //forward_renderer_use_material(s->instance);
+    
+    GLsizei stride = sizeof(float) * 18;
+    
+    glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
+        
+    glVertexPointer(3, GL_FLOAT, stride, (void*)0);
+    glEnableClientState(GL_VERTEX_ARRAY);
+    
+    glNormalPointer(GL_FLOAT, stride, (void*)(sizeof(float) * 3));
+    glEnableClientState(GL_NORMAL_ARRAY);
+    
+    glVertexAttribPointer(TANGENT, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 6));
+    glEnableVertexAttribArray(TANGENT);
+    
+    glVertexAttribPointer(BINORMAL, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 9));
+    glEnableVertexAttribArray(BINORMAL);
+    
+    glTexCoordPointer(2, GL_FLOAT, stride, (void*)(sizeof(float) * 12));
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+    
+    glVertexAttribPointer(COLOR, 4, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 14));
+    glEnableVertexAttribArray(COLOR);
+    
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
+    glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
+    
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_NORMAL_ARRAY);
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);  
+    
+    glDisableVertexAttribArray(TANGENT);
+    glDisableVertexAttribArray(BINORMAL);
+    glDisableVertexAttribArray(COLOR);  
+    
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    /* DISABLE PROGRAM */
+    glUseProgramObjectARB(0);
+
+  }
+  
+  glPopMatrix();
+  
+}
+
 void forward_renderer_use_material(material* mat) {
 
   shader_program* prog = dictionary_get(mat->properties, "program");
@@ -170,7 +232,7 @@ void forward_renderer_use_material(material* mat) {
   TANGENT = glGetAttribLocation(*prog, "tangent");
   BINORMAL = glGetAttribLocation(*prog, "binormal");
   COLOR = glGetAttribLocation(*prog, "color");
-  
+    
   GLint light_position = glGetUniformLocation(*prog, "light_position");
   GLint eye_position = glGetUniformLocation(*prog, "eye_position");
   

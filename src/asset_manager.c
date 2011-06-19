@@ -50,7 +50,7 @@ char* asset_map_filename(char* filename) {
     return new_filename;
     
   } else {
-    printf("Warning: Unsure how to convert path '%s' into a real path.\n");
+    printf("Warning: Unsure how to convert path '%s' into a real path.\n", filename);
     return filename;
   }
 

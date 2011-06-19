@@ -37,7 +37,7 @@
 
 /* NOTE: Currently not working with multiple objects */
 
-render_model* obj_load_file(char* filename) {
+model* obj_load_file(char* filename) {
 
   fflush(stdout);
   
@@ -69,10 +69,10 @@ render_model* obj_load_file(char* filename) {
   
   free(contents);
   
-  //model_generate_tangents(obj_model);
-  model_generate_orthagonal_tangents(obj_model);
+  model_generate_tangents(obj_model);
+  //model_generate_orthagonal_tangents(obj_model);
   
-  return to_render_model(obj_model);
+  return obj_model;
 };
 
 
@@ -265,7 +265,7 @@ model* obj_load_object(char* c) {
           
         } else if ( strstr(line, "usemtl") ) {
           
-          char* material_name = malloc( strlen(line) - 6 );
+          char* material_name = malloc( strlen(line) - 5 );
           strcpy(material_name, line + 7 );
           
           current_mesh->material = material_name;

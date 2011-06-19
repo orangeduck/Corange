@@ -11,12 +11,15 @@
 #include "font.h"
 #include "timing.h"
 #include "scripting.h"
+#include "renderable.h"
 
 #define DEFAULT_WIDTH 800
 #define DEFAULT_HEIGHT 600
 
-static render_model* cello;
+static model* cello;
+static render_model* rm_cello;
 static material* cello_mat;
+static renderable* r_cello;
 
 static font* console_font;
 static render_text* rt_framerate;
@@ -54,8 +57,12 @@ void cello_init() {
   cello = asset_get("/resources/cello/cello.obj");
   cello_mat = asset_get("/resources/cello/cello.mat");
   
-  printf("Cello name: %s\n", cello->name);
+  rm_cello = to_render_model(cello);
     
+  r_cello = renderable_new("cello");
+  renderable_add_model(r_cello, cello);
+  renderable_set_material(r_cello, cello_mat);
+  
   /* Put some text on the screen */
   
   console_font = asset_get("./engine/fonts/console_font.fnt");
@@ -92,6 +99,12 @@ void cello_event(SDL_Event event) {
     if (event.key.keysym.sym == SDLK_LEFTBRACKET) { cam->position.x += 1; }
     if (event.key.keysym.sym == SDLK_RIGHTBRACKET) { cam->position.x -= 1;}
     
+    if (event.key.keysym.sym == SDLK_a) { r_cello->position.y += 1; }
+    if (event.key.keysym.sym == SDLK_s) { r_cello->position.y -= 1; }
+    
+    if (event.key.keysym.sym == SDLK_q) { r_cello->scale = v3_add(r_cello->scale, v3(0.1, 0.1, 0.1)); }
+    if (event.key.keysym.sym == SDLK_w) { r_cello->scale = v3_sub(r_cello->scale, v3(0.1, 0.1, 0.1)); }
+    
     break;
   }
     
@@ -101,11 +114,13 @@ void cello_render() {
 
 #ifdef DEFERRED_RENDER
   deferred_renderer_begin();
-  deferred_renderer_render_model(cello, cello_mat);
+  //deferred_renderer_render_model(rm_cello, cello_mat);
+  deferred_renderer_render_renderable(r_cello);
   deferred_renderer_end();
 #else
   forward_renderer_begin();
-  forward_renderer_render_model(cello, cello_mat);
+  //forward_renderer_render_model(rm_cello, cello_mat);
+  forward_renderer_render_renderable(r_cello);
   forward_renderer_end();
 #endif
 
@@ -115,11 +130,14 @@ void cello_render() {
   
   render_text_render(rt_framerate);
   render_text_render(rt_test_text);
-
+  
 }
 
 void cello_finish() {
 
+  render_model_delete(rm_cello);
+  renderable_delete(r_cello);
+  
   camera_delete(cam);
 
   render_text_delete(rt_framerate);

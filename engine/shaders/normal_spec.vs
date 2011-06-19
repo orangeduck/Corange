@@ -9,7 +9,7 @@ varying vec4 half_angle;
 varying vec2 uvs;
 
 void main() {
-
+  
   vec2 temp_uvs = vec2(gl_MultiTexCoord0);
   uvs = vec2(temp_uvs.x, -temp_uvs.y);
   
@@ -26,5 +26,6 @@ void main() {
   half_angle = normalize(eye_dir + light_dir) * rotation;
   
   gl_Position = ftransform();
+  //gl_Position = proj_matrix * view_matrix * gl_Position;
   
 }

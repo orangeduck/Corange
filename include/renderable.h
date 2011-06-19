@@ -8,12 +8,11 @@
 #include "SDL/SDL.h"
 #include "SDL/SDL_opengl.h"
 
-#include "matrix.h"
 #include "vector.h"
 #include "material.h"
 #include "geometry.h"
 
-/* PositionNornalTangentBinormalUvsColor is structure
+/*
 	
 	http://www.opengl.org/wiki/Vertex_Specification_Best_Practices#Formatting_VBO_Data
 
@@ -21,9 +20,11 @@
 
 typedef struct {
 
-  GLuint vbo;
+  GLuint vertex_vbo;
+  GLuint triangle_vbo;
   
   int num_verticies;
+  int num_triangles;
   
   material* instance;
   material* base;
@@ -35,7 +36,7 @@ typedef struct {
 
   char* name;
 
-  renderable_surface* surfaces;
+  renderable_surface** surfaces;
   int num_surfaces;
   
   vector3 position;
@@ -50,14 +51,16 @@ typedef struct {
 renderable* renderable_new(char* name);
 void renderable_delete(renderable* r);
 
-void renderable_add_model(model* m);
-void renderable_add_mesh(mesh* m);
+void renderable_add_model(renderable* r, model* m);
+void renderable_add_mesh(renderable* r, mesh* m);
 
-matrix_4x4 renderable_world_matrix(renderable* r);
+void renderable_set_material(renderable* r, material* m);
 
 /* Renderable Surface */
 
-renderable_surface* renderable_surface_new();
+renderable_surface* renderable_surface_new(mesh* m);
 void renderable_surface_delete(renderable_surface* surface);
+
+void renderable_surface_set_material(renderable_surface* s, material* m);
 
 #endif

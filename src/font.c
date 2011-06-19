@@ -146,8 +146,6 @@ void parse_char_line(font* f, char* c) {
 
 void font_delete(font* f) {
   
-  texture_delete(f->texture_map);
-
   free(f->locations);
   free(f->sizes);
   free(f->offsets);

@@ -108,4 +108,8 @@ vector4 v4_to_homogeneous(vector3 v);
 
 int v4_hash(vector4 v);
 
+vector4 v4_quaternion_id();
+vector4 v4_quaternion_mul(vector4 v1, vector4 v2);
+vector4 v4_quaternion_angle_axis(float angle, vector3 axis);
+
 #endif

@@ -394,3 +394,31 @@ vector4 v4_to_homogeneous(vector3 v){
 int v4_hash(vector4 v) {
   return abs( rawcast(v.w) ^ rawcast(v.x) ^ rawcast(v.y) ^ rawcast(v.z) );
 }
+
+vector4 v4_quaternion_id() {
+  return v4(1, 0, 0, 0);
+}
+
+vector4 v4_quaternion_mul(vector4 v1, vector4 v2) {
+  
+  vector4 quat;
+  
+  quat.w = (v1.w * v2.w) - (v1.x * v2.x) - (v1.y * v2.y) - (v1.z * v2.z);
+  quat.w = (v1.w * v2.x) + (v1.x * v2.w) + (v1.y * v2.z) - (v1.z * v2.y);
+  quat.w = (v1.w * v2.y) - (v1.x * v2.z) + (v1.y * v2.w) + (v1.z * v2.x);
+  quat.w = (v1.w * v2.z) + (v1.x * v2.y) - (v1.y * v2.x) + (v1.z * v2.w);
+  
+  return quat;
+}
+
+vector4 v4_quaternion_angle_axis(float angle, vector3 axis) {
+  
+  vector4 quat;
+  
+  quat.w = cosf(angle / 2);
+  quat.x = axis.x * sinf(angle / 2);
+  quat.y = axis.y * sinf(angle / 2);
+  quat.z = axis.y * sinf(angle / 2);
+  
+  return quat;
+}

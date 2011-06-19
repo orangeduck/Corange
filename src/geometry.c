@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "vector.h"
 #include "geometry.h"
@@ -290,8 +291,11 @@ void model_generate_orthagonal_tangents(model* m) {
 render_mesh* to_render_mesh(mesh* old_mesh){
   
   render_mesh* new_mesh = malloc(sizeof(render_mesh));
-  new_mesh->name = old_mesh->name;
-  new_mesh->material = old_mesh->material;
+  new_mesh->name = malloc(strlen(old_mesh->name) + 1);
+  strcpy(new_mesh->name, old_mesh->name);
+  
+  new_mesh->material = malloc(strlen(old_mesh->material) + 1);
+  strcpy(new_mesh->material, old_mesh->material);
   
   new_mesh->num_verts = old_mesh->num_verts;
   new_mesh->num_triangles = old_mesh->num_triangles;
@@ -350,10 +354,6 @@ render_mesh* to_render_mesh(mesh* old_mesh){
   for(k=0; k < old_mesh->num_triangles_3; k++) {
     new_mesh->triangles[k] = old_mesh->triangles[k];
   }
-  
-  free(old_mesh->verticies);
-  free(old_mesh->triangles); 
-  free(old_mesh);
   
   return new_mesh;
 
@@ -427,8 +427,11 @@ void render_mesh_delete(render_mesh* m) {
 render_model* to_render_model(model* m) {
   
   render_model* new_model = malloc(sizeof(render_model));
-  new_model->name = m->name;
+  new_model->name = malloc( strlen(m->name) + 1);
+  strcpy(new_model->name, m->name);
+  
   new_model->num_meshes = m->num_meshes;
+  
   new_model->meshes = malloc(sizeof(render_mesh*) * new_model->num_meshes);
   
   int i;
@@ -436,9 +439,6 @@ render_model* to_render_model(model* m) {
     render_mesh* new_mesh = to_render_mesh(m->meshes[i]);
     new_model->meshes[i] = new_mesh;
   }
-  
-  free(m->meshes);
-  free(m);
   
   return new_model;
 };
