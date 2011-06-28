@@ -46,4 +46,8 @@ void material_print(material* mat);
 
 void material_parse_line(material* mat, char* line);
 
+void* material_get_property(material* mat, char* name);
+int material_get_type(material* mat, char* name);
+void material_set_property(material* mat, char* name, void* value, int type);
+
 #endif

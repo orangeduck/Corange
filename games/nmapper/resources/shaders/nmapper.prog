@@ -1,0 +1,2 @@
+vertex_shader : /resources/shaders/nmapper.vs
+fragment_shader : /resources/shaders/nmapper.fs

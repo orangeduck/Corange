@@ -123,6 +123,10 @@ void cello_render() {
   deferred_renderer_end();
 #else
   forward_renderer_begin();
+  
+  glClearColor(1.0f, 0.769f, 0.0f, 0.0f);
+  glClear(GL_COLOR_BUFFER_BIT);
+  
   //forward_renderer_render_model(rm_cello, cello_mat);
   forward_renderer_render_renderable(r_cello);
   forward_renderer_end();

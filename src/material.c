@@ -366,3 +366,61 @@ void material_print(material* mat) {
   }
   
 }
+
+void* material_get_property(material* mat, char* name) {
+  return dictionary_get(mat->properties, name);
+}
+
+int material_get_type(material* mat, char* name) {
+  int* t = dictionary_get(mat->types, name);
+  return *t;
+}
+
+void material_set_property(material* mat, char* name, void* value, int type) {
+  
+  void* existing = dictionary_get(mat->properties, name);
+  int* existing_type = dictionary_get(mat->types, name);
+  
+  if (existing) {
+    
+    /* Remove existing data */
+    if (*existing_type == mat_type_program) {
+      /* Do nothing */
+    } else if (*existing_type == mat_type_texture) {
+      /* Do nothing */
+    } else {
+      /* All the rest are structs that can be freed in one call */
+      free(existing);
+    }
+    
+    if (*existing_type == type) {
+    
+      dictionary_set(mat->properties, name, value);
+      
+    } else {
+    
+      free(existing_type);
+      free(existing);
+      
+      int* t = malloc(sizeof(int));
+      *t = type;
+      dictionary_set(mat->types, name, t);
+      dictionary_set(mat->properties, name, value);
+
+    }
+
+  } else {
+    
+    char* n = malloc(strlen(name) + 1);
+    strcpy(n, name);
+    
+    int* t = malloc(sizeof(int));
+    *t = type;
+      
+    dictionary_set(mat->properties, n, value);
+    dictionary_set(mat->types, n, t);
+    list_push_back(mat->keys, n);
+      
+  }
+  
+}

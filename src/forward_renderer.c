@@ -46,10 +46,6 @@ void forward_renderer_init(int width, int height) {
   WIDTH = width;
   HEIGHT = height;
   
-  /* Clear Colors */
-  glClearColor(1.0f, 0.769f, 0.0f, 0.0f);
-  glClearDepth(1.0f);
-  
   /* Enables */
   glEnable(GL_TEXTURE_2D);
   glEnable(GL_MULTISAMPLE);
@@ -67,6 +63,8 @@ void forward_renderer_init(int width, int height) {
   DIFFUSE_LIGHT[0] = 1.0f; DIFFUSE_LIGHT[1] = 1.0f; DIFFUSE_LIGHT[2] = 1.0f;
   SPECULAR_LIGHT[0] = 1.0f; SPECULAR_LIGHT[1] = 1.0f; SPECULAR_LIGHT[2] = 1.0f;
   AMBIENT_LIGHT[0] = 0.5f; AMBIENT_LIGHT[1] = 0.5f; AMBIENT_LIGHT[2] = 0.5f;
+  
+  glClearDepth(1.0f);
   
 }
 
@@ -86,11 +84,10 @@ void forward_renderer_set_dimensions(int width, int height) {
 
 void forward_renderer_begin() {
   
+  glClear(GL_DEPTH_BUFFER_BIT);
+  
   forward_renderer_setup_camera();
   
-  /* Clear Backbuffer */
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
 }
 
 void forward_renderer_setup_camera() {
@@ -251,6 +248,12 @@ void forward_renderer_use_material(material* mat) {
 
   GLint world_matrix_u = glGetUniformLocation(*prog, "world_matrix");
   glUniformMatrix4fv(world_matrix_u, 1, 0, world_matrix);
+  
+  GLint proj_matrix_u = glGetUniformLocation(*prog, "proj_matrix");
+  glUniformMatrix4fv(proj_matrix_u, 1, 0, proj_matrix);
+  
+  GLint view_matrix_u = glGetUniformLocation(*prog, "view_matrix");
+  glUniformMatrix4fv(view_matrix_u, 1, 0, view_matrix);
   
   /* Set material parameters */
   
