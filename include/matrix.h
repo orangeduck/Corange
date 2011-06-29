@@ -27,11 +27,17 @@ typedef struct {
 matrix_3x3 m33_id();
 matrix_3x3 m33_zero();
 matrix_3x3 m33_mul_m33(matrix_3x3 m1, matrix_3x3 m2);
+vector3 m33_mul_v3(matrix_3x3 m, vector3 v);
 
 matrix_4x4 m33_to_m44(matrix_3x3 m);
 
 void m33_to_array(matrix_3x3 m, float* out);
 void m33_print(matrix_3x3 m);
+
+matrix_3x3 m33_rotation_x(float a);
+matrix_3x3 m33_rotation_y(float a);
+matrix_3x3 m33_rotation_z(float a);
+matrix_3x3 m33_rotation_axis_angle(vector3 axis, float angle);
 
 /* 4 x 4 */
 

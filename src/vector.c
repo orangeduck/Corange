@@ -247,14 +247,13 @@ void v3_to_array(vector3 v, float* out) {
   
 }
 
-vector3 v3_from_homogeneous(vector4 v) {
-  vector3 vec = v3(v.x,v.y,v.z);
-  return v3_div(vec, v.w);
-};
-
 int v3_hash(vector3 v) {
   return abs( rawcast(v.x) ^ rawcast(v.y) ^ rawcast(v.z) );
 }
+
+vector4 v3_to_homogeneous(vector3 v){
+  return v4(v.x, v.y, v.z, 1.0);
+};
 
 /* Vector4 */
 
@@ -387,8 +386,9 @@ void v4_to_array(vector4 v, float* out) {
   
 }
 
-vector4 v4_to_homogeneous(vector3 v){
-  return v4(1.0, v.x, v.y, v.z);
+vector3 v4_from_homogeneous(vector4 v) {
+  vector3 vec = v3(v.w,v.x,v.y);
+  return v3_div(vec, v.z);
 };
 
 int v4_hash(vector4 v) {

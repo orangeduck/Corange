@@ -37,13 +37,10 @@ matrix_3x3 m33_id() {
   mat.zz = 1.0f;   
   
   return mat;
-};
+}
 
 
 matrix_3x3 m33_mul_m33(matrix_3x3 m1, matrix_3x3 m2) {
-
-  /* This may need double checking */
-
   matrix_3x3 mat;
 
   mat.xx = (m1.xx * m2.xx) + (m1.xy * m2.yx) + (m1.xz * m2.zx);
@@ -60,7 +57,20 @@ matrix_3x3 m33_mul_m33(matrix_3x3 m1, matrix_3x3 m2) {
   
   return mat;
   
-};
+}
+
+vector3 m33_mul_v3(matrix_3x3 m, vector3 v) {
+
+  vector3 vec;
+  
+  vec.x = (m.xx * v.x) + (m.xy * v.y) + (m.xz * v.z);
+  vec.y = (m.yx * v.x) + (m.yy * v.y) + (m.yz * v.z);
+  vec.z = (m.zx * v.x) + (m.zy * v.y) + (m.zz * v.z);
+  
+  return vec;
+
+}
+
 
 void m33_to_array(matrix_3x3 m, float* out) {
 
@@ -76,6 +86,68 @@ void m33_to_array(matrix_3x3 m, float* out) {
   out[7] = m.yz;
   out[8] = m.zz;
   
+}
+
+matrix_3x3 m33_rotation_x(float a) {
+
+  matrix_3x3 m = m33_id();
+  
+  m.yy = cos(a);
+  m.yz = -sin(a);
+  m.zy = sin(a);
+  m.zz = cos(a);
+  
+  return m;
+  
+}
+
+matrix_3x3 m33_rotation_y(float a) {
+
+  matrix_3x3 m = m33_id();
+  
+  m.xx = cos(a);
+  m.xz = sin(a);
+  m.zx = -sin(a);
+  m.zz = cos(a);
+
+  return m;
+  
+}
+
+matrix_3x3 m33_rotation_z(float a) {
+
+  matrix_3x3 m = m33_id();
+  
+  m.xx = cos(a);
+  m.xy = -sin(a);
+  m.yx = sin(a);
+  m.yy = cos(a);
+
+  return m;
+  
+}
+
+matrix_3x3 m33_rotation_axis_angle(vector3 v, float angle) {
+  
+  matrix_3x3 m;
+
+  float c = cos(angle);
+  float s = sin(angle);
+  float nc = 1 - c;
+  
+  m.xx = v.x * v.x * nc + c;
+  m.xy = v.x * v.y * nc - v.z * s;
+  m.xz = v.x * v.z * nc + v.y * s;
+  
+  m.yx = v.y * v.x * nc + v.z * s;
+  m.yy = v.y * v.y * nc + c;
+  m.yz = v.y * v.z * nc - v.x * s;
+  
+  m.zx = v.z * v.x * nc - v.y * s;
+  m.zy = v.z * v.y * nc + v.x * s;
+  m.zz = v.z * v.z * nc + c;
+  
+  return m;
 }
 
 matrix_4x4 m44_zero() {
@@ -209,7 +281,19 @@ matrix_4x4 m44_mul_m44(matrix_4x4 m1, matrix_4x4 m2) {
   
   return mat;
   
-};
+}
+
+vector4 m44_mul_v4(matrix_4x4 m, vector4 v) {
+  
+  vector4 vec;
+  
+  vec.w = (m.ww * v.w) + (m.wx * v.x) + (m.wy * v.y) + (m.wz * v.z);
+  vec.x = (m.xw * v.w) + (m.xx * v.x) + (m.xy * v.y) + (m.xz * v.z);
+  vec.y = (m.yw * v.w) + (m.yx * v.x) + (m.yy * v.y) + (m.yz * v.z);
+  vec.z = (m.zw * v.w) + (m.zx * v.x) + (m.zy * v.y) + (m.zz * v.z);
+  
+  return vec;
+}
 
 matrix_3x3 m44_to_m33(matrix_4x4 m) {
 

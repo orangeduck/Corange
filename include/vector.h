@@ -75,7 +75,7 @@ void v3_print(vector3 v);
 
 void v3_to_array(vector3 v, float* out);
 
-vector3 v3_from_homogeneous(vector4 v);
+vector4 v3_to_homogeneous(vector3 v);
 
 int v3_hash(vector3 v);
 
@@ -104,7 +104,7 @@ void v4_print(vector4 v);
 
 void v4_to_array(vector4 v, float* out);
 
-vector4 v4_to_homogeneous(vector3 v);
+vector3 v4_from_homogeneous(vector4 v);
 
 int v4_hash(vector4 v);
 
