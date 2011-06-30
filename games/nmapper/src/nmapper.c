@@ -11,6 +11,8 @@
 #include "timing.h"
 #include "text_renderer.h"
 
+#include "viewport.h"
+
 static camera* cam;
 static material* nmapper_mat;
 static float* strength;
@@ -24,14 +26,15 @@ static render_text* rt_fov;
 static renderable* r_cello;
 static renderable* r_torus;
 
-#define DEFAULT_WIDTH 800
-#define DEFAULT_HEIGHT 600
-
 void nmapper_init() {
+  
+  viewport_set_multisamples(8);
+  viewport_set_width(512);
+  viewport_set_height(512);
   
   cam = camera_new( v3(20.0, 0.0, 0.0) , v3_zero() );
   
-  forward_renderer_init(DEFAULT_WIDTH, DEFAULT_HEIGHT);
+  forward_renderer_init();
   forward_renderer_set_camera(cam);
   
   load_folder("/resources/");

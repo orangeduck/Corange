@@ -27,6 +27,10 @@ static render_text* rt_test_text;
 
 static camera* cam;
 
+static int mouse_x;
+static int mouse_y;
+static int mouse_down;
+
 void cello_init() {
   
   printf("Cello game init!\n");
@@ -37,11 +41,12 @@ void cello_init() {
   
   /* Renderer Setup */
 
+#define DEFERRED_RENDER
 #ifdef DEFERRED_RENDER
-  deferred_renderer_init(DEFAULT_WIDTH, DEFAULT_HEIGHT);
+  deferred_renderer_init();
   deferred_renderer_set_camera(cam);
 #else
-  forward_renderer_init(DEFAULT_WIDTH, DEFAULT_HEIGHT);
+  forward_renderer_init();
   forward_renderer_set_camera(cam);
 #endif
   
@@ -83,33 +88,62 @@ void cello_init() {
 
 void cello_update() {
 
+  #define PI 3.14159265
+
+  Uint8 keystate = SDL_GetMouseState(NULL, NULL);
+  if(keystate & SDL_BUTTON(1)){
+    float a1 = -(float)mouse_x * frame_time() * 2;
+    float a2 = (float)mouse_y * frame_time() * 2;
+    
+    cam->position = m33_mul_v3(m33_rotation_y( a1 ), cam->position );
+    
+    vector3 rotation_axis = v3_normalize(v3_cross( v3_sub(cam->position, cam->target) , v3(0,1,0) ));
+    
+    cam->position = m33_mul_v3(m33_rotation_axis_angle(rotation_axis, a2 ), cam->position );
+  } 
+
+  mouse_x = 0;
+  mouse_y = 0;
+  
 }
 
 void cello_event(SDL_Event event) {
 
   switch(event.type){
   case SDL_KEYUP:
-        
-    if (event.key.keysym.sym == SDLK_UP) { cam->position.y += 1; }
-    if (event.key.keysym.sym == SDLK_DOWN) { cam->position.y -= 1; }
     
-    if (event.key.keysym.sym == SDLK_LEFT) { cam->position.z += 1; }
-    if (event.key.keysym.sym == SDLK_RIGHT) { cam->position.z -= 1; }
-
-    if (event.key.keysym.sym == SDLK_LEFTBRACKET) { cam->position.x += 1; }
-    if (event.key.keysym.sym == SDLK_RIGHTBRACKET) { cam->position.x -= 1;}
+    if (event.key.keysym.sym == SDLK_UP) { r_cello->position.y += 1; }
+    if (event.key.keysym.sym == SDLK_DOWN) { r_cello->position.y -= 1; }
     
-    if (event.key.keysym.sym == SDLK_a) { r_cello->position.y += 1; }
-    if (event.key.keysym.sym == SDLK_s) { r_cello->position.y -= 1; }
-    
-    if (event.key.keysym.sym == SDLK_q) { r_cello->scale = v3_add(r_cello->scale, v3(0.1, 0.1, 0.1)); }
-    if (event.key.keysym.sym == SDLK_w) { r_cello->scale = v3_sub(r_cello->scale, v3(0.1, 0.1, 0.1)); }
-    
-    if (event.key.keysym.sym == SDLK_z) { r_cello->rotation = v4_quaternion_mul(
+    if (event.key.keysym.sym == SDLK_LEFT) { r_cello->rotation = v4_quaternion_mul(
         v4_quaternion_yaw(0.1) , r_cello->rotation); }
-    if (event.key.keysym.sym == SDLK_x) { r_cello->rotation = v4_quaternion_mul(
-        v4_quaternion_yaw(-0.1) , r_cello->rotation); }        
-    break;
+    if (event.key.keysym.sym == SDLK_RIGHT) { r_cello->rotation = v4_quaternion_mul(
+        v4_quaternion_yaw(-0.1) , r_cello->rotation); }   
+        
+  break;
+
+  case SDL_MOUSEBUTTONDOWN:
+  
+    if (event.button.button == SDL_BUTTON_LEFT) {
+      mouse_down = 1;
+    } else if (event.button.button == SDL_BUTTON_WHEELUP) {
+      cam->position = v3_sub(cam->position, v3_normalize(cam->position));
+    } else if (event.button.button == SDL_BUTTON_WHEELDOWN) {
+      cam->position = v3_add(cam->position, v3_normalize(cam->position));
+    } 
+    
+  break;
+    
+  case SDL_MOUSEBUTTONUP:
+    if (event.button.button == SDL_BUTTON_LEFT) {
+      mouse_down = 0;
+    }
+  break;
+  
+  case SDL_MOUSEMOTION:
+    mouse_x = event.motion.xrel;
+    mouse_y = event.motion.yrel;
+  break;
   }
     
 }

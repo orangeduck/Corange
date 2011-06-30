@@ -12,6 +12,8 @@
 #include "material.h"
 #include "asset_manager.h"
 
+#include "viewport.h"
+
 #include "deferred_renderer.h"
 
 static camera* CAMERA = NULL;
@@ -22,9 +24,6 @@ static float world_matrix[16];
 
 static shader_program* PROGRAM;
 static shader_program* SCREEN_PROGRAM;
-
-static int WIDTH;
-static int HEIGHT;
 
 static int NORMAL;
 static int TANGENT;
@@ -43,14 +42,7 @@ static GLuint positions_texture;
 static GLuint normals_texture;
 static GLuint depth_texture;
 
-static float ASPECT_RATIO(){
-  return (float)HEIGHT / (float)WIDTH;
-}
-
-void deferred_renderer_init(int width, int height) {
-
-  WIDTH = width;
-  HEIGHT = height;
+void deferred_renderer_init() {
   
   PROGRAM = asset_get("./engine/shaders/deferred.prog");
   SCREEN_PROGRAM = asset_get("./engine/shaders/deferred_screen.prog");
@@ -68,24 +60,24 @@ void deferred_renderer_init(int width, int height) {
   glGenRenderbuffers(1, &normals_buffer);  
   
   glBindRenderbuffer(GL_RENDERBUFFER, diffuse_buffer);
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, WIDTH, HEIGHT);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, viewport_width(), viewport_height());
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, diffuse_buffer);   
   
   glBindRenderbuffer(GL_RENDERBUFFER, positions_buffer);
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA32F, WIDTH, HEIGHT);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA32F, viewport_width(), viewport_height());
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_RENDERBUFFER, positions_buffer);  
   
   glBindRenderbuffer(GL_RENDERBUFFER, normals_buffer);
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA16F, WIDTH, HEIGHT);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA16F, viewport_width(), viewport_height());
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_RENDERBUFFER, normals_buffer);  
   
   glBindRenderbuffer(GL_RENDERBUFFER, depth_buffer);
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, WIDTH, HEIGHT);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, viewport_width(), viewport_height());
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_buffer);  
   
   glGenTextures(1, &diffuse_texture);
   glBindTexture(GL_TEXTURE_2D, diffuse_texture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, WIDTH, HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, viewport_width(), viewport_height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -94,7 +86,7 @@ void deferred_renderer_init(int width, int height) {
   
   glGenTextures(1, &positions_texture);
   glBindTexture(GL_TEXTURE_2D, positions_texture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, WIDTH, HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, viewport_width(), viewport_height(), 0, GL_RGBA, GL_FLOAT, NULL);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -103,7 +95,7 @@ void deferred_renderer_init(int width, int height) {
   
   glGenTextures(1, &normals_texture);
   glBindTexture(GL_TEXTURE_2D, normals_texture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, WIDTH, HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, viewport_width(), viewport_height(), 0, GL_RGBA, GL_FLOAT, NULL);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -112,7 +104,7 @@ void deferred_renderer_init(int width, int height) {
   
   glGenTextures(1, &depth_texture);
   glBindTexture(GL_TEXTURE_2D, depth_texture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, WIDTH, HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, viewport_width(), viewport_height(), 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -141,17 +133,12 @@ void deferred_renderer_set_camera(camera* cam) {
   CAMERA = cam;
 };
 
-void deferred_renderer_set_viewport(int width, int height) {
-  WIDTH = width;
-  HEIGHT = height;
-};
-
 void deferred_renderer_setup_camera() {
 
   if (CAMERA != NULL) {
     
     matrix_4x4 viewm = camera_view_matrix(CAMERA);
-    matrix_4x4 projm = camera_proj_matrix(CAMERA, ASPECT_RATIO() );
+    matrix_4x4 projm = camera_proj_matrix(CAMERA, viewport_ratio() );
     
     m44_to_array(viewm, view_matrix);
     m44_to_array(projm, proj_matrix);
@@ -171,9 +158,6 @@ void deferred_renderer_begin() {
   deferred_renderer_setup_camera();
 
   glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-
-  glPushAttrib(GL_VIEWPORT_BIT);
-  glViewport(0,0,WIDTH, HEIGHT);  
   
   glClearColor(1.0f, 0.769f, 0.0f, 0.0f);
   glClearDepth(1.0f);

@@ -7,11 +7,10 @@
 #include "material.h"
 #include "renderable.h"
 
-void forward_renderer_init(int width, int height);
+void forward_renderer_init();
 void forward_renderer_finish();
 
 void forward_renderer_set_camera(camera* c);
-void forward_renderer_set_dimensions(int width, int height);
 
 void forward_renderer_setup_camera();
 

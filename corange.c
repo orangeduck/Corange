@@ -23,9 +23,6 @@
 
 #include "game.h"
 
-#define DEFAULT_WIDTH 800
-#define DEFAULT_HEIGHT 600
-
 static char* game_name;
 
 main(int argc, char* argv[]) {
@@ -37,8 +34,6 @@ main(int argc, char* argv[]) {
   freopen( "CON", "w", stderr );
   
   /* SDL Setup */
-  
-  SDL_Surface *screen;
   
   if (SDL_Init(SDL_INIT_VIDEO) != 0) {
     printf("Unable to initialize SDL: %s\n", SDL_GetError());
@@ -54,19 +49,7 @@ main(int argc, char* argv[]) {
       printf("IMG_Init: %s\n", IMG_GetError());
   }
   
-  /* Set Window properties */
-  
-  SDL_WM_SetCaption("Corange","Corange");    
-  SDL_Surface* image = IMG_Load("icon.png");
-  SDL_WM_SetIcon(image, NULL);
-  
-  SDL_GL_SetAttribute( SDL_GL_MULTISAMPLESAMPLES, 8 );
-  
-  screen = SDL_SetVideoMode(DEFAULT_WIDTH, DEFAULT_HEIGHT, 0, SDL_HWSURFACE | SDL_GL_DOUBLEBUFFER | SDL_OPENGL);
-  if (screen == NULL) {
-    printf("Unable to set video mode: %s\n", SDL_GetError());
-    return 1;
-  }
+  viewport_init();
   
   /* OpenGL setup */
   
@@ -161,7 +144,9 @@ main(int argc, char* argv[]) {
   asset_manager_finish();
   
   scripting_finish();
-    
+  
+  viewport_finish();
+  
   IMG_Quit();
   SDL_Quit();
   

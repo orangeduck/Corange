@@ -1,4 +1,5 @@
 #include <string.h>
+#include <time.h>
 
 #define GLEW_STATIC
 #include "GL/glew.h"
@@ -6,6 +7,8 @@
 #define NO_SDL_GLEXT
 #include "SDL/SDL.h"
 #include "SDL/SDL_opengl.h"
+
+#include "viewport.h"
 
 #include "camera.h"
 #include "matrix.h"
@@ -23,9 +26,6 @@ static float proj_matrix[16];
 static float view_matrix[16];
 static float world_matrix[16];
 
-static int WIDTH;
-static int HEIGHT;
-
 static float* EYE_POSITION;
 static float* LIGHT_POSITION;
 
@@ -37,14 +37,7 @@ static int TANGENT;
 static int BINORMAL;
 static int COLOR;
 
-static float ASPECT_RATIO(){
-  return (float)HEIGHT / (float)WIDTH;
-}
-
-void forward_renderer_init(int width, int height) {
-  
-  WIDTH = width;
-  HEIGHT = height;
+void forward_renderer_init() {
   
   /* Enables */
   glEnable(GL_TEXTURE_2D);
@@ -76,12 +69,6 @@ void forward_renderer_set_camera(camera* c) {
   CAMERA = c;
 }
 
-void forward_renderer_set_dimensions(int width, int height) {
-  WIDTH = width;
-  HEIGHT = height;
-  glViewport(0, 0, width, height);
-}
-
 void forward_renderer_begin() {
   
   glClear(GL_DEPTH_BUFFER_BIT);
@@ -96,7 +83,7 @@ void forward_renderer_setup_camera() {
   if (CAMERA != NULL) {
     
     matrix_4x4 viewm = camera_view_matrix(CAMERA);
-    matrix_4x4 projm = camera_proj_matrix(CAMERA, ASPECT_RATIO() );
+    matrix_4x4 projm = camera_proj_matrix(CAMERA, viewport_ratio() );
     
     m44_to_array(viewm, view_matrix);
     m44_to_array(projm, proj_matrix);
