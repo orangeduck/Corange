@@ -57,7 +57,7 @@ void renderable_add_mesh(renderable* r, mesh* m) {
 
 void renderable_set_material(renderable* r, material* m) {
   int i;
-  for(i = 0; i < r->num_surfaces; r++) {
+  for(i = 0; i < r->num_surfaces; i++) {
     renderable_surface_set_material(r->surfaces[0], m);
   }
 }

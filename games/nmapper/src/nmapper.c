@@ -52,7 +52,7 @@ void nmapper_init() {
   r_cello = renderable_new("cello");
   renderable_add_model(r_cello, m_cello);
   renderable_set_material(r_cello, nmapper_mat);
-  
+
   r_torus = renderable_new("torus");
   renderable_add_model(r_torus, m_torus);
   renderable_set_material(r_torus, nmapper_mat);
@@ -64,7 +64,7 @@ void nmapper_init() {
   fov_string = malloc(128);
   strcpy(strength_string,"");
   strcpy(fov_string,"");
-  
+    
   font* console_font = asset_get("./engine/fonts/console_font.fnt");
   
   rt_strength = render_text_new(strength_string, 128, console_font);
