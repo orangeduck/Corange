@@ -17,7 +17,8 @@ typedef struct {
   GLuint position_vbo;
   GLuint uvs_vbo;
   GLuint face_position_vbo;
-  GLuint face_normal_vbo; 
+  GLuint face_normal_vbo;
+  GLuint face_tangent_vbo;
   
   GLuint* index_vbos;
   int num_index_vbos;

@@ -11,7 +11,7 @@ void painting_renderable_add_model(painting_renderable* pr, model* m) {
   renderable_add_model(pr->renderable, m);
   
   float surface_area = model_surface_area(m);
-  pr->density = 0.025f;
+  pr->density = 0.02f;
   
   pr->num_particles = (int)(surface_area / pr->density);
   
@@ -21,11 +21,13 @@ void painting_renderable_add_model(painting_renderable* pr, model* m) {
   glGenBuffers(1, &pr->uvs_vbo);
   glGenBuffers(1, &pr->face_position_vbo);
   glGenBuffers(1, &pr->face_normal_vbo);
+  glGenBuffers(1, &pr->face_tangent_vbo);
   
   float* positions_buffer = malloc( sizeof(float) * pr->num_particles * 4 * 3 );
   float* uvs_buffer = malloc( sizeof(float) * pr->num_particles * 4 * 2);
   float* face_positions_buffer = malloc( sizeof(float) * pr->num_particles * 4 * 3);
   float* face_normals_buffer = malloc( sizeof(float) * pr->num_particles * 4 * 3);
+  float* face_tangents_buffer = malloc( sizeof(float) * pr->num_particles * 4 * 3);
   
   pr->num_index_vbos = 20;
   pr->index_vbos = malloc( sizeof(GLuint) * pr->num_index_vbos );
@@ -35,6 +37,7 @@ void painting_renderable_add_model(painting_renderable* pr, model* m) {
   int uvs_index = 0;
   int fpos_index = 0;
   int fnorm_index = 0;
+  int ftan_index = 0;
   
   float sum = 0.0;
   int placed = 0;
@@ -68,6 +71,8 @@ void painting_renderable_add_model(painting_renderable* pr, model* m) {
         
         vector3 position = triangle_random_position(v1, v2, v3);
         vector3 normal = triangle_normal(v1, v2, v3);
+        //vector3 tangent = triangle_tangent(v1, v2, v3);
+        vector3 tangent = triangle_binormal(v1, v2, v3);
         
         /* Place particle */
         
@@ -87,6 +92,10 @@ void painting_renderable_add_model(painting_renderable* pr, model* m) {
           face_normals_buffer[fnorm_index] = normal.x; fnorm_index++;
           face_normals_buffer[fnorm_index] = normal.y; fnorm_index++;
           face_normals_buffer[fnorm_index] = normal.z; fnorm_index++;
+          
+          face_tangents_buffer[ftan_index] = tangent.x; ftan_index++;
+          face_tangents_buffer[ftan_index] = tangent.y; ftan_index++;
+          face_tangents_buffer[ftan_index] = tangent.z; ftan_index++;
         
           /* -------------------------- */
 
@@ -105,6 +114,10 @@ void painting_renderable_add_model(painting_renderable* pr, model* m) {
           face_normals_buffer[fnorm_index] = normal.y; fnorm_index++;
           face_normals_buffer[fnorm_index] = normal.z; fnorm_index++;
         
+          face_tangents_buffer[ftan_index] = tangent.x; ftan_index++;
+          face_tangents_buffer[ftan_index] = tangent.y; ftan_index++;
+          face_tangents_buffer[ftan_index] = tangent.z; ftan_index++;      
+      
           /* -------------------------- */
         
           positions_buffer[pos_index] = 1.0f; pos_index++;
@@ -121,6 +134,10 @@ void painting_renderable_add_model(painting_renderable* pr, model* m) {
           face_normals_buffer[fnorm_index] = normal.x; fnorm_index++;
           face_normals_buffer[fnorm_index] = normal.y; fnorm_index++;
           face_normals_buffer[fnorm_index] = normal.z; fnorm_index++;
+        
+          face_tangents_buffer[ftan_index] = tangent.x; ftan_index++;
+          face_tangents_buffer[ftan_index] = tangent.y; ftan_index++;
+          face_tangents_buffer[ftan_index] = tangent.z; ftan_index++;
         
           /* -------------------------- */
           
@@ -138,6 +155,10 @@ void painting_renderable_add_model(painting_renderable* pr, model* m) {
           face_normals_buffer[fnorm_index] = normal.x; fnorm_index++;
           face_normals_buffer[fnorm_index] = normal.y; fnorm_index++;
           face_normals_buffer[fnorm_index] = normal.z; fnorm_index++;
+          
+          face_tangents_buffer[ftan_index] = tangent.x; ftan_index++;
+          face_tangents_buffer[ftan_index] = tangent.y; ftan_index++;
+          face_tangents_buffer[ftan_index] = tangent.z; ftan_index++;
           
           /* -------------------------- */
         
@@ -168,6 +189,10 @@ void painting_renderable_add_model(painting_renderable* pr, model* m) {
   glBufferData(GL_ARRAY_BUFFER, sizeof(float) * pr->num_particles * 4 * 3, face_normals_buffer, GL_STATIC_DRAW);
   free(face_normals_buffer);
   
+  glBindBuffer(GL_ARRAY_BUFFER, pr->face_tangent_vbo);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(float) * pr->num_particles * 4 * 3, face_tangents_buffer, GL_STATIC_DRAW);
+  free(face_tangents_buffer);
+  
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   
   for(i = 0; i < pr->num_index_vbos; i++) {
@@ -177,8 +202,8 @@ void painting_renderable_add_model(painting_renderable* pr, model* m) {
     int skip = (i+1)*(i+1)*(i+1);
     int num_indicies = (pr->num_particles * 4) / (skip);
     
-    printf("Num Particles: %i\n", pr->num_particles);
-    printf("Num Indicies for skip %i: %i\n", i, num_indicies);
+    //printf("Num Particles: %i\n", pr->num_particles);
+    //printf("Num Indicies for skip %i: %i\n", i, num_indicies);
     
     int* index_buffer = malloc( sizeof(int) * num_indicies );
     
@@ -209,6 +234,9 @@ void painting_renderable_delete(painting_renderable* pr) {
   glDeleteBuffers(1, &pr->uvs_vbo);
   glDeleteBuffers(1, &pr->face_position_vbo);
   glDeleteBuffers(1, &pr->face_normal_vbo);
+  glDeleteBuffers(1, &pr->face_tangent_vbo);
+  
+  glDeleteBuffers(pr->num_index_vbos, pr->index_vbos);
   
   renderable_delete(pr->renderable);
   free(pr);

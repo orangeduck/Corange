@@ -1,6 +1,7 @@
 
 attribute vec3 face_position;
 attribute vec3 face_normal;
+attribute vec3 face_tangent;
 
 uniform mat4 world_matrix;
 uniform mat4 view_matrix;
@@ -33,17 +34,27 @@ void main()
 		
 	} else {
 		
+		vec4 screen_tangent = proj_matrix * view_matrix * vec4(face_tangent, 1.0);
+		float a = acos( dot(normalize(screen_tangent.xy), vec2(0.0,1.0) ) );
+		
+		mat4 rot = mat4(
+			vec4(cos(a), -sin(a), 0, 0),
+			vec4(sin(a),  cos(a), 0, 0),
+			vec4(0     ,       0, 1, 0),
+			vec4(0     ,       0, 0, 1)
+			);
+		
 		backfacing = 0.0;
 		
-		float size = 30.0 * density * normal_to_screen * normal_to_screen + 0.25;
+		float size = 30.0 * density * max(-normal_to_screen, 0.0) + 0.1;
+		vec4 dim = size * vec4( 1.0 , 1.0, 1.0, 1.0 );
 		
-		vec2 temp_uvs = vec2(gl_MultiTexCoord0);
-		uvs = vec2(temp_uvs.x, -temp_uvs.y);
+		uvs = gl_MultiTexCoord0.xy;
 		
 		screen_position = proj_matrix * view_matrix * world_position;
 		
 		depth = gl_Position.z / gl_Position.w;
-		gl_Position = (gl_Vertex * size) + screen_position;
+		gl_Position = rot * (gl_Vertex * dim) + screen_position;
 		
 	}
 	

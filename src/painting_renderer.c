@@ -44,6 +44,7 @@ static int COLOR;
 
 static int FACE_POSITION;
 static int FACE_NORMAL;
+static int FACE_TANGENT;
 
 static GLuint fbo = 0;
 static GLuint diffuse_buffer;
@@ -64,6 +65,7 @@ void painting_renderer_init() {
   
   FACE_POSITION = glGetAttribLocation(*PAINTING_PROG, "face_position");
   FACE_NORMAL = glGetAttribLocation(*PAINTING_PROG, "face_normal");  
+  FACE_TANGENT = glGetAttribLocation(*PAINTING_PROG, "face_tangent");
   
   EYE_POSITION = malloc(sizeof(float) * 3);
   LIGHT_POSITION = malloc(sizeof(float) * 3);
@@ -124,7 +126,7 @@ void painting_renderer_begin_render() {
   
   glBindFramebuffer(GL_FRAMEBUFFER, fbo);
   
-  glClearColor(1.0f, 0.769f, 0.0f, 0.0f);
+  glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
   glClearDepth(1.0f);
   glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
   
@@ -163,7 +165,7 @@ void painting_renderer_begin_painting() {
 
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   
-  glClearColor(1.0f, 0.769f, 0.0f, 0.0f);
+  glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
   glClearDepth(1.0f);
   glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
   
@@ -181,15 +183,13 @@ void painting_renderer_end_painting() {
 
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glUseProgramObjectARB(0);
-  
-  /*
-  
+
   glDisable(GL_DEPTH_TEST);
   glDepthMask(GL_FALSE);
   glDisable(GL_LIGHTING);
   
   glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_COLOR, GL_DST_COLOR);
+  glBlendFunc(GL_ZERO, GL_SRC_COLOR);
   
 	glMatrixMode(GL_PROJECTION);
   glPushMatrix();
@@ -199,9 +199,6 @@ void painting_renderer_end_painting() {
 	glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
 	glLoadIdentity();
-  
-  glDepthMask(GL_FALSE);
-  glDisable(GL_DEPTH_TEST);
   
   glActiveTexture(GL_TEXTURE0 + 0 );
   glBindTexture(GL_TEXTURE_2D, *BACKGROUND);
@@ -222,8 +219,6 @@ void painting_renderer_end_painting() {
 
   glMatrixMode(GL_MODELVIEW);
   glPopMatrix();
-  
-  */
   
   glDisable(GL_BLEND);
   glEnable(GL_DEPTH_TEST);
@@ -343,6 +338,10 @@ void painting_renderer_paint_renderable(painting_renderable* pr) {
   glBindBuffer(GL_ARRAY_BUFFER, pr->face_normal_vbo);
   glVertexAttribPointer(FACE_NORMAL, 3, GL_FLOAT, GL_FALSE, 0, 0);
   glEnableVertexAttribArray(FACE_NORMAL);
+  
+  glBindBuffer(GL_ARRAY_BUFFER, pr->face_tangent_vbo);
+  glVertexAttribPointer(FACE_TANGENT, 3, GL_FLOAT, GL_FALSE, 0, 0);
+  glEnableVertexAttribArray(FACE_TANGENT);
   
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pr->index_vbos[skip]);
   glDrawElements(GL_QUADS, (pr->num_particles * 4) / (skip + 1), GL_UNSIGNED_INT, 0);
