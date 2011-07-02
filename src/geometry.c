@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 #include "vector.h"
 #include "geometry.h"
@@ -217,6 +218,30 @@ void mesh_generate_orthagonal_tangents(mesh* m) {
   
 }
 
+float mesh_surface_area(mesh* m) {
+  
+  float total = 0.0;
+  
+  int i = 0;
+  while( i < m->num_triangles_3) {
+  
+    int t_i1 = m->triangles[i];
+    int t_i2 = m->triangles[i+1];
+    int t_i3 = m->triangles[i+2];
+
+    vertex v1 = m->verticies[t_i1];
+    vertex v2 = m->verticies[t_i2];
+    vertex v3 = m->verticies[t_i3];
+    
+    total += triangle_area(v1, v2, v3);
+    
+    i = i + 3;
+  }
+  
+  return total;
+  
+}
+
 void model_add_mesh(model* main_model, mesh* sub_mesh) {
           
   /* Re fit the vertex and triangle memory sizes */ 
@@ -286,6 +311,16 @@ void model_generate_orthagonal_tangents(model* m) {
     mesh_generate_orthagonal_tangents( m->meshes[i] );
   }
 
+}
+
+float model_surface_area(model* m) {
+  float total = 0.0f;
+  int i;
+  for(i=0; i<m->num_meshes; i++) {
+    total += mesh_surface_area( m->meshes[i] );
+  }
+  
+  return total;
 }
 
 render_mesh* to_render_mesh(mesh* old_mesh){
@@ -571,6 +606,39 @@ vector3 triangle_normal(vertex v1, vertex v2, vertex v3) {
   
 }
 
+float triangle_area(vertex v1, vertex v2, vertex v3) {
+  
+  vector3 ab = v3_sub(v1.position, v2.position);
+  vector3 ac = v3_sub(v1.position, v3.position);
+  
+  float area = 0.5 * v3_length(v3_cross(ab, ac));
+  
+  //printf("Area: %f\n", area);
+  
+  return area;
+  
+}
+
+vector3 triangle_random_position(vertex v1, vertex v2, vertex v3) {
+  
+  float r1 = (float)rand() / (float)RAND_MAX;
+  float r2 = (float)rand() / (float)RAND_MAX;
+  
+  if(r1 + r2 >= 1) {
+    r1 = 1 - r1;
+    r2 = 1 - r2;
+  }
+  
+  vector3 ab = v3_sub(v1.position, v2.position);
+  vector3 ac = v3_sub(v1.position, v3.position);
+  
+  vector3 a = v1.position;
+  a = v3_sub(a, v3_mul(ab , r1) );
+  a = v3_sub(a, v3_mul(ac , r2) );
+  
+  return a;
+  
+}
 
 /* CBM format - Corange Binary Model */
 

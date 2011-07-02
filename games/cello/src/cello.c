@@ -5,21 +5,36 @@
 #include "asset_manager.h"
 #include "geometry.h"
 #include "material.h"
+
 #include "text_renderer.h"
 #include "forward_renderer.h"
 #include "deferred_renderer.h"
+#include "painting_renderer.h"
+
 #include "font.h"
 #include "timing.h"
 #include "scripting.h"
+
+#include "painting_renderable.h"
 #include "renderable.h"
 
 #define DEFAULT_WIDTH 800
 #define DEFAULT_HEIGHT 600
 
 static model* cello;
+static model* piano;
+
 static render_model* rm_cello;
+static render_model* rm_piano;
+
 static material* cello_mat;
+static material* piano_mat;
+
 static renderable* r_cello;
+static renderable* r_piano;
+
+static painting_renderable* pr_cello;
+static painting_renderable* pr_piano;
 
 static font* console_font;
 static render_text* rt_framerate;
@@ -31,6 +46,8 @@ static int mouse_x;
 static int mouse_y;
 static int mouse_down;
 
+static int use_piano = 0;
+
 void cello_init() {
   
   printf("Cello game init!\n");
@@ -41,13 +58,21 @@ void cello_init() {
   
   /* Renderer Setup */
 
-#define DEFERRED_RENDER
+#define PAINTING_RENDER
+
 #ifdef DEFERRED_RENDER
   deferred_renderer_init();
   deferred_renderer_set_camera(cam);
-#else
+#endif
+
+#ifdef FORWARD_RENDER  
   forward_renderer_init();
   forward_renderer_set_camera(cam);
+#endif
+
+#ifdef PAINTING_RENDER
+  painting_renderer_init();
+  painting_renderer_set_camera(cam);
 #endif
   
   /* Script stuff */
@@ -58,15 +83,33 @@ void cello_init() {
   /* Get reference to the Cello */
   
   load_folder("/resources/cello/");
+  load_folder("/resources/piano/");
+  load_folder("/resources/shaders/");
   
   cello = asset_get("/resources/cello/cello.obj");
   cello_mat = asset_get("/resources/cello/cello.mat");
   
+  piano = asset_get("/resources/piano/piano.obj");
+  piano_mat = asset_get("/resources/piano/piano.mat");
+  
   rm_cello = to_render_model(cello);
+  rm_piano = to_render_model(piano);
     
   r_cello = renderable_new("cello");
   renderable_add_model(r_cello, cello);
   renderable_set_material(r_cello, cello_mat);
+  
+  pr_cello = painting_renderable_new("paint_cello");
+  painting_renderable_add_model(pr_cello, cello);
+  renderable_set_material(pr_cello->renderable, cello_mat);
+  
+  r_piano = renderable_new("piano");
+  renderable_add_model(r_piano, piano);
+  renderable_set_material(r_piano, piano_mat);
+  
+  pr_piano = painting_renderable_new("paint_piano");
+  painting_renderable_add_model(pr_piano, piano);
+  renderable_set_material(pr_piano->renderable, piano_mat);
   
   /* Put some text on the screen */
   
@@ -114,6 +157,7 @@ void cello_event(SDL_Event event) {
     
     if (event.key.keysym.sym == SDLK_UP) { r_cello->position.y += 1; }
     if (event.key.keysym.sym == SDLK_DOWN) { r_cello->position.y -= 1; }
+    if (event.key.keysym.sym == SDLK_p) { if(use_piano == 1){use_piano = 0;} else { use_piano = 1;} }
     
     if (event.key.keysym.sym == SDLK_LEFT) { r_cello->rotation = v4_quaternion_mul(
         v4_quaternion_yaw(0.1) , r_cello->rotation); }
@@ -152,18 +196,54 @@ void cello_render() {
 
 #ifdef DEFERRED_RENDER
   deferred_renderer_begin();
-  //deferred_renderer_render_model(rm_cello, cello_mat);
-  deferred_renderer_render_renderable(r_cello);
+  if(use_piano) {
+    deferred_renderer_render_renderable(r_piano);
+  } else {
+    deferred_renderer_render_renderable(r_cello);
+  }
   deferred_renderer_end();
-#else
+#endif
+  
+#ifdef FORWARD_RENDER
   forward_renderer_begin();
   
   glClearColor(1.0f, 0.769f, 0.0f, 0.0f);
   glClear(GL_COLOR_BUFFER_BIT);
   
-  //forward_renderer_render_model(rm_cello, cello_mat);
-  forward_renderer_render_renderable(r_cello);
+  if(use_piano) {
+    forward_renderer_render_renderable(r_piano);
+  } else {
+    forward_renderer_render_renderable(r_cello);
+  }
+  
   forward_renderer_end();
+#endif
+
+#ifdef PAINTING_RENDER
+
+  if(use_piano) {
+  
+    painting_renderer_begin_render();
+    painting_renderer_render_renderable(pr_piano);
+    painting_renderer_end_render();
+
+    painting_renderer_begin_painting();
+    painting_renderer_paint_renderable(pr_piano);
+    painting_renderer_end_painting();
+    
+
+  } else {
+
+    painting_renderer_begin_render();
+    painting_renderer_render_renderable(pr_cello);
+    painting_renderer_end_render();
+
+    painting_renderer_begin_painting();
+    painting_renderer_paint_renderable(pr_cello);
+    painting_renderer_end_painting();
+  
+  }
+
 #endif
 
   /* Render text */
@@ -179,17 +259,28 @@ void cello_finish() {
 
   render_model_delete(rm_cello);
   renderable_delete(r_cello);
+  painting_renderable_delete(pr_cello);
+  
+  render_model_delete(rm_piano);
+  renderable_delete(r_piano);
+  painting_renderable_delete(pr_piano);
   
   camera_delete(cam);
 
   render_text_delete(rt_framerate);
   render_text_delete(rt_test_text);
   
-  #ifdef DEFERRED_RENDER
-    deferred_renderer_finish();
-  #else
-    forward_renderer_finish();
-  #endif
+#ifdef DEFERRED_RENDER
+  deferred_renderer_finish();
+#endif
+    
+#ifdef FORWARD_RENDER
+  forward_renderer_finish();
+#endif
+
+#ifdef PAINTING_RENDER
+  painting_renderer_finish();
+#endif
 
   printf("Cello game finish!\n");
 

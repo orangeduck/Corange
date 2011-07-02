@@ -93,7 +93,6 @@ main(int argc, char* argv[]) {
   load_folder("./engine/scripts/");
 
   load_folder("./engine/resources/");
-  load_folder("./engine/resources/piano/");
   
   /* Setup Scripting */
   

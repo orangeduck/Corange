@@ -1,10 +1,12 @@
 string name = cello
-program prog = ./engine/shaders/normal_spec.prog
+program prog = /resources/shaders/norm_spec_env.prog
 
 texture diffuse_map = /resources/cello/cello.dds
 texture bump_map = /resources/cello/cello_nm.dds
 texture spec_map = /resources/cello/cello_s.dds
+texture env_map = /resources/cello/cello_env.dds
 
-float glossiness = 20.0
-float bumpiness = 1.0
-float specular_level = 4.0
+float glossiness = 15.0
+float bumpiness = 0.75
+float specular_level = 3.0
+float env_amount = 1.0

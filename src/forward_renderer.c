@@ -148,10 +148,6 @@ void forward_renderer_render_renderable(renderable* r) {
   matrix_4x4 r_world_matrix = m44_world( r->position, r->scale, r->rotation );
   m44_to_array(r_world_matrix, world_matrix);
   
-  //glMatrixMode(GL_MODELVIEW);
-  //glPushMatrix();
-  //glMultMatrixf(world_matrix);
-  
   int i;
   for(i=0; i < r->num_surfaces; i++) {
     

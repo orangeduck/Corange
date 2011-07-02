@@ -154,11 +154,12 @@ void render_text_render(render_text* rt) {
   glActiveTexture(GL_TEXTURE0 + 0);
   glEnable(GL_TEXTURE_2D);
   glBindTexture(GL_TEXTURE_2D, *(rt->font->texture_map) );
-  
+ 
   /* Disable lighting, enable blending */
   
   glDisable(GL_LIGHTING);
   glDisable(GL_DEPTH_TEST);
+  glDisable(GL_ALPHA_TEST);
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   

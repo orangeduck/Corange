@@ -43,6 +43,7 @@ int mesh_contains_vert(mesh* m, vertex v, int* position);
 void mesh_generate_tangents(mesh* m);
 void mesh_generate_orthagonal_tangents(mesh* m);
 void mesh_print(mesh* m);
+float mesh_surface_area(mesh* m);
 
 int mesh_append_vertex(mesh* m, vertex v);
 int mesh_append_triangle_entry(mesh* m, int pos);
@@ -62,6 +63,7 @@ void model_generate_tangents(model* m);
 void model_generate_orthagonal_tangents(model* m);
 void model_add_mesh(model* main_model, mesh* sub_mesh);
 void model_print(model* m);
+float model_surface_area(model* m);
 
 /* easier for rendering in openGL */
 typedef struct {
@@ -106,10 +108,11 @@ render_model* to_render_model(model* m);
 render_model* render_model_from_render_mesh(render_mesh* m);
 model* from_render_model(render_model* m);
 
-
 vector3 triangle_tangent(vertex v1, vertex v2, vertex v3);
 vector3 triangle_binormal(vertex v1, vertex v2, vertex v3);
 vector3 triangle_normal(vertex v1, vertex v2, vertex v3);
+vector3 triangle_random_position(vertex v1, vertex v2, vertex v3);
+float triangle_area(vertex v1, vertex v2, vertex v3);
 
 render_model* cbm_load_file(char* filename);
 void cbm_write_file(render_model* model);
