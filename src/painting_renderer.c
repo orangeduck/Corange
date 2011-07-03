@@ -24,19 +24,16 @@
 static shader_program* PAINTING_PROG;
 
 static camera* CAMERA = NULL;
+static light* LIGHT = NULL;
+static texture* SHADOW_TEX = NULL;
 
 static texture* BACKGROUND;
 
 static float proj_matrix[16];
 static float view_matrix[16];
 static float world_matrix[16];
-
-static float* EYE_POSITION;
-static float* LIGHT_POSITION;
-
-static float* DIFFUSE_LIGHT;
-static float* SPECULAR_LIGHT;
-static float* AMBIENT_LIGHT;
+static float lview_matrix[16];
+static float lproj_matrix[16];
 
 static int TANGENT;
 static int BINORMAL;
@@ -68,19 +65,6 @@ void painting_renderer_init() {
   FACE_POSITION = glGetAttribLocation(*PAINTING_PROG, "face_position");
   FACE_NORMAL = glGetAttribLocation(*PAINTING_PROG, "face_normal");  
   FACE_TANGENT = glGetAttribLocation(*PAINTING_PROG, "face_tangent");
-  
-  EYE_POSITION = malloc(sizeof(float) * 3);
-  LIGHT_POSITION = malloc(sizeof(float) * 3);
-  
-  LIGHT_POSITION[0] = 150.0f; LIGHT_POSITION[1] = 250.0f; LIGHT_POSITION[2] = 0.0f;
-  
-  DIFFUSE_LIGHT = malloc(sizeof(float) * 3);
-  SPECULAR_LIGHT = malloc(sizeof(float) * 3);
-  AMBIENT_LIGHT = malloc(sizeof(float) * 3);
-  
-  DIFFUSE_LIGHT[0] = 1.5f; DIFFUSE_LIGHT[1] = 1.5f; DIFFUSE_LIGHT[2] = 1.5f;
-  SPECULAR_LIGHT[0] = 1.0f; SPECULAR_LIGHT[1] = 1.0f; SPECULAR_LIGHT[2] = 1.0f;
-  AMBIENT_LIGHT[0] = 0.5f; AMBIENT_LIGHT[1] = 0.5f; AMBIENT_LIGHT[2] = 0.5f;
   
   glGenFramebuffers(1, &fbo);
   glBindFramebuffer(GL_FRAMEBUFFER, fbo);
@@ -137,6 +121,14 @@ void painting_renderer_set_camera(camera* c) {
   CAMERA = c;
 }
 
+void painting_renderer_set_light(light* l) {
+  LIGHT = l;
+}
+
+void painting_renderer_set_shadow_texture(texture* t) {
+  SHADOW_TEX = t;
+}
+
 void painting_renderer_begin_render() {
   
   glBindFramebuffer(GL_FRAMEBUFFER, fbo);
@@ -156,21 +148,25 @@ void painting_renderer_begin_render() {
 
 void painting_renderer_setup_camera() {
 
-  /* Load camera data */
-  if (CAMERA != NULL) {
-    
-    matrix_4x4 viewm = camera_view_matrix(CAMERA);
-    matrix_4x4 projm = camera_proj_matrix(CAMERA, viewport_ratio() );
-    
-    m44_to_array(viewm, view_matrix);
-    m44_to_array(projm, proj_matrix);
+  matrix_4x4 viewm = camera_view_matrix(CAMERA);
+  matrix_4x4 projm = camera_proj_matrix(CAMERA, viewport_ratio() );
+  
+  m44_to_array(viewm, view_matrix);
+  m44_to_array(projm, proj_matrix);
 
-    glMatrixMode(GL_MODELVIEW);
-    glLoadMatrixf(view_matrix);
-    
-    glMatrixMode(GL_PROJECTION);
-    glLoadMatrixf(proj_matrix);    
-  }
+  glMatrixMode(GL_MODELVIEW);
+  glLoadMatrixf(view_matrix);
+  
+  glMatrixMode(GL_PROJECTION);
+  glLoadMatrixf(proj_matrix);    
+
+  /* Setup light stuff */
+  
+  matrix_4x4 lviewm = light_view_matrix(LIGHT);
+  matrix_4x4 lprojm = light_proj_matrix(LIGHT);
+  
+  m44_to_array(lviewm, lview_matrix);
+  m44_to_array(lprojm, lproj_matrix);
   
 }
 
@@ -349,8 +345,7 @@ void painting_renderer_paint_renderable(painting_renderable* pr) {
   glUniformMatrix4fv(view_matrix_u, 1, 0, view_matrix);
   
   GLint eye_position = glGetUniformLocation(*PAINTING_PROG, "eye_position");
-  v3_to_array(CAMERA->position, EYE_POSITION);
-  glUniform3fv(eye_position, 1, EYE_POSITION);
+  glUniform3f(eye_position, CAMERA->position.x, CAMERA->position.y, CAMERA->position.z);
   
   glUniform1i(glGetUniformLocation(*PAINTING_PROG, "background_color"), 0);
   glActiveTexture(GL_TEXTURE0 + 0);
@@ -448,14 +443,12 @@ void painting_renderer_use_material(material* mat) {
   GLint ambient_light = glGetUniformLocation(*prog, "ambient_light");
   GLint specular_light = glGetUniformLocation(*prog, "specular_light");
   
-  v3_to_array(CAMERA->position, EYE_POSITION);
+  glUniform3f(light_position, LIGHT->position.x, LIGHT->position.y, LIGHT->position.z);
+  glUniform3f(eye_position, CAMERA->position.x, CAMERA->position.y, CAMERA->position.z);
   
-  glUniform3fv(light_position, 1, LIGHT_POSITION);
-  glUniform3fv(eye_position, 1, EYE_POSITION);
-  
-  glUniform3fv(diffuse_light, 1, DIFFUSE_LIGHT);
-  glUniform3fv(specular_light, 1, SPECULAR_LIGHT);
-  glUniform3fv(ambient_light, 1, AMBIENT_LIGHT);
+  glUniform3f(diffuse_light, LIGHT->diffuse_color.x, LIGHT->diffuse_color.y, LIGHT->diffuse_color.z);
+  glUniform3f(specular_light, LIGHT->specular_color.x, LIGHT->specular_color.y, LIGHT->specular_color.z);
+  glUniform3f(ambient_light, LIGHT->ambient_color.x, LIGHT->ambient_color.y, LIGHT->ambient_color.z);
 
   GLint world_matrix_u = glGetUniformLocation(*prog, "world_matrix");
   glUniformMatrix4fv(world_matrix_u, 1, 0, world_matrix);
@@ -465,6 +458,12 @@ void painting_renderer_use_material(material* mat) {
   
   GLint view_matrix_u = glGetUniformLocation(*prog, "view_matrix");
   glUniformMatrix4fv(view_matrix_u, 1, 0, view_matrix);
+  
+  GLint lproj_matrix_u = glGetUniformLocation(*prog, "light_proj");
+  glUniformMatrix4fv(lproj_matrix_u, 1, 0, lproj_matrix);
+  
+  GLint lview_matrix_u = glGetUniformLocation(*prog, "light_view");
+  glUniformMatrix4fv(lview_matrix_u, 1, 0, lview_matrix);
   
   /* Set material parameters */
   
@@ -512,8 +511,14 @@ void painting_renderer_use_material(material* mat) {
     } else {
       /* Do nothing */
     }
-     
+    
   }
+  
+  GLint shadow_map = glGetUniformLocation(*prog, "shadow_map");
+  glUniform1i(shadow_map, tex_counter);
+  glActiveTexture(GL_TEXTURE0 + tex_counter);
+  glBindTexture(GL_TEXTURE_2D, *SHADOW_TEX);
+  tex_counter++;
 
 }
 

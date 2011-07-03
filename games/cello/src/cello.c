@@ -47,6 +47,7 @@ static light* sun;
 static int mouse_x;
 static int mouse_y;
 static int mouse_down;
+static int mouse_right_down;
 
 static int use_piano = 1;
 
@@ -63,7 +64,7 @@ void cello_init() {
 
   shadow_mapper_init(sun);  
   
-#define FORWARD_RENDER
+#define PAINTING_RENDER
 
 #ifdef DEFERRED_RENDER
   deferred_renderer_init();
@@ -80,6 +81,8 @@ void cello_init() {
 #ifdef PAINTING_RENDER
   painting_renderer_init();
   painting_renderer_set_camera(cam);
+  painting_renderer_set_light(sun);
+  painting_renderer_set_shadow_texture( shadow_mapper_depth_texture() );
 #endif
   
   
@@ -165,7 +168,12 @@ void cello_update() {
     vector3 rotation_axis = v3_normalize(v3_cross( v3_sub(cam->position, cam->target) , v3(0,1,0) ));
     
     cam->position = m33_mul_v3(m33_rotation_axis_angle(rotation_axis, a2 ), cam->position );
-  } 
+  }
+  
+  if(keystate & SDL_BUTTON(3)){
+    sun->position.x += mouse_y;
+    sun->position.z += mouse_x;
+  }
 
   mouse_x = 0;
   mouse_y = 0;
@@ -189,21 +197,14 @@ void cello_event(SDL_Event event) {
   break;
 
   case SDL_MOUSEBUTTONDOWN:
-  
-    if (event.button.button == SDL_BUTTON_LEFT) {
-      mouse_down = 1;
-    } else if (event.button.button == SDL_BUTTON_WHEELUP) {
+
+    if (event.button.button == SDL_BUTTON_WHEELUP) {
       cam->position = v3_sub(cam->position, v3_normalize(cam->position));
-    } else if (event.button.button == SDL_BUTTON_WHEELDOWN) {
-      cam->position = v3_add(cam->position, v3_normalize(cam->position));
-    } 
-    
-  break;
-    
-  case SDL_MOUSEBUTTONUP:
-    if (event.button.button == SDL_BUTTON_LEFT) {
-      mouse_down = 0;
     }
+    if (event.button.button == SDL_BUTTON_WHEELDOWN) {
+      cam->position = v3_add(cam->position, v3_normalize(cam->position));
+    }
+    
   break;
   
   case SDL_MOUSEMOTION:
@@ -255,6 +256,15 @@ void cello_render() {
 #endif
 
 #ifdef PAINTING_RENDER
+
+  shadow_mapper_begin();
+  if(use_piano) {
+    shadow_mapper_render_renderable(r_piano);
+    shadow_mapper_render_renderable(r_floor);
+  } else {
+    shadow_mapper_render_renderable(r_cello);
+  }
+  shadow_mapper_end();
 
   painting_renderer_begin_render();
   if(use_piano) {

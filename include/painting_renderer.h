@@ -2,12 +2,16 @@
 #define painting_renderer_h
 
 #include "camera.h"
+#include "light.h"
+#include "texture.h"
 #include "painting_renderable.h"
 
 void painting_renderer_init();
 void painting_renderer_finish();
 
-void painting_renderer_set_camera(camera* cam);
+void painting_renderer_set_camera(camera* c);
+void painting_renderer_set_light(light* l);
+void painting_renderer_set_shadow_texture(texture* t);
 void painting_renderer_setup_camera();
 
 void painting_renderer_begin_render();

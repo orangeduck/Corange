@@ -71,30 +71,25 @@ void forward_renderer_begin() {
 
 void forward_renderer_setup_camera() {
 
-  /* Load camera data */
-  if (CAMERA != NULL) {
-    
-    matrix_4x4 viewm = camera_view_matrix(CAMERA);
-    matrix_4x4 projm = camera_proj_matrix(CAMERA, viewport_ratio() );
-    
-    m44_to_array(viewm, view_matrix);
-    m44_to_array(projm, proj_matrix);
+  matrix_4x4 viewm = camera_view_matrix(CAMERA);
+  matrix_4x4 projm = camera_proj_matrix(CAMERA, viewport_ratio() );
+  
+  m44_to_array(viewm, view_matrix);
+  m44_to_array(projm, proj_matrix);
 
-    glMatrixMode(GL_MODELVIEW);
-    glLoadMatrixf(view_matrix);
-    
-    glMatrixMode(GL_PROJECTION);
-    glLoadMatrixf(proj_matrix);
-    
-    /* Setup light stuff */
-    
-    matrix_4x4 lviewm = light_view_matrix(LIGHT);
-    matrix_4x4 lprojm = light_proj_matrix(LIGHT);
-    
-    m44_to_array(lviewm, lview_matrix);
-    m44_to_array(lprojm, lproj_matrix);
-    
-  }
+  glMatrixMode(GL_MODELVIEW);
+  glLoadMatrixf(view_matrix);
+  
+  glMatrixMode(GL_PROJECTION);
+  glLoadMatrixf(proj_matrix);
+  
+  /* Setup light stuff */
+  
+  matrix_4x4 lviewm = light_view_matrix(LIGHT);
+  matrix_4x4 lprojm = light_proj_matrix(LIGHT);
+  
+  m44_to_array(lviewm, lview_matrix);
+  m44_to_array(lprojm, lproj_matrix);
   
 }
 

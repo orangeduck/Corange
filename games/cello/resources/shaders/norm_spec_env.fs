@@ -37,11 +37,11 @@ void main() {
   
   vec2 shadow_coord = (light_pos.xy / light_pos.w) / 2.0 + 0.5;
   
-  float shadow_depth = texture2D( shadow_map, shadow_coord ).r + 0.003;
+  float shadow_depth = texture2D( shadow_map, shadow_coord ).r + 0.00275;
   float our_depth = (light_pos.z / light_pos.w);
   
   if (our_depth > shadow_depth) {
-	shadow = 0.0;
+	shadow = 0.1;
   }
   
   // END
