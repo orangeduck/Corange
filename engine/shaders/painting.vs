@@ -11,6 +11,7 @@ uniform vec3 eye_position;
 
 uniform float density;
 uniform float skip;
+uniform vec2 size;
 
 varying vec2 uvs;
 varying vec4 screen_position;
@@ -46,15 +47,14 @@ void main()
 		
 		backfacing = 0.0;
 		
-		float size = 30.0 * density * max(-normal_to_screen, 0.0) + 0.1;
-		vec4 dim = size * vec4( 1.0 , 1.0, 1.0, 1.0 );
+		float scale = 1000.0 * density * skip * max(-normal_to_screen, 0.0) + 0.075;
 		
 		uvs = gl_MultiTexCoord0.xy;
 		
 		screen_position = proj_matrix * view_matrix * world_position;
 		
 		depth = gl_Position.z / gl_Position.w;
-		gl_Position = rot * (gl_Vertex * dim) + screen_position;
+		gl_Position = rot * (gl_Vertex * vec4( size, 1.0, 1.0 ) * scale) + screen_position;
 		
 	}
 	

@@ -640,6 +640,34 @@ vector3 triangle_random_position(vertex v1, vertex v2, vertex v3) {
   
 }
 
+float triangle_difference_u(vertex v1, vertex v2, vertex v3) {
+  
+  float max = v1.uvs.x;
+  max = v2.uvs.x > max ? v2.uvs.x : max;
+  max = v3.uvs.x > max ? v3.uvs.x : max;
+  
+  float min = v1.uvs.x;
+  min = v2.uvs.x < min ? v2.uvs.x : min;
+  min = v3.uvs.x < min ? v3.uvs.x : min;
+  
+  return max - min;
+  
+}
+
+float triangle_difference_v(vertex v1, vertex v2, vertex v3) {
+
+  float max = v1.uvs.y;
+  max = v2.uvs.x > max ? v2.uvs.y : max;
+  max = v3.uvs.x > max ? v3.uvs.y : max;
+  
+  float min = v1.uvs.y;
+  min = v2.uvs.y < min ? v2.uvs.y : min;
+  min = v3.uvs.y < min ? v3.uvs.y : min;
+  
+  return max - min;
+
+}
+
 /* CBM format - Corange Binary Model */
 
 /* TODO: Change all int values in the model specification and loaders to longs */

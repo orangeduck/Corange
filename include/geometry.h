@@ -114,6 +114,9 @@ vector3 triangle_normal(vertex v1, vertex v2, vertex v3);
 vector3 triangle_random_position(vertex v1, vertex v2, vertex v3);
 float triangle_area(vertex v1, vertex v2, vertex v3);
 
+float triangle_difference_u(vertex v1, vertex v2, vertex v3);
+float triangle_difference_v(vertex v1, vertex v2, vertex v3);
+
 render_model* cbm_load_file(char* filename);
 void cbm_write_file(render_model* model);
 

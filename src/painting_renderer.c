@@ -309,20 +309,6 @@ void painting_renderer_paint_renderable(painting_renderable* pr) {
   glActiveTexture(GL_TEXTURE0 + 1);
   glBindTexture(GL_TEXTURE_2D, depth_texture);
   
-  glUniform1i(glGetUniformLocation(*PAINTING_PROG, "brush"), 2);
-  glActiveTexture(GL_TEXTURE0 + 2);
-  glBindTexture(GL_TEXTURE_2D, *pr->brush);
-  
-  int skip = v3_length(CAMERA->position) / (pr->density * 250) - 1;
-  skip = skip > (pr->num_index_vbos-1) ? (pr->num_index_vbos-1) : skip;
-  //printf("Skip: %i\n", skip);
-  
-  GLint density = glGetUniformLocation(*PAINTING_PROG, "density");
-  glUniform1f(density, pr->density * 0.75 * (skip+1));
-  
-  GLint skip_u = glGetUniformLocation(*PAINTING_PROG, "skip");
-  glUniform1f(skip_u, (float)skip);
-  
   glBindBuffer(GL_ARRAY_BUFFER, pr->position_vbo);
   glVertexPointer(3, GL_FLOAT, 0, 0);
   glEnableClientState(GL_VERTEX_ARRAY);
@@ -343,8 +329,52 @@ void painting_renderer_paint_renderable(painting_renderable* pr) {
   glVertexAttribPointer(FACE_TANGENT, 3, GL_FLOAT, GL_FALSE, 0, 0);
   glEnableVertexAttribArray(FACE_TANGENT);
   
+  GLint density = glGetUniformLocation(*PAINTING_PROG, "density");
+  glUniform1f(density, pr->density * pr->density);
+  
+  int skip = v3_length(CAMERA->position) / (pr->density * 600) - 1;
+  skip = skip > (pr->num_index_vbos-1) ? (pr->num_index_vbos-1) : skip;
+  
+  int skip2 =  skip + 2;
+  skip2 = skip2 > (pr->num_index_vbos-1) ? (pr->num_index_vbos-1) : skip2;
+  
+  //printf("Skip: %i, Skip2: %i\n", skip, skip2);
+  
+  GLint opacity = glGetUniformLocation(*PAINTING_PROG, "opacity");
+  GLint skip_u = glGetUniformLocation(*PAINTING_PROG, "skip");
+  GLint size = glGetUniformLocation(*PAINTING_PROG, "size");
+  
+  /* First Pass */
+  
+  /*
+  
+  glUniform1f(opacity, 0.5);
+  
+  glUniform1i(glGetUniformLocation(*PAINTING_PROG, "brush"), 2);
+  glActiveTexture(GL_TEXTURE0 + 2);
+  glBindTexture(GL_TEXTURE_2D, *pr->big_brush);
+  
+  glUniform1f(skip_u, (float)skip2+1);
+  
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pr->index_vbos[skip2]);
+  glDrawElements(GL_QUADS, (pr->num_particles / (skip + 1)) * 4, GL_UNSIGNED_INT, 0);
+  
+  */
+  
+  /* Detail pass */
+  
+  glUniform1f(opacity, 1.0);
+  glUniform2f(size, 1.75, 1.75);
+  
+  glUniform1i(glGetUniformLocation(*PAINTING_PROG, "brush"), 2);
+  glActiveTexture(GL_TEXTURE0 + 2);
+  glBindTexture(GL_TEXTURE_2D, *pr->brush);
+  
+  glUniform1f(skip_u, (float)skip+1);
+  
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pr->index_vbos[skip]);
-  glDrawElements(GL_QUADS, (pr->num_particles * 4) / (skip + 1), GL_UNSIGNED_INT, 0);
+  glDrawElements(GL_QUADS, (pr->num_particles / (skip + 1)) * 4, GL_UNSIGNED_INT, 0);
+  
   
 }
 

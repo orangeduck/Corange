@@ -11,7 +11,7 @@ void painting_renderable_add_model(painting_renderable* pr, model* m) {
   renderable_add_model(pr->renderable, m);
   
   float surface_area = model_surface_area(m);
-  pr->density = 0.02f;
+  pr->density = 0.015f;
   
   pr->num_particles = (int)(surface_area / pr->density);
   
@@ -29,7 +29,7 @@ void painting_renderable_add_model(painting_renderable* pr, model* m) {
   float* face_normals_buffer = malloc( sizeof(float) * pr->num_particles * 4 * 3);
   float* face_tangents_buffer = malloc( sizeof(float) * pr->num_particles * 4 * 3);
   
-  pr->num_index_vbos = 20;
+  pr->num_index_vbos = 15;
   pr->index_vbos = malloc( sizeof(GLuint) * pr->num_index_vbos );
   glGenBuffers(pr->num_index_vbos, pr->index_vbos);
   
@@ -71,8 +71,16 @@ void painting_renderable_add_model(painting_renderable* pr, model* m) {
         
         vector3 position = triangle_random_position(v1, v2, v3);
         vector3 normal = triangle_normal(v1, v2, v3);
-        //vector3 tangent = triangle_tangent(v1, v2, v3);
-        vector3 tangent = triangle_binormal(v1, v2, v3);
+        vector3 tangent;
+        
+        float u_diff = triangle_difference_u(v1, v2, v3);
+        float v_diff = triangle_difference_v(v1, v2, v3);
+        
+        if(u_diff < v_diff) {
+          tangent = triangle_tangent(v1, v2, v3);
+        } else {
+          tangent = triangle_binormal(v1, v2, v3);
+        }
         
         /* Place particle */
         
@@ -199,11 +207,11 @@ void painting_renderable_add_model(painting_renderable* pr, model* m) {
     
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pr->index_vbos[i]);
     
-    int skip = (i+1)*(i+1)*(i+1);
+    int skip = (i+1)*(i+1);
     int num_indicies = (pr->num_particles * 4) / (skip);
     
-    //printf("Num Particles: %i\n", pr->num_particles);
-    //printf("Num Indicies for skip %i: %i\n", i, num_indicies);
+    printf("Num Particles: %i\n", pr->num_particles);
+    printf("Num Indicies for skip %i: %i\n", i, num_indicies);
     
     int* index_buffer = malloc( sizeof(int) * num_indicies );
     
@@ -250,7 +258,8 @@ painting_renderable* painting_renderable_new(char* name) {
   pr->particle_size = 1.0f;
   pr->particle_min_size = 0.0f;
   pr->particle_max_size = 10000.0f;
-  pr->brush = asset_get("./engine/resources/brush2.dds");
+  pr->brush = asset_get("./engine/resources/brush4.dds");
+  pr->big_brush = asset_get("./engine/resources/brush_round.dds");
   
   return pr;
   

@@ -31,6 +31,7 @@ typedef struct {
   float particle_max_size;
   
   texture* brush;
+  texture* big_brush;
 
 } painting_renderable;
 
