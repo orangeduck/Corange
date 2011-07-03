@@ -9,4 +9,4 @@ texture env_map = /resources/piano/piano_env.dds
 float glossiness = 15.0
 float bumpiness = 0.75
 float specular_level = 3.0
-float env_amount = 1.0
+float env_amount = 0.5

@@ -69,6 +69,7 @@ matrix_4x4 m44_rotation_quaternion(vector4 q);
 
 matrix_4x4 m44_view_look_at(vector3 position, vector3 target, vector3 up);
 matrix_4x4 m44_perspective(float fov, float near_clip, float far_clip, float ratio);
+matrix_4x4 m44_orthographic(float left, float right, float bottom, float top, float near, float far);
 
 matrix_4x4 m44_world(vector3 position, vector3 scale, vector4 rotation);
 

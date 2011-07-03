@@ -44,6 +44,7 @@ typedef struct {
   vector4 rotation;
   
   int active;
+  int recieve_shadows;
   
 } renderable;
 

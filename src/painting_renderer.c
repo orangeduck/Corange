@@ -46,7 +46,7 @@ static int FACE_POSITION;
 static int FACE_NORMAL;
 static int FACE_TANGENT;
 
-static GLuint fbo = 0;
+static GLuint fbo;
 static GLuint diffuse_buffer;
 static GLuint depth_buffer;
 
@@ -117,9 +117,19 @@ void painting_renderer_init() {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth_texture, 0);
   
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  
 }
 
 void painting_renderer_finish() {  
+
+  glDeleteFramebuffers(1, &fbo);
+  
+  glDeleteRenderbuffers(1, &diffuse_buffer);
+  glDeleteRenderbuffers(1, &depth_buffer);
+  
+  glDeleteTextures(1,&diffuse_texture);
+  glDeleteTextures(1,&depth_texture);
   
 }
 
@@ -181,9 +191,7 @@ void painting_renderer_begin_painting() {
   glDisable(GL_DEPTH_TEST);
   glDepthMask(GL_FALSE);
   glDisable(GL_LIGHTING);
-  
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_ZERO, GL_SRC_COLOR);
+  glDisable(GL_BLEND);
   
 	glMatrixMode(GL_PROJECTION);
   glPushMatrix();
@@ -326,8 +334,6 @@ void painting_renderer_render_renderable(painting_renderable* pr) {
     glUseProgramObjectARB(0);
 
   }
-  
-  glPopMatrix();
   
 }
 

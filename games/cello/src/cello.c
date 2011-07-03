@@ -10,6 +10,7 @@
 #include "forward_renderer.h"
 #include "deferred_renderer.h"
 #include "painting_renderer.h"
+#include "shadow_mapper.h"
 
 #include "font.h"
 #include "timing.h"
@@ -41,6 +42,7 @@ static render_text* rt_framerate;
 static render_text* rt_test_text;
 
 static camera* cam;
+static light* sun;
 
 static int mouse_x;
 static int mouse_y;
@@ -55,10 +57,13 @@ void cello_init() {
   /* New Camera */
   
   cam = camera_new( v3(20.0, 0.0, 0.0) , v3_zero() );
+  sun = light_new_type( v3(30,43,-26), light_type_spot );
   
   /* Renderer Setup */
 
-#define PAINTING_RENDER
+  shadow_mapper_init(sun);  
+  
+#define FORWARD_RENDER
 
 #ifdef DEFERRED_RENDER
   deferred_renderer_init();
@@ -68,12 +73,15 @@ void cello_init() {
 #ifdef FORWARD_RENDER  
   forward_renderer_init();
   forward_renderer_set_camera(cam);
+  forward_renderer_set_light(sun);
+  forward_renderer_set_shadow_texture( shadow_mapper_depth_texture() );
 #endif
 
 #ifdef PAINTING_RENDER
   painting_renderer_init();
   painting_renderer_set_camera(cam);
 #endif
+  
   
   /* Script stuff */
   
@@ -220,6 +228,16 @@ void cello_render() {
 #endif
   
 #ifdef FORWARD_RENDER
+
+  shadow_mapper_begin();
+  if(use_piano) {
+    shadow_mapper_render_renderable(r_piano);
+    shadow_mapper_render_renderable(r_floor);
+  } else {
+    shadow_mapper_render_renderable(r_cello);
+  }
+  shadow_mapper_end();
+
   forward_renderer_begin();
   
   glClearColor(1.0f, 0.769f, 0.0f, 0.0f);
@@ -233,6 +251,7 @@ void cello_render() {
   }
   
   forward_renderer_end();
+  
 #endif
 
 #ifdef PAINTING_RENDER
@@ -293,6 +312,8 @@ void cello_finish() {
 #ifdef PAINTING_RENDER
   painting_renderer_finish();
 #endif
+
+  shadow_mapper_finish();
 
   printf("Cello game finish!\n");
 

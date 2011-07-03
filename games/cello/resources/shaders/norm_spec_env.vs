@@ -6,7 +6,7 @@ uniform mat4 proj_matrix;
 uniform mat4 view_matrix;
  
 varying vec2 uvs;
-varying vec3 world_position;
+varying vec4 world_position;
 varying mat4 TBN;
 
 void main() {
@@ -25,7 +25,7 @@ void main() {
 			  vec4(0.0,0.0,0.0,1.0)
 			 );
   
-  world_position = w_position.xyz / w_position.w;
+  world_position = w_position;
   
   gl_Position = proj_matrix * view_matrix * w_position;
   

@@ -18,8 +18,8 @@ renderable* renderable_new(char* name) {
   r->position = v3_zero();
   r->scale = v3_one();
   r->rotation = v4_quaternion_id();
-  
-  int active = 1;
+  r->recieve_shadows = 1;
+  r->active = 1;
   
   return r;
 

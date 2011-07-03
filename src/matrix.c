@@ -441,6 +441,22 @@ matrix_4x4 m44_perspective(float fov, float near_clip, float far_clip, float rat
   return proj_matrix;
 }
 
+matrix_4x4 m44_orthographic(float left, float right, float bottom, float top, float near, float far) {
+
+  matrix_4x4 m = m44_id();
+  
+  m.ww = 2 / (right - left);
+  m.xx = 2 / (top - bottom);
+  m.yy = -2 / (far - near);
+  m.zz = 1;
+  
+  m.wz = - (right + left) / (right - left);
+  m.xz = - (top + bottom) / (top - bottom);
+  m.yz = - (far + near) / (far - near);
+  
+  return m;
+}
+
 matrix_4x4 m44_translation(vector3 v) {
 
   matrix_4x4 m = m44_id();
