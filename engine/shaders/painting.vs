@@ -36,7 +36,8 @@ void main()
 	} else {
 		
 		vec4 screen_tangent = proj_matrix * view_matrix * vec4(face_tangent, 1.0);
-		float a = acos( dot(normalize(screen_tangent.xy), vec2(0.0,1.0) ) );
+		
+		float a = -atan(screen_tangent.y, screen_tangent.x);
 		
 		mat4 rot = mat4(
 			vec4(cos(a), -sin(a), 0, 0),
@@ -47,7 +48,7 @@ void main()
 		
 		backfacing = 0.0;
 		
-		float scale = 1000.0 * density * skip * max(-normal_to_screen, 0.0) + 0.075;
+		float scale = 0.25 * (skip + 3) * max(-normal_to_screen, 0.0) + 0.075;
 		
 		uvs = gl_MultiTexCoord0.xy;
 		

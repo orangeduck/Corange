@@ -364,7 +364,7 @@ void painting_renderer_paint_renderable(painting_renderable* pr) {
   /* Detail pass */
   
   glUniform1f(opacity, 1.0);
-  glUniform2f(size, 1.75, 1.75);
+  glUniform2f(size, pr->brush_size.x, pr->brush_size.y);
   
   glUniform1i(glGetUniformLocation(*PAINTING_PROG, "brush"), 2);
   glActiveTexture(GL_TEXTURE0 + 2);

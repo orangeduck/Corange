@@ -22,19 +22,19 @@
 #define DEFAULT_HEIGHT 600
 
 static model* cello;
-static model* piano;
-
-static render_model* rm_cello;
-static render_model* rm_piano;
-
 static material* cello_mat;
-static material* piano_mat;
-
 static renderable* r_cello;
-static renderable* r_piano;
-
 static painting_renderable* pr_cello;
+
+static model* piano;
+static material* piano_mat;
+static renderable* r_piano;
 static painting_renderable* pr_piano;
+
+static model* floor;
+static material* floor_mat;
+static renderable* r_floor;
+static painting_renderable* pr_floor;
 
 static font* console_font;
 static render_text* rt_framerate;
@@ -84,32 +84,45 @@ void cello_init() {
   
   load_folder("/resources/cello/");
   load_folder("/resources/piano/");
+  load_folder("/resources/floor/");
   load_folder("/resources/shaders/");
+  
+  texture* brush = asset_get("./engine/resources/brush4.dds");
+  
+  printf("Brush: %i\n", brush);
   
   cello = asset_get("/resources/cello/cello.obj");
   cello_mat = asset_get("/resources/cello/cello.mat");
   
-  piano = asset_get("/resources/piano/piano.obj");
-  piano_mat = asset_get("/resources/piano/piano.mat");
-  
-  rm_cello = to_render_model(cello);
-  rm_piano = to_render_model(piano);
-    
   r_cello = renderable_new("cello");
   renderable_add_model(r_cello, cello);
   renderable_set_material(r_cello, cello_mat);
   
-  pr_cello = painting_renderable_new("paint_cello");
+  pr_cello = painting_renderable_new("paint_cello", 0.015, v2(1,1), brush );
   painting_renderable_add_model(pr_cello, cello);
   renderable_set_material(pr_cello->renderable, cello_mat);
+  
+  piano = asset_get("/resources/piano/piano.obj");
+  piano_mat = asset_get("/resources/piano/piano.mat");
   
   r_piano = renderable_new("piano");
   renderable_add_model(r_piano, piano);
   renderable_set_material(r_piano, piano_mat);
   
-  pr_piano = painting_renderable_new("paint_piano");
+  pr_piano = painting_renderable_new("paint_piano", 0.015, v2(1,1), brush );
   painting_renderable_add_model(pr_piano, piano);
   renderable_set_material(pr_piano->renderable, piano_mat);
+  
+  floor = asset_get("/resources/floor/floor.obj");
+  floor_mat = asset_get("/resources/floor/floor.mat");
+  
+  r_floor = renderable_new("floor");
+  renderable_add_model(r_floor, floor);
+  renderable_set_material(r_floor, floor_mat);
+  
+  pr_floor = painting_renderable_new("paint_floor", 0.05, v2(1.5,2), brush );
+  painting_renderable_add_model(pr_floor, floor);
+  renderable_set_material(pr_floor->renderable, floor_mat);
   
   /* Put some text on the screen */
   
@@ -197,6 +210,7 @@ void cello_render() {
 #ifdef DEFERRED_RENDER
   deferred_renderer_begin();
   if(use_piano) {
+    deferred_renderer_render_renderable(r_floor);
     deferred_renderer_render_renderable(r_piano);
   } else {
     deferred_renderer_render_renderable(r_cello);
@@ -211,6 +225,7 @@ void cello_render() {
   glClear(GL_COLOR_BUFFER_BIT);
   
   if(use_piano) {
+    forward_renderer_render_renderable(r_floor);
     forward_renderer_render_renderable(r_piano);
   } else {
     forward_renderer_render_renderable(r_cello);
@@ -221,29 +236,24 @@ void cello_render() {
 
 #ifdef PAINTING_RENDER
 
+  painting_renderer_begin_render();
   if(use_piano) {
-  
-    painting_renderer_begin_render();
+    painting_renderer_render_renderable(pr_floor);
     painting_renderer_render_renderable(pr_piano);
-    painting_renderer_end_render();
-
-    painting_renderer_begin_painting();
-    painting_renderer_paint_renderable(pr_piano);
-    painting_renderer_end_painting();
-    
-
   } else {
-
-    painting_renderer_begin_render();
     painting_renderer_render_renderable(pr_cello);
-    painting_renderer_end_render();
-
-    painting_renderer_begin_painting();
-    painting_renderer_paint_renderable(pr_cello);
-    painting_renderer_end_painting();
-  
   }
-
+  painting_renderer_end_render();
+  
+  painting_renderer_begin_painting();
+  if(use_piano) {
+    painting_renderer_paint_renderable(pr_floor);
+    painting_renderer_paint_renderable(pr_piano);
+  } else {
+    painting_renderer_paint_renderable(pr_cello);
+  }
+  painting_renderer_end_painting();
+  
 #endif
 
   /* Render text */
@@ -257,13 +267,14 @@ void cello_render() {
 
 void cello_finish() {
 
-  render_model_delete(rm_cello);
   renderable_delete(r_cello);
   painting_renderable_delete(pr_cello);
   
-  render_model_delete(rm_piano);
   renderable_delete(r_piano);
   painting_renderable_delete(pr_piano);
+  
+  renderable_delete(r_floor);
+  painting_renderable_delete(pr_floor);
   
   camera_delete(cam);
 

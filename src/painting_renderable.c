@@ -6,12 +6,38 @@
 
 /* vec3 ParticlePosition | vec2 ParticleUVs | vec3 FacePosition | vec3 FaceNormal */
 
+painting_renderable* painting_renderable_new(char* name, float density, vector2 brush_size, texture* brush) {
+  
+  painting_renderable* pr = malloc(sizeof(painting_renderable));
+  pr->renderable = renderable_new(name);
+  pr->density = density;
+  pr->brush_size = brush_size;
+  pr->brush = brush;
+  
+  return pr;
+  
+}
+
+void painting_renderable_delete(painting_renderable* pr) {
+
+  glDeleteBuffers(1, &pr->position_vbo);
+  glDeleteBuffers(1, &pr->uvs_vbo);
+  glDeleteBuffers(1, &pr->face_position_vbo);
+  glDeleteBuffers(1, &pr->face_normal_vbo);
+  glDeleteBuffers(1, &pr->face_tangent_vbo);
+  
+  glDeleteBuffers(pr->num_index_vbos, pr->index_vbos);
+  
+  renderable_delete(pr->renderable);
+  free(pr);
+
+}
+
 void painting_renderable_add_model(painting_renderable* pr, model* m) {
 
   renderable_add_model(pr->renderable, m);
   
   float surface_area = model_surface_area(m);
-  pr->density = 0.015f;
   
   pr->num_particles = (int)(surface_area / pr->density);
   
@@ -76,7 +102,7 @@ void painting_renderable_add_model(painting_renderable* pr, model* m) {
         float u_diff = triangle_difference_u(v1, v2, v3);
         float v_diff = triangle_difference_v(v1, v2, v3);
         
-        if(u_diff < v_diff) {
+        if(u_diff > v_diff) {
           tangent = triangle_tangent(v1, v2, v3);
         } else {
           tangent = triangle_binormal(v1, v2, v3);
@@ -234,33 +260,4 @@ void painting_renderable_add_model(painting_renderable* pr, model* m) {
   }
   
 
-}
-
-void painting_renderable_delete(painting_renderable* pr) {
-
-  glDeleteBuffers(1, &pr->position_vbo);
-  glDeleteBuffers(1, &pr->uvs_vbo);
-  glDeleteBuffers(1, &pr->face_position_vbo);
-  glDeleteBuffers(1, &pr->face_normal_vbo);
-  glDeleteBuffers(1, &pr->face_tangent_vbo);
-  
-  glDeleteBuffers(pr->num_index_vbos, pr->index_vbos);
-  
-  renderable_delete(pr->renderable);
-  free(pr);
-
-}
-
-painting_renderable* painting_renderable_new(char* name) {
-  
-  painting_renderable* pr = malloc(sizeof(painting_renderable));
-  pr->renderable = renderable_new(name);
-  pr->particle_size = 1.0f;
-  pr->particle_min_size = 0.0f;
-  pr->particle_max_size = 10000.0f;
-  pr->brush = asset_get("./engine/resources/brush4.dds");
-  pr->big_brush = asset_get("./engine/resources/brush_round.dds");
-  
-  return pr;
-  
 }

@@ -9,7 +9,7 @@
 #define DEFAULT_NEAR_CLIP 1.0
 #define DEFAULT_FAR_CLIP 1024.0
 
-#define DEFAULT_FOV 0.872664626
+#define DEFAULT_FOV 0.785398163
 
 camera* camera_new(vector3 position, vector3 target) {
 

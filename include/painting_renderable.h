@@ -4,6 +4,7 @@
 #include "renderable.h"
 
 #include "texture.h"
+#include "vector.h"
 
 
 /* Particle VBO is structured in this way */
@@ -26,16 +27,13 @@ typedef struct {
   int num_particles;
   
   float density;
-  float particle_size;
-  float particle_min_size;
-  float particle_max_size;
   
   texture* brush;
-  texture* big_brush;
+  vector2 brush_size;
 
 } painting_renderable;
 
-painting_renderable* painting_renderable_new(char* name);
+painting_renderable* painting_renderable_new(char* name, float density, vector2 brush_size, texture* brush);
 void painting_renderable_delete(painting_renderable* pr);
 
 void painting_renderable_add_model(painting_renderable* r, model* m);
