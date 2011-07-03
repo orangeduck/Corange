@@ -236,8 +236,8 @@ void painting_renderable_add_model(painting_renderable* pr, model* m) {
     int skip = (i+1)*(i+1);
     int num_indicies = (pr->num_particles * 4) / (skip);
     
-    printf("Num Particles: %i\n", pr->num_particles);
-    printf("Num Indicies for skip %i: %i\n", i, num_indicies);
+    //printf("Num Particles: %i\n", pr->num_particles);
+    //printf("Num Indicies for skip %i: %i\n", i, num_indicies);
     
     int* index_buffer = malloc( sizeof(int) * num_indicies );
     

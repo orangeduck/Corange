@@ -53,6 +53,8 @@ static GLuint depth_buffer;
 static GLuint diffuse_texture;
 static GLuint depth_texture;
 
+static int DOWNSCALE = 4;
+
 void painting_renderer_init() {
   
   /* Enables */
@@ -76,7 +78,7 @@ void painting_renderer_init() {
   SPECULAR_LIGHT = malloc(sizeof(float) * 3);
   AMBIENT_LIGHT = malloc(sizeof(float) * 3);
   
-  DIFFUSE_LIGHT[0] = 1.0f; DIFFUSE_LIGHT[1] = 1.0f; DIFFUSE_LIGHT[2] = 1.0f;
+  DIFFUSE_LIGHT[0] = 1.5f; DIFFUSE_LIGHT[1] = 1.5f; DIFFUSE_LIGHT[2] = 1.5f;
   SPECULAR_LIGHT[0] = 1.0f; SPECULAR_LIGHT[1] = 1.0f; SPECULAR_LIGHT[2] = 1.0f;
   AMBIENT_LIGHT[0] = 0.5f; AMBIENT_LIGHT[1] = 0.5f; AMBIENT_LIGHT[2] = 0.5f;
   
@@ -84,19 +86,22 @@ void painting_renderer_init() {
   glBindFramebuffer(GL_FRAMEBUFFER, fbo);
   
   glGenRenderbuffers(1, &depth_buffer);
-  glGenRenderbuffers(1, &diffuse_buffer);
+  glGenRenderbuffers(1, &diffuse_buffer); 
+  
+  int width =  viewport_width() / DOWNSCALE;
+  int height =  viewport_height() / DOWNSCALE;
   
   glBindRenderbuffer(GL_RENDERBUFFER, diffuse_buffer);
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, viewport_width(), viewport_height());
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, width, height);
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, diffuse_buffer);   
   
   glBindRenderbuffer(GL_RENDERBUFFER, depth_buffer);
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, viewport_width(), viewport_height());
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width, height);
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_buffer);  
   
   glGenTextures(1, &diffuse_texture);
   glBindTexture(GL_TEXTURE_2D, diffuse_texture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, viewport_width(), viewport_height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -105,7 +110,7 @@ void painting_renderer_init() {
   
   glGenTextures(1, &depth_texture);
   glBindTexture(GL_TEXTURE_2D, depth_texture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, viewport_width(), viewport_height(), 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -134,6 +139,8 @@ void painting_renderer_begin_render() {
   glDrawBuffers(1, buffers);
   
   painting_renderer_setup_camera();
+  
+  glViewport(0, 0, viewport_width() / DOWNSCALE, viewport_height() / DOWNSCALE);
   
 }
 
@@ -165,9 +172,47 @@ void painting_renderer_begin_painting() {
 
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   
+  glViewport(0, 0, viewport_width(), viewport_height());
+  
   glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
   glClearDepth(1.0f);
   glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+  
+  glDisable(GL_DEPTH_TEST);
+  glDepthMask(GL_FALSE);
+  glDisable(GL_LIGHTING);
+  
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_ZERO, GL_SRC_COLOR);
+  
+	glMatrixMode(GL_PROJECTION);
+  glPushMatrix();
+	glLoadIdentity();
+	glOrtho(-1.0, 1.0, -1.0, 1.0, -1, 1);
+  
+	glMatrixMode(GL_MODELVIEW);
+  glPushMatrix();
+	glLoadIdentity();
+  
+  glActiveTexture(GL_TEXTURE0 + 0 );
+  glBindTexture(GL_TEXTURE_2D, diffuse_texture);
+  glEnable(GL_TEXTURE_2D);
+  
+	glBegin(GL_QUADS);
+		glMultiTexCoord2f(GL_TEXTURE0, 0.0f, 0.0f); glVertex3f(-1.0, -1.0,  0.0f);
+		glMultiTexCoord2f(GL_TEXTURE0, 1.0f, 0.0f); glVertex3f(1.0, -1.0,  0.0f);
+		glMultiTexCoord2f(GL_TEXTURE0, 1.0f, 1.0f); glVertex3f(1.0,  1.0,  0.0f);
+		glMultiTexCoord2f(GL_TEXTURE0, 0.0f, 1.0f); glVertex3f(-1.0,  1.0,  0.0f);
+	glEnd();
+  
+  glActiveTexture(GL_TEXTURE0 + 0 );
+  glDisable(GL_TEXTURE_2D);
+  
+  glMatrixMode(GL_PROJECTION);
+  glPopMatrix();
+
+  glMatrixMode(GL_MODELVIEW);
+  glPopMatrix();
   
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

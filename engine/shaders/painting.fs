@@ -32,8 +32,8 @@ void main()
 	vec4 col = texture2D(brush, uvs);
 	
 	vec3 color = col.rgb * texture2D(background_color, screen_uv).rgb;
-	color = mix(grey, color, saturation);
-	color += brightness;
+	//color = mix(grey, color, saturation);
+	//color += brightness;
 
 	gl_FragColor = vec4(color, col.a * opacity);
 }

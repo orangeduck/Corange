@@ -46,7 +46,7 @@ static int mouse_x;
 static int mouse_y;
 static int mouse_down;
 
-static int use_piano = 0;
+static int use_piano = 1;
 
 void cello_init() {
   
@@ -98,7 +98,7 @@ void cello_init() {
   renderable_add_model(r_cello, cello);
   renderable_set_material(r_cello, cello_mat);
   
-  pr_cello = painting_renderable_new("paint_cello", 0.015, v2(1,1), brush );
+  pr_cello = painting_renderable_new("paint_cello", 0.01, v2(0.1,0.1), brush );
   painting_renderable_add_model(pr_cello, cello);
   renderable_set_material(pr_cello->renderable, cello_mat);
   
@@ -109,7 +109,7 @@ void cello_init() {
   renderable_add_model(r_piano, piano);
   renderable_set_material(r_piano, piano_mat);
   
-  pr_piano = painting_renderable_new("paint_piano", 0.015, v2(1,1), brush );
+  pr_piano = painting_renderable_new("paint_piano", 0.01, v2(0.1,0.1), brush );
   painting_renderable_add_model(pr_piano, piano);
   renderable_set_material(pr_piano->renderable, piano_mat);
   
@@ -120,7 +120,7 @@ void cello_init() {
   renderable_add_model(r_floor, floor);
   renderable_set_material(r_floor, floor_mat);
   
-  pr_floor = painting_renderable_new("paint_floor", 0.05, v2(1.5,2), brush );
+  pr_floor = painting_renderable_new("paint_floor", 0.01, v2(0.1,0.1), brush );
   painting_renderable_add_model(pr_floor, floor);
   renderable_set_material(pr_floor->renderable, floor_mat);
   
@@ -129,14 +129,15 @@ void cello_init() {
   console_font = asset_get("./engine/fonts/console_font.fnt");
   
   rt_framerate = render_text_new("hello", 10, console_font);
-  rt_framerate->position = v2(-1.0,-1.0);
-  rt_framerate->scale = v2(1.0,1.0);
-  rt_framerate->color = v4(0,0,0,1);
+  rt_framerate->position = v2(-0.95,-0.95);
+  rt_framerate->scale = v2(0.7,0.7);
+  rt_framerate->color = v4(1,1,1,1);
   render_text_update(rt_framerate);
   
-  rt_test_text = render_text_new("Corange v0.1", 512, console_font);
-  rt_test_text->position = v2(-1.0,-0.95);
-  rt_test_text->color = v4(0,0,1,1);
+  rt_test_text = render_text_new("Painting Renderer\nmouse to move\n'p' to switch object.", 512, console_font);
+  rt_test_text->position = v2(-0.95,-0.90);
+  rt_test_text->scale = v2(0.7,0.7);
+  rt_test_text->color = v4(1,1,1,1);
   render_text_update(rt_test_text);
   
   

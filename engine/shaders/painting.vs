@@ -39,23 +39,21 @@ void main()
 		
 		float a = -atan(screen_tangent.y, screen_tangent.x);
 		
-		mat4 rot = mat4(
-			vec4(cos(a), -sin(a), 0, 0),
-			vec4(sin(a),  cos(a), 0, 0),
-			vec4(0     ,       0, 1, 0),
-			vec4(0     ,       0, 0, 1)
+		mat2 rot = mat2(
+			vec2(cos(a), -sin(a)),
+			vec2(sin(a),  cos(a))
 			);
 		
 		backfacing = 0.0;
 		
-		float scale = 0.25 * (skip + 3) * max(-normal_to_screen, 0.0) + 0.075;
+		float scale = 1.5 * (skip + 2) * max(-normal_to_screen, 0.5);
 		
 		uvs = gl_MultiTexCoord0.xy;
 		
 		screen_position = proj_matrix * view_matrix * world_position;
 		
 		depth = gl_Position.z / gl_Position.w;
-		gl_Position = rot * (gl_Vertex * vec4( size, 1.0, 1.0 ) * scale) + screen_position;
+		gl_Position = screen_position + vec4(rot * (gl_Vertex.xy * size * scale), 0.0, 0.0);
 		
 	}
 	
