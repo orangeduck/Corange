@@ -137,7 +137,7 @@ void cello_init() {
   renderable_add_model(r_floor, floor);
   renderable_set_material(r_floor, floor_mat);
   
-  pr_floor = painting_renderable_new("paint_floor", 0.01, v2(0.075,0.1), brush, align_auto );
+  pr_floor = painting_renderable_new("paint_floor", 0.01, v2(0.075,0.1), brush, align_x_axis );
   painting_renderable_add_model(pr_floor, floor);
   renderable_set_material(pr_floor->renderable, floor_mat);
   

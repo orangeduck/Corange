@@ -61,7 +61,7 @@ void painting_renderer_init() {
   glEnable(GL_MULTISAMPLE);
   glEnable(GL_DEPTH_TEST);
   
-  PAINTING_PROG = asset_get("./engine/shaders/painting.prog");
+  PAINTING_PROG = asset_get("./engine/shaders/painting_high.prog");
   BACKGROUND = asset_get("./engine/resources/paperback.dds");
   
   FACE_POSITION = glGetAttribLocation(*PAINTING_PROG, "face_position");
@@ -102,8 +102,8 @@ void painting_renderer_init() {
   glGenTextures(1, &painting_texture);
   glBindTexture(GL_TEXTURE_2D, painting_texture);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, painting_texture, 0);
@@ -376,7 +376,7 @@ void painting_renderer_paint_renderable(painting_renderable* pr) {
   
   glUniform1i(glGetUniformLocation(*PAINTING_PROG, "background_paint"), 3);
   glActiveTexture(GL_TEXTURE0 + 3);
-  glBindTexture(GL_TEXTURE_2D, *BACKGROUND);
+  glBindTexture(GL_TEXTURE_2D, painting_texture);
   
   glUniform1i(glGetUniformLocation(*PAINTING_PROG, "brush"), 4);
   glActiveTexture(GL_TEXTURE0 + 4);
