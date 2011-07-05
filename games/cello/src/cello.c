@@ -55,10 +55,16 @@ void cello_init() {
   
   printf("Cello game init!\n");
   
+  viewport_set_vsync(1);
+  viewport_set_dimensions( v2(800 * 1.5, 600 * 1.5) );
+  
   /* New Camera */
   
   cam = camera_new( v3(20.0, 0.0, 0.0) , v3_zero() );
   sun = light_new_type( v3(30,43,-26), light_type_spot );
+  
+  sun->ambient_color = v3(0.749, 0.855, 0.902);
+  sun->diffuse_color = v3(1.0, 0.875, 0.573);
   
   /* Renderer Setup */
 
@@ -98,7 +104,7 @@ void cello_init() {
   load_folder("/resources/floor/");
   load_folder("/resources/shaders/");
   
-  texture* brush = asset_get("./engine/resources/brush4.dds");
+  texture* brush = asset_get("./engine/resources/brushset1.dds");
   
   printf("Brush: %i\n", brush);
   
@@ -109,7 +115,7 @@ void cello_init() {
   renderable_add_model(r_cello, cello);
   renderable_set_material(r_cello, cello_mat);
   
-  pr_cello = painting_renderable_new("paint_cello", 0.01, v2(0.1,0.1), brush );
+  pr_cello = painting_renderable_new("paint_cello", 0.01, v2(0.075,0.075), brush, align_auto );
   painting_renderable_add_model(pr_cello, cello);
   renderable_set_material(pr_cello->renderable, cello_mat);
   
@@ -120,7 +126,7 @@ void cello_init() {
   renderable_add_model(r_piano, piano);
   renderable_set_material(r_piano, piano_mat);
   
-  pr_piano = painting_renderable_new("paint_piano", 0.01, v2(0.1,0.1), brush );
+  pr_piano = painting_renderable_new("paint_piano", 0.01, v2(0.075,0.1), brush, align_x_axis );
   painting_renderable_add_model(pr_piano, piano);
   renderable_set_material(pr_piano->renderable, piano_mat);
   
@@ -131,7 +137,7 @@ void cello_init() {
   renderable_add_model(r_floor, floor);
   renderable_set_material(r_floor, floor_mat);
   
-  pr_floor = painting_renderable_new("paint_floor", 0.01, v2(0.1,0.1), brush );
+  pr_floor = painting_renderable_new("paint_floor", 0.01, v2(0.075,0.1), brush, align_auto );
   painting_renderable_add_model(pr_floor, floor);
   renderable_set_material(pr_floor->renderable, floor_mat);
   
@@ -160,8 +166,8 @@ void cello_update() {
 
   Uint8 keystate = SDL_GetMouseState(NULL, NULL);
   if(keystate & SDL_BUTTON(1)){
-    float a1 = -(float)mouse_x * frame_time() * 2;
-    float a2 = (float)mouse_y * frame_time() * 2;
+    float a1 = -(float)mouse_x * frame_time() * 0.25;
+    float a2 = (float)mouse_y * frame_time() * 0.25;
     
     cam->position = m33_mul_v3(m33_rotation_y( a1 ), cam->position );
     
@@ -171,8 +177,8 @@ void cello_update() {
   }
   
   if(keystate & SDL_BUTTON(3)){
-    sun->position.x += mouse_y;
-    sun->position.z += mouse_x;
+    sun->position.x += (float)mouse_y / 2;
+    sun->position.z -= (float)mouse_x / 2;
   }
 
   mouse_x = 0;

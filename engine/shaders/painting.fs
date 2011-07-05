@@ -1,5 +1,6 @@
 uniform sampler2D background_color;
 uniform sampler2D background_depth;
+uniform sampler2D canvas_color;
 uniform sampler2D brush;
 
 uniform float opacity;
@@ -21,19 +22,25 @@ void main()
 		discard;
 	}
 	
+	vec4 color_brush = texture2D(brush, uvs);
+	
+	if(color_brush.a < 0.1) {
+		discard;
+	}
+	
 	vec2 screen_uv = ( (screen_position.xy / screen_position.w) / 2) + 0.5;
 	
 	float old_depth = texture2D(background_depth, screen_uv).r;
 	
-	if (old_depth < depth) {
+	if (old_depth <= depth) {
 		discard;
 	}
 	
-	vec4 col = texture2D(brush, uvs);
-	
-	vec3 color = col.rgb * texture2D(background_color, screen_uv).rgb;
+	vec4 color_image = texture2D(background_color, screen_uv);
+	vec4 color_canvas = texture2D(canvas_color, screen_uv);
+	vec3 color = color_brush.rgb * color_image.rgb * color_canvas.rgb;
 	//color = mix(grey, color, saturation);
 	//color += brightness;
 
-	gl_FragColor = vec4(color, col.a * opacity);
+	gl_FragColor = vec4(color, color_brush.a * opacity);
 }

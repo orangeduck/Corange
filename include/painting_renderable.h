@@ -31,9 +31,15 @@ typedef struct {
   texture* brush;
   vector2 brush_size;
 
+  int alignment;
+  
 } painting_renderable;
 
-painting_renderable* painting_renderable_new(char* name, float density, vector2 brush_size, texture* brush);
+static int align_x_axis = 0;
+static int align_y_axis = 1;
+static int align_auto = 2;
+
+painting_renderable* painting_renderable_new(char* name, float density, vector2 brush_size, texture* brush, int alignment);
 void painting_renderable_delete(painting_renderable* pr);
 
 void painting_renderable_add_model(painting_renderable* r, model* m);

@@ -45,9 +45,11 @@ static int FACE_TANGENT;
 
 static GLuint fbo;
 static GLuint diffuse_buffer;
+static GLuint painting_buffer;
 static GLuint depth_buffer;
 
 static GLuint diffuse_texture;
+static GLuint painting_texture;
 static GLuint depth_texture;
 
 static int DOWNSCALE = 4;
@@ -71,6 +73,7 @@ void painting_renderer_init() {
   
   glGenRenderbuffers(1, &depth_buffer);
   glGenRenderbuffers(1, &diffuse_buffer); 
+  glGenRenderbuffers(1, &painting_buffer); 
   
   int width =  viewport_width() / DOWNSCALE;
   int height =  viewport_height() / DOWNSCALE;
@@ -78,6 +81,10 @@ void painting_renderer_init() {
   glBindRenderbuffer(GL_RENDERBUFFER, diffuse_buffer);
   glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, width, height);
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, diffuse_buffer);   
+  
+  glBindRenderbuffer(GL_RENDERBUFFER, painting_buffer);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, width, height);
+  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_RENDERBUFFER, painting_buffer);   
   
   glBindRenderbuffer(GL_RENDERBUFFER, depth_buffer);
   glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width, height);
@@ -91,6 +98,15 @@ void painting_renderer_init() {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, diffuse_texture, 0);
+
+  glGenTextures(1, &painting_texture);
+  glBindTexture(GL_TEXTURE_2D, painting_texture);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, painting_texture, 0);
   
   glGenTextures(1, &depth_texture);
   glBindTexture(GL_TEXTURE_2D, depth_texture);
@@ -111,9 +127,11 @@ void painting_renderer_finish() {
   
   glDeleteRenderbuffers(1, &diffuse_buffer);
   glDeleteRenderbuffers(1, &depth_buffer);
+  glDeleteRenderbuffers(1, &painting_buffer);
   
   glDeleteTextures(1,&diffuse_texture);
   glDeleteTextures(1,&depth_texture);
+  glDeleteTextures(1,&painting_texture);
   
 }
 
@@ -137,8 +155,8 @@ void painting_renderer_begin_render() {
   glClearDepth(1.0f);
   glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
   
-  GLenum buffers[] = { GL_COLOR_ATTACHMENT0 };
-  glDrawBuffers(1, buffers);
+  GLenum buffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
+  glDrawBuffers(2, buffers);
   
   painting_renderer_setup_camera();
   
@@ -187,7 +205,40 @@ void painting_renderer_begin_painting() {
   glDisable(GL_DEPTH_TEST);
   glDepthMask(GL_FALSE);
   glDisable(GL_LIGHTING);
+  
   glDisable(GL_BLEND);
+  
+	glMatrixMode(GL_PROJECTION);
+  glPushMatrix();
+	glLoadIdentity();
+	glOrtho(-1.0, 1.0, -1.0, 1.0, -1, 1);
+  
+	glMatrixMode(GL_MODELVIEW);
+  glPushMatrix();
+	glLoadIdentity();
+  
+  glActiveTexture(GL_TEXTURE0 + 0 );
+  glBindTexture(GL_TEXTURE_2D, *BACKGROUND);
+  glEnable(GL_TEXTURE_2D);
+  
+	glBegin(GL_QUADS);
+		glMultiTexCoord2f(GL_TEXTURE0, 0.0f, 0.0f); glVertex3f(-1.0, -1.0,  0.0f);
+		glMultiTexCoord2f(GL_TEXTURE0, 1.0f, 0.0f); glVertex3f(1.0, -1.0,  0.0f);
+		glMultiTexCoord2f(GL_TEXTURE0, 1.0f, 1.0f); glVertex3f(1.0,  1.0,  0.0f);
+		glMultiTexCoord2f(GL_TEXTURE0, 0.0f, 1.0f); glVertex3f(-1.0,  1.0,  0.0f);
+	glEnd();
+  
+  glActiveTexture(GL_TEXTURE0 + 0 );
+  glDisable(GL_TEXTURE_2D);
+  
+  glMatrixMode(GL_PROJECTION);
+  glPopMatrix();
+
+  glMatrixMode(GL_MODELVIEW);
+  glPopMatrix();
+  
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_ZERO, GL_SRC_COLOR);
   
 	glMatrixMode(GL_PROJECTION);
   glPushMatrix();
@@ -232,42 +283,6 @@ void painting_renderer_end_painting() {
 
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glUseProgramObjectARB(0);
-
-  glDisable(GL_DEPTH_TEST);
-  glDepthMask(GL_FALSE);
-  glDisable(GL_LIGHTING);
-  
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_ZERO, GL_SRC_COLOR);
-  
-	glMatrixMode(GL_PROJECTION);
-  glPushMatrix();
-	glLoadIdentity();
-	glOrtho(-1.0, 1.0, -1.0, 1.0, -1, 1);
-  
-	glMatrixMode(GL_MODELVIEW);
-  glPushMatrix();
-	glLoadIdentity();
-  
-  glActiveTexture(GL_TEXTURE0 + 0 );
-  glBindTexture(GL_TEXTURE_2D, *BACKGROUND);
-  glEnable(GL_TEXTURE_2D);
-  
-	glBegin(GL_QUADS);
-		glMultiTexCoord2f(GL_TEXTURE0, 0.0f, 0.0f); glVertex3f(-1.0, -1.0,  0.0f);
-		glMultiTexCoord2f(GL_TEXTURE0, 1.0f, 0.0f); glVertex3f(1.0, -1.0,  0.0f);
-		glMultiTexCoord2f(GL_TEXTURE0, 1.0f, 1.0f); glVertex3f(1.0,  1.0,  0.0f);
-		glMultiTexCoord2f(GL_TEXTURE0, 0.0f, 1.0f); glVertex3f(-1.0,  1.0,  0.0f);
-	glEnd();
-  
-  glActiveTexture(GL_TEXTURE0 + 0 );
-  glDisable(GL_TEXTURE_2D);
-  
-  glMatrixMode(GL_PROJECTION);
-  glPopMatrix();
-
-  glMatrixMode(GL_MODELVIEW);
-  glPopMatrix();
   
   glDisable(GL_BLEND);
   glEnable(GL_DEPTH_TEST);
@@ -355,6 +370,18 @@ void painting_renderer_paint_renderable(painting_renderable* pr) {
   glActiveTexture(GL_TEXTURE0 + 1);
   glBindTexture(GL_TEXTURE_2D, depth_texture);
   
+  glUniform1i(glGetUniformLocation(*PAINTING_PROG, "canvas_color"), 2);
+  glActiveTexture(GL_TEXTURE0 + 2);
+  glBindTexture(GL_TEXTURE_2D, *BACKGROUND);
+  
+  glUniform1i(glGetUniformLocation(*PAINTING_PROG, "background_paint"), 3);
+  glActiveTexture(GL_TEXTURE0 + 3);
+  glBindTexture(GL_TEXTURE_2D, *BACKGROUND);
+  
+  glUniform1i(glGetUniformLocation(*PAINTING_PROG, "brush"), 4);
+  glActiveTexture(GL_TEXTURE0 + 4);
+  glBindTexture(GL_TEXTURE_2D, *pr->brush);
+  
   glBindBuffer(GL_ARRAY_BUFFER, pr->position_vbo);
   glVertexPointer(3, GL_FLOAT, 0, 0);
   glEnableClientState(GL_VERTEX_ARRAY);
@@ -411,10 +438,6 @@ void painting_renderer_paint_renderable(painting_renderable* pr) {
   
   glUniform1f(opacity, 1.0);
   glUniform2f(size, pr->brush_size.x, pr->brush_size.y);
-  
-  glUniform1i(glGetUniformLocation(*PAINTING_PROG, "brush"), 2);
-  glActiveTexture(GL_TEXTURE0 + 2);
-  glBindTexture(GL_TEXTURE_2D, *pr->brush);
   
   glUniform1f(skip_u, (float)skip+1);
   

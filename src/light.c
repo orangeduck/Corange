@@ -113,7 +113,7 @@ light* light_new_type(vector3 position, int type) {
     
     l->diffuse_color = v3(1,1,1);
     l->specular_color = v3(1,1,1);
-    l->ambient_color = v3(0.5,0.5,0.5);
+    l->ambient_color = v3(0.75,0.75,0.75);
     
     l->type = light_type_spot;
     

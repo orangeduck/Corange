@@ -6,13 +6,14 @@
 
 /* vec3 ParticlePosition | vec2 ParticleUVs | vec3 FacePosition | vec3 FaceNormal */
 
-painting_renderable* painting_renderable_new(char* name, float density, vector2 brush_size, texture* brush) {
+painting_renderable* painting_renderable_new(char* name, float density, vector2 brush_size, texture* brush, int alignment) {
   
   painting_renderable* pr = malloc(sizeof(painting_renderable));
   pr->renderable = renderable_new(name);
   pr->density = density;
   pr->brush_size = brush_size;
   pr->brush = brush;
+  pr->alignment = alignment;
   
   return pr;
   
@@ -99,14 +100,31 @@ void painting_renderable_add_model(painting_renderable* pr, model* m) {
         vector3 normal = triangle_normal(v1, v2, v3);
         vector3 tangent;
         
-        float u_diff = triangle_difference_u(v1, v2, v3);
-        float v_diff = triangle_difference_v(v1, v2, v3);
+        if (pr->alignment == align_x_axis) {
         
-        if(u_diff > v_diff) {
           tangent = triangle_tangent(v1, v2, v3);
-        } else {
+        
+        } else if (pr->alignment == align_y_axis) {
+        
           tangent = triangle_binormal(v1, v2, v3);
+        
+        } else if (pr->alignment == align_auto) {
+          
+          float u_diff = triangle_difference_u(v1, v2, v3);
+          float v_diff = triangle_difference_v(v1, v2, v3);
+          
+          if(u_diff > v_diff) {
+            tangent = triangle_tangent(v1, v2, v3);
+          } else {
+            tangent = triangle_binormal(v1, v2, v3);
+          }
         }
+        
+        int num_brushes = 8;
+        int brush_index = rand() % num_brushes;
+        
+        float uv_span = 1.0 / num_brushes;
+        float uv_x = uv_span * brush_index;
         
         /* Place particle */
         
@@ -116,7 +134,7 @@ void painting_renderable_add_model(painting_renderable* pr, model* m) {
           positions_buffer[pos_index] = -1.0f; pos_index++;
           positions_buffer[pos_index] = 0.0f; pos_index++;
           
-          uvs_buffer[uvs_index] = 0.0f; uvs_index++;
+          uvs_buffer[uvs_index] = uv_x; uvs_index++;
           uvs_buffer[uvs_index] = 0.0f; uvs_index++;
           
           face_positions_buffer[fpos_index] = position.x; fpos_index++;
@@ -137,7 +155,7 @@ void painting_renderable_add_model(painting_renderable* pr, model* m) {
           positions_buffer[pos_index] = 1.0f; pos_index++;
           positions_buffer[pos_index] = 0.0f; pos_index++;
           
-          uvs_buffer[uvs_index] = 0.0f; uvs_index++;
+          uvs_buffer[uvs_index] = uv_x; uvs_index++;
           uvs_buffer[uvs_index] = 1.0f; uvs_index++;
           
           face_positions_buffer[fpos_index] = position.x; fpos_index++;
@@ -158,7 +176,7 @@ void painting_renderable_add_model(painting_renderable* pr, model* m) {
           positions_buffer[pos_index] = 1.0f; pos_index++;
           positions_buffer[pos_index] = 0.0f; pos_index++;
           
-          uvs_buffer[uvs_index] = 1.0f; uvs_index++;
+          uvs_buffer[uvs_index] = uv_x + uv_span; uvs_index++;
           uvs_buffer[uvs_index] = 1.0f; uvs_index++;
           
           face_positions_buffer[fpos_index] = position.x; fpos_index++;
@@ -179,7 +197,7 @@ void painting_renderable_add_model(painting_renderable* pr, model* m) {
           positions_buffer[pos_index] = -1.0f; pos_index++;
           positions_buffer[pos_index] = 0.0f; pos_index++;
           
-          uvs_buffer[uvs_index] = 1.0f; uvs_index++;
+          uvs_buffer[uvs_index] = uv_x + uv_span; uvs_index++;
           uvs_buffer[uvs_index] = 0.0f; uvs_index++;
           
           face_positions_buffer[fpos_index] = position.x; fpos_index++;

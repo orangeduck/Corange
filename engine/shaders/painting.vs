@@ -46,14 +46,14 @@ void main()
 		
 		backfacing = 0.0;
 		
-		float scale = 1.5 * (skip + 2) * max(-normal_to_screen, 0.5);
-		
 		uvs = gl_MultiTexCoord0.xy;
 		
 		screen_position = proj_matrix * view_matrix * world_position;
 		
-		depth = gl_Position.z / gl_Position.w;
+		float scale = 1.25 * (skip + 2) * max(-normal_to_screen, 0.0);
+		
 		gl_Position = screen_position + vec4(rot * (gl_Vertex.xy * size * scale), 0.0, 0.0);
+		depth = gl_Position.z / gl_Position.w;
 		
 	}
 	

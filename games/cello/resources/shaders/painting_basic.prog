@@ -1,0 +1,2 @@
+vertex_shader : /resources/shaders/painting_basic.vs
+fragment_shader : /resources/shaders/painting_basic.fs
