@@ -17,7 +17,10 @@ texture* jpg_load_file(char* filename);
 
 texture* load_image_file(char* filename);
 
+texture* texture_new();
 void texture_delete(texture* t);
+
+void texture_write_to_file(texture* t, char* filename);
 
 /* BEGIN DDS STUFF */
 

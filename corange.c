@@ -23,7 +23,7 @@
 
 #include "game.h"
 
-static char* game_name;
+static char* game_name_arg;
 
 main(int argc, char* argv[]) {
   
@@ -61,16 +61,16 @@ main(int argc, char* argv[]) {
   /* Start */
     
   if (argc < 2) {
-    game_name = malloc(strlen("empty") + 1);
-    strcpy(game_name, "empty");
+    game_name_arg = malloc(strlen("empty") + 1);
+    strcpy(game_name_arg, "empty");
   } else {
-    game_name = malloc(strlen(argv[1]) + 1);
-    strcpy(game_name, argv[1]);
+    game_name_arg = malloc(strlen(argv[1]) + 1);
+    strcpy(game_name_arg, argv[1]);
   }
   
   /* Load Assets */
   
-  asset_manager_init(game_name);
+  asset_manager_init(game_name_arg);
   
   asset_manager_handler("obj", (void*(*)(char*))obj_load_file, (void(*)(void*))model_delete);
   
@@ -100,7 +100,7 @@ main(int argc, char* argv[]) {
   
   /* Load Game */
   
-  game_load(game_name);
+  game_load(game_name_arg);
   
   game_init();
   
@@ -116,6 +116,7 @@ main(int argc, char* argv[]) {
       case SDL_KEYDOWN:
       case SDL_KEYUP:
         if (event.key.keysym.sym == SDLK_ESCAPE) { running = 0; }
+        if (event.key.keysym.sym == SDLK_PRINT) { viewport_screenshot(); }
         break;
       case SDL_QUIT:
         running = 0;

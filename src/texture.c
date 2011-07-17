@@ -3,12 +3,67 @@
 #include "SDL/SDL.h"
 #include "SDL/SDL_image.h"
 
+#include "asset_manager.h"
 #include "texture.h"
 
 void texture_delete(texture* t) {
   texture tex = *t;
   glDeleteTextures(1, &tex);
   free(t);
+}
+
+texture* texture_new() {
+  
+  texture* t = malloc(sizeof(texture));
+  
+  texture tex_id;
+  glGenTextures(1, &tex_id);
+  
+  *t = tex_id;
+  
+  return t;
+}
+
+void texture_write_to_file(texture* t, char* filename) {
+  
+  char* ext = asset_file_extension(filename);
+  
+  int format, width, height;
+  
+  glBindTexture(GL_TEXTURE_2D, *t);
+  glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width );
+  glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height );
+  glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_INTERNAL_FORMAT, &format );
+  
+  if ( strcmp(ext,"bmp") == 0 ) {
+    
+  } else if ( strcmp(ext, "tga") == 0 ) {
+    
+    unsigned char* image_data = malloc( sizeof(unsigned char) * width * height * 4 );
+    glGetTexImage( GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data ); 
+    
+    int xa= width % 256;
+    int xb= (width-xa)/256;
+
+    int ya= height % 256;
+    int yb= (height-ya)/256;
+    unsigned char header[18]={0,0,2,0,0,0,0,0,0,0,0,0,(char)xa,(char)xb,(char)ya,(char)yb,32,0};
+    
+    SDL_RWops* file = SDL_RWFromFile(filename, "wb");
+    SDL_RWwrite(file, header, sizeof(char) * 18, 1);
+    SDL_RWwrite(file, image_data, sizeof(char) * width * height * 4, 1 );
+    SDL_RWclose(file);
+    
+    free(image_data);
+    
+  } else {
+    
+    printf("Error: Cannot save texture to &s, unknown file extension %s\n", filename, ext);
+    
+  }
+  
+  free(ext);
+  
 }
 
 texture* bmp_load_file(char* filename) {

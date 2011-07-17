@@ -37,6 +37,22 @@ void timer_stop() {
 
 }
 
+void timestamp_sm(char* out) {
+    
+    time_t ltime;
+    struct tm *time_val;
+
+    ltime=time(NULL);
+    time_val=localtime(&ltime);
+
+    sprintf(out, "%d%d%d%d%d%d",
+            time_val->tm_mday,
+            time_val->tm_mon,
+            time_val->tm_year,
+            time_val->tm_hour,
+            time_val->tm_min,
+            time_val->tm_sec);
+}
 
 static char frame_rate_string_var[12] = "";
 

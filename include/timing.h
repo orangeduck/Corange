@@ -12,4 +12,6 @@ float frame_rate();
 float frame_time();
 char* frame_rate_string();
 
+void timestamp_sm(char* out);
+
 #endif

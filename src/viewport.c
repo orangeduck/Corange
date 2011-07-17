@@ -1,4 +1,7 @@
+#include "texture.h"
+
 #include "viewport.h"
+#include "game.h"
 
 #define DEFAULT_WIDTH 800
 #define DEFAULT_HEIGHT 600
@@ -193,4 +196,37 @@ vector2 viewport_dimensions() {
 
 float viewport_ratio() {
   return (float)window_height / (float)window_width;
+}
+
+static char timestamp_string[64];
+static char screenshot_string[256];
+
+void viewport_screenshot() {
+  
+  unsigned char* image_data = malloc( sizeof(unsigned char) * viewport_width() * viewport_height() * 4 );
+  glReadPixels( 0, 0, viewport_width(), viewport_height(), GL_BGRA, GL_UNSIGNED_BYTE, image_data ); 
+  
+  int xa= viewport_width() % 256;
+  int xb= (viewport_width()-xa)/256;
+
+  int ya= viewport_height() % 256;
+  int yb= (viewport_height()-ya)/256;
+  unsigned char header[18]={0,0,2,0,0,0,0,0,0,0,0,0,(char)xa,(char)xb,(char)ya,(char)yb,32,0};
+  
+  timestamp_sm(timestamp_string);
+
+  screenshot_string[0] = '\0';
+  strcat(screenshot_string, "./");
+  strcat(screenshot_string, game_name());
+  strcat(screenshot_string, "_");
+  strcat(screenshot_string, timestamp_string);
+  strcat(screenshot_string, ".tga");
+  
+  SDL_RWops* file = SDL_RWFromFile(screenshot_string, "wb");
+  SDL_RWwrite(file, header, sizeof(char) * 18, 1);
+  SDL_RWwrite(file, image_data, sizeof(char) * viewport_width() * viewport_height() * 4, 1 );
+  SDL_RWclose(file);
+  
+  free(image_data);
+  
 }

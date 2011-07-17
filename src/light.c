@@ -134,8 +134,7 @@ light* light_new_type(vector3 position, int type) {
     return l;
     
   }
-  
-  
+   
 }
 
 void light_delete(light* l) {

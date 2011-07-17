@@ -4,6 +4,8 @@
 
 #include "game.h"
 
+static char game_name_str[128];
+
 static char* game_dll_location;
 
 static char* game_init_func_name;
@@ -28,7 +30,13 @@ static void (*game_render_func)();
 static void (*game_finish_func)();
 static void (*game_event_func)(SDL_Event);
 
+char* game_name() {
+  return game_name_str;
+}
+
 void game_load(char* name) {
+  
+  strcpy(game_name_str, name);
   
   if(game_loaded) {
     game_unload();

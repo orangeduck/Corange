@@ -1,1 +1,2 @@
-Renderables - materials linked to VBO objects.
+Automatic linking of materials to renderables.
+Sometimes computer crashes on openGL context switch.

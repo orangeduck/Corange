@@ -5,6 +5,7 @@
 #include "asset_manager.h"
 #include "geometry.h"
 #include "material.h"
+#include "texture.h"
 
 #include "text_renderer.h"
 #include "forward_renderer.h"
@@ -56,7 +57,7 @@ void cello_init() {
   printf("Cello game init!\n");
   
   viewport_set_vsync(1);
-  viewport_set_dimensions( v2(800 * 1.5, 600 * 1.5) );
+  //viewport_set_dimensions( v2(800 * 1.5, 600 * 1.5) );
   
   /* New Camera */
   
@@ -105,6 +106,7 @@ void cello_init() {
   load_folder("/resources/shaders/");
   
   texture* brush = asset_get("./engine/resources/brushset1.dds");
+  texture_write_to_file(brush, "./test.tga");
   
   printf("Brush: %i\n", brush);
   

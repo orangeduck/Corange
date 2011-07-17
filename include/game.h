@@ -14,5 +14,7 @@ void game_render();
 
 void game_finish();
 
+char* game_name();
+
 
 #endif
