@@ -20,6 +20,8 @@
 
 #include "forward_renderer.h"
 
+static int use_shadows = 0;
+
 static camera* CAMERA = NULL;
 static light* LIGHT = NULL;
 static texture* SHADOW_TEX = NULL;
@@ -58,7 +60,14 @@ void forward_renderer_set_light(light* l) {
 }
 
 void forward_renderer_set_shadow_texture(texture* t) {
-  SHADOW_TEX = t;
+  
+  if ( t == NULL) {
+    use_shadows = 0;
+  } else {
+    use_shadows = 1;
+    SHADOW_TEX = t;
+  }
+  
 }
 
 void forward_renderer_begin() {
@@ -285,11 +294,15 @@ void forward_renderer_use_material(material* mat) {
      
   }
   
-  GLint shadow_map = glGetUniformLocation(*prog, "shadow_map");
-  glUniform1i(shadow_map, tex_counter);
-  glActiveTexture(GL_TEXTURE0 + tex_counter);
-  glBindTexture(GL_TEXTURE_2D, *SHADOW_TEX);
-  tex_counter++;
+  if ( use_shadows ) {
+  
+    GLint shadow_map = glGetUniformLocation(*prog, "shadow_map");
+    glUniform1i(shadow_map, tex_counter);
+    glActiveTexture(GL_TEXTURE0 + tex_counter);
+    glBindTexture(GL_TEXTURE_2D, *SHADOW_TEX);
+    tex_counter++;
+  
+  }
 
 }
 

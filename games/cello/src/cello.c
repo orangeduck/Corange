@@ -106,9 +106,6 @@ void cello_init() {
   load_folder("/resources/shaders/");
   
   texture* brush = asset_get("./engine/resources/brushset1.dds");
-  texture_write_to_file(brush, "./test.tga");
-  
-  printf("Brush: %i\n", brush);
   
   cello = asset_get("/resources/cello/cello.obj");
   cello_mat = asset_get("/resources/cello/cello.mat");
@@ -163,8 +160,6 @@ void cello_init() {
 }
 
 void cello_update() {
-
-  #define PI 3.14159265
 
   Uint8 keystate = SDL_GetMouseState(NULL, NULL);
   if(keystate & SDL_BUTTON(1)){

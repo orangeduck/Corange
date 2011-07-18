@@ -45,7 +45,7 @@ void main()
 		vec2 screen_uvs = (screen_position.xy / screen_position.w) / 2 + 0.5;
 		vec4 paint_data = texture2DLod(background_paint, screen_uvs, 0.0);
 		float total_size = paint_data.x * paint_data.y;
-		float hash_value = mod( (world_position.x + world_position.y + world_position.z) * 1216 , 2.0 );
+		float hash_value = mod( (world_position.x + world_position.y + world_position.z) * 1216 , 1.75 );
 		float dir_value = max(-normal_to_screen, 0.0);
 		
 		if ( hash_value < (1 - (dir_value * total_size)) ) {
@@ -67,7 +67,7 @@ void main()
 			
 			uvs = gl_MultiTexCoord0.xy;
 			
-			float scale = 2.0 * (skip + 2);
+			float scale = 2.0 * (skip + 2) * min( dir_value * 2 , 1 );
 			
 			paint_data.x = paint_data.x / 2;
 			vec2 brush_size = mix( vec2(paint_data.x,paint_data.y), vec2(paint_data.y,paint_data.x), paint_data.a);

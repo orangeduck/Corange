@@ -4,6 +4,7 @@
 
 #include "forward_renderer.h"
 
+#include "light.h"
 #include "camera.h"
 #include "matrix.h"
 #include "renderable.h"
@@ -14,6 +15,8 @@
 #include "viewport.h"
 
 static camera* cam;
+static light* sun;
+
 static material* nmapper_mat;
 static float* strength;
 
@@ -33,9 +36,11 @@ void nmapper_init() {
   viewport_set_height(512);
   
   cam = camera_new( v3(20.0, 0.0, 0.0) , v3_zero() );
+  sun = light_new_type( v3(30,43,-26), light_type_spot );
   
   forward_renderer_init();
   forward_renderer_set_camera(cam);
+  forward_renderer_set_light(sun);
   
   load_folder("/resources/");
   load_folder("/resources/meshes/");
@@ -49,13 +54,19 @@ void nmapper_init() {
   model* m_cello = asset_get("/resources/meshes/cello.obj");
   model* m_torus = asset_get("/resources/meshes/torus.obj");
   
+  printf("TEST1");fflush(stdout);
+ 
   r_cello = renderable_new("cello");
   renderable_add_model(r_cello, m_cello);
   renderable_set_material(r_cello, nmapper_mat);
 
+  printf("TEST2");fflush(stdout);
+  
   r_torus = renderable_new("torus");
   renderable_add_model(r_torus, m_torus);
   renderable_set_material(r_torus, nmapper_mat);
+  
+  printf("TEST3");fflush(stdout);
   
   strength = malloc(sizeof(float));
   *strength = 1.0f;
@@ -64,7 +75,9 @@ void nmapper_init() {
   fov_string = malloc(128);
   strcpy(strength_string,"");
   strcpy(fov_string,"");
-    
+
+  printf("TEST4");fflush(stdout);
+  
   font* console_font = asset_get("./engine/fonts/console_font.fnt");
   
   rt_strength = render_text_new(strength_string, 128, console_font);
@@ -79,12 +92,16 @@ void nmapper_init() {
   rt_fov->color = v4(1,1,1,1);
   render_text_update(rt_fov);
   
+  printf("TEST5");fflush(stdout);
+  
   material_set_property(nmapper_mat, "bump_map", t_cello, mat_type_texture);
   //material_set_property(nmapper_mat, "bump_map", t_blank, mat_type_texture);
   material_set_property(nmapper_mat, "strength", strength, mat_type_float);
   
   glClearColor(0.5f, 0.5f, 1.0f, 0.0f);
-  
+    
+  printf("TEST6");fflush(stdout);
+
 }
 
 static int mouse_down;
