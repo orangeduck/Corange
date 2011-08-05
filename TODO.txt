@@ -1,2 +1,5 @@
 Automatic linking of materials to renderables.
-Sometimes computer crashes on openGL context switch.
+Sometimes computer freezes running corange. NO IDEA WHY.
+Skydome - time of day etc
+Skeletal animation
+Fur Shader

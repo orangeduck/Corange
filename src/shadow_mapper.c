@@ -75,7 +75,7 @@ void shadow_mapper_init(light* l) {
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   
   texture_ptr = malloc(sizeof(texture));
-  *texture_ptr = color_texture;
+  *texture_ptr = depth_texture;
   
 }
 
@@ -106,6 +106,7 @@ void shadow_mapper_begin() {
   
   shadow_mapper_setup_camera();
   
+  glEnable(GL_CULL_FACE);
   glCullFace(GL_FRONT);
   
 }
@@ -129,47 +130,13 @@ void shadow_mapper_setup_camera() {
 }
 
 void shadow_mapper_end() {
-
-  glCullFace(GL_FRONT);
+  
+  glCullFace(GL_BACK);
+  glDisable(GL_CULL_FACE);
 
   glViewport( 0, 0, viewport_width(), viewport_height());
   
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
-  
-  glClearColor(0.5f, 0.5f, 0.5f, 0.0f);
-  glClearDepth(1.0f);
-  glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-  
-  glDisable(GL_LIGHTING);
-  
-	glMatrixMode(GL_PROJECTION);
-  glPushMatrix();
-	glLoadIdentity();
-	glOrtho(-1.0, 1.0, -1.0, 1.0, -1, 1);
-  
-	glMatrixMode(GL_MODELVIEW);
-  glPushMatrix();
-	glLoadIdentity();
-  
-  glActiveTexture(GL_TEXTURE0 + 0 );
-  glBindTexture(GL_TEXTURE_2D, depth_texture);
-  glEnable(GL_TEXTURE_2D);
-  
-	glBegin(GL_QUADS);
-		glMultiTexCoord2f(GL_TEXTURE0, 0.0f, 0.0f); glVertex3f(-0.9, -0.9,  0.0f);
-		glMultiTexCoord2f(GL_TEXTURE0, 1.0f, 0.0f); glVertex3f(0.9, -0.9,  0.0f);
-		glMultiTexCoord2f(GL_TEXTURE0, 1.0f, 1.0f); glVertex3f(0.9,  0.9,  0.0f);
-		glMultiTexCoord2f(GL_TEXTURE0, 0.0f, 1.0f); glVertex3f(-0.9,  0.9,  0.0f);
-	glEnd();
-  
-  glActiveTexture(GL_TEXTURE0 + 0 );
-  glDisable(GL_TEXTURE_2D);
-  
-  glMatrixMode(GL_PROJECTION);
-  glPopMatrix();
-
-  glMatrixMode(GL_MODELVIEW);
-  glPopMatrix();
   
 }
 

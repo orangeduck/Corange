@@ -18,6 +18,8 @@
 #include "scripting.h"
 #include "shader.h"
 
+#include "perlin_noise.h"
+
 #include "asset_manager.h"
 #include "obj_loader.h"
 

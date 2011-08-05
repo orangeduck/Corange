@@ -50,7 +50,7 @@ void texture_write_to_file(texture* t, char* filename) {
     unsigned char header[18]={0,0,2,0,0,0,0,0,0,0,0,0,(char)xa,(char)xb,(char)ya,(char)yb,32,0};
     
     SDL_RWops* file = SDL_RWFromFile(filename, "wb");
-    SDL_RWwrite(file, header, sizeof(char) * 18, 1);
+    SDL_RWwrite(file, header, sizeof(header), 1);
     SDL_RWwrite(file, image_data, sizeof(char) * width * height * 4, 1 );
     SDL_RWclose(file);
     

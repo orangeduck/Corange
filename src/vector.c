@@ -58,6 +58,12 @@ vector2 v2_mul(vector2 v, float fac) {
   return v;
 }
 
+vector2 v2_pow(vector2 v, float exp) {
+  v.x = pow(v.x, exp);
+  v.y = pow(v.y, exp);
+  return v;
+}
+
 vector2 v2_neg(vector2 v) {
   v.x = -v.x;
   v.y = -v.y;
@@ -67,6 +73,18 @@ vector2 v2_neg(vector2 v) {
 vector2 v2_abs(vector2 v) {
   v.x = abs(v.x);
   v.y = abs(v.y);
+  return v;
+}
+
+vector2 v2_floor(vector2 v) {
+  v.x = floor(v.x);
+  v.y = floor(v.y);
+  return v;
+}
+
+vector2 v2_fmod(vector2 v, float val) {
+  v.x = fmod(v.x, val);
+  v.y = fmod(v.y, val);
   return v;
 }
 
@@ -119,6 +137,59 @@ int v2_hash(vector2 v) {
   return abs(rawcast(v.x) ^ rawcast(v.y));
 }
 
+int v2_mix_hash(vector2 v) {
+
+  int raw_vx = abs(rawcast(v.x));
+  int raw_vy = abs(rawcast(v.y));
+
+  int h1 = raw_vx << 1;
+  int h2 = raw_vy << 3;
+  int h3 = raw_vx >> 8;
+  int h4 = raw_vy << 7;
+  int h5 = raw_vx >> 12;
+  int h6 = raw_vy >> 15;
+  int h7 = raw_vx >> 11;
+  int h8 = raw_vy << 12;
+
+  int h9 = raw_vx << 2;
+  int h10 = raw_vy << 6;
+  int h11 = raw_vx >> 2;
+  int h12 = raw_vy << 9;
+  int h13 = raw_vx >> 21;
+  int h14 = raw_vy >> 13;
+  int h15 = raw_vx >> 8;
+  int h16 = raw_vy << 4;
+  
+  int result_a = h1 ^ h2 ^ h3 ^ h4 ^ h5 ^ h6 ^ h7 ^ h8;
+  int result_b = h9 ^ h10 ^ h11 ^ h12 ^ h13 ^ h14 ^ h15 ^ h16;
+  
+  return (result_a * 10252247) ^ (result_b * 70209673);
+}
+
+vector2 v2_saturate(vector2 v) {
+  
+  v.x = v.x > 1.0 ? 1.0 : v.x;
+  v.x = v.x < 0.0 ? 0.0 : v.x;
+  
+  v.y = v.y > 1.0 ? 1.0 : v.y;
+  v.y = v.y < 0.0 ? 0.0 : v.y;
+  
+  return v;
+}
+
+vector2 v2_lerp(vector2 v1, vector2 v2, float amount) {
+  return  v2_add( v2_mul(v1, 1-amount), v2_mul(v2, amount) );
+}
+
+vector2 v2_smoothstep(vector2 v1, vector2 v2, float amount) {
+  float scaled_amount = amount*amount*(3 - 2*amount);
+  return v2_lerp( v1, v2, scaled_amount );
+}
+
+vector2 v2_smootherstep(vector2 v1, vector2 v2, float amount) {
+  float scaled_amount = amount*amount*amount*(amount*(amount*6 - 15) + 10);
+  return v2_lerp( v1, v2, scaled_amount );
+}
 
 /* Vector3 */
 
@@ -168,6 +239,13 @@ vector3 v3_mul(vector3 v, float fac) {
   return v;
 }
 
+vector3 v3_pow(vector3 v, float exp) {
+  v.x = pow(v.x, exp);
+  v.y = pow(v.y, exp);
+  v.z = pow(v.z, exp);
+  return v;
+}
+
 vector3 v3_neg(vector3 v) {
   v.x = -v.x;
   v.y = -v.y;
@@ -179,6 +257,20 @@ vector3 v3_abs(vector3 v) {
   v.x = abs(v.x);
   v.y = abs(v.y);
   v.z = abs(v.z);
+  return v;
+}
+
+vector3 v3_floor(vector3 v) {
+  v.x = floor(v.x);
+  v.y = floor(v.y);
+  v.z = floor(v.z);
+  return v;
+}
+
+vector3 v3_fmod(vector3 v, float val) {
+  v.x = fmod(v.x, val);
+  v.y = fmod(v.y, val);
+  v.z = fmod(v.z, val);
   return v;
 }
 
@@ -255,6 +347,34 @@ vector4 v3_to_homogeneous(vector3 v){
   return v4(v.x, v.y, v.z, 1.0);
 };
 
+vector3 v3_saturate(vector3 v) {
+  
+  v.x = v.x > 1.0 ? 1.0 : v.x;
+  v.x = v.x < 0.0 ? 0.0 : v.x;
+  
+  v.y = v.y > 1.0 ? 1.0 : v.y;
+  v.y = v.y < 0.0 ? 0.0 : v.y;
+  
+  v.z = v.z > 1.0 ? 1.0 : v.z;
+  v.z = v.z < 0.0 ? 0.0 : v.z;
+  
+  return v;
+}
+
+vector3 v3_lerp(vector3 v1, vector3 v2, float amount) {
+  return  v3_add( v3_mul(v1, 1-amount), v3_mul(v2, amount) );
+}
+
+vector3 v3_smoothstep(vector3 v1, vector3 v2, float amount) {
+  float scaled_amount = amount*amount*(3 - 2*amount);
+  return v3_lerp( v1, v2, scaled_amount );
+}
+
+vector3 v3_smootherstep(vector3 v1, vector3 v2, float amount) {
+  float scaled_amount = amount*amount*amount*(amount*(amount*6 - 15) + 10);
+  return v3_lerp( v1, v2, scaled_amount );
+}
+
 /* Vector4 */
 
 vector4 v4(float w, float x, float y, float z) {
@@ -308,6 +428,14 @@ vector4 v4_mul(vector4 v, float fac) {
   return v;
 }
 
+vector4 v4_pow(vector4 v, float exp) {
+  v.w = pow(v.w, exp);
+  v.x = pow(v.x, exp);
+  v.y = pow(v.y, exp);
+  v.z = pow(v.z, exp);
+  return v;
+}
+
 vector4 v4_neg(vector4 v) {
   v.w = -v.w;
   v.x = -v.x;
@@ -322,6 +450,22 @@ vector4 v4_abs(vector4 v) {
   v.y = abs(v.y);
   v.z = abs(v.z);
   return v;
+}
+
+vector4 v4_floor(vector4 v) {
+  v.w = floor(v.w);
+  v.x = floor(v.x);
+  v.y = floor(v.y);
+  v.z = floor(v.z);
+  return v;
+}
+
+vector4 v4_fmod(vector4 v, float val) {
+  v.w = fmod(v.w, val);
+  v.x = fmod(v.x, val);
+  v.y = fmod(v.y, val);
+  v.z = fmod(v.z, val);
+  return v;  
 }
 
 void v4_print(vector4 v) {
@@ -393,6 +537,37 @@ vector3 v4_from_homogeneous(vector4 v) {
 
 int v4_hash(vector4 v) {
   return abs( rawcast(v.w) ^ rawcast(v.x) ^ rawcast(v.y) ^ rawcast(v.z) );
+}
+
+vector4 v4_saturate(vector4 v) {
+
+  v.w = v.w > 1.0 ? 1.0 : v.w;
+  v.w = v.w < 0.0 ? 0.0 : v.w;
+  
+  v.x = v.x > 1.0 ? 1.0 : v.x;
+  v.x = v.x < 0.0 ? 0.0 : v.x;
+  
+  v.y = v.y > 1.0 ? 1.0 : v.y;
+  v.y = v.y < 0.0 ? 0.0 : v.y;
+  
+  v.z = v.z > 1.0 ? 1.0 : v.z;
+  v.z = v.z < 0.0 ? 0.0 : v.z;
+  
+  return v;
+}
+
+vector4 v4_lerp(vector4 v1, vector4 v2, float amount) {
+  return  v4_add( v4_mul(v1, 1-amount), v4_mul(v2, amount) );
+}
+
+vector4 v4_smoothstep(vector4 v1, vector4 v2, float amount) {
+  float scaled_amount = amount*amount*(3 - 2*amount);
+  return v4_lerp( v1, v2, scaled_amount );
+}
+
+vector4 v4_smootherstep(vector4 v1, vector4 v2, float amount) {
+  float scaled_amount = amount*amount*amount*(amount*(amount*6 - 15) + 10);
+  return v4_lerp( v1, v2, scaled_amount );
 }
 
 vector4 v4_quaternion_id() {

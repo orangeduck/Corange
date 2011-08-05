@@ -136,6 +136,8 @@ void render_text_update(render_text* rt) {
 
 void render_text_render(render_text* rt) {
 
+  glDisable(GL_CULL_FACE);
+
   glUseProgramObjectARB(0);
   
   /* Setup 2D camera */
@@ -182,7 +184,6 @@ void render_text_render(render_text* rt) {
   glDisable(GL_BLEND);
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_LIGHTING);
-  
   
   glMatrixMode(GL_PROJECTION);
   glPopMatrix();

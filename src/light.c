@@ -4,8 +4,8 @@
 #include "light.h"
 
 /* Make sure these constants match those in camera otherwise there can be issues */
-#define DEFAULT_LIGHT_NEAR_CLIP 2.0
-#define DEFAULT_LIGHT_FAR_CLIP 256.0
+#define DEFAULT_LIGHT_NEAR_CLIP 4.0
+#define DEFAULT_LIGHT_FAR_CLIP 4096.0
 
 #define DEFAULT_FOV 0.785398163
 

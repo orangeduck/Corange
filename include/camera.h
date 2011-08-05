@@ -1,9 +1,8 @@
+#ifndef camera_h
+#define camera_h
 
 #include "vector.h"
 #include "matrix.h"
-
-#ifndef camera_h
-#define camera_h
 
 enum camera_type { orbit };
 
