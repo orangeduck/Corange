@@ -1,0 +1,13 @@
+string name = piano
+program prog = /resources/shaders/painting_basic.prog
+
+texture diffuse_map = /resources/piano/piano.dds
+texture bump_map = /resources/piano/piano_nm.dds
+texture spec_map = /resources/piano/piano_s.dds
+texture env_map = /resources/piano/piano_env.dds
+texture paint_map = /resources/piano/piano_pm.dds
+
+float glossiness = 15.0
+float bumpiness = 0.75
+float specular_level = 3.0
+float env_amount = 0.5

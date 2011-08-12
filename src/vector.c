@@ -6,6 +6,17 @@
 
 #include "vector.h"
 
+int rawcast(float x)
+{
+  union {
+    float f;
+    int i;
+  } u;
+
+  u.f = x;
+  return u.i;
+}
+
 vector2 v2(float x, float y) {
   vector2 v;
   v.x = x;
@@ -15,6 +26,10 @@ vector2 v2(float x, float y) {
 
 vector2 v2_zero() {
   return v2(0, 0);
+}
+
+vector2 v2_one() {
+  return v2(1, 1);
 }
 
 vector2 v2_add(vector2 v1, vector2 v2) {
@@ -43,6 +58,12 @@ vector2 v2_mul(vector2 v, float fac) {
   return v;
 }
 
+vector2 v2_pow(vector2 v, float exp) {
+  v.x = pow(v.x, exp);
+  v.y = pow(v.y, exp);
+  return v;
+}
+
 vector2 v2_neg(vector2 v) {
   v.x = -v.x;
   v.y = -v.y;
@@ -52,6 +73,18 @@ vector2 v2_neg(vector2 v) {
 vector2 v2_abs(vector2 v) {
   v.x = abs(v.x);
   v.y = abs(v.y);
+  return v;
+}
+
+vector2 v2_floor(vector2 v) {
+  v.x = floor(v.x);
+  v.y = floor(v.y);
+  return v;
+}
+
+vector2 v2_fmod(vector2 v, float val) {
+  v.x = fmod(v.x, val);
+  v.y = fmod(v.y, val);
   return v;
 }
 
@@ -90,14 +123,72 @@ vector2 v2_from_string(char* s) {
 }
 
 int v2_equ(vector2 v1, vector2 v2) {
-  int x_equ = (v1.x == v2.x);
-  int y_equ = (v1.y == v2.y);
-  return (x_equ && y_equ);
+  if(!(v1.x == v2.x)) { return 0; }
+  if(!(v1.y == v2.y)) { return 0; }
+  return 1;
 }
 
 void v2_to_array(vector2 v, float* out) {
   out[0] = v.x;
   out[1] = v.y;
+}
+
+int v2_hash(vector2 v) {
+  return abs(rawcast(v.x) ^ rawcast(v.y));
+}
+
+int v2_mix_hash(vector2 v) {
+
+  int raw_vx = abs(rawcast(v.x));
+  int raw_vy = abs(rawcast(v.y));
+
+  int h1 = raw_vx << 1;
+  int h2 = raw_vy << 3;
+  int h3 = raw_vx >> 8;
+  int h4 = raw_vy << 7;
+  int h5 = raw_vx >> 12;
+  int h6 = raw_vy >> 15;
+  int h7 = raw_vx >> 11;
+  int h8 = raw_vy << 12;
+
+  int h9 = raw_vx << 2;
+  int h10 = raw_vy << 6;
+  int h11 = raw_vx >> 2;
+  int h12 = raw_vy << 9;
+  int h13 = raw_vx >> 21;
+  int h14 = raw_vy >> 13;
+  int h15 = raw_vx >> 8;
+  int h16 = raw_vy << 4;
+  
+  int result_a = h1 ^ h2 ^ h3 ^ h4 ^ h5 ^ h6 ^ h7 ^ h8;
+  int result_b = h9 ^ h10 ^ h11 ^ h12 ^ h13 ^ h14 ^ h15 ^ h16;
+  
+  return (result_a * 10252247) ^ (result_b * 70209673);
+}
+
+vector2 v2_saturate(vector2 v) {
+  
+  v.x = v.x > 1.0 ? 1.0 : v.x;
+  v.x = v.x < 0.0 ? 0.0 : v.x;
+  
+  v.y = v.y > 1.0 ? 1.0 : v.y;
+  v.y = v.y < 0.0 ? 0.0 : v.y;
+  
+  return v;
+}
+
+vector2 v2_lerp(vector2 v1, vector2 v2, float amount) {
+  return  v2_add( v2_mul(v1, 1-amount), v2_mul(v2, amount) );
+}
+
+vector2 v2_smoothstep(vector2 v1, vector2 v2, float amount) {
+  float scaled_amount = amount*amount*(3 - 2*amount);
+  return v2_lerp( v1, v2, scaled_amount );
+}
+
+vector2 v2_smootherstep(vector2 v1, vector2 v2, float amount) {
+  float scaled_amount = amount*amount*amount*(amount*(amount*6 - 15) + 10);
+  return v2_lerp( v1, v2, scaled_amount );
 }
 
 /* Vector3 */
@@ -112,6 +203,10 @@ vector3 v3(float x, float y, float z) {
 
 vector3 v3_zero() {
   return v3(0, 0, 0);
+}
+
+vector3 v3_one() {
+  return v3(1, 1, 1);
 }
 
 vector3 v3_add(vector3 v1, vector3 v2) {
@@ -144,6 +239,13 @@ vector3 v3_mul(vector3 v, float fac) {
   return v;
 }
 
+vector3 v3_pow(vector3 v, float exp) {
+  v.x = pow(v.x, exp);
+  v.y = pow(v.y, exp);
+  v.z = pow(v.z, exp);
+  return v;
+}
+
 vector3 v3_neg(vector3 v) {
   v.x = -v.x;
   v.y = -v.y;
@@ -155,6 +257,20 @@ vector3 v3_abs(vector3 v) {
   v.x = abs(v.x);
   v.y = abs(v.y);
   v.z = abs(v.z);
+  return v;
+}
+
+vector3 v3_floor(vector3 v) {
+  v.x = floor(v.x);
+  v.y = floor(v.y);
+  v.z = floor(v.z);
+  return v;
+}
+
+vector3 v3_fmod(vector3 v, float val) {
+  v.x = fmod(v.x, val);
+  v.y = fmod(v.y, val);
+  v.z = fmod(v.z, val);
   return v;
 }
 
@@ -209,10 +325,10 @@ vector3 v3_from_string(char* s) {
 }
 
 int v3_equ(vector3 v1, vector3 v2) {
-  int x_equ = (v1.x == v2.x);
-  int y_equ = (v1.y == v2.y);
-  int z_equ = (v1.z == v2.z);
-  return (x_equ && y_equ && z_equ);
+  if(!(v1.x == v2.x)) { return 0; }
+  if(!(v1.y == v2.y)) { return 0; }
+  if(!(v1.z == v2.z)) { return 0; }
+  return 1;
 }
 
 void v3_to_array(vector3 v, float* out) {
@@ -221,6 +337,42 @@ void v3_to_array(vector3 v, float* out) {
   out[1] = v.y;
   out[2] = v.z;
   
+}
+
+int v3_hash(vector3 v) {
+  return abs( rawcast(v.x) ^ rawcast(v.y) ^ rawcast(v.z) );
+}
+
+vector4 v3_to_homogeneous(vector3 v){
+  return v4(v.x, v.y, v.z, 1.0);
+};
+
+vector3 v3_saturate(vector3 v) {
+  
+  v.x = v.x > 1.0 ? 1.0 : v.x;
+  v.x = v.x < 0.0 ? 0.0 : v.x;
+  
+  v.y = v.y > 1.0 ? 1.0 : v.y;
+  v.y = v.y < 0.0 ? 0.0 : v.y;
+  
+  v.z = v.z > 1.0 ? 1.0 : v.z;
+  v.z = v.z < 0.0 ? 0.0 : v.z;
+  
+  return v;
+}
+
+vector3 v3_lerp(vector3 v1, vector3 v2, float amount) {
+  return  v3_add( v3_mul(v1, 1-amount), v3_mul(v2, amount) );
+}
+
+vector3 v3_smoothstep(vector3 v1, vector3 v2, float amount) {
+  float scaled_amount = amount*amount*(3 - 2*amount);
+  return v3_lerp( v1, v2, scaled_amount );
+}
+
+vector3 v3_smootherstep(vector3 v1, vector3 v2, float amount) {
+  float scaled_amount = amount*amount*amount*(amount*(amount*6 - 15) + 10);
+  return v3_lerp( v1, v2, scaled_amount );
 }
 
 /* Vector4 */
@@ -236,6 +388,10 @@ vector4 v4(float w, float x, float y, float z) {
 
 vector4 v4_zero() {
   return v4(0, 0, 0, 0);
+}
+
+vector4 v4_one() {
+  return v4(1.0, 1.0, 1.0, 1.0);
 }
 
 vector4 v4_add(vector4 v1, vector4 v2) {
@@ -272,6 +428,14 @@ vector4 v4_mul(vector4 v, float fac) {
   return v;
 }
 
+vector4 v4_pow(vector4 v, float exp) {
+  v.w = pow(v.w, exp);
+  v.x = pow(v.x, exp);
+  v.y = pow(v.y, exp);
+  v.z = pow(v.z, exp);
+  return v;
+}
+
 vector4 v4_neg(vector4 v) {
   v.w = -v.w;
   v.x = -v.x;
@@ -286,6 +450,22 @@ vector4 v4_abs(vector4 v) {
   v.y = abs(v.y);
   v.z = abs(v.z);
   return v;
+}
+
+vector4 v4_floor(vector4 v) {
+  v.w = floor(v.w);
+  v.x = floor(v.x);
+  v.y = floor(v.y);
+  v.z = floor(v.z);
+  return v;
+}
+
+vector4 v4_fmod(vector4 v, float val) {
+  v.w = fmod(v.w, val);
+  v.x = fmod(v.x, val);
+  v.y = fmod(v.y, val);
+  v.z = fmod(v.z, val);
+  return v;  
 }
 
 void v4_print(vector4 v) {
@@ -334,11 +514,11 @@ vector4 v4_from_string(char* s) {
 }
 
 int v4_equ(vector4 v1, vector4 v2) {
-  int w_equ = (v1.w == v2.w);
-  int x_equ = (v1.x == v2.x);
-  int y_equ = (v1.y == v2.y);
-  int z_equ = (v1.z == v2.z);
-  return (w_equ && x_equ && y_equ && z_equ);
+  if(!(v1.w == v2.w)) { return 0; }
+  if(!(v1.x == v2.x)) { return 0; }
+  if(!(v1.y == v2.y)) { return 0; }
+  if(!(v1.z == v2.z)) { return 0; }
+  return 1;
 }
 
 void v4_to_array(vector4 v, float* out) {
@@ -348,4 +528,84 @@ void v4_to_array(vector4 v, float* out) {
   out[2] = v.y;
   out[3] = v.z;
   
+}
+
+vector3 v4_from_homogeneous(vector4 v) {
+  vector3 vec = v3(v.w,v.x,v.y);
+  return v3_div(vec, v.z);
+};
+
+int v4_hash(vector4 v) {
+  return abs( rawcast(v.w) ^ rawcast(v.x) ^ rawcast(v.y) ^ rawcast(v.z) );
+}
+
+vector4 v4_saturate(vector4 v) {
+
+  v.w = v.w > 1.0 ? 1.0 : v.w;
+  v.w = v.w < 0.0 ? 0.0 : v.w;
+  
+  v.x = v.x > 1.0 ? 1.0 : v.x;
+  v.x = v.x < 0.0 ? 0.0 : v.x;
+  
+  v.y = v.y > 1.0 ? 1.0 : v.y;
+  v.y = v.y < 0.0 ? 0.0 : v.y;
+  
+  v.z = v.z > 1.0 ? 1.0 : v.z;
+  v.z = v.z < 0.0 ? 0.0 : v.z;
+  
+  return v;
+}
+
+vector4 v4_lerp(vector4 v1, vector4 v2, float amount) {
+  return  v4_add( v4_mul(v1, 1-amount), v4_mul(v2, amount) );
+}
+
+vector4 v4_smoothstep(vector4 v1, vector4 v2, float amount) {
+  float scaled_amount = amount*amount*(3 - 2*amount);
+  return v4_lerp( v1, v2, scaled_amount );
+}
+
+vector4 v4_smootherstep(vector4 v1, vector4 v2, float amount) {
+  float scaled_amount = amount*amount*amount*(amount*(amount*6 - 15) + 10);
+  return v4_lerp( v1, v2, scaled_amount );
+}
+
+vector4 v4_quaternion_id() {
+  return v4(1, 0, 0, 0);
+}
+
+vector4 v4_quaternion_mul(vector4 v1, vector4 v2) {
+  
+  vector4 quat;
+  
+  quat.w = (v1.w * v2.w) - (v1.x * v2.x) - (v1.y * v2.y) - (v1.z * v2.z);
+  quat.x = (v1.w * v2.x) + (v1.x * v2.w) + (v1.y * v2.z) - (v1.z * v2.y);
+  quat.y = (v1.w * v2.y) - (v1.x * v2.z) + (v1.y * v2.w) + (v1.z * v2.x);
+  quat.z = (v1.w * v2.z) + (v1.x * v2.y) - (v1.y * v2.x) + (v1.z * v2.w);
+  
+  return quat;
+}
+
+vector4 v4_quaternion_angle_axis(float angle, vector3 axis) {
+  
+  vector4 quat;
+  
+  quat.w = cosf(angle / 2);
+  quat.x = axis.x * sinf(angle / 2);
+  quat.y = axis.y * sinf(angle / 2);
+  quat.z = axis.y * sinf(angle / 2);
+  
+  return quat;
+}
+
+vector4 v4_quaternion_yaw(float a) {
+  return v4( cosf(a / 2.0), 0, sinf(a / 2.0), 0 );
+}
+
+vector4 v4_quaternion_pitch(float a) {
+  return v4( cosf(a / 2.0), sinf(a / 2.0), 0, 0 );
+}
+
+vector4 v4_quaternion_roll(float a) {
+  return v4( cosf(a / 2.0), 0, 0, sinf(a / 2.0) );
 }

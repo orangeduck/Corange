@@ -4,7 +4,7 @@
 #include "geometry.h"
 
 /* Loads an obj file into a model */
-render_model* obj_load_file(char* filename);
+model* obj_load_file(char* filename);
 
 /* Loads an obj object from a working string */
 model* obj_load_object(char* contents);

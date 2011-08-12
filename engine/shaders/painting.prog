@@ -1,0 +1,2 @@
+vertex_shader : ./engine/shaders/painting.vs
+fragment_shader : ./engine/shaders/painting.fs

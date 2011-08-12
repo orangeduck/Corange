@@ -5,8 +5,8 @@
 #include "GL/glew.h"
 
 #define NO_SDL_GLEXT
-#include "SDL.h"
-#include "SDL_opengl.h"
+#include "SDL/SDL.h"
+#include "SDL/SDL_opengl.h"
 
 typedef GLuint texture;
 
@@ -17,7 +17,10 @@ texture* jpg_load_file(char* filename);
 
 texture* load_image_file(char* filename);
 
+texture* texture_new();
 void texture_delete(texture* t);
+
+void texture_write_to_file(texture* t, char* filename);
 
 /* BEGIN DDS STUFF */
 

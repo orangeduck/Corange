@@ -37,13 +37,10 @@ matrix_3x3 m33_id() {
   mat.zz = 1.0f;   
   
   return mat;
-};
+}
 
 
 matrix_3x3 m33_mul_m33(matrix_3x3 m1, matrix_3x3 m2) {
-
-  /* This may need double checking */
-
   matrix_3x3 mat;
 
   mat.xx = (m1.xx * m2.xx) + (m1.xy * m2.yx) + (m1.xz * m2.zx);
@@ -60,7 +57,20 @@ matrix_3x3 m33_mul_m33(matrix_3x3 m1, matrix_3x3 m2) {
   
   return mat;
   
-};
+}
+
+vector3 m33_mul_v3(matrix_3x3 m, vector3 v) {
+
+  vector3 vec;
+  
+  vec.x = (m.xx * v.x) + (m.xy * v.y) + (m.xz * v.z);
+  vec.y = (m.yx * v.x) + (m.yy * v.y) + (m.yz * v.z);
+  vec.z = (m.zx * v.x) + (m.zy * v.y) + (m.zz * v.z);
+  
+  return vec;
+
+}
+
 
 void m33_to_array(matrix_3x3 m, float* out) {
 
@@ -76,6 +86,68 @@ void m33_to_array(matrix_3x3 m, float* out) {
   out[7] = m.yz;
   out[8] = m.zz;
   
+}
+
+matrix_3x3 m33_rotation_x(float a) {
+
+  matrix_3x3 m = m33_id();
+  
+  m.yy = cos(a);
+  m.yz = -sin(a);
+  m.zy = sin(a);
+  m.zz = cos(a);
+  
+  return m;
+  
+}
+
+matrix_3x3 m33_rotation_y(float a) {
+
+  matrix_3x3 m = m33_id();
+  
+  m.xx = cos(a);
+  m.xz = sin(a);
+  m.zx = -sin(a);
+  m.zz = cos(a);
+
+  return m;
+  
+}
+
+matrix_3x3 m33_rotation_z(float a) {
+
+  matrix_3x3 m = m33_id();
+  
+  m.xx = cos(a);
+  m.xy = -sin(a);
+  m.yx = sin(a);
+  m.yy = cos(a);
+
+  return m;
+  
+}
+
+matrix_3x3 m33_rotation_axis_angle(vector3 v, float angle) {
+  
+  matrix_3x3 m;
+
+  float c = cos(angle);
+  float s = sin(angle);
+  float nc = 1 - c;
+  
+  m.xx = v.x * v.x * nc + c;
+  m.xy = v.x * v.y * nc - v.z * s;
+  m.xz = v.x * v.z * nc + v.y * s;
+  
+  m.yx = v.y * v.x * nc + v.z * s;
+  m.yy = v.y * v.y * nc + c;
+  m.yz = v.y * v.z * nc - v.x * s;
+  
+  m.zx = v.z * v.x * nc - v.y * s;
+  m.zy = v.z * v.y * nc + v.x * s;
+  m.zz = v.z * v.z * nc + c;
+  
+  return m;
 }
 
 matrix_4x4 m44_zero() {
@@ -209,7 +281,19 @@ matrix_4x4 m44_mul_m44(matrix_4x4 m1, matrix_4x4 m2) {
   
   return mat;
   
-};
+}
+
+vector4 m44_mul_v4(matrix_4x4 m, vector4 v) {
+  
+  vector4 vec;
+  
+  vec.w = (m.ww * v.w) + (m.wx * v.x) + (m.wy * v.y) + (m.wz * v.z);
+  vec.x = (m.xw * v.w) + (m.xx * v.x) + (m.xy * v.y) + (m.xz * v.z);
+  vec.y = (m.yw * v.w) + (m.yx * v.x) + (m.yy * v.y) + (m.yz * v.z);
+  vec.z = (m.zw * v.w) + (m.zx * v.x) + (m.zy * v.y) + (m.zz * v.z);
+  
+  return vec;
+}
 
 matrix_3x3 m44_to_m33(matrix_4x4 m) {
 
@@ -332,36 +416,14 @@ matrix_4x4 m44_view_look_at(vector3 position, vector3 target, vector3 up) {
 
 matrix_4x4 m44_perspective(float fov, float near_clip, float far_clip, float ratio) {
   
-  /*
-  float height, width, q, p;
-  
-  width = 1.0f / tan(fov * 0.5);
-  height = 1.0f / tan(fov * 0.5);
-  q = (far_clip + near_clip) / (far_clip - near_clip);
-  p = -2.0 * far_clip * near_clip / (far_clip - near_clip);
-  
-  matrix_4x4 proj_matrix = m44_zero();
-  proj_matrix.ww = width;
-  proj_matrix.xx = height;
-  proj_matrix.yy = q;
-  proj_matrix.zy = p;
-  proj_matrix.yz = 1.0f;
-  
-  return proj_matrix;
-  */
-  
-  /*
-  
-  The above seems to work file, but I've copied this from the Glu source:
-  
+  /*  
     http://www.opengl.org/wiki/GluPerspective_code
     
-    It also works.
   */
   
   float right, left, bottom, top;
   
-  right = near_clip * tanf(fov);
+  right = -(near_clip * tanf(fov));
   left = -right;
   
   top = ratio * near_clip * tanf(fov);
@@ -377,6 +439,22 @@ matrix_4x4 m44_perspective(float fov, float near_clip, float far_clip, float rat
   proj_matrix.yz = ( -(2.0 * near_clip) * far_clip) / (far_clip - near_clip);
   
   return proj_matrix;
+}
+
+matrix_4x4 m44_orthographic(float left, float right, float bottom, float top, float near, float far) {
+
+  matrix_4x4 m = m44_id();
+  
+  m.ww = 2 / (right - left);
+  m.xx = 2 / (top - bottom);
+  m.yy = -2 / (far - near);
+  m.zz = 1;
+  
+  m.wz = - (right + left) / (right - left);
+  m.xz = - (top + bottom) / (top - bottom);
+  m.yz = - (far + near) / (far - near);
+  
+  return m;
 }
 
 matrix_4x4 m44_translation(vector3 v) {
@@ -395,7 +473,7 @@ matrix_4x4 m44_scale(vector3 v) {
   matrix_4x4 m = m44_id();
   m.ww = v.x;
   m.xx = v.y;
-  m.zz = v.z;
+  m.yy = v.z;
 
   return m;
 };
@@ -450,61 +528,40 @@ matrix_4x4 m44_rotation(vector3 v) {
   
 };
 
-/*
-
-  Quaternion to Rotation matrix
-  
-  Taken from wikipedia:
-    http://en.wikipedia.org/wiki/Rotation_matrix
-
-  Nq = w^2 + x^2 + y^2 + z^2
-  if Nq > 0.0 then s = 2/Nq else s = 0.0
-  X = x*s; Y = y*s; Z = z*s
-  wX = w*X; wY = w*Y; wZ = w*Z
-  xX = x*X; xY = x*Y; xZ = x*Z
-  yY = y*Y; yZ = y*Z; zZ = z*Z
-  [ 1.0-(yY+zZ)       xY-wZ        xZ+wY  ]
-  [      xY+wZ   1.0-(xX+zZ)       yZ-wX  ]
-  [      xZ-wY        yZ+wX   1.0-(xX+yY) ]
-
-*/
-
 matrix_4x4 m44_rotation_quaternion(vector4 q) {
 
-  float nq = (q.w * q.w) + (q.x * q.x) + (q.y * q.y) + (q.z * q.z);
-  float s;
-  
-  if(nq > 0.0) { s = 2.0 / nq; } else { s = 0.0; } 
-  
-  float x = q.x * s;
-  float y = q.y * s;
-  float z = q.z * s;
-  
-  float wx = q.w * x;
-  float wy = q.w * y;
-  float wz = q.w * z;
-  
-  float xx = q.x * x;
-  float xy = q.x * x;
-  float xz = q.x * x;
-  
-  float yy = q.y * y;
-  float yz = q.y * z;
-  float zz = q.z * z;
+  q = v4_normalize(q);
   
   matrix_4x4 m = m44_id();
   
-  m.ww = 1.0 - (yy + zz);
-  m.wx = xy - wz;
-  m.wy = xz + wy;
+  m.ww = 1.0 - 2 * q.y * q.y - 2 * q.z * q.z;
+  m.wx =       2 * q.x * q.y - 2 * q.w * q.z;
+  m.wy =       2 * q.x * q.z + 2 * q.w * q.y;
   
-  m.xw = xy + wz;
-  m.xx = 1.0 - (xx + zz);
-  m.xy = yz - wz;
+  m.xw =       2 * q.x * q.y + 2 * q.w * q.z;
+  m.xx = 1.0 - 2 * q.x * q.x - 2 * q.z * q.z;
+  m.xy =       2 * q.y * q.z + 2 * q.w * q.x;
   
-  m.yw = xz - wy;
-  m.yx = yz + wx;
-  m.yy = 1.0 - (xx + yy);
+  m.yw =       2 * q.x * q.z - 2 * q.w * q.y;
+  m.yx =       2 * q.y * q.z - 2 * q.w * q.x;
+  m.yy = 1.0 - 2 * q.x * q.x - 2 * q.y * q.y;
   
   return m;
 };
+
+matrix_4x4 m44_world(vector3 position, vector3 scale, vector4 rotation) {
+  
+  matrix_4x4 pos_m, sca_m, rot_m, result;
+  
+  pos_m = m44_translation(position);
+  rot_m = m44_rotation_quaternion(rotation);
+  sca_m = m44_scale(scale);
+  
+  result = m44_id();
+  result = m44_mul_m44( result, pos_m );
+  result = m44_mul_m44( result, sca_m );
+  result = m44_mul_m44( result, rot_m );
+  
+  return result;
+  
+}

@@ -1,0 +1,2 @@
+vertex_shader : ./engine/shaders/deferred_screen.vs
+fragment_shader : ./engine/shaders/deferred_screen.fs

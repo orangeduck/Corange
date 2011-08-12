@@ -1,19 +1,19 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
+#include <time.h>
 
-#include "arraylist.h"
 #include "vector.h"
 #include "geometry.h"
 
 int vertex_equal(vertex v1, vertex v2) {
-
-  int pos_equal = v3_equ(v1.position, v2.position);
-  int norm_equal = v3_equ(v1.normal, v2.normal);
-  int uv_equal = v2_equ(v1.uvs, v2.uvs);
   
-  return (pos_equal && norm_equal && uv_equal);
+  if(!v3_equ(v1.position, v2.position)) { return 0; }
+  if(!v3_equ(v1.normal, v2.normal)) { return 0; }
+  if(!v2_equ(v1.uvs, v2.uvs)) { return 0; }
   
-};
+  return 1;  
+}
 
 void vertex_print(vertex v) {
 
@@ -29,14 +29,15 @@ void vertex_print(vertex v) {
 
 int mesh_contains_vert(mesh* m, vertex v, int* position) {
   
-  int contains = 0;
-  int i = 0;
-  
+  int i = 0;  
   for (i = 0; i < m->num_verts; i++) {
-    if (vertex_equal(v, m->verticies[i])) { contains = 1; *position = i; break;}
+    if (vertex_equal(v, m->verticies[i])) { 
+      *position = i;
+      return 1;
+      }
   }
   
-  return contains;
+  return 0;
 }
 
 static int pos;
@@ -56,10 +57,29 @@ void mesh_add_vertex(mesh* m, vertex v) {
     
     m->num_triangles_3++;
     m->num_verts++;
-
+    
   }
 
 }
+
+int mesh_append_vertex(mesh* m, vertex v) {
+
+    m->verticies[m->num_verts] = v;
+    m->triangles[m->num_triangles_3] = m->num_verts;
+    
+    m->num_triangles_3++;
+    m->num_verts++;
+
+    return (m->num_verts - 1);
+}
+
+int mesh_append_triangle_entry(mesh* m, int pos) {
+
+    m->triangles[m->num_triangles_3] = pos;
+    m->num_triangles_3++;
+    
+    return (m->num_triangles_3 - 1);
+} 
 
 void mesh_print(mesh* m) {
   
@@ -143,6 +163,85 @@ void mesh_generate_tangents(mesh* m) {
   
 }
 
+void mesh_generate_orthagonal_tangents(mesh* m) {
+  
+  int i;
+  
+  /* Clear all tangents to 0,0,0 */
+  
+  for(i = 0; i < m->num_verts; i++) {
+    m->verticies[i].tangent = v3_zero();
+    m->verticies[i].binormal = v3_zero();
+  }
+  
+  /* Loop over faces, calculate tangent and append to verticies of that face */
+  
+  i = 0;
+  while( i < m->num_triangles_3) {
+    
+    int t_i1 = m->triangles[i];
+    int t_i2 = m->triangles[i+1];
+    int t_i3 = m->triangles[i+2];
+    
+    vertex v1 = m->verticies[t_i1];
+    vertex v2 = m->verticies[t_i2];
+    vertex v3 = m->verticies[t_i3];
+    
+    vector3 face_normal = triangle_normal(v1, v2, v3);    
+    vector3 face_binormal_temp = triangle_binormal(v1, v2, v3);
+    
+    vector3 face_tangent = v3_normalize( v3_cross(face_binormal_temp, face_normal) );
+    vector3 face_binormal = v3_normalize( v3_cross(face_tangent, face_normal) );
+    
+    v1.tangent = v3_add(face_tangent, v1.tangent);
+    v2.tangent = v3_add(face_tangent, v2.tangent);
+    v3.tangent = v3_add(face_tangent, v3.tangent);
+    
+    v1.binormal = v3_add(face_binormal, v1.binormal);
+    v2.binormal = v3_add(face_binormal, v2.binormal);
+    v3.binormal = v3_add(face_binormal, v3.binormal);
+    
+    m->verticies[t_i1] = v1;
+    m->verticies[t_i2] = v2;
+    m->verticies[t_i3] = v3;
+    
+    i = i + 3;
+  }
+  
+  
+  /* normalize all tangents */
+  
+  for(i = 0; i < m->num_verts; i++) {
+    m->verticies[i].tangent = v3_normalize( m->verticies[i].tangent );
+    m->verticies[i].binormal = v3_normalize( m->verticies[i].binormal );
+  }
+  
+}
+
+float mesh_surface_area(mesh* m) {
+  
+  float total = 0.0;
+  
+  int i = 0;
+  while( i < m->num_triangles_3) {
+  
+    int t_i1 = m->triangles[i];
+    int t_i2 = m->triangles[i+1];
+    int t_i3 = m->triangles[i+2];
+
+    vertex v1 = m->verticies[t_i1];
+    vertex v2 = m->verticies[t_i2];
+    vertex v3 = m->verticies[t_i3];
+    
+    total += triangle_area(v1, v2, v3);
+    
+    i = i + 3;
+  }
+  
+  return total;
+  
+}
+
 void model_add_mesh(model* main_model, mesh* sub_mesh) {
           
   /* Re fit the vertex and triangle memory sizes */ 
@@ -205,11 +304,33 @@ void model_generate_tangents(model* m) {
   
 }
 
+void model_generate_orthagonal_tangents(model* m) {
+
+  int i;
+  for(i=0; i<m->num_meshes; i++) {
+    mesh_generate_orthagonal_tangents( m->meshes[i] );
+  }
+
+}
+
+float model_surface_area(model* m) {
+  float total = 0.0f;
+  int i;
+  for(i=0; i<m->num_meshes; i++) {
+    total += mesh_surface_area( m->meshes[i] );
+  }
+  
+  return total;
+}
+
 render_mesh* to_render_mesh(mesh* old_mesh){
   
   render_mesh* new_mesh = malloc(sizeof(render_mesh));
-  new_mesh->name = old_mesh->name;
-  new_mesh->material = old_mesh->material;
+  new_mesh->name = malloc(strlen(old_mesh->name) + 1);
+  strcpy(new_mesh->name, old_mesh->name);
+  
+  new_mesh->material = malloc(strlen(old_mesh->material) + 1);
+  strcpy(new_mesh->material, old_mesh->material);
   
   new_mesh->num_verts = old_mesh->num_verts;
   new_mesh->num_triangles = old_mesh->num_triangles;
@@ -268,10 +389,6 @@ render_mesh* to_render_mesh(mesh* old_mesh){
   for(k=0; k < old_mesh->num_triangles_3; k++) {
     new_mesh->triangles[k] = old_mesh->triangles[k];
   }
-  
-  free(old_mesh->verticies);
-  free(old_mesh->triangles); 
-  free(old_mesh);
   
   return new_mesh;
 
@@ -345,8 +462,11 @@ void render_mesh_delete(render_mesh* m) {
 render_model* to_render_model(model* m) {
   
   render_model* new_model = malloc(sizeof(render_model));
-  new_model->name = m->name;
+  new_model->name = malloc( strlen(m->name) + 1);
+  strcpy(new_model->name, m->name);
+  
   new_model->num_meshes = m->num_meshes;
+  
   new_model->meshes = malloc(sizeof(render_mesh*) * new_model->num_meshes);
   
   int i;
@@ -354,9 +474,6 @@ render_model* to_render_model(model* m) {
     render_mesh* new_mesh = to_render_mesh(m->meshes[i]);
     new_model->meshes[i] = new_mesh;
   }
-  
-  free(m->meshes);
-  free(m);
   
   return new_model;
 };
@@ -477,7 +594,7 @@ vector3 triangle_binormal(vertex vert1, vertex vert2, vertex vert3) {
   
   return v3_normalize(sdir);
 
-};
+}
 
 vector3 triangle_normal(vertex v1, vertex v2, vertex v3) {
   
@@ -487,4 +604,102 @@ vector3 triangle_normal(vertex v1, vertex v2, vertex v3) {
   
   return v3_normalize(normal);
   
-};
+}
+
+float triangle_area(vertex v1, vertex v2, vertex v3) {
+  
+  vector3 ab = v3_sub(v1.position, v2.position);
+  vector3 ac = v3_sub(v1.position, v3.position);
+  
+  float area = 0.5 * v3_length(v3_cross(ab, ac));
+  
+  //printf("Area: %f\n", area);
+  
+  return area;
+  
+}
+
+vector3 triangle_random_position(vertex v1, vertex v2, vertex v3) {
+  
+  float r1 = (float)rand() / (float)RAND_MAX;
+  float r2 = (float)rand() / (float)RAND_MAX;
+  
+  if(r1 + r2 >= 1) {
+    r1 = 1 - r1;
+    r2 = 1 - r2;
+  }
+  
+  vector3 ab = v3_sub(v1.position, v2.position);
+  vector3 ac = v3_sub(v1.position, v3.position);
+  
+  vector3 a = v1.position;
+  a = v3_sub(a, v3_mul(ab , r1) );
+  a = v3_sub(a, v3_mul(ac , r2) );
+  
+  return a;
+  
+}
+
+float triangle_difference_u(vertex v1, vertex v2, vertex v3) {
+  
+  float max = v1.uvs.x;
+  max = v2.uvs.x > max ? v2.uvs.x : max;
+  max = v3.uvs.x > max ? v3.uvs.x : max;
+  
+  float min = v1.uvs.x;
+  min = v2.uvs.x < min ? v2.uvs.x : min;
+  min = v3.uvs.x < min ? v3.uvs.x : min;
+  
+  return max - min;
+  
+}
+
+float triangle_difference_v(vertex v1, vertex v2, vertex v3) {
+
+  float max = v1.uvs.y;
+  max = v2.uvs.x > max ? v2.uvs.y : max;
+  max = v3.uvs.x > max ? v3.uvs.y : max;
+  
+  float min = v1.uvs.y;
+  min = v2.uvs.y < min ? v2.uvs.y : min;
+  min = v3.uvs.y < min ? v3.uvs.y : min;
+  
+  return max - min;
+
+}
+
+/* CBM format - Corange Binary Model */
+
+/* TODO: Change all int values in the model specification and loaders to longs */
+
+/*
+  
+  -- Details --
+  
+  CBM
+  [num_objects : int]
+  [object list]
+  
+  -- Object --
+  
+  [name_len : int][name]
+  [mat_name_len : int][mat_name]
+  [num_verts : long]
+    [verts : position, normal, tangent, binormal, uv, color]
+  [num_triangles : long]
+    [triangle_indicies : long]
+    
+*/
+
+render_model* cbm_load_file(char* filename) {
+
+
+
+}
+
+
+void cbm_write_file(render_model* model) {
+
+
+
+}

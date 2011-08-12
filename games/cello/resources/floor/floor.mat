@@ -1,0 +1,13 @@
+string name = floor
+program prog = /resources/shaders/painting_basic.prog
+
+texture diffuse_map = /resources/floor/floor.dds
+texture bump_map = /resources/floor/floor_nm.dds
+texture spec_map = /resources/floor/floor_s.dds
+texture env_map = /resources/piano/piano_env.dds
+texture paint_map = /resources/floor/floor_pm.dds
+
+float glossiness = 50.0
+float bumpiness = 0.75
+float specular_level = 1.0
+float env_amount = 1.0
