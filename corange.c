@@ -22,6 +22,7 @@
 
 #include "asset_manager.h"
 #include "obj_loader.h"
+#include "ply_loader.h"
 
 #include "game.h"
 
@@ -75,6 +76,7 @@ main(int argc, char* argv[]) {
   asset_manager_init(game_name_arg);
   
   asset_manager_handler("obj", (void*(*)(char*))obj_load_file, (void(*)(void*))model_delete);
+  asset_manager_handler("ply", (void*(*)(char*))ply_load_file, (void(*)(void*))model_delete);
   
   asset_manager_handler("dds", (void*(*)(char*))dds_load_file, (void(*)(void*))texture_delete);
   asset_manager_handler("bmp", (void*(*)(char*))bmp_load_file, (void(*)(void*))texture_delete);

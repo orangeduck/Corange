@@ -310,6 +310,7 @@ void cello_finish() {
   painting_renderable_delete(pr_floor);
   
   camera_delete(cam);
+  light_delete(sun);
 
   render_text_delete(rt_framerate);
   render_text_delete(rt_test_text);
