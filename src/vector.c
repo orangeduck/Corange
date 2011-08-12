@@ -17,6 +17,114 @@ int rawcast(float x)
   return u.i;
 }
 
+float max(float x, float y) {
+  return x > y ? x : y;
+}
+
+float min(float x, float y) {
+  return x < y ? x : y;
+}
+
+float clamp(float x, float bottom, float top) {
+  x = max(x, bottom);
+  x = min(x, top);
+  return x;
+}
+
+float saturate(float x) {
+  x = max(x, 0.0);
+  x = min(x, 1.0);
+  return x;
+}
+
+float lerp(float p1, float p2, float amount) {
+  return (p1 * amount) + (p2 * (1-amount));
+}
+
+float smoothstep(float p1, float p2, float amount) {
+  float scaled_amount = amount*amount*(3 - 2*amount);
+  return lerp( p1, p2, scaled_amount );
+}
+
+float smootherstep(float p1, float p2, float amount) {
+  float scaled_amount = amount*amount*amount*(amount*(amount*6 - 15) + 10);
+  return lerp( p1, p2, scaled_amount );
+}
+
+float cosine_interpolation(float p1, float p2, float amount) {
+   float mu2 = (1-cos(amount*3.1415926))/2;
+   return (p2*(1-mu2)+p1*mu2);
+}
+
+float nearest_neighbor_interpolation(float p1, float p2, float amount) {
+  amount = roundf(amount);
+  if (amount) { return p2; }
+  else { return p1; }
+}
+
+float cubic_interpolation(float p1, float p2, float p3, float p4, float amount) {
+  
+  float amount_sqrd = amount * amount;
+  float amount_cubd = amount * amount * amount;
+  
+  float a1 = p4 - p3 - p2 + p1;
+  float a2 = p1 - p2 - a1;
+  float a3 = p3 - p1;
+  float a4 = p2;
+  
+  return (a1 * amount_cubd) + (a2 * amount_sqrd) + (a3 * amount) + a4;
+}
+
+float binearest_neighbor_interpolation(float top_left, float top_right, float bottom_left, float bottom_right, float x_amount, float y_amount) {
+  
+  x_amount = roundf(x_amount);
+  y_amount = roundf(y_amount);
+  
+  if( x_amount && !y_amount ) { return bottom_right; }
+  if( !x_amount && y_amount ) { return top_left; }
+  if( !x_amount && !y_amount ) { return bottom_left; }
+  if( x_amount && y_amount ) { return top_right; }
+  
+}
+
+float bilinear_interpolation(float top_left, float top_right, float bottom_left, float bottom_right, float x_amount, float y_amount) {
+  
+  float left = lerp(bottom_left, top_left, y_amount);
+  float right = lerp(bottom_right, top_right, y_amount);
+  return lerp(left, right, x_amount);
+  
+}
+
+float bicosine_interpolation(float top_left, float top_right, float bottom_left, float bottom_right, float x_amount, float y_amount) {
+
+  float left = cosine_interpolation(bottom_left, top_left, y_amount);
+  float right = cosine_interpolation(bottom_right, top_right, y_amount);
+  return cosine_interpolation(left, right, x_amount);
+
+}
+
+float bismoothstep_interpolation(float top_left, float top_right, float bottom_left, float bottom_right, float x_amount, float y_amount) {
+
+  float left = smoothstep(bottom_left, top_left, y_amount);
+  float right = smoothstep(bottom_right, top_right, y_amount);
+  return smoothstep(left, right, x_amount);
+
+}
+
+float bismootherstep_interpolation(float top_left, float top_right, float bottom_left, float bottom_right, float x_amount, float y_amount) {
+
+  float left = smootherstep(bottom_left, top_left, y_amount);
+  float right = smootherstep(bottom_right, top_right, y_amount);
+  return smootherstep(left, right, x_amount);
+
+}
+
+/*
+float bicubic_interpolation(float top_left, float top_right, float bottom_left, float bottom_right, float x, float y) {
+
+}
+*/
+
 vector2 v2(float x, float y) {
   vector2 v;
   v.x = x;
@@ -71,8 +179,8 @@ vector2 v2_neg(vector2 v) {
 }
 
 vector2 v2_abs(vector2 v) {
-  v.x = abs(v.x);
-  v.y = abs(v.y);
+  v.x = fabs(v.x);
+  v.y = fabs(v.y);
   return v;
 }
 
@@ -145,40 +253,38 @@ int v2_mix_hash(vector2 v) {
   int h1 = raw_vx << 1;
   int h2 = raw_vy << 3;
   int h3 = raw_vx >> 8;
+  
   int h4 = raw_vy << 7;
   int h5 = raw_vx >> 12;
   int h6 = raw_vy >> 15;
-  int h7 = raw_vx >> 11;
-  int h8 = raw_vy << 12;
 
-  int h9 = raw_vx << 2;
-  int h10 = raw_vy << 6;
-  int h11 = raw_vx >> 2;
-  int h12 = raw_vy << 9;
-  int h13 = raw_vx >> 21;
-  int h14 = raw_vy >> 13;
-  int h15 = raw_vx >> 8;
-  int h16 = raw_vy << 4;
+  int h7 = raw_vx << 2;
+  int h8 = raw_vy << 6;
+  int h9 = raw_vx >> 2;
   
-  int result_a = h1 ^ h2 ^ h3 ^ h4 ^ h5 ^ h6 ^ h7 ^ h8;
-  int result_b = h9 ^ h10 ^ h11 ^ h12 ^ h13 ^ h14 ^ h15 ^ h16;
+  int h10 = raw_vy << 9;
+  int h11 = raw_vx >> 21;
+  int h12 = raw_vy >> 13;
   
-  return (result_a * 10252247) ^ (result_b * 70209673);
+  int res1 = h1 ^ h2 ^ h3;
+  int res2 = h4 ^ h5 ^ h6;
+  int res3 = h7 ^ h8 ^ h9;
+  int res4 = h10 ^ h11 ^ h12;
+  
+  return (res1 * 10252247) ^ (res2 * 70209673) ^ (res3 * 104711) ^ (res4 * 63589);
 }
 
 vector2 v2_saturate(vector2 v) {
-  
-  v.x = v.x > 1.0 ? 1.0 : v.x;
-  v.x = v.x < 0.0 ? 0.0 : v.x;
-  
-  v.y = v.y > 1.0 ? 1.0 : v.y;
-  v.y = v.y < 0.0 ? 0.0 : v.y;
-  
+  v.x = saturate(v.x);
+  v.y = saturate(v.y);
   return v;
 }
 
 vector2 v2_lerp(vector2 v1, vector2 v2, float amount) {
-  return  v2_add( v2_mul(v1, 1-amount), v2_mul(v2, amount) );
+  vector2 v;
+  v.x = lerp(v1.x, v2.x, amount);
+  v.y = lerp(v1.y, v2.y, amount);
+  return v;
 }
 
 vector2 v2_smoothstep(vector2 v1, vector2 v2, float amount) {
@@ -254,9 +360,9 @@ vector3 v3_neg(vector3 v) {
 }
 
 vector3 v3_abs(vector3 v) {
-  v.x = abs(v.x);
-  v.y = abs(v.y);
-  v.z = abs(v.z);
+  v.x = fabs(v.x);
+  v.y = fabs(v.y);
+  v.z = fabs(v.z);
   return v;
 }
 
@@ -348,21 +454,18 @@ vector4 v3_to_homogeneous(vector3 v){
 };
 
 vector3 v3_saturate(vector3 v) {
-  
-  v.x = v.x > 1.0 ? 1.0 : v.x;
-  v.x = v.x < 0.0 ? 0.0 : v.x;
-  
-  v.y = v.y > 1.0 ? 1.0 : v.y;
-  v.y = v.y < 0.0 ? 0.0 : v.y;
-  
-  v.z = v.z > 1.0 ? 1.0 : v.z;
-  v.z = v.z < 0.0 ? 0.0 : v.z;
-  
+  v.x = saturate(v.x);
+  v.y = saturate(v.y);
+  v.z = saturate(v.z);
   return v;
 }
 
 vector3 v3_lerp(vector3 v1, vector3 v2, float amount) {
-  return  v3_add( v3_mul(v1, 1-amount), v3_mul(v2, amount) );
+  vector3 v;
+  v.x = lerp(v1.x, v2.x, amount);
+  v.y = lerp(v1.y, v2.y, amount);
+  v.z = lerp(v1.z, v2.z, amount);
+  return v;
 }
 
 vector3 v3_smoothstep(vector3 v1, vector3 v2, float amount) {
@@ -445,10 +548,10 @@ vector4 v4_neg(vector4 v) {
 }
 
 vector4 v4_abs(vector4 v) {
-  v.w = abs(v.w);
-  v.x = abs(v.x);
-  v.y = abs(v.y);
-  v.z = abs(v.z);
+  v.w = fabs(v.w);
+  v.x = fabs(v.x);
+  v.y = fabs(v.y);
+  v.z = fabs(v.z);
   return v;
 }
 
@@ -541,23 +644,21 @@ int v4_hash(vector4 v) {
 
 vector4 v4_saturate(vector4 v) {
 
-  v.w = v.w > 1.0 ? 1.0 : v.w;
-  v.w = v.w < 0.0 ? 0.0 : v.w;
-  
-  v.x = v.x > 1.0 ? 1.0 : v.x;
-  v.x = v.x < 0.0 ? 0.0 : v.x;
-  
-  v.y = v.y > 1.0 ? 1.0 : v.y;
-  v.y = v.y < 0.0 ? 0.0 : v.y;
-  
-  v.z = v.z > 1.0 ? 1.0 : v.z;
-  v.z = v.z < 0.0 ? 0.0 : v.z;
+  v.w = saturate(v.w);
+  v.x = saturate(v.x);
+  v.y = saturate(v.y);
+  v.z = saturate(v.z);
   
   return v;
 }
 
 vector4 v4_lerp(vector4 v1, vector4 v2, float amount) {
-  return  v4_add( v4_mul(v1, 1-amount), v4_mul(v2, amount) );
+  vector4 v;
+  v.w = lerp(v1.w, v2.w, amount);
+  v.x = lerp(v1.x, v2.x, amount);
+  v.y = lerp(v1.y, v2.y, amount);
+  v.z = lerp(v1.z, v2.z, amount);
+  return v;
 }
 
 vector4 v4_smoothstep(vector4 v1, vector4 v2, float amount) {

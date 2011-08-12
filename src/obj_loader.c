@@ -38,8 +38,6 @@
 /* NOTE: Currently not working with multiple objects */
 
 model* obj_load_file(char* filename) {
-
-  fflush(stdout);
   
   model* obj_model = malloc(sizeof(model));
   

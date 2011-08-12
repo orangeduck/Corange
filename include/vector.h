@@ -22,6 +22,27 @@ typedef struct {
 } vector4;
 
 
+/* Floating point maths */
+
+
+float max(float x, float y);
+float min(float x, float y);
+float clamp(float x, float bottom, float top);
+float saturate(float x);
+
+float lerp(float p1, float p2, float amount);
+float smoothstep(float p1, float p2, float amount);
+float smootherstep(float p1, float p2, float amount);
+float cosine_interpolation(float p1, float p2, float amount);
+float cubic_interpolation(float p1, float p2, float p3, float p4, float amount);
+float nearest_neighbor_interpolation(float p1, float p2, float amount);
+
+float binearest_neighbor_interpolation(float top_left, float top_right, float bottom_left, float bottom_right, float x_amount, float y_amount);
+float bilinear_interpolation(float top_left, float top_right, float bottom_left, float bottom_right, float x_amount, float y_amount);
+float bicosine_interpolation(float top_left, float top_right, float bottom_left, float bottom_right, float x_amount, float y_amount);
+float bismoothstep_interpolation(float top_left, float top_right, float bottom_left, float bottom_right, float x_amount, float y_amount);
+float bismootherstep_interpolation(float top_left, float top_right, float bottom_left, float bottom_right, float x_amount, float y_amount);
+
 /* Vector2 */
 
 

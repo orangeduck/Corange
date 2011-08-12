@@ -17,6 +17,7 @@
 #include "font.h"
 #include "texture.h"
 #include "dictionary.h"
+#include "timing.h"
 
 #include "forward_renderer.h"
 
@@ -31,6 +32,8 @@ static float view_matrix[16];
 static float world_matrix[16];
 static float lview_matrix[16];
 static float lproj_matrix[16];
+
+static float timer;
 
 static int TANGENT;
 static int BINORMAL;
@@ -75,6 +78,8 @@ void forward_renderer_begin() {
   glClear(GL_DEPTH_BUFFER_BIT);
   
   forward_renderer_setup_camera();
+  
+  timer += frame_time();
   
 }
 
@@ -222,6 +227,8 @@ void forward_renderer_use_material(material* mat) {
   GLint diffuse_light = glGetUniformLocation(*prog, "diffuse_light");
   GLint ambient_light = glGetUniformLocation(*prog, "ambient_light");
   GLint specular_light = glGetUniformLocation(*prog, "specular_light");
+ 
+  GLint time = glGetUniformLocation(*prog, "time");
   
   glUniform3f(light_position, LIGHT->position.x, LIGHT->position.y, LIGHT->position.z);
   glUniform3f(eye_position, CAMERA->position.x, CAMERA->position.y, CAMERA->position.z);
@@ -230,6 +237,8 @@ void forward_renderer_use_material(material* mat) {
   glUniform3f(specular_light, LIGHT->specular_color.x, LIGHT->specular_color.y, LIGHT->specular_color.z);
   glUniform3f(ambient_light, LIGHT->ambient_color.x, LIGHT->ambient_color.y, LIGHT->ambient_color.z);
 
+  glUniform1f(time,timer);
+  
   GLint world_matrix_u = glGetUniformLocation(*prog, "world_matrix");
   glUniformMatrix4fv(world_matrix_u, 1, 0, world_matrix);
   
