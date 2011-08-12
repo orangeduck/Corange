@@ -12,7 +12,7 @@ C_FILES= $(wildcard src/*.c)
 OBJ_FILES= $(addprefix obj/,$(notdir $(C_FILES:.c=.o)))
 
 cello.dll: $(OBJ_FILES)
-	$(CC) -g $(OBJ_FILES) $(LFLAGS) -shared -o $@
+	$(CC) -Wl,--enable-auto-import -g $(OBJ_FILES) $(LFLAGS) -shared -o $@
 
 obj/%.o: src/%.c
 	$(CC) $< -c -g $(CFLAGS) -o $@ 

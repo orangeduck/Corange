@@ -61,8 +61,8 @@ void painting_renderer_init() {
   glEnable(GL_MULTISAMPLE);
   glEnable(GL_DEPTH_TEST);
   
-  PAINTING_PROG = asset_get("./engine/shaders/painting_high.prog");
-  BACKGROUND = asset_get("./engine/resources/paperback.dds");
+  PAINTING_PROG = asset_get("/resources/shaders/painting_high.prog");
+  BACKGROUND = asset_get("/resources/paperback.dds");
   
   FACE_POSITION = glGetAttribLocation(*PAINTING_PROG, "face_position");
   FACE_NORMAL = glGetAttribLocation(*PAINTING_PROG, "face_normal");  

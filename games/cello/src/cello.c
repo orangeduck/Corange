@@ -1,6 +1,11 @@
 #include <stdio.h>
 
+#define GLEW_STATIC
+#include "GL/glew.h"
+
+#define NO_SDL_GLEXT
 #include "SDL/SDL.h"
+#include "SDL/SDL_opengl.h"
 
 #include "asset_manager.h"
 #include "geometry.h"
@@ -15,7 +20,6 @@
 
 #include "font.h"
 #include "timing.h"
-#include "scripting.h"
 
 #include "painting_renderable.h"
 #include "renderable.h"
@@ -56,56 +60,15 @@ void cello_init() {
   
   printf("Cello game init!\n");
   
-  viewport_set_vsync(1);
-  //viewport_set_dimensions( v2(800 * 1.5, 600 * 1.5) );
-  
-  /* New Camera */
-  
-  cam = camera_new( v3(20.0, 0.0, 0.0) , v3_zero() );
-  sun = light_new_type( v3(30,43,-26), light_type_spot );
-  
-  sun->ambient_color = v3(0.749, 0.855, 0.902);
-  sun->diffuse_color = v3(1.0, 0.875, 0.573);
-  
-  /* Renderer Setup */
-
-  shadow_mapper_init(sun);  
-  
-#define PAINTING_RENDER
-
-#ifdef DEFERRED_RENDER
-  deferred_renderer_init();
-  deferred_renderer_set_camera(cam);
-#endif
-
-#ifdef FORWARD_RENDER  
-  forward_renderer_init();
-  forward_renderer_set_camera(cam);
-  forward_renderer_set_light(sun);
-  forward_renderer_set_shadow_texture( shadow_mapper_depth_texture() );
-#endif
-
-#ifdef PAINTING_RENDER
-  painting_renderer_init();
-  painting_renderer_set_camera(cam);
-  painting_renderer_set_light(sun);
-  painting_renderer_set_shadow_texture( shadow_mapper_depth_texture() );
-#endif
-  
-  
-  /* Script stuff */
-  
-  script* s = asset_get("./engine/scripts/hello_world.lua");
-  scripting_run_script(s);
-  
   /* Get reference to the Cello */
   
+  load_folder("/resources/");
   load_folder("/resources/cello/");
   load_folder("/resources/piano/");
   load_folder("/resources/floor/");
   load_folder("/resources/shaders/");
   
-  texture* brush = asset_get("./engine/resources/brushset1.dds");
+  texture* brush = asset_get("/resources/brushset1.dds");
   
   cello = asset_get("/resources/cello/cello.obj");
   cello_mat = asset_get("/resources/cello/cello.mat");
@@ -156,6 +119,43 @@ void cello_init() {
   rt_test_text->color = v4(1,1,1,1);
   render_text_update(rt_test_text);
   
+  /* Init render engine */
+  
+  viewport_set_vsync(1);
+  //viewport_set_dimensions( v2(800 * 1.5, 600 * 1.5) );
+  
+  /* New Camera */
+  
+  cam = camera_new( v3(20.0, 0.0, 0.0) , v3_zero() );
+  sun = light_new_type( v3(30,43,-26), light_type_spot );
+  
+  sun->ambient_color = v3(0.749, 0.855, 0.902);
+  sun->diffuse_color = v3(1.0, 0.875, 0.573);
+  
+  /* Renderer Setup */
+
+  shadow_mapper_init(sun);  
+  
+#define PAINTING_RENDER
+
+#ifdef DEFERRED_RENDER
+  deferred_renderer_init();
+  deferred_renderer_set_camera(cam);
+#endif
+
+#ifdef FORWARD_RENDER  
+  forward_renderer_init();
+  forward_renderer_set_camera(cam);
+  forward_renderer_set_light(sun);
+  forward_renderer_set_shadow_texture( shadow_mapper_depth_texture() );
+#endif
+
+#ifdef PAINTING_RENDER
+  painting_renderer_init();
+  painting_renderer_set_camera(cam);
+  painting_renderer_set_light(sun);
+  painting_renderer_set_shadow_texture( shadow_mapper_depth_texture() );
+#endif
   
 }
 
