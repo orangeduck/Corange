@@ -117,8 +117,8 @@ void nmapper_update() {
 
   Uint8 keystate = SDL_GetMouseState(NULL, NULL);
   if(keystate & SDL_BUTTON(1)){
-    float a1 = -(float)mouse_x * frame_time() * 2;
-    float a2 = (float)mouse_y * frame_time() * 2;
+    float a1 = -(float)mouse_x * 0.005;
+    float a2 = (float)mouse_y * 0.005;
     
     cam->position = m33_mul_v3(m33_rotation_y( a1 ), cam->position );
     
