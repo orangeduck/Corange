@@ -24,6 +24,38 @@ texture* texture_new() {
   return t;
 }
 
+
+unsigned char pixels[2048 * 2048 * 4];
+texture* last_texture = NULL;
+int size_x, size_y;
+
+/* Warning - due to the above allocation this can only sample 2048 by 2048 or under textures */
+
+vector4 texture_sample(texture* t, vector2 point) {  
+  
+  if ( t != last_texture ) {
+    
+    glBindTexture(GL_TEXTURE_2D, *t);
+   
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &size_x);
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &size_y);  
+  
+    glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+    
+    last_texture = t;
+  }
+  
+  int u = size_x * point.x;
+  int v = size_y * point.y;
+  
+  float r = (float)pixels[u * 4 + v * size_x * 4 + 0] / 255;
+  float g = (float)pixels[u * 4 + v * size_x * 4 + 1] / 255;
+  float b = (float)pixels[u * 4 + v * size_x * 4 + 2] / 255;
+  float a = (float)pixels[u * 4 + v * size_x * 4 + 3] / 255;
+  
+  return v4(r,g,b,a);
+}
+
 void texture_write_to_file(texture* t, char* filename) {
   
   char* ext = asset_file_extension(filename);

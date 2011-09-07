@@ -8,6 +8,8 @@
 #include "SDL/SDL.h"
 #include "SDL/SDL_opengl.h"
 
+#include "vector.h"
+
 typedef GLuint texture;
 
 texture* bmp_load_file(char* filename);
@@ -19,6 +21,8 @@ texture* load_image_file(char* filename);
 
 texture* texture_new();
 void texture_delete(texture* t);
+
+vector4 texture_sample(texture* t, vector2 point);
 
 void texture_write_to_file(texture* t, char* filename);
 

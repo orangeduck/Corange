@@ -1,5 +1,7 @@
 #include "wolf_renderable.h"
 
+#include "asset_manager.h"
+
 #include <math.h>
 
 wolf_renderable* wolf_renderable_new(char* name, model* m, texture* brush_texture, int num_brushes, vector2 brush_scale, float density) {
@@ -59,9 +61,17 @@ wolf_renderable* wolf_renderable_new(char* name, model* m, texture* brush_textur
       int k;
       for(k = 0; k < kcount; k++) {
         
-        vector3 position = triangle_random_position(v1, v2, v3);
-        vector3 normal = triangle_normal(v1, v2, v3);
-        vector3 tangent = triangle_tangent(v1, v2, v3);
+        vertex rand_pos = triangle_random_position_interpolation(v1, v2, v3);
+        
+        vector3 position = rand_pos.position;
+        vector2 uvs = rand_pos.uvs;
+        vector3 normal = rand_pos.normal;
+        vector3 tangent = rand_pos.tangent;
+        
+        texture* piano_texture = asset_get("/resources/piano/piano.dds");
+        vector4 sample = texture_sample(piano_texture, rand_pos.uvs);
+        
+        //v4_print(sample);printf("\n");
         
         short brush_id = rand() % w->num_brushes;
         
