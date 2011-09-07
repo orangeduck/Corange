@@ -13,7 +13,7 @@ void main()
 	}
 	
 	vec4 color_brush = texture2D(brush, uvs);
-	if(color_brush.a <= 0.1) {
+	if(color_brush.a < 0.5) {
 		discard;
 	}
 	

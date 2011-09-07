@@ -27,7 +27,7 @@
 
 static char* game_name_arg;
 
-main(int argc, char* argv[]) {
+int main(int argc, char* argv[]) {
   
   /* Stop Redirect of stdout and stderr */
   

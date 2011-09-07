@@ -136,7 +136,7 @@ void cello_init() {
 
   shadow_mapper_init(sun);  
   
-#define PAINTING_RENDER
+#define DEFERRED_RENDER
 
 #ifdef DEFERRED_RENDER
   deferred_renderer_init();

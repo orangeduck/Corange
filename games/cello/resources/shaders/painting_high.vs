@@ -68,7 +68,7 @@ void main()
 			
 			uvs = gl_MultiTexCoord0.xy;
 			
-			float scale = 1.5 * (skip + 2) * min( dir_value * 2 , 1 );
+			float scale = 1.25 * (skip + 2) * min( dir_value * 2 , 1 );
 			
 			paint_data.x = paint_data.x / 2;
 			vec2 brush_size = mix( vec2(paint_data.x,paint_data.y), vec2(paint_data.y,paint_data.x), paint_data.a);

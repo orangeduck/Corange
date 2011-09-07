@@ -4,9 +4,9 @@
 #include "font.h"
 #include "vector.h"
 
-int align_left = 0;
-int align_center = 1;
-int align_right = 2;
+static int text_align_left = 0;
+static int text_align_center = 1;
+static int text_align_right = 2;
 
 /*
   After editing any properties of a render_text in this struct, please call the update function

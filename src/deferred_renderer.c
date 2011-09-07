@@ -29,8 +29,6 @@ static int NORMAL;
 static int TANGENT;
 static int BINORMAL;
 
-static float CAM_POSITION[3];
-
 static GLuint fbo = 0;
 static GLuint depth_buffer;
 static GLuint diffuse_buffer;
@@ -78,8 +76,8 @@ void deferred_renderer_init() {
   glGenTextures(1, &diffuse_texture);
   glBindTexture(GL_TEXTURE_2D, diffuse_texture);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, viewport_width(), viewport_height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, diffuse_texture, 0);
@@ -87,8 +85,8 @@ void deferred_renderer_init() {
   glGenTextures(1, &positions_texture);
   glBindTexture(GL_TEXTURE_2D, positions_texture);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, viewport_width(), viewport_height(), 0, GL_RGBA, GL_FLOAT, NULL);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, positions_texture, 0);
@@ -96,8 +94,8 @@ void deferred_renderer_init() {
   glGenTextures(1, &normals_texture);
   glBindTexture(GL_TEXTURE_2D, normals_texture);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, viewport_width(), viewport_height(), 0, GL_RGBA, GL_FLOAT, NULL);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, normals_texture, 0);
@@ -105,8 +103,8 @@ void deferred_renderer_init() {
   glGenTextures(1, &depth_texture);
   glBindTexture(GL_TEXTURE_2D, depth_texture);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, viewport_width(), viewport_height(), 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth_texture, 0);
@@ -133,7 +131,63 @@ void deferred_renderer_set_camera(camera* cam) {
   CAMERA = cam;
 };
 
-void deferred_renderer_setup_camera() {
+static void deferred_renderer_use_material(material* mat) {
+  
+  /* Set material parameters */
+  
+  int tex_counter = 0;
+  
+  int i;
+  for(i = 0; i < mat->keys->num_items; i++) {
+    char* key = list_get(mat->keys, i);
+    
+    int* type = dictionary_get(mat->types, key);
+    void* property = dictionary_get(mat->properties, key);
+    
+    GLint loc = glGetUniformLocation(*PROGRAM, key);
+    
+    GLint world_matrix_u = glGetUniformLocation(*PROGRAM, "world_matrix");
+    glUniformMatrix4fv(world_matrix_u, 1, 0, world_matrix);
+    
+    if (*type == mat_type_texture) {
+    
+      glUniform1i(loc, tex_counter);
+      glActiveTexture(GL_TEXTURE0 + tex_counter);
+      glBindTexture(GL_TEXTURE_2D, *((texture*)property));
+      tex_counter++;
+    
+    } else if (*type == mat_type_int) {
+    
+      glUniform1i(loc, *((float*)property));
+    
+    } else if (*type == mat_type_float) {
+    
+      glUniform1f(loc, *((float*)property));
+      
+    } else if (*type == mat_type_vector2) {
+    
+      vector2 v = *((vector2*)property);
+      glUniform2f(loc, v.x, v.y);
+    
+    } else if (*type == mat_type_vector3) {
+    
+      vector3 v = *((vector3*)property);
+      glUniform3f(loc, v.x, v.y, v.z);
+  
+    } else if (*type == mat_type_vector4) {
+    
+      vector4 v = *((vector4*)property);
+      glUniform4f(loc, v.w, v.x, v.y, v.z);
+    
+    } else {
+      /* Do nothing */
+    }
+     
+  }  
+
+}
+
+static void deferred_renderer_setup_camera() {
 
   if (CAMERA != NULL) {
     
@@ -208,9 +262,8 @@ void deferred_renderer_end() {
   glEnable(GL_TEXTURE_2D);
   glUniform1iARB(glGetUniformLocation(*SCREEN_PROGRAM, "depth_texture"), 3);
   
-  GLint cam_position = glGetUniformLocation(*SCREEN_PROGRAM, "cameraPosition");
-  v3_to_array(CAMERA->position, CAM_POSITION);
-  glUniform3fv(cam_position, 1, CAM_POSITION);
+  GLint cam_position = glGetUniformLocation(*SCREEN_PROGRAM, "camera_position");
+  glUniform3f(cam_position, CAMERA->position.x, CAMERA->position.y, CAMERA->position.z);
   
 	glBegin(GL_QUADS);
 		glMultiTexCoord2f(GL_TEXTURE0, 0.0f, 0.0f); glVertex3f(-1.0, -1.0,  0.0f);
@@ -334,62 +387,6 @@ void deferred_renderer_render_renderable(renderable* r) {
     glUseProgramObjectARB(0);
 
   }
-
-};
-
-void deferred_renderer_use_material(material* mat) {
-  
-  /* Set material parameters */
-  
-  int tex_counter = 0;
-  
-  int i;
-  for(i = 0; i < mat->keys->num_items; i++) {
-    char* key = list_get(mat->keys, i);
-    
-    int* type = dictionary_get(mat->types, key);
-    void* property = dictionary_get(mat->properties, key);
-    
-    GLint loc = glGetUniformLocation(*PROGRAM, key);
-    
-    GLint world_matrix_u = glGetUniformLocation(*PROGRAM, "world_matrix");
-    glUniformMatrix4fv(world_matrix_u, 1, 0, world_matrix);
-    
-    if (*type == mat_type_texture) {
-    
-      glUniform1i(loc, tex_counter);
-      glActiveTexture(GL_TEXTURE0 + tex_counter);
-      glBindTexture(GL_TEXTURE_2D, *((texture*)property));
-      tex_counter++;
-    
-    } else if (*type == mat_type_int) {
-    
-      glUniform1i(loc, *((float*)property));
-    
-    } else if (*type == mat_type_float) {
-    
-      glUniform1f(loc, *((float*)property));
-      
-    } else if (*type == mat_type_vector2) {
-    
-      vector2 v = *((vector2*)property);
-      glUniform2f(loc, v.x, v.y);
-    
-    } else if (*type == mat_type_vector3) {
-    
-      vector3 v = *((vector3*)property);
-      glUniform3f(loc, v.x, v.y, v.z);
-  
-    } else if (*type == mat_type_vector4) {
-    
-      vector4 v = *((vector4*)property);
-      glUniform4f(loc, v.w, v.x, v.y, v.z);
-    
-    } else {
-      /* Do nothing */
-    }
-     
-  }  
 
 }
 

@@ -117,6 +117,8 @@ float triangle_area(vertex v1, vertex v2, vertex v3);
 float triangle_difference_u(vertex v1, vertex v2, vertex v3);
 float triangle_difference_v(vertex v1, vertex v2, vertex v3);
 
+vertex triangle_interpolation(vertex v1, vertex v2, vertex v3, vector3 position);
+
 render_model* cbm_load_file(char* filename);
 void cbm_write_file(render_model* model);
 

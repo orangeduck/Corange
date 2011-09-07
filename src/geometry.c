@@ -640,6 +640,57 @@ vector3 triangle_random_position(vertex v1, vertex v2, vertex v3) {
   
 }
 
+vertex triangle_random_position_interpolation(vertex v1, vertex v2, vertex v3) {
+
+  float r1 = (float)rand() / (float)RAND_MAX;
+  float r2 = (float)rand() / (float)RAND_MAX;
+  
+  if(r1 + r2 >= 1) {
+    r1 = 1 - r1;
+    r2 = 1 - r2;
+  }
+  
+  vertex v;
+  
+  vector3 v_pos, v_norm, v_tang, v_binorm;
+  vector4 v_col;
+  vector2 v_uv;
+  
+  v_pos = v1.position;
+  v_pos = v3_sub(v_pos, v3_mul(v3_sub(v1.position, v2.position) , r1) );
+  v_pos = v3_sub(v_pos, v3_mul(v3_sub(v1.position, v3.position) , r2) );
+  
+  v_norm = v1.normal;
+  v_norm = v3_sub(v_norm, v3_mul(v3_sub(v1.normal, v2.normal) , r1) );
+  v_norm = v3_sub(v_norm, v3_mul(v3_sub(v1.normal, v3.normal) , r2) );
+  
+  v_tang = v1.tangent;
+  v_tang = v3_sub(v_tang, v3_mul(v3_sub(v1.tangent, v2.tangent) , r1) );
+  v_tang = v3_sub(v_tang, v3_mul(v3_sub(v1.tangent, v3.tangent) , r2) );
+  
+  v_binorm = v1.binormal;
+  v_binorm = v3_sub(v_binorm, v3_mul(v3_sub(v1.binormal, v2.binormal) , r1) );
+  v_binorm = v3_sub(v_binorm, v3_mul(v3_sub(v1.binormal, v3.binormal) , r2) );
+  
+  v_col = v1.color;
+  v_col = v4_sub(v_col, v4_mul(v4_sub(v1.color, v2.color) , r1) );
+  v_col = v4_sub(v_col, v4_mul(v4_sub(v1.color, v3.color)  , r2) );
+  
+  v_uv = v1.uvs;
+  v_uv = v2_sub(v_uv, v2_mul(v2_sub(v1.uvs, v2.uvs) , r1) );
+  v_uv = v2_sub(v_uv, v2_mul(v2_sub(v1.uvs, v3.uvs)  , r2) );
+  
+  v.position = v_pos;
+  v.normal = v_norm;
+  v.tangent = v_tang;
+  v.binormal = v_binorm;
+  v.color = v_col;
+  v.uvs = v_uv;
+  
+  return v;
+}
+
+
 float triangle_difference_u(vertex v1, vertex v2, vertex v3) {
   
   float max = v1.uvs.x;

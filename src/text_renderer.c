@@ -28,7 +28,7 @@ render_text* render_text_new(char* string, int buffersize, font* text_font) {
   rt->scale = v2(1.0,1.0);
   rt->color = v4_one();
   
-  rt->alignment = align_left;
+  rt->alignment = text_align_left;
   rt->line_spacing = 0.0;
   rt->char_spacing = 0.0;
   rt->rotation = 0.0;

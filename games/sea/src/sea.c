@@ -31,10 +31,8 @@ static texture* noise5;
 
 static texture* skydome;
 
-static texture* foam1;
-static texture* foam2;
-static texture* foam3;
-static texture* foam4;
+static texture* water_calm;
+static texture* water_foam;
 
 void sea_init() {
 
@@ -63,10 +61,8 @@ void sea_init() {
   
   skydome = asset_get("/resources/skybox_cloud_10.dds");
 
-  foam1 = asset_get("/resources/foam1.dds");
-  foam2 = asset_get("/resources/foam2.dds");
-  foam3 = asset_get("/resources/foam3.dds");
-  foam4 = asset_get("/resources/foam4.dds");
+  water_calm = asset_get("/resources/water_calm.dds");
+  water_foam = asset_get("/resources/water_foam.dds");
   
   seaplane = asset_get("/resources/seaplane.obj");
   seaplane_mat = asset_get("/resources/seaplane.mat");
@@ -79,10 +75,8 @@ void sea_init() {
   
   material_set_property(seaplane_mat, "tex_skybox", skydome, mat_type_texture);
 
-  material_set_property(seaplane_mat, "tex_foam1", foam1, mat_type_texture);
-  material_set_property(seaplane_mat, "tex_foam2", foam2, mat_type_texture);
-  material_set_property(seaplane_mat, "tex_foam3", foam3, mat_type_texture);
-  material_set_property(seaplane_mat, "tex_foam4", foam4, mat_type_texture);
+  material_set_property(seaplane_mat, "tex_calm_water", water_calm, mat_type_texture);
+  material_set_property(seaplane_mat, "tex_foam_water", water_foam, mat_type_texture);
   
   r_seaplane = renderable_new("seaplane");
   renderable_add_model(r_seaplane, seaplane);
