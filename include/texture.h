@@ -22,6 +22,8 @@ void texture_generate_mipmaps(texture* t);
 
 texture* dds_load_file( char* filename );
 
+void texture_write_to_file(texture* t, char* filename);
+
 /* BEGIN DDS STUFF */
 
 //  little-endian, of course

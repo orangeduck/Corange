@@ -39,7 +39,7 @@ image* texture_get_image(texture* t) {
   glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &w);
   glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &h);
   
-  unsigned char* data = malloc( w * h);
+  unsigned char* data = malloc(w * h * 4);
   
   glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
   
@@ -56,6 +56,15 @@ void texture_generate_mipmaps(texture* t) {
   glGenerateMipmap(GL_TEXTURE_2D);
   
 }
+
+void texture_write_to_file(texture* t, char* filename){
+  
+  image* i = texture_get_image(t);
+  image_write_to_file(i, filename);
+  image_delete(i);
+  
+}
+
 
 DdsLoadInfo loadInfoDXT1 = {
   1, 0, 0, 4, 8, GL_COMPRESSED_RGBA_S3TC_DXT1_EXT
