@@ -77,10 +77,6 @@ int main(int argc, char* argv[]) {
   asset_manager_handler("obj", (void*(*)(char*))obj_load_file, (void(*)(void*))model_delete);
   
   asset_manager_handler("dds", (void*(*)(char*))dds_load_file, (void(*)(void*))texture_delete);
-  asset_manager_handler("bmp", (void*(*)(char*))bmp_load_file, (void(*)(void*))texture_delete);
-  asset_manager_handler("png", (void*(*)(char*))png_load_file, (void(*)(void*))texture_delete);
-  asset_manager_handler("tif", (void*(*)(char*))tif_load_file, (void(*)(void*))texture_delete);
-  asset_manager_handler("jpg", (void*(*)(char*))jpg_load_file, (void(*)(void*))texture_delete);
   
   asset_manager_handler("vs" , (void*(*)(char*))vs_load_file,  (void(*)(void*))shader_delete);
   asset_manager_handler("fs" , (void*(*)(char*))fs_load_file,  (void(*)(void*))shader_delete);

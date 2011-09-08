@@ -69,7 +69,7 @@ wolf_renderable* wolf_renderable_new(char* name, model* m, texture* brush_textur
         vector3 tangent = rand_pos.tangent;
         
         texture* piano_texture = asset_get("/resources/piano/piano.dds");
-        vector4 sample = texture_sample(piano_texture, rand_pos.uvs);
+        //vector4 sample = texture_sample(piano_texture, rand_pos.uvs);
         
         //v4_print(sample);printf("\n");
         

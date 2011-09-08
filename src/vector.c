@@ -196,6 +196,24 @@ vector2 v2_fmod(vector2 v, float val) {
   return v;
 }
 
+vector2 v2_max(vector2 v, float x) {
+  v.x = max(v.x, x);
+  v.y = max(v.y, x);
+  return v;
+}
+
+vector2 v2_min(vector2 v, float x) {
+  v.x = min(v.x, x);
+  v.y = min(v.y, x);
+  return v;
+}
+
+vector2 v2_clamp(vector2 v, float b, float t) {
+  v.x = clamp(v.x, b, t);
+  v.y = clamp(v.y, b, t);
+  return v;
+}
+
 void v2_print(vector2 v) {
   printf("v2(%4.2f,%4.2f)", v.x, v.y);
 }
@@ -669,6 +687,30 @@ vector4 v4_smoothstep(vector4 v1, vector4 v2, float amount) {
 vector4 v4_smootherstep(vector4 v1, vector4 v2, float amount) {
   float scaled_amount = amount*amount*amount*(amount*(amount*6 - 15) + 10);
   return v4_lerp( v1, v2, scaled_amount );
+}
+
+vector4 v4_binearest_neighbor_interpolation(vector4 top_left, vector4 top_right, vector4 bottom_left, vector4 bottom_right, float x_amount, float y_amount) {
+
+  vector4 v;
+  v.w = binearest_neighbor_interpolation( top_left.w, top_right.w, bottom_left.w, bottom_right.w, x_amount, y_amount );
+  v.x = binearest_neighbor_interpolation( top_left.x, top_right.x, bottom_left.x, bottom_right.x, x_amount, y_amount );
+  v.y = binearest_neighbor_interpolation( top_left.y, top_right.y, bottom_left.y, bottom_right.y, x_amount, y_amount );
+  v.z = binearest_neighbor_interpolation( top_left.z, top_right.z, bottom_left.z, bottom_right.z, x_amount, y_amount );
+  
+  return v;
+
+}
+
+vector4 v4_bilinear_interpolation(vector4 top_left, vector4 top_right, vector4 bottom_left, vector4 bottom_right, float x_amount, float y_amount) {
+
+  vector4 v;
+  v.w = bilinear_interpolation( top_left.w, top_right.w, bottom_left.w, bottom_right.w, x_amount, y_amount );
+  v.x = bilinear_interpolation( top_left.x, top_right.x, bottom_left.x, bottom_right.x, x_amount, y_amount );
+  v.y = bilinear_interpolation( top_left.y, top_right.y, bottom_left.y, bottom_right.y, x_amount, y_amount );
+  v.z = bilinear_interpolation( top_left.z, top_right.z, bottom_left.z, bottom_right.z, x_amount, y_amount );
+  
+  return v;
+
 }
 
 vector4 v4_quaternion_id() {

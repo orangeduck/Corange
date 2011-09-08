@@ -60,6 +60,10 @@ vector2 v2_abs(vector2 v);
 vector2 v2_floor(vector2 v);
 vector2 v2_fmod(vector2 v, float val);
 
+vector2 v2_max(vector2 v, float x);
+vector2 v2_min(vector2 v, float x);
+vector2 v2_clamp(vector2 v, float b, float t);
+
 int v2_equ(vector2 v1, vector2 v2);
 
 float v2_dot(vector2 v1, vector2 v2);
@@ -153,6 +157,9 @@ vector4 v4_saturate(vector4 v);
 vector4 v4_lerp(vector4 v1, vector4 v2, float amount);
 vector4 v4_smoothstep(vector4 v1, vector4 v2, float amount);
 vector4 v4_smootherstep(vector4 v1, vector4 v2, float amount);
+
+vector4 v4_binearest_neighbor_interpolation(vector4 top_left, vector4 top_right, vector4 bottom_left, vector4 bottom_right, float x_amount, float y_amount);
+vector4 v4_bilinear_interpolation(vector4 top_left, vector4 top_right, vector4 bottom_left, vector4 bottom_right, float x_amount, float y_amount);
 
 vector4 v4_quaternion_id();
 vector4 v4_quaternion_mul(vector4 v1, vector4 v2);

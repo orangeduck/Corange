@@ -6,12 +6,6 @@
 #include "asset_manager.h"
 #include "texture.h"
 
-void texture_delete(texture* t) {
-  texture tex = *t;
-  glDeleteTextures(1, &tex);
-  free(t);
-}
-
 texture* texture_new() {
   
   texture* t = malloc(sizeof(texture));
@@ -24,171 +18,44 @@ texture* texture_new() {
   return t;
 }
 
-
-unsigned char pixels[2048 * 2048 * 4];
-texture* last_texture = NULL;
-int size_x, size_y;
-
-/* Warning - due to the above allocation this can only sample 2048 by 2048 or under textures */
-
-vector4 texture_sample(texture* t, vector2 point) {  
-  
-  if ( t != last_texture ) {
-    
-    glBindTexture(GL_TEXTURE_2D, *t);
-   
-    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &size_x);
-    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &size_y);  
-  
-    glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-    
-    last_texture = t;
-  }
-  
-  int u = size_x * point.x;
-  int v = size_y * point.y;
-  
-  float r = (float)pixels[u * 4 + v * size_x * 4 + 0] / 255;
-  float g = (float)pixels[u * 4 + v * size_x * 4 + 1] / 255;
-  float b = (float)pixels[u * 4 + v * size_x * 4 + 2] / 255;
-  float a = (float)pixels[u * 4 + v * size_x * 4 + 3] / 255;
-  
-  return v4(r,g,b,a);
+void texture_delete(texture* t) {
+  texture tex = *t;
+  glDeleteTextures(1, &tex);
+  free(t);
 }
 
-void texture_write_to_file(texture* t, char* filename) {
+void texture_set_image(texture* t, image* i) {
+
+  glBindTexture(GL_TEXTURE_2D, *t);
+  glTexImage2D(GL_TEXTURE_2D, 0, 4, i->width, i->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, i->data );
   
-  char* ext = asset_file_extension(filename);
+}
+
+image* texture_get_image(texture* t) {
   
-  int format, width, height;
+  int w, h;
   
   glBindTexture(GL_TEXTURE_2D, *t);
-  glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width );
-  glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height );
-  glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_INTERNAL_FORMAT, &format );
+  glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &w);
+  glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &h);
   
-  if ( strcmp(ext,"bmp") == 0 ) {
-    
-  } else if ( strcmp(ext, "tga") == 0 ) {
-    
-    unsigned char* image_data = malloc( sizeof(unsigned char) * width * height * 4 );
-    glGetTexImage( GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data ); 
-    
-    int xa= width % 256;
-    int xb= (width-xa)/256;
-
-    int ya= height % 256;
-    int yb= (height-ya)/256;
-    unsigned char header[18]={0,0,2,0,0,0,0,0,0,0,0,0,(char)xa,(char)xb,(char)ya,(char)yb,32,0};
-    
-    SDL_RWops* file = SDL_RWFromFile(filename, "wb");
-    SDL_RWwrite(file, header, sizeof(header), 1);
-    SDL_RWwrite(file, image_data, sizeof(char) * width * height * 4, 1 );
-    SDL_RWclose(file);
-    
-    free(image_data);
-    
-  } else {
-    
-    printf("Error: Cannot save texture to &s, unknown file extension %s\n", filename, ext);
-    
-  }
+  unsigned char* data = malloc( w * h);
   
-  free(ext);
+  glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
   
+  image* i = image_new(w, h, data);
+  
+  free(data);
+  
+  return i;
 }
 
-texture* bmp_load_file(char* filename) {
-  
-  printf("Loading: %s\n", filename);
-  
-  texture my_texture;	
-  SDL_Surface *surface;
-  GLenum texture_format;
-  GLint  nOfColors;
-   
-  surface = SDL_LoadBMP(filename);
-   
-  if(!surface) {
-    printf("Error: Could not load file %s: %s\n",filename , SDL_GetError());
-    return NULL;
-  }
-  
-  nOfColors = surface->format->BytesPerPixel;
-  if (nOfColors == 4) {
-    if (surface->format->Rmask == 0x000000ff) texture_format = GL_RGBA;
-    else texture_format = GL_BGRA;
-  
-  } else if (nOfColors == 3) {
-    if (surface->format->Rmask == 0x000000ff) texture_format = GL_RGB;
-    else texture_format = GL_BGR;
-  }
- 
-  glGenTextures(1, &my_texture);
-  glBindTexture(GL_TEXTURE_2D, my_texture);
-  glTexImage2D(GL_TEXTURE_2D, 0, nOfColors, surface->w, surface->h, 0, texture_format, GL_UNSIGNED_BYTE, surface->pixels );
+void texture_generate_mipmaps(texture* t) {
 
-  if (surface) { 
-    SDL_FreeSurface(surface);
-  }
+  glBindTexture(GL_TEXTURE_2D, *t);
+  glGenerateMipmap(GL_TEXTURE_2D);
   
-  texture* tex = malloc(sizeof(texture));
-  *tex = my_texture;
-  
-  return tex;
 }
-
-texture* load_image_file(char* filename) {
-  
-  printf("Loading: %s\n", filename);
-  
-  texture my_texture;	
-  SDL_Surface *surface;
-  GLenum texture_format;
-  GLint  nOfColors;
-   
-  surface = IMG_Load(filename);
-   
-  if(!surface) {
-    printf("Error: Could not load file %s: %s\n",filename , SDL_GetError());
-    return NULL;
-  }
-  
-  nOfColors = surface->format->BytesPerPixel;
-  if (nOfColors == 4) {
-    if (surface->format->Rmask == 0x000000ff) texture_format = GL_RGBA;
-    else texture_format = GL_BGRA;
-  
-  } else if (nOfColors == 3) {
-    if (surface->format->Rmask == 0x000000ff) texture_format = GL_RGB;
-    else texture_format = GL_BGR;
-  }
- 
-  glGenTextures(1, &my_texture);
-  glBindTexture(GL_TEXTURE_2D, my_texture);
-  glTexImage2D(GL_TEXTURE_2D, 0, nOfColors, surface->w, surface->h, 0, texture_format, GL_UNSIGNED_BYTE, surface->pixels );
-
-  if (surface) { 
-    SDL_FreeSurface(surface);
-  }
-  
-  texture* tex = malloc(sizeof(texture));
-  *tex = my_texture;
-  
-  return tex;
-};
-
-texture* png_load_file(char* filename) {
-  return load_image_file(filename);
-};
-
-texture* tif_load_file(char* filename) {
-  return load_image_file(filename);
-};
-
-texture* jpg_load_file(char* filename) {
-  return load_image_file(filename);
-};
 
 DdsLoadInfo loadInfoDXT1 = {
   1, 0, 0, 4, 8, GL_COMPRESSED_RGBA_S3TC_DXT1_EXT

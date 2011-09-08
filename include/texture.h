@@ -8,23 +8,19 @@
 #include "SDL/SDL.h"
 #include "SDL/SDL_opengl.h"
 
-#include "vector.h"
+#include "image.h"
 
 typedef GLuint texture;
-
-texture* bmp_load_file(char* filename);
-texture* png_load_file(char* filename);
-texture* tif_load_file(char* filename);
-texture* jpg_load_file(char* filename);
-
-texture* load_image_file(char* filename);
 
 texture* texture_new();
 void texture_delete(texture* t);
 
-vector4 texture_sample(texture* t, vector2 point);
+void texture_set_image(texture* t, image* i);
+image* texture_get_image(texture* t);
 
-void texture_write_to_file(texture* t, char* filename);
+void texture_generate_mipmaps(texture* t);
+
+texture* dds_load_file( char* filename );
 
 /* BEGIN DDS STUFF */
 
@@ -168,8 +164,5 @@ typedef struct {
   GLenum type;
   
 } DdsLoadInfo;
-
-texture* dds_load_file(char* filename);
-
 
 #endif
