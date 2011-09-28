@@ -1,10 +1,8 @@
 #ifndef texture_h
 #define texture_h
 
-#define GLEW_STATIC
 #include "GL/glew.h"
 
-#define NO_SDL_GLEXT
 #include "SDL/SDL.h"
 #include "SDL/SDL_opengl.h"
 

@@ -1,31 +1,6 @@
 #include <stdlib.h>
 
-#define GLEW_STATIC
-#include "GL/glew.h"
-
-#define NO_SDL_GLEXT
-#include "SDL/SDL.h"
-#include "SDL/SDL_opengl.h"
-#include "SDL/SDL_image.h"
-
-#include "timing.h"
-#include "font.h"
-#include "texture.h"
-#include "camera.h"
-#include "vector.h"
-#include "geometry.h"
-#include "material.h"
-#include "scripting.h"
-#include "shader.h"
-
-#include "image.h"
-
-#include "perlin_noise.h"
-
-#include "asset_manager.h"
-#include "obj_loader.h"
-
-#include "game.h"
+#include "corange.h"
 
 static char* game_name_arg;
 
@@ -42,15 +17,6 @@ int main(int argc, char* argv[]) {
   if (SDL_Init(SDL_INIT_VIDEO) != 0) {
     printf("Unable to initialize SDL: %s\n", SDL_GetError());
     return 1;
-  }
-  
-  /* Init SDL image */
-  
-  int flags = IMG_INIT_JPG|IMG_INIT_PNG|IMG_INIT_TIF;
-  int initted = IMG_Init(flags);
-  if(initted&flags != flags) {
-      printf("IMG_Init: Failed to init required jpg and png support!\n",0);
-      printf("IMG_Init: %s\n", IMG_GetError());
   }
   
   viewport_init();
@@ -147,7 +113,6 @@ int main(int argc, char* argv[]) {
   
   viewport_finish();
   
-  IMG_Quit();
   SDL_Quit();
   
   return 0;

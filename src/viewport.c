@@ -1,7 +1,7 @@
 #include "texture.h"
+#include "game.h"
 
 #include "viewport.h"
-#include "game.h"
 
 #define DEFAULT_WIDTH 800
 #define DEFAULT_HEIGHT 600
@@ -25,7 +25,6 @@ void viewport_init() {
   window_vsync = 0;
   
   viewport_set_title("corange", "corange");
-  viewport_set_icon("icon.png");
   
   viewport_start();
   
@@ -57,8 +56,8 @@ void viewport_start() {
 
 void viewport_restart() {
 
+#ifdef _WIN32
   /* Built temp context and share resources */
-
   SDL_SysWMinfo info;
 
   // get window handle from SDL
@@ -81,6 +80,7 @@ void viewport_restart() {
   if (!wglShareLists(info.hglrc, tempRC)) {
   printf("wglShareLists #1 failed\n");
   }
+#endif
   
   /* Init new video mode */
   
@@ -99,6 +99,7 @@ void viewport_restart() {
   
   /* Get rid of temp context */
   
+#ifdef _WIN32
   SDL_VERSION(&info.version);
   if (SDL_GetWMInfo(&info) == -1) {
   printf("SDL_GetWMInfo #2 failed\n");
@@ -113,16 +114,12 @@ void viewport_restart() {
   if (!wglDeleteContext(tempRC)) {
   printf("wglDeleteContext failed\n");
   }
+#endif
   
 }
 
 void viewport_set_title(char* title, char* icon_title) {
   SDL_WM_SetCaption(title, icon_title);    
-}
-
-void viewport_set_icon(char* filename) {
-  window_icon = IMG_Load(filename);
-  SDL_WM_SetIcon(window_icon, NULL);
 }
 
 void viewport_set_vsync(int vsync) {

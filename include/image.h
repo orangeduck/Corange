@@ -31,9 +31,6 @@ void image_flip_horizontal(image* i);
 void image_flip_vertical(image* i);
 
 image* bmp_load_file(char* filename);
-image* png_load_file(char* filename);
-image* tif_load_file(char* filename);
-image* jpg_load_file(char* filename);
 
 void tga_save_file(image* i, char* filename);
 

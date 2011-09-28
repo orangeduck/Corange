@@ -7,9 +7,7 @@
 #include <stdio.h>
 #include <math.h>
 
-#define NO_SDL_GLEXT
 #include "SDL/SDL.h"
-#include "SDL/SDL_Image.h"
 
 image* image_new(int width, int height, char* data) {
   
@@ -236,38 +234,4 @@ image* bmp_load_file(char* filename) {
   SDL_FreeSurface(surface);
   
   return i;
-}
-
-image* image_load_file(char* filename) {
-
-  SDL_Surface *surface;
-  
-  surface = IMG_Load(filename);
-   
-  if (!surface) {
-    printf("Error: Could not load file %s: %s\n",filename , SDL_GetError());
-    return NULL;
-  }
-  
-  if (surface->format->BytesPerPixel != 4) {
-    printf("Error loading %s. Needs four channels!");
-  }
-
-  image* i = image_new(surface->w, surface->h, surface->pixels);
-  
-  SDL_FreeSurface(surface);
-  
-  return i;
-}
-
-image* png_load_file(char* filename) {
-  return image_load_file(filename);
-}
-
-image* tif_load_file(char* filename) {
-  return image_load_file(filename);
-}
-
-image* jpg_load_file(char* filename) {
-  return image_load_file(filename);
 }

@@ -1,22 +1,14 @@
 #ifndef renderable_h
 #define renderable_h
 
-#define GLEW_STATIC
 #include "GL/glew.h"
 
-#define NO_SDL_GLEXT
 #include "SDL/SDL.h"
 #include "SDL/SDL_opengl.h"
 
 #include "vector.h"
 #include "material.h"
 #include "geometry.h"
-
-/*
-	
-	http://www.opengl.org/wiki/Vertex_Specification_Best_Practices#Formatting_VBO_Data
-
-*/
 
 typedef struct {
 
