@@ -128,8 +128,8 @@ light* light_new_type(vector3 position, int type) {
     l->aspect_ratio = 1.0;
     
     l->shadow_color = v3_zero();
-    l->shadow_map_width = 512;
-    l->shadow_map_height = 512;
+    l->shadow_map_width = 1024;
+    l->shadow_map_height = 1024;
     
     return l;
     
