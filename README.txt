@@ -15,17 +15,20 @@
 			
 		Otherwise it will default to the blank game called "empty" which will just display a blank screen.
 	
+		You can also run any of the demo .bat files
 	
 	:: Features ::
 	
 		* Clean and simple asset management
 		* Deferred and forward renderers
+		* Text renderer
 		* LUA scripting
-		* Loads obj files and a host of texture formats
-		* Small and Simple
+		* Dynamically loaded game modules
+		* Loads obj files and dds files
+		* Small, Simple and powerful
 	
 	
-	:: Installation ::
+	:: Compiling ::
 	
-		To install on Windows you need MinGW with gcc and from that it should just compile
-		To install on Unix you need probably lots of things including a new Makefile.
+		To compile on Windows you need MinGW with gcc and from that it should just compile
+		To compile on Unix you need probably lots of things including a new Makefile and changes to the code.
