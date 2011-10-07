@@ -56,10 +56,10 @@ void image_set_pixel(image* i, int u, int v, vector4 color) {
   
   v = i->height - v - 1;
   
-  i->data[u * 4 + v * i->width * 4 + 0] = (color.w * 255);
-  i->data[u * 4 + v * i->width * 4 + 1] = (color.x * 255);
-  i->data[u * 4 + v * i->width * 4 + 2] = (color.y * 255);
-  i->data[u * 4 + v * i->width * 4 + 3] = (color.z * 255);
+  i->data[u * 4 + v * i->width * 4 + 0] = (color.r * 255);
+  i->data[u * 4 + v * i->width * 4 + 1] = (color.g * 255);
+  i->data[u * 4 + v * i->width * 4 + 2] = (color.b * 255);
+  i->data[u * 4 + v * i->width * 4 + 3] = (color.a * 255);
   
 }
 

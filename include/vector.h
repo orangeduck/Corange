@@ -7,18 +7,35 @@ typedef struct {
 } vector2;
 
 
-typedef struct {
-  float x;
-  float y;
-  float z;
+typedef union {
+  struct {
+    float x;
+    float y;
+    float z;
+  };
+
+  struct {
+    float r;
+    float g;
+    float b;
+  };
 } vector3;
 
 
-typedef struct {
-  float w;
-  float x;
-  float y;
-  float z;
+typedef union {
+  struct {
+    float x;
+    float y;
+    float z;
+    float w;
+  };
+  
+  struct {
+    float r;
+	float g;
+	float b;
+	float a;
+  };
 } vector4;
 
 
@@ -124,7 +141,7 @@ vector3 v3_smootherstep(vector3 v1, vector3 v2, float amount);
 /* Vector4 */
 
 
-vector4 v4(float w, float x, float y, float z);
+vector4 v4(float x, float y, float z, float w);
 vector4 v4_zero();
 vector4 v4_one();
 

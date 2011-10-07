@@ -153,51 +153,38 @@ matrix_3x3 m33_rotation_axis_angle(vector3 v, float angle) {
 matrix_4x4 m44_zero() {
   matrix_4x4 mat;
   
-  mat.ww = 0.0f;
-  mat.wx = 0.0f;
-  mat.wy = 0.0f;
-  mat.wz = 0.0f;
-  
-  mat.xw = 0.0f;
   mat.xx = 0.0f;
   mat.xy = 0.0f;
   mat.xz = 0.0f;
+  mat.xw = 0.0f;
   
-  mat.yw = 0.0f;
   mat.yx = 0.0f;
   mat.yy = 0.0f;
   mat.yz = 0.0f;
+  mat.yw = 0.0f;
   
-  mat.zw = 0.0f;
   mat.zx = 0.0f;
   mat.zy = 0.0f;  
-  mat.zz = 0.0f;  
+  mat.zz = 0.0f;
+  mat.zw = 0.0f;
+  
+  mat.wx = 0.0f;
+  mat.wy = 0.0f;
+  mat.wz = 0.0f;
+  mat.ww = 0.0f;
   
   return mat;
 };
 
 matrix_4x4 m44_id(){
-  matrix_4x4 mat;
   
-  mat.ww = 1.0f;
-  mat.wx = 0.0f;
-  mat.wy = 0.0f;
-  mat.wz = 0.0f;
+  matrix_4x4 mat = m44_zero();
   
-  mat.xw = 0.0f;
   mat.xx = 1.0f;
-  mat.xy = 0.0f;
-  mat.xz = 0.0f;
-  
-  mat.yw = 0.0f;
-  mat.yx = 0.0f;
   mat.yy = 1.0f;
-  mat.yz = 0.0f;
+  mat.zz = 1.0f;
+  mat.ww = 1.0f;
   
-  mat.zw = 0.0f;
-  mat.zx = 0.0f;
-  mat.zy = 0.0f;  
-  mat.zz = 1.0f;  
   
   return mat;
 };
@@ -205,25 +192,25 @@ matrix_4x4 m44_id(){
 matrix_4x4 m44_transpose(matrix_4x4 m) {
   matrix_4x4 mat;
   
-  mat.ww = m.ww;
-  mat.wx = m.xw;
-  mat.wy = m.yw;
-  mat.wz = m.zw;
-  
-  mat.xw = m.wx;
   mat.xx = m.xx;
   mat.xy = m.yx;
   mat.xz = m.zx;
+  mat.xw = m.wx;
   
-  mat.yw = m.wy;
   mat.yx = m.xy;
   mat.yy = m.yy;
   mat.yz = m.zy;
+  mat.yw = m.wy;
   
-  mat.zw = m.xw;
   mat.zx = m.xz;
   mat.zy = m.yz;  
-  mat.zz = m.zz;  
+  mat.zz = m.zz;
+  mat.zw = m.xw;
+  
+  mat.wx = m.xw;
+  mat.wy = m.yw;
+  mat.wz = m.zw;
+  mat.ww = m.ww;
   
   return mat;
 }
@@ -232,25 +219,25 @@ matrix_4x4 m33_to_m44(matrix_3x3 m) {
 
   matrix_4x4 mat;
   
-  mat.ww = m.xx;
-  mat.wx = m.xy;
-  mat.wy = m.xz;
-  mat.wz = 0.0f;
+  mat.xx = m.xx;
+  mat.xy = m.xy;
+  mat.xy = m.xz;
+  mat.xw = 0.0f;
   
-  mat.xw = m.yx;
-  mat.xx = m.yy;
-  mat.xy = m.yz;
-  mat.xz = 0.0f;
+  mat.yx = m.yx;
+  mat.yy = m.yy;
+  mat.yz = m.yz;
+  mat.yw = 0.0f;
   
-  mat.yw = m.zx;
-  mat.yx = m.zy;
-  mat.yy = m.zz;
-  mat.yz = 0.0f;
-  
+  mat.zx = m.zx;
+  mat.zy = m.zy;
+  mat.zz = m.zz;
   mat.zw = 0.0f;
-  mat.zx = 0.0f;
-  mat.zy = 0.0f;  
-  mat.zz = 1.0f;
+  
+  mat.ww = 0.0f;
+  mat.wx = 0.0f;
+  mat.wy = 0.0f;  
+  mat.wz = 1.0f;
   
   return mat;
 };
@@ -259,25 +246,25 @@ matrix_4x4 m44_mul_m44(matrix_4x4 m1, matrix_4x4 m2) {
 
   matrix_4x4 mat;
 
-  mat.ww = (m1.ww * m2.ww) + (m1.wx * m2.xw) + (m1.wy * m2.yw) + (m1.wz * m2.zw);
-  mat.wx = (m1.ww * m2.wx) + (m1.wx * m2.xx) + (m1.wy * m2.yx) + (m1.wz * m2.zx);
-  mat.wy = (m1.ww * m2.wy) + (m1.wx * m2.xy) + (m1.wy * m2.yy) + (m1.wz * m2.zy);
-  mat.wz = (m1.ww * m2.wz) + (m1.wx * m2.xz) + (m1.wy * m2.yz) + (m1.wz * m2.zz);
-
-  mat.xw = (m1.xw * m2.ww) + (m1.xx * m2.xw) + (m1.xy * m2.yw) + (m1.xz * m2.zw);
-  mat.xx = (m1.xw * m2.wx) + (m1.xx * m2.xx) + (m1.xy * m2.yx) + (m1.xz * m2.zx);
-  mat.xy = (m1.xw * m2.wy) + (m1.xx * m2.xy) + (m1.xy * m2.yy) + (m1.xz * m2.zy);
-  mat.xz = (m1.xw * m2.wz) + (m1.xx * m2.xz) + (m1.xy * m2.yz) + (m1.xz * m2.zz);
-
-  mat.yw = (m1.yw * m2.ww) + (m1.yx * m2.xw) + (m1.yy * m2.yw) + (m1.yz * m2.zw);
-  mat.yx = (m1.yw * m2.wx) + (m1.yx * m2.xx) + (m1.yy * m2.yx) + (m1.yz * m2.zx);
-  mat.yy = (m1.yw * m2.wy) + (m1.yx * m2.xy) + (m1.yy * m2.yy) + (m1.yz * m2.zy);
-  mat.yz = (m1.yw * m2.wz) + (m1.yx * m2.xz) + (m1.yy * m2.yz) + (m1.yz * m2.zz);
-
-  mat.zw = (m1.zw * m2.ww) + (m1.zx * m2.xw) + (m1.zy * m2.yw) + (m1.zz * m2.zw);
-  mat.zx = (m1.zw * m2.wx) + (m1.zx * m2.xx) + (m1.zy * m2.yx) + (m1.zz * m2.zx);
-  mat.zy = (m1.zw * m2.wy) + (m1.zx * m2.xy) + (m1.zy * m2.yy) + (m1.zz * m2.zy);
-  mat.zz = (m1.zw * m2.wz) + (m1.zx * m2.xz) + (m1.zy * m2.yz) + (m1.zz * m2.zz);
+  mat.xx = (m1.xx * m2.xx) + (m1.xy * m2.yx) + (m1.xz * m2.zx) + (m1.xw * m2.wx);
+  mat.xy = (m1.xx * m2.xy) + (m1.xy * m2.yy) + (m1.xz * m2.zy) + (m1.xw * m2.wy);
+  mat.xz = (m1.xx * m2.xz) + (m1.xy * m2.yz) + (m1.xz * m2.zz) + (m1.xw * m2.wz);
+  mat.xw = (m1.xx * m2.xw) + (m1.xy * m2.yw) + (m1.xz * m2.zw) + (m1.xw * m2.ww);
+  
+  mat.yx = (m1.yx * m2.xx) + (m1.yy * m2.yx) + (m1.yz * m2.zx) + (m1.yw * m2.wx);
+  mat.yy = (m1.yx * m2.xy) + (m1.yy * m2.yy) + (m1.yz * m2.zy) + (m1.yw * m2.wy);
+  mat.yz = (m1.yx * m2.xz) + (m1.yy * m2.yz) + (m1.yz * m2.zz) + (m1.yw * m2.wz);
+  mat.yw = (m1.yx * m2.xw) + (m1.yy * m2.yw) + (m1.yz * m2.zw) + (m1.yw * m2.ww);
+ 
+  mat.zx = (m1.zx * m2.xx) + (m1.zy * m2.yx) + (m1.zz * m2.zx) + (m1.zw * m2.wx);
+  mat.zy = (m1.zx * m2.xy) + (m1.zy * m2.yy) + (m1.zz * m2.zy) + (m1.zw * m2.wy);
+  mat.zz = (m1.zx * m2.xz) + (m1.zy * m2.yz) + (m1.zz * m2.zz) + (m1.zw * m2.wz);
+  mat.zw = (m1.zx * m2.xw) + (m1.zy * m2.yw) + (m1.zz * m2.zw) + (m1.zw * m2.ww);
+  
+  mat.wx = (m1.wx * m2.xx) + (m1.wy * m2.yx) + (m1.wz * m2.zx) + (m1.ww * m2.wx);
+  mat.wy = (m1.wx * m2.xy) + (m1.wy * m2.yy) + (m1.wz * m2.zy) + (m1.ww * m2.wy);
+  mat.wz = (m1.wx * m2.xz) + (m1.wy * m2.yz) + (m1.wz * m2.zz) + (m1.ww * m2.wz);
+  mat.ww = (m1.wx * m2.xw) + (m1.wy * m2.yw) + (m1.wz * m2.zw) + (m1.ww * m2.ww);
   
   return mat;
   
@@ -287,29 +274,29 @@ vector4 m44_mul_v4(matrix_4x4 m, vector4 v) {
   
   vector4 vec;
   
-  vec.w = (m.ww * v.w) + (m.wx * v.x) + (m.wy * v.y) + (m.wz * v.z);
-  vec.x = (m.xw * v.w) + (m.xx * v.x) + (m.xy * v.y) + (m.xz * v.z);
-  vec.y = (m.yw * v.w) + (m.yx * v.x) + (m.yy * v.y) + (m.yz * v.z);
-  vec.z = (m.zw * v.w) + (m.zx * v.x) + (m.zy * v.y) + (m.zz * v.z);
+  vec.x = (m.xx * v.x) + (m.xy * v.y) + (m.xz * v.z) + (m.xw * v.w);
+  vec.y = (m.yx * v.x) + (m.yy * v.y) + (m.yz * v.z) + (m.yw * v.w);
+  vec.z = (m.zx * v.x) + (m.zy * v.y) + (m.zz * v.z) + (m.zw * v.w);
+  vec.w = (m.wx * v.x) + (m.wy * v.y) + (m.wz * v.z) + (m.ww * v.w);
   
   return vec;
 }
 
 matrix_3x3 m44_to_m33(matrix_4x4 m) {
 
-  matrix_3x3 mat = m33_zero();
+  matrix_3x3 mat;
   
-  mat.xx = m.ww;
-  mat.xy = m.wx;
-  mat.xz = m.wy;
+  mat.xx = m.xx;
+  mat.xy = m.xy;
+  mat.xz = m.xz;
   
-  mat.yx = m.xw;
-  mat.yy = m.xx;
-  mat.yz = m.xy;
+  mat.yx = m.yx;
+  mat.yy = m.yy;
+  mat.yz = m.yz;
   
-  mat.zx = m.yw;
-  mat.zy = m.yx;
-  mat.zz = m.yy;
+  mat.zx = m.zx;
+  mat.zy = m.zy;
+  mat.zz = m.zz;
   
   return mat;
   
@@ -317,59 +304,59 @@ matrix_3x3 m44_to_m33(matrix_4x4 m) {
 
 
 void m44_to_array(matrix_4x4 m, float* out) {
-
-  out[0] = m.ww;
-  out[1] = m.xw;
-  out[2] = m.yw;
-  out[3] = m.zw;
   
-  out[4] = m.wx;
-  out[5] = m.xx;
-  out[6] = m.yx;
-  out[7] = m.zx;
+  out[0] = m.xx;
+  out[1] = m.yx;
+  out[2] = m.zx;
+  out[3] = m.wx;
 
-  out[8]  = m.wy;
-  out[9]  = m.xy;
-  out[10] = m.yy;
-  out[11] = m.zy;
+  out[4]  = m.xy;
+  out[5]  = m.yy;
+  out[6] = m.zy;
+  out[7] = m.wy;
   
-  out[12] = m.wz;
-  out[13] = m.xz;
-  out[14] = m.yz;
-  out[15] = m.zz;
+  out[8] = m.xz;
+  out[9] = m.yz;
+  out[10] = m.zz;
+  out[11] = m.wz;
+  
+  out[12] = m.xw;
+  out[13] = m.yw;
+  out[14] = m.zw;
+  out[15] = m.ww;
   
 }
 
 void m44_to_array_trans(matrix_4x4 m, float* out) {
-
-  out[0] = m.ww;
-  out[1] = m.wx;
-  out[2] = m.wy;
-  out[3] = m.wz;
   
-  out[4] = m.xw;
-  out[5] = m.xx;
-  out[6] = m.xy;
-  out[7] = m.xz;
+  out[0] = m.xx;
+  out[1] = m.xy;
+  out[2] = m.xz;
+  out[3] = m.xw;
 
-  out[8]  = m.yw;
-  out[9]  = m.yx;
-  out[10] = m.yy;
-  out[11] = m.yz;
+  out[4]  = m.yx;
+  out[5]  = m.yy;
+  out[6] = m.yz;
+  out[7] = m.yw;
   
-  out[12] = m.zw;
-  out[13] = m.zx;
-  out[14] = m.zy;
-  out[15] = m.zz;
+  out[8] = m.zx;
+  out[9] = m.zy;
+  out[10] = m.zz;
+  out[11] = m.zw;
+  
+  out[12] = m.wx;
+  out[13] = m.wy;
+  out[14] = m.wz;
+  out[15] = m.ww;
   
 }
 
 void m44_print(matrix_4x4 m) {
 
-  printf("|%4.2f, %4.2f, %4.2f, %4.2f|\n", m.ww, m.wx, m.wy, m.wz);
-  printf("|%4.2f, %4.2f, %4.2f, %4.2f|\n", m.xw, m.xx, m.xy, m.xz);
-  printf("|%4.2f, %4.2f, %4.2f, %4.2f|\n", m.yw, m.yx, m.yy, m.yz);
-  printf("|%4.2f, %4.2f, %4.2f, %4.2f|\n", m.zw, m.zx, m.zy, m.zz);
+  printf("|%4.2f, %4.2f, %4.2f, %4.2f|\n", m.xx, m.xy, m.xz, m.xw);
+  printf("|%4.2f, %4.2f, %4.2f, %4.2f|\n", m.yx, m.yy, m.yz, m.yw);
+  printf("|%4.2f, %4.2f, %4.2f, %4.2f|\n", m.zx, m.zy, m.zz, m.zw);
+  printf("|%4.2f, %4.2f, %4.2f, %4.2f|\n", m.wx, m.wy, m.wz, m.ww);
   
 }
 
@@ -386,27 +373,18 @@ matrix_4x4 m44_view_look_at(vector3 position, vector3 target, vector3 up) {
   vector3 xaxis = v3_normalize( v3_cross(up, zaxis) );
   vector3 yaxis = v3_cross(zaxis, xaxis);
 
-  matrix_4x4 view_matrix;
-  view_matrix.ww = xaxis.x;
-  view_matrix.wx = xaxis.y;
-  view_matrix.wy = xaxis.z;
-  view_matrix.wz = 0.0f;
+  matrix_4x4 view_matrix = m44_id();
+  view_matrix.xx = xaxis.x;
+  view_matrix.xy = xaxis.y;
+  view_matrix.xz = xaxis.z;
   
-  view_matrix.xw = yaxis.x;
-  view_matrix.xx = yaxis.y;
-  view_matrix.xy = yaxis.z;
-  view_matrix.xz = 0.0f;
+  view_matrix.yx = yaxis.x;
+  view_matrix.yy = yaxis.y;
+  view_matrix.yz = yaxis.z;
   
-  view_matrix.yw = -zaxis.x;
-  view_matrix.yx = -zaxis.y;
-  view_matrix.yy = -zaxis.z;
-  view_matrix.yz = 0.0f;
-  
-  view_matrix.zw = 0.0f;
-  view_matrix.zx = 0.0f;
-  view_matrix.zy = 0.0f;
-  
-  view_matrix.zz = 1.0f;
+  view_matrix.zx = -zaxis.x;
+  view_matrix.zy = -zaxis.y;
+  view_matrix.zz = -zaxis.z;
   
   // Also unsure of this.
   view_matrix = m44_mul_m44(view_matrix, m44_translation(v3_neg(position)) );
@@ -430,13 +408,13 @@ matrix_4x4 m44_perspective(float fov, float near_clip, float far_clip, float rat
   bottom = -top;
   
   matrix_4x4 proj_matrix = m44_zero();
-  proj_matrix.ww = (2.0 * near_clip) / (right - left);
-  proj_matrix.xx = (2.0 * near_clip) / (top - bottom);
-  proj_matrix.wy = (right + left) / (right - left);
-  proj_matrix.xy = (top + bottom) / (top - bottom);
-  proj_matrix.yy = (-far_clip - near_clip) / (far_clip - near_clip);
-  proj_matrix.zy = -1.0;
-  proj_matrix.yz = ( -(2.0 * near_clip) * far_clip) / (far_clip - near_clip);
+  proj_matrix.xx = (2.0 * near_clip) / (right - left);
+  proj_matrix.yy = (2.0 * near_clip) / (top - bottom);
+  proj_matrix.xz = (right + left) / (right - left);
+  proj_matrix.yz = (top + bottom) / (top - bottom);
+  proj_matrix.zz = (-far_clip - near_clip) / (far_clip - near_clip);
+  proj_matrix.wz = -1.0;
+  proj_matrix.zw = ( -(2.0 * near_clip) * far_clip) / (far_clip - near_clip);
   
   return proj_matrix;
 }
@@ -445,14 +423,13 @@ matrix_4x4 m44_orthographic(float left, float right, float bottom, float top, fl
 
   matrix_4x4 m = m44_id();
   
-  m.ww = 2 / (right - left);
-  m.xx = 2 / (top - bottom);
-  m.yy = -2 / (far - near);
-  m.zz = 1;
+  m.xx = 2 / (right - left);
+  m.yy = 2 / (top - bottom);
+  m.zz = -2 / (far - near);
   
-  m.wz = - (right + left) / (right - left);
-  m.xz = - (top + bottom) / (top - bottom);
-  m.yz = - (far + near) / (far - near);
+  m.xw = - (right + left) / (right - left);
+  m.yw = - (top + bottom) / (top - bottom);
+  m.zw = - (far + near) / (far - near);
   
   return m;
 }
@@ -460,9 +437,9 @@ matrix_4x4 m44_orthographic(float left, float right, float bottom, float top, fl
 matrix_4x4 m44_translation(vector3 v) {
 
   matrix_4x4 m = m44_id();
-  m.wz = v.x;
-  m.xz = v.y;
-  m.yz = v.z;
+  m.xw = v.x;
+  m.yw = v.y;
+  m.zw = v.z;
 
   return m;
   
@@ -471,9 +448,9 @@ matrix_4x4 m44_translation(vector3 v) {
 matrix_4x4 m44_scale(vector3 v) {
 
   matrix_4x4 m = m44_id();
-  m.ww = v.x;
-  m.xx = v.y;
-  m.yy = v.z;
+  m.xx = v.x;
+  m.yy = v.y;
+  m.zz = v.z;
 
   return m;
 };
@@ -482,10 +459,10 @@ matrix_4x4 m44_rotation_x(float a) {
 
   matrix_4x4 m = m44_id();
   
-  m.xx = cos(a);
-  m.xy = -sin(a);
-  m.yx = sin(a);
   m.yy = cos(a);
+  m.yz = -sin(a);
+  m.zy = sin(a);
+  m.zz = cos(a);
   
   return m;
   
@@ -495,10 +472,10 @@ matrix_4x4 m44_rotation_y(float a) {
 
   matrix_4x4 m = m44_id();
   
-  m.ww = cos(a);
-  m.wy = sin(a);
-  m.yw = -sin(a);
-  m.yy = cos(a);
+  m.xx = cos(a);
+  m.xz = sin(a);
+  m.zx = -sin(a);
+  m.zz = cos(a);
 
   return m;
   
@@ -508,10 +485,10 @@ matrix_4x4 m44_rotation_z(float a) {
 
   matrix_4x4 m = m44_id();
   
-  m.ww = cos(a);
-  m.wx = -sin(a);
-  m.xw = sin(a);
   m.xx = cos(a);
+  m.xy = -sin(a);
+  m.yx = sin(a);
+  m.yy = cos(a);
 
   return m;
   
@@ -523,7 +500,7 @@ matrix_4x4 m44_rotation(vector3 v) {
   m = m44_mul_m44(m , m44_rotation_x(v.x) );
   m = m44_mul_m44(m , m44_rotation_y(v.y) );
   m = m44_mul_m44(m , m44_rotation_z(v.z) );
-
+  
   return m;
   
 };
@@ -534,17 +511,17 @@ matrix_4x4 m44_rotation_quaternion(vector4 q) {
   
   matrix_4x4 m = m44_id();
   
-  m.ww = 1.0 - 2 * q.y * q.y - 2 * q.z * q.z;
-  m.wx =       2 * q.x * q.y - 2 * q.w * q.z;
-  m.wy =       2 * q.x * q.z + 2 * q.w * q.y;
+  m.xx = 1.0 - 2 * q.y * q.y - 2 * q.z * q.z;
+  m.xy =       2 * q.x * q.y - 2 * q.w * q.z;
+  m.xz =       2 * q.x * q.z + 2 * q.w * q.y;
   
-  m.xw =       2 * q.x * q.y + 2 * q.w * q.z;
-  m.xx = 1.0 - 2 * q.x * q.x - 2 * q.z * q.z;
-  m.xy =       2 * q.y * q.z + 2 * q.w * q.x;
+  m.yx =       2 * q.x * q.y + 2 * q.w * q.z;
+  m.yy = 1.0 - 2 * q.x * q.x - 2 * q.z * q.z;
+  m.yz =       2 * q.y * q.z + 2 * q.w * q.x;
   
-  m.yw =       2 * q.x * q.z - 2 * q.w * q.y;
-  m.yx =       2 * q.y * q.z - 2 * q.w * q.x;
-  m.yy = 1.0 - 2 * q.x * q.x - 2 * q.y * q.y;
+  m.zx =       2 * q.x * q.z - 2 * q.w * q.y;
+  m.zy =       2 * q.y * q.z - 2 * q.w * q.x;
+  m.zz = 1.0 - 2 * q.x * q.x - 2 * q.y * q.y;
   
   return m;
 };
