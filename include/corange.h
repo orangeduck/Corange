@@ -1,9 +1,7 @@
 /* Include SDL, OpenGL and GLEW */
 
-#define GLEW_STATIC
 #include "GL/glew.h"
 
-#define NO_SDL_GLEXT
 #include "SDL/SDL.h"
 #include "SDL/SDL_opengl.h"
 
@@ -20,6 +18,7 @@
 
 /* Engine Entities */
 
+#include "image.h"
 #include "camera.h"
 #include "light.h"
 #include "font.h"

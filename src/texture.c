@@ -1,9 +1,5 @@
-
-#define NO_SDL_GLEXT
-#include "SDL/SDL.h"
-#include "SDL/SDL_image.h"
-
 #include "asset_manager.h"
+
 #include "texture.h"
 
 texture* texture_new() {

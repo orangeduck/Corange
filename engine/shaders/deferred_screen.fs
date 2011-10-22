@@ -51,7 +51,7 @@ void main( void )
 	
 	vec3 ambient_amount = 0.3 * diffuse;
 	float light_amount = max(dot(normal, lightDir), 0.0);
-	float spec_amount = ((glossiness + 2) / spec ) * pow(max(dot(normal, vHalfVector),0.0), glossiness);
+	float spec_amount = spec * pow(max(dot(normal, vHalfVector),0.0), glossiness);
 	
 	float difference = our_depth - shadow_depth;
 	

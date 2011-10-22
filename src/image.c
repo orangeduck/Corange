@@ -10,9 +10,7 @@
 #include <math.h>
 #include <assert.h>
 
-#define NO_SDL_GLEXT
 #include "SDL/SDL.h"
-#include "SDL/SDL_Image.h"
 
 image* image_new(int width, int height, char* data) {
   
@@ -335,16 +333,10 @@ vector4 image_get_pixel(image* i, int u, int v) {
 void image_set_pixel(image* i, int u, int v, vector4 color) {
   
   v = i->height - v - 1;
-  
-  assert( u >= 0 );
-  assert( v >= 0 );
-  assert( u < i->width );
-  assert( v < i->height );  
-  
-  i->data[u * 4 + v * i->width * 4 + 0] = (color.w * 255);
-  i->data[u * 4 + v * i->width * 4 + 1] = (color.x * 255);
-  i->data[u * 4 + v * i->width * 4 + 2] = (color.y * 255);
-  i->data[u * 4 + v * i->width * 4 + 3] = (color.z * 255);
+  i->data[u * 4 + v * i->width * 4 + 0] = (color.r * 255);
+  i->data[u * 4 + v * i->width * 4 + 1] = (color.g * 255);
+  i->data[u * 4 + v * i->width * 4 + 2] = (color.b * 255);
+  i->data[u * 4 + v * i->width * 4 + 3] = (color.a * 255);
   
 }
 
@@ -932,38 +924,4 @@ image* bmp_load_file(char* filename) {
   SDL_FreeSurface(surface);
   
   return i;
-}
-
-image* image_load_file(char* filename) {
-
-  SDL_Surface *surface;
-  
-  surface = IMG_Load(filename);
-   
-  if (!surface) {
-    printf("Error: Could not load file %s: %s\n",filename , SDL_GetError());
-    return NULL;
-  }
-  
-  if (surface->format->BytesPerPixel != 4) {
-    printf("Error loading %s. Needs four channels!");
-  }
-
-  image* i = image_new(surface->w, surface->h, surface->pixels);
-  
-  SDL_FreeSurface(surface);
-  
-  return i;
-}
-
-image* png_load_file(char* filename) {
-  return image_load_file(filename);
-}
-
-image* tif_load_file(char* filename) {
-  return image_load_file(filename);
-}
-
-image* jpg_load_file(char* filename) {
-  return image_load_file(filename);
 }

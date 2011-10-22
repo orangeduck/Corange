@@ -1,2 +1,0 @@
-vertex_shader : /resources/shaders/painting_high.vs
-fragment_shader : /resources/shaders/painting_high.fs

@@ -14,10 +14,11 @@ typedef struct {
 
 typedef struct {
 
-  float ww; float wx; float wy; float wz;
-  float xw; float xx; float xy; float xz;
-  float yw; float yx; float yy; float yz;
-  float zw; float zx; float zy; float zz;
+ 
+  float xx; float xy; float xz; float xw;
+  float yx; float yy; float yz; float yw;
+  float zx; float zy; float zz; float zw;
+  float wx; float wy; float wz; float ww;
 
 } matrix_4x4;
 

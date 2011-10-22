@@ -1,14 +1,8 @@
-/*
-  Geometry Stuff
-
-*/
-
-#include "vector.h"
-
 #ifndef geometry_h
 #define geometry_h
 
-/* Vertex */
+#include "vector.h"
+
 typedef struct {
 
   vector3 position;
@@ -23,7 +17,6 @@ typedef struct {
 
 int vertex_equal(vertex v1, vertex v2);
 
-/* Mesh */
 typedef struct {
   
   char* name;
@@ -48,7 +41,6 @@ float mesh_surface_area(mesh* m);
 int mesh_append_vertex(mesh* m, vertex v);
 int mesh_append_triangle_entry(mesh* m, int pos);
 
-/* Model */
 typedef struct {
   
   char* name;
@@ -65,7 +57,6 @@ void model_add_mesh(model* main_model, mesh* sub_mesh);
 void model_print(model* m);
 float model_surface_area(model* m);
 
-/* easier for rendering in openGL */
 typedef struct {
 
   char* name;

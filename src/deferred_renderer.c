@@ -18,9 +18,12 @@
 
 static camera* CAMERA = NULL;
 
-static float proj_matrix[16];
-static float view_matrix[16];
-static float world_matrix[16];
+static float PROJ_MATRIX[16];
+static float VIEW_MATRIX[16];
+static float WORLD_MATRIX[16];
+
+static float LIGHT_VIEW_MATRIX[16];
+static float LIGHT_PROJ_MATRIX[16];
 
 static shader_program* PROGRAM;
 static shader_program* SCREEN_PROGRAM;
@@ -39,6 +42,9 @@ static GLuint diffuse_texture;
 static GLuint positions_texture;
 static GLuint normals_texture;
 static GLuint depth_texture;
+
+static texture* SHADOW_TEX;
+static light* LIGHT;
 
 void deferred_renderer_init() {
   
@@ -109,7 +115,7 @@ void deferred_renderer_init() {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth_texture, 0);
  
-};
+}
 
 void deferred_renderer_finish() {
   
@@ -125,11 +131,19 @@ void deferred_renderer_finish() {
   glDeleteTextures(1,&normals_texture);
   glDeleteTextures(1,&depth_texture);
   
-};
+}
 
 void deferred_renderer_set_camera(camera* cam) {
   CAMERA = cam;
-};
+}
+
+void deferred_renderer_set_shadow_texture(texture* t) {
+  SHADOW_TEX = t;
+}
+
+void deferred_renderer_set_light(light* l) {
+  LIGHT = l;
+}
 
 static void deferred_renderer_use_material(material* mat) {
   
@@ -147,7 +161,7 @@ static void deferred_renderer_use_material(material* mat) {
     GLint loc = glGetUniformLocation(*PROGRAM, key);
     
     GLint world_matrix_u = glGetUniformLocation(*PROGRAM, "world_matrix");
-    glUniformMatrix4fv(world_matrix_u, 1, 0, world_matrix);
+    glUniformMatrix4fv(world_matrix_u, 1, 0, WORLD_MATRIX);
     
     if (*type == mat_type_texture) {
     
@@ -189,21 +203,23 @@ static void deferred_renderer_use_material(material* mat) {
 
 static void deferred_renderer_setup_camera() {
 
-  if (CAMERA != NULL) {
-    
-    matrix_4x4 viewm = camera_view_matrix(CAMERA);
-    matrix_4x4 projm = camera_proj_matrix(CAMERA, viewport_ratio() );
-    
-    m44_to_array(viewm, view_matrix);
-    m44_to_array(projm, proj_matrix);
-    
-    glMatrixMode(GL_MODELVIEW);
-    glLoadMatrixf(view_matrix);
-    
-    glMatrixMode(GL_PROJECTION);
-    glLoadMatrixf(proj_matrix);
+  matrix_4x4 viewm = camera_view_matrix(CAMERA);
+  matrix_4x4 projm = camera_proj_matrix(CAMERA, viewport_ratio() );
   
-  }
+  m44_to_array(viewm, VIEW_MATRIX);
+  m44_to_array(projm, PROJ_MATRIX);
+  
+  glMatrixMode(GL_MODELVIEW);
+  glLoadMatrixf(VIEW_MATRIX);
+  
+  glMatrixMode(GL_PROJECTION);
+  glLoadMatrixf(PROJ_MATRIX);
+  
+  matrix_4x4 lviewm = light_view_matrix(LIGHT);
+  matrix_4x4 lprojm = light_proj_matrix(LIGHT);
+  
+  m44_to_array(lviewm, LIGHT_VIEW_MATRIX);
+  m44_to_array(lprojm, LIGHT_PROJ_MATRIX);
 
 };
 
@@ -262,8 +278,22 @@ void deferred_renderer_end() {
   glEnable(GL_TEXTURE_2D);
   glUniform1iARB(glGetUniformLocation(*SCREEN_PROGRAM, "depth_texture"), 3);
   
+  glActiveTexture(GL_TEXTURE0 + 4 );
+  glBindTexture(GL_TEXTURE_2D, *SHADOW_TEX);
+  glEnable(GL_TEXTURE_2D);
+  glUniform1iARB(glGetUniformLocation(*SCREEN_PROGRAM, "shadows_texture"), 4);
+  
   GLint cam_position = glGetUniformLocation(*SCREEN_PROGRAM, "camera_position");
   glUniform3f(cam_position, CAMERA->position.x, CAMERA->position.y, CAMERA->position.z);
+  
+  GLint light_position = glGetUniformLocation(*SCREEN_PROGRAM, "light_position");
+  glUniform3f(light_position, LIGHT->position.x, LIGHT->position.y, LIGHT->position.z);
+  
+  GLint lproj_matrix_u = glGetUniformLocation(*SCREEN_PROGRAM, "light_proj");
+  glUniformMatrix4fv(lproj_matrix_u, 1, 0, LIGHT_PROJ_MATRIX);
+  
+  GLint lview_matrix_u = glGetUniformLocation(*SCREEN_PROGRAM, "light_view");
+  glUniformMatrix4fv(lview_matrix_u, 1, 0, LIGHT_VIEW_MATRIX);
   
 	glBegin(GL_QUADS);
 		glMultiTexCoord2f(GL_TEXTURE0, 0.0f, 0.0f); glVertex3f(-1.0, -1.0,  0.0f);
@@ -282,6 +312,9 @@ void deferred_renderer_end() {
   glDisable(GL_TEXTURE_2D);
   
   glActiveTexture(GL_TEXTURE0 + 3 );
+  glDisable(GL_TEXTURE_2D);
+  
+  glActiveTexture(GL_TEXTURE0 + 4 );
   glDisable(GL_TEXTURE_2D);
   
   glMatrixMode(GL_PROJECTION);
@@ -341,7 +374,7 @@ void deferred_renderer_render_model(render_model* m, material* mat) {
 void deferred_renderer_render_renderable(renderable* r) {
 
   matrix_4x4 r_world_matrix = m44_world( r->position, r->scale, r->rotation );
-  m44_to_array(r_world_matrix, world_matrix);
+  m44_to_array(r_world_matrix, WORLD_MATRIX);
   
   int i;
   for(i=0; i < r->num_surfaces; i++) {

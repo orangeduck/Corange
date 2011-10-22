@@ -1,10 +1,8 @@
 #ifndef viewport_h
 #define viewport_h
 
-#define NO_SDL_GLEXT
 #include "SDL/SDL.h"
 #include "SDL/SDL_opengl.h"
-#include "SDL/SDL_image.h"
 #include "SDL/SDL_syswm.h"
 
 #include "vector.h"
@@ -16,7 +14,6 @@ void viewport_start();
 void viewport_restart();
 
 void viewport_set_title(char* title, char* icon_title);
-void viewport_set_icon(char* filename);
 
 void viewport_set_vsync(int vsync);
 void viewport_set_multisamples(int samples);

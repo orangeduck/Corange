@@ -1,6 +1,8 @@
 #ifndef shader_h
 #define shader_h
 
+#include "Gl/glew.h"
+
 #include "SDL/SDL.h"
 #include "SDL/SDL_opengl.h"
 

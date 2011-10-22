@@ -6,7 +6,11 @@
 
 #include "kernel.h"
 
+static cl_int error;
+
 kernel_program* cl_load_file(char* filename) {
+  
+  /*
   
   char* source = asset_load_file(filename);
   
@@ -32,10 +36,12 @@ kernel_program* cl_load_file(char* filename) {
   kernel_program* kp = malloc(sizeof(kernel_program));
   *kp = program;
   return program;
+  
+  */
 }
 
 void kernel_program_delete(kernel_program* k) {
-  clReleaseProgram(*k)
+  clReleaseProgram(*k);
   free(k);
 }
 

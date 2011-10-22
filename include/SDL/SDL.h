@@ -25,6 +25,8 @@
 #ifndef _SDL_H
 #define _SDL_H
 
+#define NO_SDL_GLEXT
+
 #include "SDL_main.h"
 #include "SDL_stdinc.h"
 #include "SDL_audio.h"

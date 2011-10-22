@@ -77,9 +77,6 @@ void image_mask_nand(image* i, image* i2);
 void image_mask_xnor(image* i, image* i2);
 
 image* bmp_load_file(char* filename);
-image* png_load_file(char* filename);
-image* tif_load_file(char* filename);
-image* jpg_load_file(char* filename);
 
 void tga_save_file(image* i, char* filename);
 

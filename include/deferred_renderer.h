@@ -2,6 +2,8 @@
 #define deferred_renderer_h
 
 #include "camera.h"
+#include "light.h"
+#include "shadow_mapper.h"
 #include "geometry.h"
 #include "material.h"
 #include "renderable.h"
@@ -10,6 +12,8 @@ void deferred_renderer_init();
 void deferred_renderer_finish();
 
 void deferred_renderer_set_camera(camera* cam);
+void deferred_renderer_set_light(light* l);
+void deferred_renderer_set_shadow_texture(texture* t);
 void deferred_renderer_set_viewport(int width, int height);
 
 void deferred_renderer_begin();
