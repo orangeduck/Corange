@@ -1,5 +1,4 @@
 #include <string.h>
-#include <time.h>
 
 #include "SDL/SDL.h"
 #include "SDL/SDL_opengl.h"
@@ -11,10 +10,8 @@
 #include "matrix.h"
 #include "geometry.h"
 #include "shader.h"
-#include "font.h"
 #include "texture.h"
 #include "dictionary.h"
-#include "timing.h"
 
 #include "forward_renderer.h"
 

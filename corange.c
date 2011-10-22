@@ -4,13 +4,11 @@
 
 static char* game_name_arg;
 
-void init_opengl_extensions();
-
 int main(int argc, char* argv[]) {
   
   /* Stop Redirect of stdout and stderr */
   
-  FILE * ctt = fopen("CON", "w" );
+  FILE* ctt = fopen("CON", "w" );
   freopen( "CON", "w", stdout );
   freopen( "CON", "w", stderr );
   
@@ -23,11 +21,9 @@ int main(int argc, char* argv[]) {
   
   viewport_init();
   
-  /* OpenGL setup */
-  
   SDL_LocalInit();
-  
-  /* OpenCL setiup */
+      
+  /* OpenCL setup */
   
   /*
   
@@ -84,8 +80,6 @@ int main(int argc, char* argv[]) {
   asset_manager_handler("fnt", (void*(*)(char*))font_load_file,(void(*)(void*))font_delete);
   asset_manager_handler("mat", (void*(*)(char*))mat_load_file, (void(*)(void*))material_delete);
   asset_manager_handler("lua", (void*(*)(char*))lua_load_file, (void(*)(void*))script_delete);
-  
-  printf("Address: %i", glCreateShader);fflush(stdout);
   
   load_folder("./engine/shaders/");
   load_folder("./engine/fonts/");
