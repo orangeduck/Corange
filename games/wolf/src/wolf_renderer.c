@@ -642,6 +642,9 @@ void wolf_renderer_begin_painting() {
   
   glUseProgramObjectARB(*PAINTING_PROGRAM);
   
+  glBindTexture(GL_TEXTURE_2D, composed_texture_ldr);
+  glGenerateMipmap(GL_TEXTURE_2D);
+  
 }
 
 void wolf_renderer_paint(wolf_renderable* wr) {
@@ -689,7 +692,7 @@ void wolf_renderer_paint(wolf_renderable* wr) {
 
   
   glBindBuffer(GL_ARRAY_BUFFER, wr->brush_id_vbo);
-  glVertexAttribPointer(BRUSH_ID_ATTRIBUTE, 1, GL_SHORT, GL_FALSE, 0, 0);
+  glVertexAttribPointer(BRUSH_ID_ATTRIBUTE, 1, GL_FLOAT, GL_FALSE, 0, 0);
   glEnableVertexAttribArray(BRUSH_ID_ATTRIBUTE);
   
   glBindBuffer(GL_ARRAY_BUFFER, wr->position_vbo);

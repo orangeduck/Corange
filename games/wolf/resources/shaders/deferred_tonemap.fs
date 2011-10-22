@@ -69,7 +69,7 @@ void main()
   
   retcolor = linear_space( vec4(retcolor,1) ).rgb;
   
-  retcolor = stepped_color(retcolor, 1.618 * 20.0);
+  //retcolor = stepped_color(retcolor, 1.618 * 20.0);
   
   gl_FragColor = vec4(retcolor,1);
 }

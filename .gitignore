@@ -4,3 +4,6 @@ logs/*
 corange.exe
 stdout.txt
 stderr.txt
+brush_alpha*
+brush_sample*
+brush_xor*

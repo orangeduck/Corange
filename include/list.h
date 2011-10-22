@@ -26,6 +26,8 @@ void* list_pop_back(list* l);
 void* list_get(list* l, int index);
 void list_set(list* l, int index, void* item);
 
+int list_is_empty(list* l);
+
 void list_delete(list* l);
 void list_clear(list* l);
 

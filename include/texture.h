@@ -19,6 +19,7 @@ void texture_set_image(texture* t, image* i);
 image* texture_get_image(texture* t);
 
 void texture_generate_mipmaps(texture* t);
+void texture_set_filtering_nearest(texture* t);
 
 texture* dds_load_file( char* filename );
 

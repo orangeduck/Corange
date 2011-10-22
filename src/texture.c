@@ -47,6 +47,9 @@ image* texture_get_image(texture* t) {
   
   free(data);
   
+  image_bgr_to_rgb(i);
+  image_flip_vertical(i);
+  
   return i;
 }
 
@@ -56,6 +59,15 @@ void texture_generate_mipmaps(texture* t) {
   glGenerateMipmap(GL_TEXTURE_2D);
   
 }
+
+void texture_set_filtering_nearest(texture* t) {
+  
+  glBindTexture(GL_TEXTURE_2D, *t);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  
+}
+
 
 void texture_write_to_file(texture* t, char* filename){
   

@@ -7,19 +7,40 @@ typedef struct {
 } vector2;
 
 
-typedef struct {
-  float x;
-  float y;
-  float z;
+typedef union {
+
+  struct {
+    float x;
+    float y;
+    float z;
+  };
+  
+  struct {
+    float r;
+	float g;
+	float b;
+  };
+  
 } vector3;
 
+typedef union {
 
-typedef struct {
-  float w;
-  float x;
-  float y;
-  float z;
+  struct {
+    float w;
+    float x;
+    float y;
+    float z;
+  };
+
+  struct {
+    float r;
+    float g;
+    float b;
+    float a;
+  };
+
 } vector4;
+
 
 
 /* Floating point maths */
@@ -47,6 +68,7 @@ float bismootherstep_interpolation(float top_left, float top_right, float bottom
 
 
 vector2 v2(float x, float y);
+vector2 v2_new(float x, float y);
 vector2 v2_zero();
 vector2 v2_one();
 
@@ -87,6 +109,7 @@ vector2 v2_smootherstep(vector2 v1, vector2 v2, float amount);
 
 
 vector3 v3(float x, float y, float z);
+vector3 v3_new(float x, float y, float z);
 vector3 v3_zero();
 vector3 v3_one();
 
@@ -125,6 +148,7 @@ vector3 v3_smootherstep(vector3 v1, vector3 v2, float amount);
 
 
 vector4 v4(float w, float x, float y, float z);
+vector4 v4_new(float w, float x, float y, float z);
 vector4 v4_zero();
 vector4 v4_one();
 
@@ -157,6 +181,7 @@ vector4 v4_saturate(vector4 v);
 vector4 v4_lerp(vector4 v1, vector4 v2, float amount);
 vector4 v4_smoothstep(vector4 v1, vector4 v2, float amount);
 vector4 v4_smootherstep(vector4 v1, vector4 v2, float amount);
+vector4 v4_nearest_neighbor_interpolation(vector4 v1, vector4 v2, float amount);
 
 vector4 v4_binearest_neighbor_interpolation(vector4 top_left, vector4 top_right, vector4 bottom_left, vector4 bottom_right, float x_amount, float y_amount);
 vector4 v4_bilinear_interpolation(vector4 top_left, vector4 top_right, vector4 bottom_left, vector4 bottom_right, float x_amount, float y_amount);

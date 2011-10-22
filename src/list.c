@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <assert.h>
 
 #include "list.h"
 
@@ -38,6 +39,8 @@ void list_push_back(list* l, void* item) {
 
 void* list_pop_back(list* l) {
   
+  assert( l->num_items > 0 );  
+  
   l->num_items--;
   void* item = l->ptrs[ l->num_items ];
   
@@ -59,6 +62,11 @@ void* list_get(list* l, int index) {
 void list_set(list* l, int index, void* item) {
   l->ptrs[ index ] = item;
 }
+
+int list_is_empty(list* l) {
+  return (l->num_items == 0);
+}
+
 
 void list_delete(list* l) {
   free(l->ptrs);

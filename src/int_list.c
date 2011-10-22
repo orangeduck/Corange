@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <assert.h>
 
 #include "int_list.h"
 
@@ -44,6 +45,8 @@ void int_list_push_back(int_list* l, int item) {
 
 int int_list_pop_back(int_list* l) {
 
+  assert( l->num_items > 0 );
+
   l->num_items--;
   int item = l->ints[ l->num_items ];
   
@@ -65,6 +68,11 @@ int int_list_get(int_list* l, int index) {
 void int_list_set(int_list* l, int index, int item) {
   l->ints[ index ] = item;
 }
+
+int int_list_is_empty(int_list* l) {
+  return (l->num_items == 0);
+}
+
 
 void int_list_clear(int_list* l) {
   int blocksize = l->block_size;

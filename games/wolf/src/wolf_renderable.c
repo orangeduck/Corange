@@ -1,6 +1,7 @@
 #include "wolf_renderable.h"
 
 #include "asset_manager.h"
+#include "brush_dict.h"
 
 #include <math.h>
 
@@ -23,7 +24,7 @@ wolf_renderable* wolf_renderable_new(char* name, model* m, texture* brush_textur
   glGenBuffers(1, &w->position_vbo);
   glGenBuffers(1, &w->direction_vbo);
   
-  short* brush_id_buffer = malloc( sizeof(short) * w->num_particles * 4 * 1);
+  float* brush_id_buffer = malloc( sizeof(float) * w->num_particles * 4 * 1);
   float* positions_buffer = malloc( sizeof(float) * w->num_particles * 4 * 3);
   float* direction_buffer = malloc( sizeof(float) * w->num_particles * 4 * 3);
   
@@ -33,6 +34,13 @@ wolf_renderable* wolf_renderable_new(char* name, model* m, texture* brush_textur
   
   float sum = 0.0;
   int placed = 0;
+  
+  image* ref_img = texture_get_image(asset_get("/resources/piano/piano.dds"));
+  image* stencil = image_blank(ref_img->width, ref_img->height);
+  
+  brush_dict_init(brush_texture, 16, 16, 164);
+  
+  timer_start();
   
   srand(time(NULL));
   
@@ -68,12 +76,7 @@ wolf_renderable* wolf_renderable_new(char* name, model* m, texture* brush_textur
         vector3 normal = rand_pos.normal;
         vector3 tangent = rand_pos.tangent;
         
-        texture* piano_texture = asset_get("/resources/piano/piano.dds");
-        //vector4 sample = texture_sample(piano_texture, rand_pos.uvs);
-        
-        //v4_print(sample);printf("\n");
-        
-        short brush_id = rand() % w->num_brushes;
+        int brush_id = brush_id_for_position(ref_img, stencil, uvs);
         
         /* Place particle */
         
@@ -138,8 +141,14 @@ wolf_renderable* wolf_renderable_new(char* name, model* m, texture* brush_textur
     
   }
   
+  timer_stop();
+  
+  image_delete(ref_img);
+  
+  brush_dict_finish();
+  
   glBindBuffer(GL_ARRAY_BUFFER, w->brush_id_vbo);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(short) * w->num_particles * 4 * 1, brush_id_buffer, GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(float) * w->num_particles * 4 * 1, brush_id_buffer, GL_STATIC_DRAW);
 
   glBindBuffer(GL_ARRAY_BUFFER, w->position_vbo);
   glBufferData(GL_ARRAY_BUFFER, sizeof(float) * w->num_particles * 4 * 3, positions_buffer, GL_STATIC_DRAW);

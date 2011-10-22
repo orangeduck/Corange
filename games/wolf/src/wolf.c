@@ -35,7 +35,7 @@ void wolf_init() {
   load_folder("/resources/piano/");
   load_folder("/resources/shaders/");
   
-  texture* brush = asset_get("/resources/brushset1.dds");
+  texture* brush = asset_get("/resources/brush_dict.dds");
   
   piano = asset_get("/resources/piano/piano.obj");
   piano_mat = asset_get("/resources/piano/piano.mat");
@@ -44,7 +44,7 @@ void wolf_init() {
   renderable_add_model(r_piano, piano);
   renderable_set_material(r_piano, piano_mat);
   
-  wr_piano = wolf_renderable_new("wr_piano", piano, brush, 5, v2(1,1), 0.05 );
+  wr_piano = wolf_renderable_new("wr_piano", piano, brush, 8, v2(1,1), 800.0 );
   renderable_set_material(wr_piano->renderable, piano_mat);
   
   /* Put some text on the screen */

@@ -132,6 +132,13 @@ vector2 v2(float x, float y) {
   return v;
 }
 
+vector2 v2_new(float x, float y) {
+  vector2 v;
+  v.x = x;
+  v.y = y;
+  return v;
+}
+
 vector2 v2_zero() {
   return v2(0, 0);
 }
@@ -325,6 +332,14 @@ vector3 v3(float x, float y, float z) {
   return v;
 }
 
+vector3 v3_new(float x, float y, float z) {
+  vector3 v;
+  v.x = x;
+  v.y = y;
+  v.z = z;
+  return v;
+}
+
 vector3 v3_zero() {
   return v3(0, 0, 0);
 }
@@ -499,6 +514,15 @@ vector3 v3_smootherstep(vector3 v1, vector3 v2, float amount) {
 /* Vector4 */
 
 vector4 v4(float w, float x, float y, float z) {
+  vector4 v;
+  v.w = w;
+  v.x = x;
+  v.y = y;
+  v.z = z;
+  return v;
+}
+
+vector4 v4_new(float w, float x, float y, float z) {
   vector4 v;
   v.w = w;
   v.x = x;
@@ -687,6 +711,15 @@ vector4 v4_smoothstep(vector4 v1, vector4 v2, float amount) {
 vector4 v4_smootherstep(vector4 v1, vector4 v2, float amount) {
   float scaled_amount = amount*amount*amount*(amount*(amount*6 - 15) + 10);
   return v4_lerp( v1, v2, scaled_amount );
+}
+
+vector4 v4_nearest_neighbor_interpolation(vector4 v1, vector4 v2, float amount) {
+  vector4 v;
+  v.w = nearest_neighbor_interpolation(v1.w, v2.w, amount);
+  v.x = nearest_neighbor_interpolation(v1.x, v2.x, amount);
+  v.y = nearest_neighbor_interpolation(v1.y, v2.y, amount);
+  v.z = nearest_neighbor_interpolation(v1.z, v2.z, amount);
+  return v;
 }
 
 vector4 v4_binearest_neighbor_interpolation(vector4 top_left, vector4 top_right, vector4 bottom_left, vector4 bottom_right, float x_amount, float y_amount) {
