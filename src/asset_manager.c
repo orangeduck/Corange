@@ -4,10 +4,6 @@
 
 #include "SDL/SDL_rwops.h"
 
-#include "dictionary.h"
-
-#include "shader.h"
-
 #include "asset_manager.h"
 
 static dictionary* asset_dictionary;

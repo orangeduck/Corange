@@ -1,10 +1,6 @@
-
-#define GLEW_STATIC
-#include "GL/glew.h"
-
-#define NO_SDL_GLEXT
 #include "SDL/SDL.h"
 #include "SDL/SDL_opengl.h"
+#include "SDL/SDL_local.h"
 
 #include "shader.h"
 #include "camera.h"
@@ -244,7 +240,7 @@ void deferred_renderer_end() {
   
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   
-  glUseProgramObjectARB(*SCREEN_PROGRAM);
+  glUseProgram(*SCREEN_PROGRAM);
   
 	glMatrixMode(GL_PROJECTION);
   glPushMatrix();
@@ -261,27 +257,27 @@ void deferred_renderer_end() {
   glActiveTexture(GL_TEXTURE0 + 0 );
   glBindTexture(GL_TEXTURE_2D, diffuse_texture);
   glEnable(GL_TEXTURE_2D);
-  glUniform1iARB(glGetUniformLocation(*SCREEN_PROGRAM, "diffuse_texture"), 0);
+  glUniform1i(glGetUniformLocation(*SCREEN_PROGRAM, "diffuse_texture"), 0);
   
   glActiveTexture(GL_TEXTURE0 + 1 );
   glBindTexture(GL_TEXTURE_2D, positions_texture);
   glEnable(GL_TEXTURE_2D);
-  glUniform1iARB(glGetUniformLocation(*SCREEN_PROGRAM, "positions_texture"), 1);
+  glUniform1i(glGetUniformLocation(*SCREEN_PROGRAM, "positions_texture"), 1);
   
   glActiveTexture(GL_TEXTURE0 + 2 );
   glBindTexture(GL_TEXTURE_2D, normals_texture);
   glEnable(GL_TEXTURE_2D);
-  glUniform1iARB(glGetUniformLocation(*SCREEN_PROGRAM, "normals_texture"), 2);
+  glUniform1i(glGetUniformLocation(*SCREEN_PROGRAM, "normals_texture"), 2);
   
   glActiveTexture(GL_TEXTURE0 + 3 );
   glBindTexture(GL_TEXTURE_2D, depth_texture);
   glEnable(GL_TEXTURE_2D);
-  glUniform1iARB(glGetUniformLocation(*SCREEN_PROGRAM, "depth_texture"), 3);
+  glUniform1i(glGetUniformLocation(*SCREEN_PROGRAM, "depth_texture"), 3);
   
   glActiveTexture(GL_TEXTURE0 + 4 );
   glBindTexture(GL_TEXTURE_2D, *SHADOW_TEX);
   glEnable(GL_TEXTURE_2D);
-  glUniform1iARB(glGetUniformLocation(*SCREEN_PROGRAM, "shadows_texture"), 4);
+  glUniform1i(glGetUniformLocation(*SCREEN_PROGRAM, "shadows_texture"), 4);
   
   GLint cam_position = glGetUniformLocation(*SCREEN_PROGRAM, "camera_position");
   glUniform3f(cam_position, CAMERA->position.x, CAMERA->position.y, CAMERA->position.z);
@@ -296,10 +292,10 @@ void deferred_renderer_end() {
   glUniformMatrix4fv(lview_matrix_u, 1, 0, LIGHT_VIEW_MATRIX);
   
 	glBegin(GL_QUADS);
-		glMultiTexCoord2f(GL_TEXTURE0, 0.0f, 0.0f); glVertex3f(-1.0, -1.0,  0.0f);
-		glMultiTexCoord2f(GL_TEXTURE0, 1.0f, 0.0f); glVertex3f(1.0, -1.0,  0.0f);
-		glMultiTexCoord2f(GL_TEXTURE0, 1.0f, 1.0f); glVertex3f(1.0,  1.0,  0.0f);
-		glMultiTexCoord2f(GL_TEXTURE0, 0.0f, 1.0f); glVertex3f(-1.0,  1.0,  0.0f);
+		glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0, -1.0,  0.0f);
+		glTexCoord2f(1.0f, 0.0f); glVertex3f(1.0, -1.0,  0.0f);
+		glTexCoord2f(1.0f, 1.0f); glVertex3f(1.0,  1.0,  0.0f);
+		glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0,  1.0,  0.0f);
 	glEnd();
   
   glActiveTexture(GL_TEXTURE0 + 0 );
@@ -323,7 +319,7 @@ void deferred_renderer_end() {
   glMatrixMode(GL_MODELVIEW);
   glPopMatrix();
   
-  glUseProgramObjectARB(0);
+  glUseProgram(0);
   
   glDepthMask(GL_TRUE);
   glEnable(GL_DEPTH_TEST);
@@ -345,7 +341,7 @@ void deferred_renderer_render_model(render_model* m, material* mat) {
       
       render_mesh* me = m->meshes[i];
             
-      glUseProgramObjectARB(*PROGRAM);
+      glUseProgram(*PROGRAM);
       
       deferred_renderer_use_material(mat);
       
@@ -358,7 +354,7 @@ void deferred_renderer_render_model(render_model* m, material* mat) {
       
       glDrawElements(GL_TRIANGLES, me->num_triangles_3, GL_UNSIGNED_INT, me->triangles);
   
-      glUseProgramObjectARB(0);
+      glUseProgram(0);
   
     }
     
@@ -381,7 +377,7 @@ void deferred_renderer_render_renderable(renderable* r) {
     
     renderable_surface* s = r->surfaces[i];
           
-    glUseProgramObjectARB(*PROGRAM);
+    glUseProgram(*PROGRAM);
     
     deferred_renderer_use_material(s->base);
     
@@ -417,7 +413,7 @@ void deferred_renderer_render_renderable(renderable* r) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     
-    glUseProgramObjectARB(0);
+    glUseProgram(0);
 
   }
 

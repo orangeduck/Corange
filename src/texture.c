@@ -74,34 +74,36 @@ void texture_write_to_file(texture* t, char* filename){
 }
 
 
-DdsLoadInfo loadInfoDXT1 = {
-  1, 0, 0, 4, 8, GL_COMPRESSED_RGBA_S3TC_DXT1_EXT
-};
-DdsLoadInfo loadInfoDXT3 = {
-  1, 0, 0, 4, 16, GL_COMPRESSED_RGBA_S3TC_DXT3_EXT
-};
-DdsLoadInfo loadInfoDXT5 = {
-  1, 0, 0, 4, 16, GL_COMPRESSED_RGBA_S3TC_DXT5_EXT
-};
-DdsLoadInfo loadInfoBGRA8 = {
-  0, 0, 0, 1, 4, GL_RGBA8, GL_BGRA, GL_UNSIGNED_BYTE
-};
-DdsLoadInfo loadInfoBGR8 = {
-  0, 0, 0, 1, 3, GL_RGB8, GL_BGR, GL_UNSIGNED_BYTE
-};
-DdsLoadInfo loadInfoBGR5A1 = {
-  0, 1, 0, 1, 2, GL_RGB5_A1, GL_BGRA, GL_UNSIGNED_SHORT_1_5_5_5_REV
-};
-DdsLoadInfo loadInfoBGR565 = {
-  0, 1, 0, 1, 2, GL_RGB5, GL_RGB, GL_UNSIGNED_SHORT_5_6_5
-};
-DdsLoadInfo loadInfoIndex8 = {
-  0, 0, 1, 1, 1, GL_RGB8, GL_BGRA, GL_UNSIGNED_BYTE
-};
+
 
 #define max(A,B) (((A)>(B))?(A):(B))
 
 texture* dds_load_file( char* filename ){
+  
+  DdsLoadInfo loadInfoDXT1 = {
+    1, 0, 0, 4, 8, GL_COMPRESSED_RGBA_S3TC_DXT1_EXT
+  };
+  DdsLoadInfo loadInfoDXT3 = {
+    1, 0, 0, 4, 16, GL_COMPRESSED_RGBA_S3TC_DXT3_EXT
+  };
+  DdsLoadInfo loadInfoDXT5 = {
+    1, 0, 0, 4, 16, GL_COMPRESSED_RGBA_S3TC_DXT5_EXT
+  };
+  DdsLoadInfo loadInfoBGRA8 = {
+    0, 0, 0, 1, 4, GL_RGBA8, GL_BGRA, GL_UNSIGNED_BYTE
+  };
+  DdsLoadInfo loadInfoBGR8 = {
+    0, 0, 0, 1, 3, GL_RGB8, GL_BGR, GL_UNSIGNED_BYTE
+  };
+  DdsLoadInfo loadInfoBGR5A1 = {
+    0, 1, 0, 1, 2, GL_RGB5_A1, GL_BGRA, GL_UNSIGNED_SHORT_1_5_5_5_REV
+  };
+  DdsLoadInfo loadInfoBGR565 = {
+    0, 1, 0, 1, 2, GL_RGB5, GL_RGB, GL_UNSIGNED_SHORT_5_6_5
+  };
+  DdsLoadInfo loadInfoIndex8 = {
+    0, 0, 1, 1, 1, GL_RGB8, GL_BGRA, GL_UNSIGNED_BYTE
+  };
   
   printf("Loading: %s\n", filename);
   

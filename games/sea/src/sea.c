@@ -1,13 +1,5 @@
-#include "SDL/SDL.h"
 
-#include "asset_manager.h"
-#include "text_renderer.h"
-#include "light.h"
-#include "camera.h"
-#include "material.h"
-#include "geometry.h"
-#include "renderable.h"
-#include "perlin_noise.h"
+#include "corange.h"
 
 static camera* cam;
 static light* sun;

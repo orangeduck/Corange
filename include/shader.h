@@ -1,13 +1,12 @@
 #ifndef shader_h
 #define shader_h
 
-#include "Gl/glew.h"
-
 #include "SDL/SDL.h"
 #include "SDL/SDL_opengl.h"
+#include "SDL/SDL_local.h"
 
 typedef GLenum shader;
-typedef GLhandleARB shader_program;
+typedef GLuint shader_program;
 
 shader_program* shader_program_new();
 

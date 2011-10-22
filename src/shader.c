@@ -1,12 +1,5 @@
-
-#define GLEW_STATIC
-#include "GL/glew.h"
-
-#define NO_SDL_GLEXT
-#include "SDL/SDL.h"
-#include "SDL/SDL_opengl.h"
-
 #include "asset_manager.h"
+
 #include "shader.h"
 
 static void trim(char * s) {
@@ -26,10 +19,10 @@ shader* vs_load_file(char* filename) {
   char* vs_source = asset_load_file(filename);
   const char* vs = vs_source;
   
-  *new_shader = glCreateShaderObjectARB(GL_VERTEX_SHADER_ARB);
+  *new_shader = glCreateShader(GL_VERTEX_SHADER);
   
-  glShaderSourceARB(*new_shader, 1, &vs, NULL);
-  glCompileShaderARB(*new_shader);
+  glShaderSource(*new_shader, 1, &vs, NULL);
+  glCompileShader(*new_shader);
   
   shader_print_log(new_shader);
   
@@ -46,13 +39,13 @@ shader* fs_load_file(char* filename) {
   char* fs_source = asset_load_file(filename);
   const char* fs = fs_source;
   
-  *new_shader = glCreateShaderObjectARB(GL_FRAGMENT_SHADER_ARB);
-  glShaderSourceARB(*new_shader, 1, &fs, NULL);
-  glCompileShaderARB(*new_shader);
+  *new_shader = glCreateShader(GL_FRAGMENT_SHADER);
+  glShaderSource(*new_shader, 1, &fs, NULL);
+  glCompileShader(*new_shader);
   
   shader_print_log(new_shader);
   
-  free(fs_source);   
+  free(fs_source);
   
   return new_shader;
 
@@ -62,18 +55,18 @@ shader* fs_load_file(char* filename) {
 shader_program* shader_program_new() {
 
   shader_program* program = malloc(sizeof(shader_program));  
-  *program = glCreateProgramObjectARB();
+  *program = glCreateProgram();
   return program;
 
 }
 
 void shader_program_attach_shader(shader_program* program, shader* shader) {
-  glAttachObjectARB(*program, *shader);
+  glAttachShader(*program, *shader);
 }
 
 
 void shader_program_link(shader_program* program) {
-  glLinkProgramARB(*program);
+  glLinkProgram(*program);
   shader_program_print_log(program);
 }
 
@@ -81,7 +74,7 @@ void shader_program_print_log(shader_program* program) {
 
   char* log = malloc(2048);
   int i;
-  glGetInfoLogARB(*program, 2048, &i, log);
+  glGetProgramInfoLog(*program, 2048, &i, log);
   log[i] = '\0';
   printf("\nShader Linker:\n %s\n", log);
   free(log);
@@ -92,7 +85,7 @@ void shader_print_log(shader* shader) {
 
   char* log = malloc(2048);
   int i;
-  glGetInfoLogARB(*shader, 2048, &i, log);
+  glGetShaderInfoLog(*shader, 2048, &i, log);
   log[i] = '\0';
   printf("\nShader Compiler:\n %s\n", log);
   free(log);
@@ -215,13 +208,13 @@ void shader_program_parse_line(shader_program* program, char* line) {
 } 
 
 void shader_program_delete(shader_program* program) {
-  glDeleteObjectARB(*program);
+  glDeleteProgram(*program);
   free(program);
 };
 
 void shader_delete(shader* shader) {
   
-  glDeleteObjectARB(*shader);
+  glDeleteShader(*shader);
   free(shader);
   
 }

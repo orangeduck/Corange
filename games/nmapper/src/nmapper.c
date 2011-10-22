@@ -1,18 +1,4 @@
-#include "SDL/SDL.h"
-
-#include "asset_manager.h"
-
-#include "forward_renderer.h"
-
-#include "light.h"
-#include "camera.h"
-#include "matrix.h"
-#include "renderable.h"
-#include "material.h"
-#include "timing.h"
-#include "text_renderer.h"
-
-#include "viewport.h"
+#include "corange.h"
 
 static camera* cam;
 static light* sun;

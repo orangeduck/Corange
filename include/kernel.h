@@ -6,6 +6,11 @@
 typedef cl_program kernel_program;
 typedef cl_kernel kernel;
 
+void kernel_set_context(cl_context context);
+void kernel_set_device(cl_device_id device);
+
+void kernel_check_error();
+
 kernel_program* cl_load_file(char* filename);
 void kernel_program_delete(kernel_program* k);
 

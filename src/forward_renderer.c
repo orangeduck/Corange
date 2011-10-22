@@ -1,12 +1,9 @@
 #include <string.h>
 #include <time.h>
 
-#define GLEW_STATIC
-#include "GL/glew.h"
-
-#define NO_SDL_GLEXT
 #include "SDL/SDL.h"
 #include "SDL/SDL_opengl.h"
+#include "SDL/SDL_local.h"
 
 #include "viewport.h"
 
@@ -143,7 +140,7 @@ void forward_renderer_render_model(render_model* m, material* mat) {
       glDisableVertexAttribArray(COLOR);  
   
       /* DISABLE PROGRAM */
-      glUseProgramObjectARB(0);
+      glUseProgram(0);
   
     }
     
@@ -203,7 +200,7 @@ void forward_renderer_render_renderable(renderable* r) {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     /* DISABLE PROGRAM */
-    glUseProgramObjectARB(0);
+    glUseProgram(0);
 
   }
   
@@ -213,7 +210,7 @@ void forward_renderer_use_material(material* mat) {
 
   shader_program* prog = dictionary_get(mat->properties, "program");
   
-  glUseProgramObjectARB(*prog);
+  glUseProgram(*prog);
   
   /* Set global parameters */
   

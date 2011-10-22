@@ -1,10 +1,9 @@
 #ifndef texture_h
 #define texture_h
 
-#include "GL/glew.h"
-
 #include "SDL/SDL.h"
 #include "SDL/SDL_opengl.h"
+#include "SDL/SDL_local.h"
 
 #include "image.h"
 

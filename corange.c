@@ -4,6 +4,8 @@
 
 static char* game_name_arg;
 
+void init_opengl_extensions();
+
 int main(int argc, char* argv[]) {
   
   /* Stop Redirect of stdout and stderr */
@@ -16,17 +18,46 @@ int main(int argc, char* argv[]) {
   
   if (SDL_Init(SDL_INIT_VIDEO) != 0) {
     printf("Unable to initialize SDL: %s\n", SDL_GetError());
-    return 1;
+    exit(EXIT_FAILURE);
   }
   
   viewport_init();
   
   /* OpenGL setup */
   
-  GLenum err = glewInit();
-  if (GLEW_OK != err) {
-    printf("Glew Error: %s\n", glewGetErrorString(err));
+  SDL_LocalInit();
+  
+  /* OpenCL setiup */
+  
+  /*
+  
+  cl_int error;
+  cl_platform_id platform;
+  cl_device_id device;
+  cl_context context;
+  
+  error = oclGetPlatformID(&platform);
+  if (error != CL_SUCCESS) {
+     printf("Error getting platform id (%i)\n", error);
+     exit(EXIT_FAILURE);
   }
+  
+  error = clGetDeviceIDs(platform, CL_DEVICE_TYPE_GPU, 1, &device, NULL);
+  if (error != CL_SUCCESS) {
+    printf("Error getting OpenCL device (%i)\n", error);
+    exit(EXIT_FAILURE);
+  }
+  
+  context = clCreateContext(0, 1, &device, NULL, NULL, &error);
+  if (error != CL_SUCCESS) {
+    printf("Error creating OpenCL context (%i)\n", error);
+    exit(EXIT_FAILURE);
+  }
+  
+  kernel_set_device(device);
+  kernel_set_context(context);
+  
+  */
   
   /* Start */
     
@@ -53,6 +84,8 @@ int main(int argc, char* argv[]) {
   asset_manager_handler("fnt", (void*(*)(char*))font_load_file,(void(*)(void*))font_delete);
   asset_manager_handler("mat", (void*(*)(char*))mat_load_file, (void(*)(void*))material_delete);
   asset_manager_handler("lua", (void*(*)(char*))lua_load_file, (void(*)(void*))script_delete);
+  
+  printf("Address: %i", glCreateShader);fflush(stdout);
   
   load_folder("./engine/shaders/");
   load_folder("./engine/fonts/");

@@ -1,10 +1,9 @@
 #ifndef renderable_h
 #define renderable_h
 
-#include "GL/glew.h"
-
 #include "SDL/SDL.h"
 #include "SDL/SDL_opengl.h"
+#include "SDL/SDL_local.h"
 
 #include "vector.h"
 #include "material.h"

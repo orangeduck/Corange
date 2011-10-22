@@ -1,9 +1,12 @@
-/* Include SDL, OpenGL and GLEW */
-
-#include "GL/glew.h"
+/* Include SDL, OpenGL */
 
 #include "SDL/SDL.h"
 #include "SDL/SDL_opengl.h"
+#include "SDL/SDL_local.h"
+
+/* Include OpenCL */
+
+#include "CL/cl.h"
 
 /* Main Engine Files */
 
@@ -52,6 +55,6 @@
 
 #include "obj_loader.h"
 
-/* Misc */
+/* Processing */
 
-#include "perlin_noise.h"
+#include "kernel.h"

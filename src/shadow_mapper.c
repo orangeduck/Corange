@@ -1,9 +1,6 @@
-#define GLEW_STATIC
-#include "GL/glew.h"
-
-#define NO_SDL_GLEXT
 #include "SDL/SDL.h"
 #include "SDL/SDL_opengl.h"
+#include "SDL/SDL_local.h"
 
 #include "shader.h"
 #include "viewport.h"
@@ -36,7 +33,7 @@ void shadow_mapper_init(light* l) {
   LIGHT = l;
   
   depth_shader = asset_get("./engine/shaders/depth.prog");
-    
+  
   glGenFramebuffers(1, &fbo);
   glBindFramebuffer(GL_FRAMEBUFFER, fbo);
   
@@ -145,7 +142,7 @@ void shadow_mapper_render_renderable(renderable* r) {
   matrix_4x4 r_world_matrix = m44_world( r->position, r->scale, r->rotation );
   m44_to_array(r_world_matrix, world_matrix);
   
-  glUseProgramObjectARB(*depth_shader);
+  glUseProgram(*depth_shader);
   
   int i;
   for(i=0; i < r->num_surfaces; i++) {
@@ -169,7 +166,7 @@ void shadow_mapper_render_renderable(renderable* r) {
 
   }
   
-  glUseProgramObjectARB(0);
+  glUseProgram(0);
   
 }
 

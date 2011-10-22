@@ -1,11 +1,8 @@
 #include <string.h>
 
-#define GLEW_STATIC
-#include "GL/glew.h"
-
-#define NO_SDL_GLEXT
 #include "SDL/SDL.h"
 #include "SDL/SDL_opengl.h"
+#include "SDL/SDL_local.h"
 
 #include "camera.h"
 #include "matrix.h"
@@ -138,7 +135,7 @@ void render_text_render(render_text* rt) {
 
   glDisable(GL_CULL_FACE);
 
-  glUseProgramObjectARB(0);
+  glUseProgram(0);
   
   /* Setup 2D camera */
   
