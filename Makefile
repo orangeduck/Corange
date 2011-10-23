@@ -1,5 +1,3 @@
-# This is zee makefile
-
 CC=gcc
 
 INCS= -I ./include

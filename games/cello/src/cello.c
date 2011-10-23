@@ -85,6 +85,7 @@ void cello_init() {
   /* New Camera */
   
   cam = camera_new( v3(20.0, 0.0, 0.0) , v3_zero() );
+  
   sun = light_new_type( v3(30,43,-26), light_type_spot );
   
   sun->ambient_color = v3(0.749, 0.855, 0.902);

@@ -1,28 +1,47 @@
 #include "corange.h"
 
-static font* console_font;
-static render_text* rt_no_game;
+#include "particles.h"
 
 void metaballs_init() {
   
-  console_font = asset_get("./engine/fonts/console_font.fnt");
-
-  rt_no_game = render_text_new("METABALLS.", 512, console_font);
-  rt_no_game->scale = v2(3.0, 3.0);
-  rt_no_game->position = v2(-0.65,-0.1);
-  rt_no_game->color = v4(1.0,1.0,1.0,1);
-  render_text_update(rt_no_game);
+  load_folder("/kernels/");
+  
+  particles_init();
+  
+  glClearColor(0.5, 0.5, 0.5, 1.0);
+  glPointSize(5.0);
+  glEnable(GL_POINT_SMOOTH);
   
 }
 
 void metaballs_update() {
 
+  particles_update(0.0001);
+  
 }
 
 void metaballs_render() {
 
-  render_text_render(rt_no_game);
+  glClear(GL_COLOR_BUFFER_BIT);
 
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glOrtho(-0.1, 0.1, 0, 0.1, -1, 1);
+  
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+  
+  int i;
+  for(i = 0; i < particles_count(); i++) {
+    
+    vector3 position = particle_position(i);
+    
+    glBegin(GL_POINTS);
+    glVertex3f(position.x, position.y, position.z);
+    glEnd();
+    
+  }
+  
 }
 
 void metaballs_event(SDL_Event event) {
@@ -30,7 +49,7 @@ void metaballs_event(SDL_Event event) {
 }
 
 void metaballs_finish() {
-
-  render_text_delete(rt_no_game);
+  
+  particles_finish();
 
 }

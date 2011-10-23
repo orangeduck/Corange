@@ -21,39 +21,15 @@ int main(int argc, char* argv[]) {
   
   viewport_init();
   
-  SDL_LocalInit();
+  SDL_LoadOpenGLExtensions();
       
   /* OpenCL setup */
   
-  /*
-  
-  cl_int error;
-  cl_platform_id platform;
-  cl_device_id device;
-  cl_context context;
-  
-  error = oclGetPlatformID(&platform);
-  if (error != CL_SUCCESS) {
-     printf("Error getting platform id (%i)\n", error);
-     exit(EXIT_FAILURE);
-  }
-  
-  error = clGetDeviceIDs(platform, CL_DEVICE_TYPE_GPU, 1, &device, NULL);
-  if (error != CL_SUCCESS) {
-    printf("Error getting OpenCL device (%i)\n", error);
-    exit(EXIT_FAILURE);
-  }
-  
-  context = clCreateContext(0, 1, &device, NULL, NULL, &error);
-  if (error != CL_SUCCESS) {
-    printf("Error creating OpenCL context (%i)\n", error);
-    exit(EXIT_FAILURE);
-  }
-  
-  kernel_set_device(device);
-  kernel_set_context(context);
-  
-  */
+#ifdef _WIN32
+  kernels_init_with_opengl();
+#else
+  kernels_init();
+#endif
   
   /* Start */
     
@@ -80,10 +56,12 @@ int main(int argc, char* argv[]) {
   asset_manager_handler("fnt", (void*(*)(char*))font_load_file,(void(*)(void*))font_delete);
   asset_manager_handler("mat", (void*(*)(char*))mat_load_file, (void(*)(void*))material_delete);
   asset_manager_handler("lua", (void*(*)(char*))lua_load_file, (void(*)(void*))script_delete);
+  asset_manager_handler("cl", (void*(*)(char*))cl_load_file, (void(*)(void*))kernel_program_delete);
   
   load_folder("./engine/shaders/");
   load_folder("./engine/fonts/");
   load_folder("./engine/scripts/");
+  load_folder("./engine/kernels/");
 
   load_folder("./engine/resources/");
   
@@ -137,6 +115,8 @@ int main(int argc, char* argv[]) {
   asset_manager_finish();
   
   scripting_finish();
+  
+  kernels_finish();
   
   viewport_finish();
   

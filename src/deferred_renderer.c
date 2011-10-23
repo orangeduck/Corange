@@ -224,15 +224,15 @@ void deferred_renderer_begin() {
   deferred_renderer_setup_camera();
 
   glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-  
-  glClearColor(1.0f, 0.769f, 0.0f, 0.0f);
-  glClearDepth(1.0f);
-  glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
   GLenum buffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
   glDrawBuffers(3, buffers);
   
   glDisable(GL_LIGHTING);
+  
+  glClearColor(1.0f, 0.769f, 0.0f, 0.0f);
+  glClearDepth(1.0f);
+  glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
   
 };
 
@@ -278,6 +278,11 @@ void deferred_renderer_end() {
   glBindTexture(GL_TEXTURE_2D, *SHADOW_TEX);
   glEnable(GL_TEXTURE_2D);
   glUniform1i(glGetUniformLocation(*SCREEN_PROGRAM, "shadows_texture"), 4);
+  
+  glActiveTexture(GL_TEXTURE0 + 5 );
+  glBindTexture(GL_TEXTURE_2D, *(texture*)asset_get("./engine/resources/random.dds"));
+  glEnable(GL_TEXTURE_2D);
+  glUniform1i(glGetUniformLocation(*SCREEN_PROGRAM, "random_texture"), 5);
   
   GLint cam_position = glGetUniformLocation(*SCREEN_PROGRAM, "camera_position");
   glUniform3f(cam_position, CAMERA->position.x, CAMERA->position.y, CAMERA->position.z);

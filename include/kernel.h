@@ -5,19 +5,29 @@
 
 typedef cl_program kernel_program;
 typedef cl_kernel kernel;
+typedef cl_mem kernel_memory;
 
-void kernel_set_context(cl_context context);
-void kernel_set_device(cl_device_id device);
+void kernels_init();
+void kernels_init_with_opengl();
+void kernels_finish();
 
-void kernel_check_error();
+void kernels_check_error(const char* name);
 
 kernel_program* cl_load_file(char* filename);
 void kernel_program_delete(kernel_program* k);
 
 kernel kernel_program_get_kernel(kernel_program* kp, char* kernel_name);
 
-kernel kernel_set_argument(kernel k, int arg_num, int arg_type_size, void* value);
+void kernel_set_argument(kernel k, int arg_num, int arg_type_size, void* value);
 void kernel_run(kernel k, int worker_count, int work_group_size);
 void kernel_delete(kernel k);
+
+kernel_memory kernel_memory_allocate(int size);
+kernel_memory kernel_memory_from_glbuffer(int buff_obj);
+kernel_memory kernel_memory_from_gltexture(int tex_obj);
+
+void kernel_memory_delete(kernel_memory km);
+void kernel_memory_write(kernel_memory km, int size, void* src);
+void kernel_memory_read(kernel_memory km, int size, void* dst);
 
 #endif

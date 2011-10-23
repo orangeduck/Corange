@@ -1,4 +1,4 @@
-// Photoshop based blending modes
+/* Photoshop based blending modes */
 
 vec4 darken(a,b) {
 	return min(a, b);
