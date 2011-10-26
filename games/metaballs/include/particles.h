@@ -10,8 +10,10 @@ void particles_update(float timestep);
 
 int particles_count();
 
-vector3 particle_position(int id);
-vector3 particle_velocity(int id);
+vector4 particle_position(int id);
+vector4 particle_velocity(int id);
 
+GLuint particle_positions_buffer();
+GLuint particle_velocities_buffer();
 
 #endif

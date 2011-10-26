@@ -8,6 +8,7 @@ typedef cl_kernel kernel;
 typedef cl_mem kernel_memory;
 
 void kernels_init();
+void kernels_init_with_cpu();
 void kernels_init_with_opengl();
 void kernels_finish();
 
@@ -25,6 +26,9 @@ void kernel_delete(kernel k);
 kernel_memory kernel_memory_allocate(int size);
 kernel_memory kernel_memory_from_glbuffer(int buff_obj);
 kernel_memory kernel_memory_from_gltexture(int tex_obj);
+
+void kernel_memory_gl_aquire(kernel_memory km);
+void kernel_memory_gl_release(kernel_memory km);
 
 void kernel_memory_delete(kernel_memory km);
 void kernel_memory_write(kernel_memory km, int size, void* src);

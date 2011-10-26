@@ -199,7 +199,7 @@ void cello_render() {
   forward_renderer_begin();
   
   glClearColor(1.0f, 0.769f, 0.0f, 0.0f);
-  glClear(GL_COLOR_BUFFER_BIT);
+  glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
   
   if(use_piano) {
     forward_renderer_render_renderable(r_floor);

@@ -21,8 +21,8 @@ void main() {
 						vec4(0.0,0.0,0.0,1.0)
 						); 
   
-  vec4 eye_dir = vec4( normalize(eye_position.xyz - gl_Position.xyz) , 1.0);
-  vec4 light_dir = vec4( normalize(light_position.xyz - gl_Position.xyz) , 1.0);
+  vec4 eye_dir = vec4( normalize(eye_position.xyz - gl_Vertex.xyz) , 1.0);
+  vec4 light_dir = vec4( normalize(light_position.xyz - gl_Vertex.xyz) , 1.0);
 	
   light_vector = light_dir * world_matrix * rotation;
   half_angle = normalize(eye_dir + light_dir) * world_matrix * rotation;

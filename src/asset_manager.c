@@ -258,7 +258,12 @@ void unload_folder(char* folder) {
 
 void* asset_get(char* path) {
   path = asset_map_filename(path);
-  return dictionary_get(asset_dictionary, path);
+  void* val = dictionary_get(asset_dictionary, path);
+  if (val == NULL) {
+    printf("Error: Could not find asset %s. Perhaps it is not loaded yet?", path);
+    exit(EXIT_FAILURE);
+  };
+  return val;
 };
 
 int asset_loaded(char* path) {

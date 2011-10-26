@@ -65,12 +65,12 @@ void main() {
   vec3 eye_vector = normalize(position - eye_position);
   vec3 half_vector = normalize(light_vector + eye_vector); 
   
-  float n_dot_l = max( -dot( normal, light_vector ) , 0.0f);
-  float n_dot_h = max( -dot( normal, half_vector ) , 0.0f);
+  float n_dot_l = max( -dot( normal, light_vector ) , 0.0);
+  float n_dot_h = max( -dot( normal, half_vector ) , 0.0);
   
   vec3 reflected = normalize(reflect(eye_vector, normal));
   vec3 env = texture2D(env_map, reflected.xy).rgb;
-  float env_amount = (1 - dot(eye_vector, normal)) * spec.r * env_amount;
+  float env_amount = (1.0 - dot(eye_vector, normal)) * spec.r * env_amount;
   
   vec3 final_diffuse = (diffuse * diffuse_light * shadow * n_dot_l);
   final_diffuse = mix(final_diffuse, env, env_amount);
@@ -79,7 +79,7 @@ void main() {
   
   vec3 final = final_diffuse + final_ambient + final_spec;
   
-  float difference = (shadow_depth - our_depth) * 10;
+  float difference = (shadow_depth - our_depth) * 10.0;
   
   gl_FragData[0] = vec4(final , diffuse_a.a);
 

@@ -123,12 +123,12 @@ renderable_surface* renderable_surface_new(mesh* m) {
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   
-  material* base = asset_get(m->material);
+  material* base;
   
   //printf("mat: |%s|\n", m->material); fflush(stdout);
   
-  if( base != NULL ) {
-    s->base = base;
+  if( asset_loaded(m->material) ) {
+    s->base = asset_get(m->material);
   } else {
     //s->base = asset_get("/resources/cello/cello.mat");
     s->base = asset_get("./engine/resources/basic.mat");

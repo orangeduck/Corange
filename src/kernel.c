@@ -34,6 +34,22 @@ void kernels_init() {
   
 }
 
+void kernels_init_with_cpu() {
+
+  error = clGetPlatformIDs(1, &platform, NULL);
+  kernels_check_error("oclGetPlatformID");
+  
+  error = clGetDeviceIDs(platform, CL_DEVICE_TYPE_CPU, 1, &device, NULL);
+  kernels_check_error("clGetDeviceIDs");
+  
+  context = clCreateContext(0, 1, &device, NULL, NULL, &error);
+  kernels_check_error("clCreateContext");
+  
+  queue = clCreateCommandQueue(context, device, 0, &error);
+  kernels_check_error("clCreateCommandQueue");
+
+}
+
 void kernels_init_with_opengl() {
 
 #ifdef _WIN32
@@ -153,9 +169,19 @@ kernel_memory kernel_memory_from_glbuffer(int buff_obj) {
 
 kernel_memory kernel_memory_from_gltexture(int tex_obj) {
   /* 3553 is for GL_TEXTURE_2D - avoids dependancies. */
-  kernel_memory mem = clCreateFromGLTexture2D (context, CL_MEM_READ_WRITE, 3553, 0, tex_obj, &error);
+  kernel_memory mem = clCreateFromGLTexture2D(context, CL_MEM_READ_WRITE, 3553, 0, tex_obj, &error);
   kernels_check_error("clCreateFromGLTexture2D");
   return mem;
+}
+
+void kernel_memory_gl_aquire(kernel_memory km) {
+  error = clEnqueueAcquireGLObjects(queue, 1, &km, 0, NULL, NULL);
+  kernels_check_error("clEnqueueAcquireGLObjects");
+}
+
+void kernel_memory_gl_release(kernel_memory km) {
+  error = clEnqueueReleaseGLObjects(queue, 1, &km, 0, NULL, NULL);
+  kernels_check_error("clEnqueueReleaseGLObjects");
 }
 
 void kernel_memory_delete(kernel_memory km) {

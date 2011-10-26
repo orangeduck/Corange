@@ -12,6 +12,7 @@
 #include "shader.h"
 #include "texture.h"
 #include "dictionary.h"
+#include "timing.h"
 
 #include "forward_renderer.h"
 
@@ -27,7 +28,7 @@ static float world_matrix[16];
 static float lview_matrix[16];
 static float lproj_matrix[16];
 
-static float timer;
+static float timer = 0.0;
 
 static int TANGENT;
 static int BINORMAL;
@@ -74,7 +75,6 @@ void forward_renderer_begin() {
   forward_renderer_setup_camera();
   
   timer += frame_time();
-  
 }
 
 void forward_renderer_setup_camera() {
