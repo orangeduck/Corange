@@ -271,14 +271,15 @@ float shadow_amount_soft_pcf25(vec3 position, float hardness) {
   float blocked_depth = 0.0;
   for(int i = 0; i < 25; i++) {
     vec2 offset = disc_samples[i];
-    blocked_depth += texture2D( shadows_texture, shadow_coord.xy + offset ).r;
+    float sample_depth = texture2D( shadows_texture, shadow_coord.xy + offset ).r;
+    blocked_depth += min(sample_depth, our_depth);
   }
   
   blocked_depth = blocked_depth / 25;
   
-  float prenumbra = (max(our_depth - blocked_depth,0) * hardness) / blocked_depth;
+  float prenumbra = max((our_depth - blocked_depth) * hardness * 0.25,0) / blocked_depth;
   
-  float kernel = prenumbra * 1000;
+  float kernel = prenumbra * 1000 + 0.00025;
   
   vec2 samples[25] = vec2[25]( vec2(-2.0*kernel, -2.0*kernel),
                        vec2(-2.0*kernel,  -kernel),
@@ -321,8 +322,8 @@ float shadow_amount_soft_pcf25(vec3 position, float hardness) {
     }
   }
   
-  return kernel * 100;
-  //return shadow;
+  //return kernel * 100;
+  return shadow;
 }
 
 

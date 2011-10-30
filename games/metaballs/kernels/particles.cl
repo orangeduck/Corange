@@ -8,7 +8,8 @@ __kernel void particle_update(__global float4* positions,
                               const float max_life,
                               const float min_velocity,
                               
-                              float time_difference 
+                              const float time_difference,
+                              const int reset
                               ) {
   
   /* 4 times due to the 4 values required for billboards */
@@ -16,7 +17,7 @@ __kernel void particle_update(__global float4* positions,
   
   lifetimes[i] = lifetimes[i] + time_difference;
   
-  if ((lifetimes[i] > max_life) || ( length(velocities[i]) < min_velocity )) {
+  if ((lifetimes[i] > max_life) || ( length(velocities[i]) < min_velocity ) || reset) {
     
     lifetimes[i] = 0.0;
     
@@ -24,7 +25,7 @@ __kernel void particle_update(__global float4* positions,
     float rx = randoms[i].x;
     float ry = randoms[i].y;
     float rz = randoms[i].z;
-    velocities[i] = (float4)(rx - 0.5, ry, rz - 0.5, 0);
+    velocities[i] = (float4)(rx, ry, rz, 0);
   
   } else {
   

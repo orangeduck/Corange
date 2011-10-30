@@ -3,6 +3,73 @@
 
 #include "matrix.h"
 
+matrix_2x2 m22_id() {
+  matrix_2x2 mat;
+  
+  mat.xx = 1.0f;
+  mat.xy = 0.0f;
+  mat.yx = 0.0f;
+  mat.yy = 1.0f;
+  
+  return mat;
+}
+
+matrix_2x2 m22_zero() {
+  matrix_2x2 mat;
+  
+  mat.xx = 0.0f;
+  mat.xy = 0.0f;
+  mat.yx = 0.0f;
+  mat.yy = 0.0f;
+  
+  return mat;
+}
+
+matrix_2x2 m22_mul_m22(matrix_2x2 m1, matrix_2x2 m2) {
+  matrix_2x2 mat;
+  
+  mat.xx = m1.xx * m2.xx + m1.xy * m2.yx;
+  mat.xy = m1.xx * m2.xy + m1.xy * m2.yy;
+  mat.yx = m1.yx * m2.xx + m1.yy * m2.yx;
+  mat.yx = m1.yx * m2.xy + m1.yy * m2.yy;
+  
+  return mat;
+}
+
+vector2 m22_mul_v2(matrix_2x2 m, vector2 v) {
+  vector2 vec;
+  
+  vec.x = v.x * m.xx + v.y * m.xy;
+  vec.y = v.x * m.yx + v.y * m.yy;
+  
+  return vec;
+}
+
+void m22_to_array(matrix_2x2 m, float* out) {
+  
+  out[0] = m.xx;
+  out[1] = m.xy;
+  out[2] = m.yx;
+  out[3] = m.yy;
+  
+}
+
+void m22_print(matrix_2x2 m) {
+  printf("|%4.2f, %4.2f|\n", m.xx, m.xy);
+  printf("|%4.2f, %4.2f|\n", m.yx, m.yy);
+}
+
+matrix_2x2 m22_rotation(float a) {
+  matrix_2x2 m;
+  
+  m.xx = cos(a);
+  m.xy = -sin(a);
+  m.yx = sin(a);
+  m.yy = cos(a);
+  
+  return m;
+}
+
 matrix_3x3 m33_zero() {
   matrix_3x3 mat;
   
@@ -19,7 +86,7 @@ matrix_3x3 m33_zero() {
   mat.zz = 0.0f;  
   
   return mat;
-};
+}
 
 matrix_3x3 m33_id() {
   matrix_3x3 mat;

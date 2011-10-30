@@ -10,6 +10,8 @@ void particles_update(float timestep);
 
 int particles_count();
 
+void particles_reset();
+
 vector4 particle_position(int id);
 vector4 particle_velocity(int id);
 

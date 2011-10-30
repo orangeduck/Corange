@@ -348,6 +348,26 @@ vector3 v3_one() {
   return v3(1, 1, 1);
 }
 
+vector3 v3_red() {
+  return v3(1, 0, 0);
+}
+
+vector3 v3_green() {
+  return v3(0, 1, 0);
+}
+
+vector3 v3_blue() {
+  return v3(0, 0, 1);
+}
+
+vector3 v3_white() {
+  return v3(1, 1, 1);
+}
+
+vector3 v3_black() {
+  return v3(0, 0, 0);
+}
+
 vector3 v3_add(vector3 v1, vector3 v2) {
   vector3 v;
   v.x = v1.x + v2.x;
@@ -536,7 +556,27 @@ vector4 v4_zero() {
 }
 
 vector4 v4_one() {
-  return v4(1.0, 1.0, 1.0, 1.0);
+  return v4(1, 1, 1, 1);
+}
+
+vector4 v4_red() {
+  return v4(1,0,0,1);
+}
+
+vector4 v4_green() {
+  return v4(0,1,0,1);
+}
+
+vector4 v4_blue() {
+  return v4(0,0,1,1);
+}
+
+vector4 v4_white() {
+  return v4(1,1,1,1);
+}
+
+vector4 v4_black() {
+  return v4(0,0,0,1);
 }
 
 vector4 v4_add(vector4 v1, vector4 v2) {

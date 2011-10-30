@@ -15,8 +15,8 @@ static material* floor_mat;
 static renderable* r_floor;
 
 static font* console_font;
-static render_text* rt_framerate;
-static render_text* rt_test_text;
+static ui_text* txt_framerate;
+static ui_text* txt_test_text;
 
 static camera* cam;
 static light* sun;
@@ -65,17 +65,17 @@ void cello_init() {
   
   console_font = asset_get("./engine/fonts/console_font.fnt");
   
-  rt_framerate = render_text_new("hello", 10, console_font);
-  rt_framerate->position = v2(-0.95,-0.95);
-  rt_framerate->scale = v2(0.7,0.7);
-  rt_framerate->color = v4(1,1,1,1);
-  render_text_update(rt_framerate);
+  txt_framerate = ui_text_new("hello", console_font);
+  txt_framerate->position = v2(10, 10);
+  txt_framerate->scale = v2(0.7,0.7);
+  txt_framerate->color = v4(1,1,1,1);
+  ui_text_update(txt_framerate);
   
-  rt_test_text = render_text_new("Renderer\nmouse to move\n'p' to switch object.", 512, console_font);
-  rt_test_text->position = v2(-0.95,-0.90);
-  rt_test_text->scale = v2(0.7,0.7);
-  rt_test_text->color = v4(1,1,1,1);
-  render_text_update(rt_test_text);
+  txt_test_text = ui_text_new("Renderer\nmouse to move\n'p' to switch object.", console_font);
+  txt_test_text->position = v2(20, 20);
+  txt_test_text->scale = v2(0.7,0.7);
+  txt_test_text->color = v4(1,1,1,1);
+  ui_text_update(txt_test_text);
   
   /* Init render engine */
   
@@ -214,10 +214,10 @@ void cello_render() {
 
   /* Render text */
   
-  render_text_update_string(rt_framerate, frame_rate_string());
+  ui_text_update_string(txt_framerate, frame_rate_string());
   
-  render_text_render(rt_framerate);
-  render_text_render(rt_test_text);
+  ui_text_render(txt_framerate);
+  ui_text_render(txt_test_text);
   
 }
 
@@ -230,8 +230,8 @@ void cello_finish() {
   camera_delete(cam);
   light_delete(sun);
 
-  render_text_delete(rt_framerate);
-  render_text_delete(rt_test_text);
+  ui_text_delete(txt_framerate);
+  ui_text_delete(txt_test_text);
   
 #ifdef DEFERRED_RENDER
   deferred_renderer_finish();

@@ -34,8 +34,12 @@
 #include "renderable.h"
 #include "forward_renderer.h"
 #include "deferred_renderer.h"
-#include "text_renderer.h"
 #include "shadow_mapper.h"
+
+/* UI */
+
+#include "ui_text.h"
+#include "ui_rectangle.h"
 
 /* Data Structures */
 

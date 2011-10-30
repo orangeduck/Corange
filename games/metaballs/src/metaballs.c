@@ -21,6 +21,10 @@ const int max_particles = 1000;
 static shader_program* particle_program;
 static texture* particle_texture;
 
+static font* console_font;
+static ui_text* ui_framerate;
+static ui_rectangle* ui_box;
+
 void metaballs_init() {
   
   load_folder("/kernels/");
@@ -88,6 +92,20 @@ void metaballs_init() {
   glBufferData(GL_ARRAY_BUFFER, sizeof(vector2) * 4 * max_particles, temp_uvs, GL_DYNAMIC_COPY);
   
   free(temp_uvs);
+  
+  console_font = asset_get("./engine/fonts/console_font.fnt");
+  
+  ui_framerate = ui_text_new("", console_font);
+  ui_framerate->position = v2( 20, 20 );
+  ui_framerate->scale = v2(1,1);
+  ui_framerate->color = v4(1,1,1,1);
+  ui_text_update(ui_framerate);
+  
+  ui_box = ui_rectangle_new(v2(15, 15), v2(40, 40));
+  ui_box->color = v4_black();
+  ui_box->border_size = 2;
+  ui_box->border_color = v4_white();
+  
 }
 
 void metaballs_update() {
@@ -112,8 +130,9 @@ void metaballs_update() {
   mouse_x = 0;
   mouse_y = 0;
 
-  particles_update(0.005);
+  particles_update(frame_time() / 10);
   
+  ui_text_update_string(ui_framerate, frame_rate_string());
 }
 
 static float proj_matrix[16];
@@ -127,7 +146,7 @@ void metaballs_render() {
 
   forward_renderer_begin();
   
-  glClearColor(1.0f, 0.769f, 0.0f, 0.0f);
+  glClearColor(0.75f, 0.75f, 0.75f, 0.75f);
   glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
   
   forward_renderer_render_renderable(r_floor);
@@ -152,9 +171,14 @@ void metaballs_render() {
     
     GLuint particle_position = glGetAttribLocation(*particle_program, "particle_position");
     glEnableVertexAttribArray(particle_position);
+    GLuint particle_velocity = glGetAttribLocation(*particle_program, "particle_velocity");
+    glEnableVertexAttribArray(particle_velocity);
     
     glBindBuffer(GL_ARRAY_BUFFER, particle_positions_buffer());
     glVertexAttribPointer(particle_position, 4, GL_FLOAT, GL_TRUE, 0, (void*)0);
+    
+    glBindBuffer(GL_ARRAY_BUFFER, particle_velocities_buffer());
+    glVertexAttribPointer(particle_velocity, 4, GL_FLOAT, GL_TRUE, 0, (void*)0);
     
     glBindBuffer(GL_ARRAY_BUFFER, billboard_positions);
     glVertexPointer(3, GL_FLOAT, 0, (void*)0);
@@ -167,6 +191,7 @@ void metaballs_render() {
     glDrawArrays(GL_QUADS, 0, particles_count() * 4);
   
     glDisableVertexAttribArray(particle_position);
+    glDisableVertexAttribArray(particle_velocity);
   
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     
@@ -176,13 +201,31 @@ void metaballs_render() {
     glUseProgram(0);
   
   forward_renderer_end();
-
+  
+  ui_rectangle_render(ui_box);
+  ui_text_render(ui_framerate);
+  
 }
 
 void metaballs_event(SDL_Event event) {
 
   switch(event.type){
 
+  case SDL_KEYUP:
+    
+    if (event.key.keysym.sym == SDLK_SPACE) { 
+      particles_reset();
+    }
+    
+  break;
+  
+  case SDL_MOUSEBUTTONUP:
+    
+    ui_text_on_click_up(ui_framerate, v2(event.button.x, event.button.y));
+    ui_rectangle_on_click_up(ui_box, v2(event.button.x, event.button.y));
+    
+  break;
+  
   case SDL_MOUSEBUTTONDOWN:
 
     if (event.button.button == SDL_BUTTON_WHEELUP) {
@@ -191,6 +234,9 @@ void metaballs_event(SDL_Event event) {
     if (event.button.button == SDL_BUTTON_WHEELDOWN) {
       cam->position = v3_add(cam->position, v3_normalize(cam->position));
     }
+    
+    ui_text_on_click_down(ui_framerate, v2(event.button.x, event.button.y));
+    ui_rectangle_on_click_down(ui_box, v2(event.button.x, event.button.y));
     
   break;
   
@@ -203,6 +249,9 @@ void metaballs_event(SDL_Event event) {
 }
 
 void metaballs_finish() {
+
+  ui_rectangle_delete(ui_box);
+  ui_text_delete(ui_framerate);
 
   camera_delete(cam);
   light_delete(sun);

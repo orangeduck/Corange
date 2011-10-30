@@ -149,6 +149,7 @@ static GLenum GL_GENERATE_MIPMAP = 0x8191;
 static GLenum GL_VERTEX_SHADER = 0x8B31;
 static GLenum GL_FRAGMENT_SHADER = 0x8B30;
 static GLenum GL_TEXTURE_MAX_LEVEL = 0x813D;
+static GLenum GL_STATIC_READ = 0x88E4;
 static GLenum GL_DYNAMIC_COPY = 0x88EA;
 
 #endif

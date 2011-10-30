@@ -19,6 +19,7 @@ kernel_memory k_particle_velocities;
 kernel_memory k_particle_lifetimes;
 kernel_memory k_particle_randoms;
 
+int reset = 0;
 
 void particles_init() {
 
@@ -41,10 +42,16 @@ void particles_init() {
     float ry = ((float)rand() / RAND_MAX);
     float rz = ((float)rand() / RAND_MAX);
     
-    particle_velocities[i  ] = v4(rx - 0.5 , ry, rz - 0.5, 0);
-    particle_velocities[i+1] = v4(rx - 0.5 , ry, rz - 0.5, 0);
-    particle_velocities[i+2] = v4(rx - 0.5 , ry, rz - 0.5, 0);
-    particle_velocities[i+3] = v4(rx - 0.5 , ry, rz - 0.5, 0);
+    vector3 normed = v3_normalize( v3(rx - 0.5, ry, rz - 0.5) );
+    normed = v3_mul(normed, 0.75);
+    rx = normed.x;
+    ry = normed.y;
+    rz = normed.z;
+    
+    particle_velocities[i  ] = v4(rx, ry, rz, 0);
+    particle_velocities[i+1] = v4(rx, ry, rz, 0);
+    particle_velocities[i+2] = v4(rx, ry, rz, 0);
+    particle_velocities[i+3] = v4(rx, ry, rz, 0);
     
     particle_randoms[i  ] = v4(rx, ry, rz, 0);
     particle_randoms[i+1] = v4(rx, ry, rz, 0);
@@ -85,6 +92,8 @@ void particles_init() {
   float max_life = 1.0;
   float min_velocity = 0.1;
   
+  int reset = 0;
+  
   k_update = kernel_program_get_kernel(program, "particle_update");
   kernel_set_argument(k_update, 0, sizeof(kernel_memory), &k_particle_positions);
   kernel_set_argument(k_update, 1, sizeof(kernel_memory), &k_particle_velocities);
@@ -122,12 +131,19 @@ void particles_update(float timestep) {
   kernel_memory_gl_aquire(k_particle_randoms);
   
   kernel_set_argument(k_update, 6, sizeof(float), &timestep);
+  kernel_set_argument(k_update, 7, sizeof(int), &reset);
   kernel_run(k_update, particle_count, particle_count);
+  
+  reset = 0;
   
   kernel_memory_gl_release(k_particle_positions);
   kernel_memory_gl_release(k_particle_velocities);
   kernel_memory_gl_release(k_particle_lifetimes);
   kernel_memory_gl_release(k_particle_randoms);
+}
+
+void particles_reset() {
+  reset = 1;
 }
 
 int particles_count() {

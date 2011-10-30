@@ -110,6 +110,12 @@ vector3 v3_new(float x, float y, float z);
 vector3 v3_zero();
 vector3 v3_one();
 
+vector3 v3_red();
+vector3 v3_green();
+vector3 v3_blue();
+vector3 v3_white();
+vector3 v3_black();
+
 vector3 v3_add(vector3 v1, vector3 v2);
 vector3 v3_sub(vector3 v1, vector3 v2);
 vector3 v3_mul(vector3 v, float fac);
@@ -148,6 +154,12 @@ vector4 v4(float x, float y, float z, float w);
 vector4 v4(float x, float y, float z, float w);
 vector4 v4_zero();
 vector4 v4_one();
+
+vector4 v4_red();
+vector4 v4_green();
+vector4 v4_blue();
+vector4 v4_white();
+vector4 v4_black();
 
 vector4 v4_add(vector4 v1, vector4 v2);
 vector4 v4_sub(vector4 v1, vector4 v2);

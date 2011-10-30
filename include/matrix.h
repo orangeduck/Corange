@@ -4,6 +4,13 @@
 #include "vector.h"
 
 typedef struct {
+
+  float xx; float xy;
+  float yx; float yy;
+  
+} matrix_2x2;
+
+typedef struct {
   
   float xx; float xy; float xz;
   float yx; float yy; float yz;
@@ -14,7 +21,6 @@ typedef struct {
 
 typedef struct {
 
- 
   float xx; float xy; float xz; float xw;
   float yx; float yy; float yz; float yw;
   float zx; float zy; float zz; float zw;
@@ -22,6 +28,16 @@ typedef struct {
 
 } matrix_4x4;
 
+/* 2 x 2 */
+
+matrix_2x2 m22_id();
+matrix_2x2 m22_zero();
+matrix_2x2 m22_mul_m22(matrix_2x2 m1, matrix_2x2 m2);
+vector2 m22_mul_v2(matrix_2x2 m, vector2 v);
+
+void m22_to_array(matrix_2x2 m, float* out);
+void m22_print(matrix_2x2 m);
+matrix_2x2 m22_rotation(float a);
 
 /* 3 x 3 */
 

@@ -9,8 +9,8 @@ static float* strength;
 static char* strength_string;
 static char* fov_string;
 
-static render_text* rt_strength;
-static render_text* rt_fov;
+static ui_text* txt_strength;
+static ui_text* txt_fov;
 
 static renderable* r_cello;
 static renderable* r_torus;
@@ -39,20 +39,14 @@ void nmapper_init() {
   
   model* m_cello = asset_get("/resources/meshes/cello.obj");
   model* m_torus = asset_get("/resources/meshes/torus.obj");
-  
-  printf("TEST1");fflush(stdout);
  
   r_cello = renderable_new("cello");
   renderable_add_model(r_cello, m_cello);
   renderable_set_material(r_cello, nmapper_mat);
-
-  printf("TEST2");fflush(stdout);
   
   r_torus = renderable_new("torus");
   renderable_add_model(r_torus, m_torus);
   renderable_set_material(r_torus, nmapper_mat);
-  
-  printf("TEST3");fflush(stdout);
   
   strength = malloc(sizeof(float));
   *strength = 1.0f;
@@ -61,32 +55,25 @@ void nmapper_init() {
   fov_string = malloc(128);
   strcpy(strength_string,"");
   strcpy(fov_string,"");
-
-  printf("TEST4");fflush(stdout);
   
   font* console_font = asset_get("./engine/fonts/console_font.fnt");
   
-  rt_strength = render_text_new(strength_string, 128, console_font);
-  rt_strength->position = v2(-1.0,-1.0);
-  rt_strength->scale = v2(1.0,1.0);
-  rt_strength->color = v4(1,1,1,1);
-  render_text_update(rt_strength);
+  txt_strength = ui_text_new(strength_string, console_font);
+  txt_strength->position = v2(10, 10);
+  txt_strength->scale = v2(1.0,1.0);
+  txt_strength->color = v4(1,1,1,1);
+  ui_text_update(txt_strength);
   
-  rt_fov = render_text_new(fov_string, 128, console_font);
-  rt_fov->position = v2(-1.0,-0.93);
-  rt_fov->scale = v2(1.0,1.0);
-  rt_fov->color = v4(1,1,1,1);
-  render_text_update(rt_fov);
-  
-  printf("TEST5");fflush(stdout);
+  txt_fov = ui_text_new(fov_string, console_font);
+  txt_fov->position = v2(10, 30);
+  txt_fov->scale = v2(1.0,1.0);
+  txt_fov->color = v4(1,1,1,1);
+  ui_text_update(txt_fov);
   
   material_set_property(nmapper_mat, "bump_map", t_cello, mat_type_texture);
-  //material_set_property(nmapper_mat, "bump_map", t_blank, mat_type_texture);
   material_set_property(nmapper_mat, "strength", strength, mat_type_float);
   
   glClearColor(0.5f, 0.5f, 1.0f, 0.0f);
-    
-  printf("TEST6");fflush(stdout);
 
 }
 
@@ -116,6 +103,9 @@ void nmapper_update() {
   mouse_x = 0;
   mouse_y = 0;
   
+  ui_text_update_string(txt_strength, strength_string);
+  ui_text_update_string(txt_fov, fov_string);
+  
 }
 
 void nmapper_render() {
@@ -128,11 +118,8 @@ void nmapper_render() {
   //forward_renderer_render_renderable(r_torus);
   forward_renderer_end();
   
-  render_text_update_string(rt_strength, strength_string);
-  render_text_update_string(rt_fov, fov_string);
-  
-  render_text_render(rt_strength);
-  render_text_render(rt_fov);
+  ui_text_render(txt_strength);
+  ui_text_render(txt_fov);
 
 }
 
@@ -203,8 +190,8 @@ void nmapper_finish() {
 
   free(strength);
 
-  render_text_delete(rt_strength);
-  render_text_delete(rt_fov);
+  ui_text_delete(txt_strength);
+  ui_text_delete(txt_fov);
   
   renderable_delete(r_cello);
   renderable_delete(r_torus);
