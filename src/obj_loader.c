@@ -48,7 +48,7 @@ model* obj_load_file(char* filename) {
   obj_model->num_meshes = 0;
   obj_model->meshes = malloc(sizeof(model*) * 0);
   
-  char* contents = asset_load_file(filename);
+  char* contents = asset_file_contents(filename);
   
   char* c = contents; // Pointer to beginning of file
   

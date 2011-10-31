@@ -17,9 +17,6 @@ typedef struct {
 } font;
 
 font* font_load_file(char* filename);
-
-void parse_char_line(font* f, char* line);
-
 void font_delete(font* font);
 
 

@@ -42,7 +42,7 @@ material* mat_load_file(char* filename) {
   material* mat = material_new();
   mat->name = name;
   
-  char* c = asset_load_file(filename);
+  char* c = asset_file_contents(filename);
   
   char* line = malloc(1024);
   
@@ -50,21 +50,20 @@ material* mat_load_file(char* filename) {
   int j = 0;
   
   while(1) {
-  
-    /* If end of string then exit. */
-    if( c[i] == '\0') { break; }
     
     /* End of line reached */
-    if( c[i] == '\n') {
+    if((c[i] == '\n') || (c[i] == '\0')) {
     
       /* Null terminate line buffer */
-      line[j-1] = '\0';
+      line[j] = '\0';
       
       material_parse_line(mat, line);
       //printf("LINE: %s \n",line);
       
       /* Reset line buffer index */
       j = 0;
+      
+      if( c[i] == '\0') { break; }
       
     } else {
     
@@ -299,8 +298,12 @@ void material_parse_line(material* mat, char* line) {
     return;
   }
   
+  if (strcmp(type, "\r\n\0")) {
+    return;
+  }
   
-  printf("ERROR: Unknown material type %s\n", type);
+  printf("Error reading material file line: %s\n", line);
+  exit(EXIT_FAILURE);
   
 }
 

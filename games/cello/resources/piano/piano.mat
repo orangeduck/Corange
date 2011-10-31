@@ -1,5 +1,5 @@
 string name = piano
-program prog = /resources/shaders/norm_spec_env.prog
+program prog = ./engine/shaders/norm_spec_env.prog
 
 texture diffuse_map = /resources/piano/piano.dds
 texture bump_map = /resources/piano/piano_nm.dds
@@ -9,4 +9,4 @@ texture env_map = /resources/piano/piano_env.dds
 float glossiness = 25.0
 float bumpiness = 1.5
 float specular_level = 3.0
-float env_amount = 0.5
+float env_amount = 1.0

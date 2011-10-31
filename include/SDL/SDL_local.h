@@ -151,5 +151,7 @@ static GLenum GL_FRAGMENT_SHADER = 0x8B30;
 static GLenum GL_TEXTURE_MAX_LEVEL = 0x813D;
 static GLenum GL_STATIC_READ = 0x88E4;
 static GLenum GL_DYNAMIC_COPY = 0x88EA;
+static GLenum GL_COMPILE_STATUS = 0x8B81;
+static GLenum GL_LINK_STATUS = 0x8B82;
 
 #endif

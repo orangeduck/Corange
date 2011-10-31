@@ -12,14 +12,9 @@ static shader_program* depth_shader;
 static texture* texture_ptr;
 
 static GLuint fbo;
-
 static GLuint depth_buffer;
-static GLuint color_buffer;
-
-static GLuint color_texture;
 static GLuint depth_texture;
 
-static light* LIGHT;
 static light* LIGHT;
 
 static texture* texture_ptr;
@@ -38,27 +33,13 @@ void shadow_mapper_init(light* l) {
   glBindFramebuffer(GL_FRAMEBUFFER, fbo);
   
   glGenRenderbuffers(1, &depth_buffer);
-  glGenRenderbuffers(1, &color_buffer); 
   
   int width = l->shadow_map_width;
   int height = l->shadow_map_height;
   
-  glBindRenderbuffer(GL_RENDERBUFFER, color_buffer);
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, width, height);
-  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, color_buffer);   
-  
   glBindRenderbuffer(GL_RENDERBUFFER, depth_buffer);
   glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width, height);
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_buffer);  
-  
-  glGenTextures(1, &color_texture);
-  glBindTexture(GL_TEXTURE_2D, color_texture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, color_texture, 0);
   
   glGenTextures(1, &depth_texture);
   glBindTexture(GL_TEXTURE_2D, depth_texture);
@@ -81,9 +62,7 @@ void shadow_mapper_finish() {
   glDeleteFramebuffers(1, &fbo);
   
   glDeleteRenderbuffers(1, &depth_buffer);
-  glDeleteRenderbuffers(1, &color_buffer);
   glDeleteTextures(1,&depth_texture);
-  glDeleteTextures(1,&color_texture);
   
 }
 
@@ -97,9 +76,6 @@ void shadow_mapper_begin() {
   
   glViewport( 0, 0, LIGHT->shadow_map_width, LIGHT->shadow_map_height);
   glDisable(GL_LIGHTING);
-  
-  glEnable(GL_DEPTH_TEST);
-  glDepthMask(GL_TRUE);
   
   shadow_mapper_setup_camera();
   

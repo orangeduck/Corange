@@ -16,7 +16,7 @@ shader* vs_load_file(char* filename) {
 
   shader* new_shader = malloc(sizeof(shader));
   
-  char* vs_source = asset_load_file(filename);
+  char* vs_source = asset_file_contents(filename);
   const char* vs = vs_source;
   
   *new_shader = glCreateShader(GL_VERTEX_SHADER);
@@ -24,10 +24,17 @@ shader* vs_load_file(char* filename) {
   glShaderSource(*new_shader, 1, &vs, NULL);
   glCompileShader(*new_shader);
   
+  free(vs_source);
+  
   shader_print_log(new_shader);
   
-  free(vs_source);
- 
+  int error = 0;
+  glGetShaderiv(*new_shader, GL_COMPILE_STATUS, &error);
+  if (error == GL_FALSE) {
+    printf("Error Compiling Shader %s.\n", filename);
+    exit(EXIT_FAILURE);
+  }
+  
   return new_shader;
   
 }
@@ -36,21 +43,27 @@ shader* fs_load_file(char* filename) {
 
   shader* new_shader = malloc(sizeof(shader));
 
-  char* fs_source = asset_load_file(filename);
+  char* fs_source = asset_file_contents(filename);
   const char* fs = fs_source;
   
   *new_shader = glCreateShader(GL_FRAGMENT_SHADER);
   glShaderSource(*new_shader, 1, &fs, NULL);
   glCompileShader(*new_shader);
   
+  free(fs_source);
+  
   shader_print_log(new_shader);
   
-  free(fs_source);
+  int error = 0;
+  glGetShaderiv(*new_shader, GL_COMPILE_STATUS, &error);
+  if (error == GL_FALSE) {
+    printf("Error Compiling Shader %s.\n", filename);
+    exit(EXIT_FAILURE);
+  }
   
   return new_shader;
 
 }
-
 
 shader_program* shader_program_new() {
 
@@ -67,7 +80,6 @@ void shader_program_attach_shader(shader_program* program, shader* shader) {
 
 void shader_program_link(shader_program* program) {
   glLinkProgram(*program);
-  shader_program_print_log(program);
 }
 
 void shader_program_print_log(shader_program* program) {
@@ -76,7 +88,7 @@ void shader_program_print_log(shader_program* program) {
   int i;
   glGetProgramInfoLog(*program, 2048, &i, log);
   log[i] = '\0';
-  printf("\nShader Linker:\n %s\n", log);
+  printf("%s", log);
   free(log);
   
 }
@@ -87,7 +99,7 @@ void shader_print_log(shader* shader) {
   int i;
   glGetShaderInfoLog(*shader, 2048, &i, log);
   log[i] = '\0';
-  printf("\nShader Compiler:\n %s\n", log);
+  printf("%s", log);
   free(log);
   
 }
@@ -96,7 +108,7 @@ shader_program* prog_load_file(char* filename) {
 
   shader_program* sp = shader_program_new();
   
-  char* c = asset_load_file(filename);
+  char* c = asset_file_contents(filename);
   
   char* line = malloc(1024);
   
@@ -105,19 +117,18 @@ shader_program* prog_load_file(char* filename) {
   
   while(1) {
   
-    /* If end of string then exit. */
-    if( c[i] == '\0') { break; }
-    
     /* End of line reached */
-    if( c[i] == '\n' ) {
+    if(( c[i] == '\n' ) || ( c[i] == '\0')) {
     
       /* Null terminate line buffer */
-      line[j-1] = '\0';
+      line[j] = '\0';
       
       shader_program_parse_line(sp, line);
       
       /* Reset line buffer index */
       j = 0;
+      
+      if( c[i] == '\0') { break; }
       
     } else {
     
@@ -133,13 +144,21 @@ shader_program* prog_load_file(char* filename) {
   free(c);
   
   shader_program_link(sp);
-
+  shader_program_print_log(sp);
+  
+  int error = 0;
+  glGetProgramiv(*sp, GL_LINK_STATUS, &error);
+  if (error == GL_FALSE) {
+    printf("Error Linking Shader Program %s.\n", filename);
+    exit(EXIT_FAILURE);
+  }
+  
   return sp;
   
 };
 
 static char type[25];
-static char path[256];
+static char path[512];
 void shader_program_parse_line(shader_program* program, char* line) {
   
   char c;
@@ -172,38 +191,27 @@ void shader_program_parse_line(shader_program* program, char* line) {
     j++;
   }
   
-  if (strcmp(type, "vertex_shader") == 0) {
+  if ((strcmp(type, "vertex_shader") == 0) || (strcmp(type, "fragment_shader") == 0))  {
     
-    shader* vs;
+    shader* s;
     
     if(asset_loaded(path)) {
-      vs = (shader*)asset_get(path);
+      s = (shader*)asset_get(path);
     } else {
       load_file(path);
-      vs = (shader*)asset_get(path);
+      s = (shader*)asset_get(path);
     }
     
-    shader_program_attach_shader(program, vs);
+    shader_program_attach_shader(program, s);
     return;
   }
   
-  if (strcmp(type, "fragment_shader") == 0) {
-    
-    shader* fs;
-    
-    if(asset_loaded(path)) {
-      fs = (shader*)asset_get(path);
-    } else {
-      load_file(path);
-      fs = (shader*)asset_get(path);
-    }
-    
-    shader_program_attach_shader(program, fs);
+  if (strcmp(type, "\r\n\0")) {
     return;
   }
   
-  printf("Error: badly formed program file\n");
-  return;
+  printf("Error reading shader file line: %s\n", line);
+  exit(EXIT_FAILURE);
   
 } 
 
@@ -213,10 +221,8 @@ void shader_program_delete(shader_program* program) {
 };
 
 void shader_delete(shader* shader) {
-  
   glDeleteShader(*shader);
   free(shader);
-  
 }
 
 

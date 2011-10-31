@@ -12,6 +12,13 @@ uniform sampler2D diffuse_map;
 uniform sampler2D bump_map;
 uniform sampler2D spec_map;
 
+vec4 swap_red_green(vec4 normal) {
+  float temp = normal.r;
+  normal.r = normal.g;
+  normal.g = temp;
+  return normal;
+}
+
 void main( void )
 {
 	vec2 uvs = vec2(gl_TexCoord[0].x, -gl_TexCoord[0].y);
@@ -19,6 +26,7 @@ void main( void )
 	float spec = texture2D(spec_map,uvs).r * specular_level;
 	
 	vec4 normal = texture2D(bump_map, uvs);
+	normal = swap_red_green(normal);
 	normal = mix(normal, vec4( 0.5, 0.5, 1.0, 1.0 ), bumpiness * 1.5);
 	normal = (normal * 2.0 - vec4(1.0,1.0,1.0,0.0)) * TBN * world_matrix;
 	

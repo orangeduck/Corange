@@ -67,22 +67,7 @@ void asset_handler_delete(asset_handler* h) {
 
 }
 
-/* Unloads all assets, clears the stringtable with the supplied handlers */
-void asset_manager_finish() {
-
-  int i;
-  for(i=0; i <asset_dictionary->table_size; i++) {
-    bucket* b = asset_dictionary->buckets[i];
-    delete_bucket_list(b);
-  }
-  
-  for(i=0; i < num_handlers; i++) {
-    free(asset_handlers[num_handlers].extension);
-  }
-  
-}
-
-void delete_bucket_list(bucket* b) {
+static void delete_bucket_list(bucket* b) {
   
   if(b == NULL) {
     return;
@@ -111,6 +96,21 @@ void delete_bucket_list(bucket* b) {
   
 }
 
+/* Unloads all assets, clears the stringtable with the supplied handlers */
+void asset_manager_finish() {
+
+  int i;
+  for(i=0; i <asset_dictionary->table_size; i++) {
+    bucket* b = asset_dictionary->buckets[i];
+    delete_bucket_list(b);
+  }
+  
+  for(i=0; i < num_handlers; i++) {
+    free(asset_handlers[num_handlers].extension);
+  }
+  
+}
+
 
 void asset_manager_handler(char* extension, void* load_func(char*) , void del_func(void*) ) {
   
@@ -131,9 +131,10 @@ void load_file(char* filename) {
   filename = asset_map_filename(filename);
   
   if (dictionary_contains(asset_dictionary, filename)) {
-    printf("Asset %s already loaded\n", filename);
-    return;
+    printf("Error: Asset %s already loaded\n", filename);
+    exit(EXIT_FAILURE);
   }
+  
   char* ext = asset_file_extension(filename);
   int i;
   for(i=0; i < num_handlers; i++) {
@@ -169,7 +170,9 @@ void load_folder(char* folder) {
         strcpy(filename, folder);
         strcat(filename, ent->d_name);
         
-        load_file(filename);
+        if(!asset_loaded(filename)) {
+          load_file(filename);
+        }
         
         free(filename);
       } 
@@ -273,7 +276,7 @@ int asset_loaded(char* path) {
 
 /* Asset Loader helper commands */
 
-char* asset_load_file(char* filename) {
+char* asset_file_contents(char* filename) {
   
   filename = asset_map_filename(filename);
   
@@ -282,8 +285,8 @@ char* asset_load_file(char* filename) {
   SDL_RWops* file = SDL_RWFromFile(filename, "r");
   
   if(file == NULL) {
-    printf("Error Loading File %s: Can't find file.\n", filename); fflush(stdout);
-    return NULL;
+    printf("Error Loading File %s: Can't find file.\n", filename);
+    exit(EXIT_FAILURE);
   }
   
   long size = SDL_RWseek(file,0,SEEK_END);

@@ -56,7 +56,7 @@ int main(int argc, char* argv[]) {
   asset_manager_handler("fnt", (void*(*)(char*))font_load_file,(void(*)(void*))font_delete);
   asset_manager_handler("mat", (void*(*)(char*))mat_load_file, (void(*)(void*))material_delete);
   asset_manager_handler("lua", (void*(*)(char*))lua_load_file, (void(*)(void*))script_delete);
-  asset_manager_handler("cl", (void*(*)(char*))cl_load_file, (void(*)(void*))kernel_program_delete);
+  asset_manager_handler("cl" , (void*(*)(char*))cl_load_file,  (void(*)(void*))kernel_program_delete);
   
   load_folder("./engine/shaders/");
   load_folder("./engine/fonts/");

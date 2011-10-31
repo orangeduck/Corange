@@ -2,17 +2,10 @@
 
 #include "corange.h"
 
-static model* cello;
-static material* cello_mat;
 static renderable* r_cello;
-
-static model* piano;
-static material* piano_mat;
 static renderable* r_piano;
-
-static model* floor;
-static material* floor_mat;
 static renderable* r_floor;
+static renderable* r_skybox;
 
 static font* console_font;
 static ui_text* txt_framerate;
@@ -28,38 +21,71 @@ static int mouse_right_down;
 
 static int use_piano = 1;
 
+static int use_deferred = 1;
+
+static void swap_renderer() {
+  
+  if (use_deferred) {
+    
+    deferred_renderer_finish();
+    forward_renderer_init();
+    forward_renderer_set_camera(cam);
+    forward_renderer_set_light(sun);
+    forward_renderer_set_shadow_texture( shadow_mapper_depth_texture() );
+    
+    use_deferred = 0;
+  } else {
+    
+    forward_renderer_finish();
+    deferred_renderer_init();
+    deferred_renderer_set_camera(cam);
+    deferred_renderer_set_light(sun);
+    deferred_renderer_set_shadow_texture( shadow_mapper_depth_texture() );
+    
+    use_deferred = 1;
+  }
+
+}
+
 void cello_init() {
   
   printf("Cello game init!\n");
   
   /* Get reference to the Cello */
   
-  load_folder("/resources/");
   load_folder("/resources/cello/");
   load_folder("/resources/piano/");
   load_folder("/resources/floor/");
+  load_folder("/resources/skybox/");
   load_folder("/resources/shaders/");
   
-  cello = asset_get("/resources/cello/cello.obj");
-  cello_mat = asset_get("/resources/cello/cello.mat");
+  model* cello = asset_get("/resources/cello/cello.obj");
+  material* cello_mat = asset_get("/resources/cello/cello.mat");
   
   r_cello = renderable_new("cello");
   renderable_add_model(r_cello, cello);
   renderable_set_material(r_cello, cello_mat);
   
-  piano = asset_get("/resources/piano/piano.obj");
-  piano_mat = asset_get("/resources/piano/piano.mat");
+  model* piano = asset_get("/resources/piano/piano.obj");
+  material* piano_mat = asset_get("/resources/piano/piano.mat");
   
   r_piano = renderable_new("piano");
   renderable_add_model(r_piano, piano);
   renderable_set_material(r_piano, piano_mat);
   
-  floor = asset_get("/resources/floor/floor.obj");
-  floor_mat = asset_get("/resources/floor/floor.mat");
+  model* floor = asset_get("/resources/floor/floor.obj");
+  material* floor_mat = asset_get("/resources/floor/floor.mat");
   
   r_floor = renderable_new("floor");
   renderable_add_model(r_floor, floor);
   renderable_set_material(r_floor, floor_mat);
+  
+  model* skybox = asset_get("/resources/skybox/skybox.obj");
+  material* skybox_mat = asset_get("/resources/skybox/skybox.mat");
+  
+  r_skybox = renderable_new("skybox");
+  renderable_add_model(r_skybox, skybox);
+  renderable_set_material(r_skybox, skybox_mat);
   
   /* Put some text on the screen */
   
@@ -67,14 +93,10 @@ void cello_init() {
   
   txt_framerate = ui_text_new("hello", console_font);
   txt_framerate->position = v2(10, 10);
-  txt_framerate->scale = v2(0.7,0.7);
-  txt_framerate->color = v4(1,1,1,1);
   ui_text_update(txt_framerate);
   
-  txt_test_text = ui_text_new("Renderer\nmouse to move\n'p' to switch object.", console_font);
-  txt_test_text->position = v2(20, 20);
-  txt_test_text->scale = v2(0.7,0.7);
-  txt_test_text->color = v4(1,1,1,1);
+  txt_test_text = ui_text_new("mouse to move\n'p' to switch object\n'r' to switch renderer", console_font);
+  txt_test_text->position = v2(10, 30);
   ui_text_update(txt_test_text);
   
   /* Init render engine */
@@ -94,22 +116,18 @@ void cello_init() {
   /* Renderer Setup */
 
   shadow_mapper_init(sun);  
-  
-#define DEFERRED_RENDER
 
-#ifdef DEFERRED_RENDER
-  deferred_renderer_init();
-  deferred_renderer_set_camera(cam);
-  deferred_renderer_set_light(sun);
-  deferred_renderer_set_shadow_texture( shadow_mapper_depth_texture() );
-#endif
-
-#ifdef FORWARD_RENDER  
-  forward_renderer_init();
-  forward_renderer_set_camera(cam);
-  forward_renderer_set_light(sun);
-  forward_renderer_set_shadow_texture( shadow_mapper_depth_texture() );
-#endif
+  if (use_deferred) {
+    deferred_renderer_init();
+    deferred_renderer_set_camera(cam);
+    deferred_renderer_set_light(sun);
+    deferred_renderer_set_shadow_texture( shadow_mapper_depth_texture() );
+  } else {
+    forward_renderer_init();
+    forward_renderer_set_camera(cam);
+    forward_renderer_set_light(sun);
+    forward_renderer_set_shadow_texture( shadow_mapper_depth_texture() );
+  }
   
 }
 
@@ -145,6 +163,7 @@ void cello_event(SDL_Event event) {
     if (event.key.keysym.sym == SDLK_UP) { r_cello->position.y += 1; }
     if (event.key.keysym.sym == SDLK_DOWN) { r_cello->position.y -= 1; }
     if (event.key.keysym.sym == SDLK_p) { if(use_piano == 1){use_piano = 0;} else { use_piano = 1;} }
+    if (event.key.keysym.sym == SDLK_r) { swap_renderer(); }
     
     if (event.key.keysym.sym == SDLK_LEFT) { r_cello->rotation = v4_quaternion_mul(
         v4_quaternion_yaw(0.1) , r_cello->rotation); }
@@ -183,34 +202,38 @@ void cello_render() {
   }
   shadow_mapper_end();
 
-#ifdef DEFERRED_RENDER
-  deferred_renderer_begin();
-  if(use_piano) {
-    deferred_renderer_render_renderable(r_floor);
-    deferred_renderer_render_renderable(r_piano);
-  } else {
-    deferred_renderer_render_renderable(r_cello);
-  }
-  deferred_renderer_end();
-#endif
+  if (use_deferred) {
   
-#ifdef FORWARD_RENDER
+    deferred_renderer_begin();
+    
+    deferred_renderer_render_renderable(r_skybox);
+    
+    if(use_piano) {
+      deferred_renderer_render_renderable(r_floor);
+      deferred_renderer_render_renderable(r_piano);
+    } else {
+      deferred_renderer_render_renderable(r_cello);
+    }
+    deferred_renderer_end();
+    
+  } else {
+  
+    forward_renderer_begin();
+    
+    glClearColor(1.0f, 0.769f, 0.0f, 0.0f);
+    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+    
+    forward_renderer_render_renderable(r_skybox);
 
-  forward_renderer_begin();
-  
-  glClearColor(1.0f, 0.769f, 0.0f, 0.0f);
-  glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-  
-  if(use_piano) {
-    forward_renderer_render_renderable(r_floor);
-    forward_renderer_render_renderable(r_piano);
-  } else {
-    forward_renderer_render_renderable(r_cello);
+    if(use_piano) {
+      forward_renderer_render_renderable(r_floor);
+      forward_renderer_render_renderable(r_piano);
+    } else {
+      forward_renderer_render_renderable(r_cello);
+    }
+    
+    forward_renderer_end();
   }
-  
-  forward_renderer_end();
-  
-#endif
 
   /* Render text */
   
@@ -226,6 +249,7 @@ void cello_finish() {
   renderable_delete(r_cello);
   renderable_delete(r_piano);
   renderable_delete(r_floor);
+  renderable_delete(r_skybox);
   
   camera_delete(cam);
   light_delete(sun);
@@ -233,13 +257,11 @@ void cello_finish() {
   ui_text_delete(txt_framerate);
   ui_text_delete(txt_test_text);
   
-#ifdef DEFERRED_RENDER
-  deferred_renderer_finish();
-#endif
-    
-#ifdef FORWARD_RENDER
-  forward_renderer_finish();
-#endif
+  if (use_deferred) {
+    deferred_renderer_finish();
+  } else {
+    forward_renderer_finish();
+  }
 
   shadow_mapper_finish();
 

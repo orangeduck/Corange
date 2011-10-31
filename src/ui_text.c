@@ -24,7 +24,7 @@ ui_text* ui_text_new(char* string, font* text_font) {
   text->font = text_font;
   text->position = v2(0.0,0.0);
   text->scale = v2(1.0,1.0);
-  text->color = v4_one();
+  text->color = v4_black();
   
   text->alignment = text_align_left;
   text->line_spacing = 0.0;

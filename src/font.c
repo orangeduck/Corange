@@ -4,6 +4,47 @@
 
 #include "font.h"
 
+static void parse_char_line(font* f, char* c) {
+  
+  int i = 0;
+  char* end;
+  
+  while (*c != '=' ) c++; c++;
+  int id = strtoul(c, &end, 0);
+  c = end;
+  
+  while (*c != '=' ) c++; c++;
+  int x_loc = strtoul(c, &end, 0);
+  c = end;
+  
+  while (*c != '=' ) c++; c++;
+  int y_loc = strtoul(c, &end, 0);
+  c = end;
+
+  while (*c != '=' ) c++; c++;
+  int width = strtoul(c, &end, 0);
+  c = end;
+  
+  while (*c != '=' ) c++; c++;
+  int height = strtoul(c, &end, 0);
+  c = end;
+  
+  while (*c != '=' ) c++; c++;
+  int x_off = strtoul(c, &end, 0);
+  c = end;
+  
+  while (*c != '=' ) c++; c++;
+  int y_off = strtoul(c, &end, 0);
+  c = end;
+  
+  //printf("Line Details: %i %i %i %i %i %i %i \n", id, x_loc, y_loc, width, height, x_off, y_off);
+  
+  f->locations[id] = v2((float)x_loc / f->width, (float)y_loc / f->height);
+  f->sizes[id] = v2((float)width / f->width, (float)height / f->height);
+  f->offsets[id] = v2((float)x_off / f->width, (float)y_off / f->height);
+  
+}
+
 font* font_load_file(char* filename) {
   
   font* f = malloc(sizeof(font));
@@ -15,7 +56,7 @@ font* font_load_file(char* filename) {
 
   f->texture_map = 0;
   
-  char* c = asset_load_file(filename);
+  char* c = asset_file_contents(filename);
   
   /* Begin parsing font data */
   
@@ -101,47 +142,6 @@ font* font_load_file(char* filename) {
   
   return f;
   
-};
-
-void parse_char_line(font* f, char* c) {
-  
-  int i = 0;
-  char* end;
-  
-  while (*c != '=' ) c++; c++;
-  int id = strtoul(c, &end, 0);
-  c = end;
-  
-  while (*c != '=' ) c++; c++;
-  int x_loc = strtoul(c, &end, 0);
-  c = end;
-  
-  while (*c != '=' ) c++; c++;
-  int y_loc = strtoul(c, &end, 0);
-  c = end;
-
-  while (*c != '=' ) c++; c++;
-  int width = strtoul(c, &end, 0);
-  c = end;
-  
-  while (*c != '=' ) c++; c++;
-  int height = strtoul(c, &end, 0);
-  c = end;
-  
-  while (*c != '=' ) c++; c++;
-  int x_off = strtoul(c, &end, 0);
-  c = end;
-  
-  while (*c != '=' ) c++; c++;
-  int y_off = strtoul(c, &end, 0);
-  c = end;
-  
-  //printf("Line Details: %i %i %i %i %i %i %i \n", id, x_loc, y_loc, width, height, x_off, y_off);
-  
-  f->locations[id] = v2((float)x_loc / f->width, (float)y_loc / f->height);
-  f->sizes[id] = v2((float)width / f->width, (float)height / f->height);
-  f->offsets[id] = v2((float)x_off / f->width, (float)y_off / f->height);
-  
 }
 
 void font_delete(font* f) {
@@ -151,4 +151,4 @@ void font_delete(font* f) {
   free(f->offsets);
   
   free(f);
-};
+}

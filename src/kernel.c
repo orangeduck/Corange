@@ -101,7 +101,7 @@ void kernels_check_error(const char* name) {
 
 kernel_program* cl_load_file(char* filename) {
   
-  char* source = asset_load_file(filename);
+  char* source = asset_file_contents(filename);
   const char* source_const = source;
   int src_len = strlen(source);
   
