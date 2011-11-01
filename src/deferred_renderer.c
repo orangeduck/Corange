@@ -217,7 +217,7 @@ static void deferred_renderer_setup_camera() {
   m44_to_array(lviewm, LIGHT_VIEW_MATRIX);
   m44_to_array(lprojm, LIGHT_PROJ_MATRIX);
 
-};
+}
 
 void deferred_renderer_begin() {
 
@@ -234,7 +234,7 @@ void deferred_renderer_begin() {
   glClearDepth(1.0f);
   glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
   
-};
+}
 
 void deferred_renderer_end() {
   
@@ -295,6 +295,14 @@ void deferred_renderer_end() {
   
   GLint lview_matrix_u = glGetUniformLocation(*SCREEN_PROGRAM, "light_view");
   glUniformMatrix4fv(lview_matrix_u, 1, 0, LIGHT_VIEW_MATRIX);
+  
+  GLint diffuse_light = glGetUniformLocation(*SCREEN_PROGRAM, "diffuse_light");
+  GLint ambient_light = glGetUniformLocation(*SCREEN_PROGRAM, "ambient_light");
+  GLint specular_light = glGetUniformLocation(*SCREEN_PROGRAM, "specular_light");
+  
+  glUniform3f(diffuse_light, LIGHT->diffuse_color.r, LIGHT->diffuse_color.g, LIGHT->diffuse_color.b);
+  glUniform3f(specular_light, LIGHT->specular_color.r, LIGHT->specular_color.g, LIGHT->specular_color.b);
+  glUniform3f(ambient_light, LIGHT->ambient_color.r, LIGHT->ambient_color.g, LIGHT->ambient_color.b);
   
 	glBegin(GL_QUADS);
 		glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0, -1.0,  0.0f);

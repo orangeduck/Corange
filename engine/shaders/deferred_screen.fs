@@ -10,6 +10,10 @@ uniform sampler2D random_texture;
 uniform vec3 camera_position;
 uniform vec3 light_position;
 
+uniform vec3 diffuse_light;
+uniform vec3 ambient_light;
+uniform vec3 specular_light;
+
 uniform mat4 light_view;
 uniform mat4 light_proj;
 
@@ -28,7 +32,7 @@ void main( void )
   float shadow = shadow_amount_soft_pcf25(light_pos, shadows_texture, 0.001);
 	
 	vec4 diffuse_a = texture2D( diffuse_texture, gl_TexCoord[0].xy );
-	vec3 diffuse = diffuse_a.rgb;
+	vec3 albedo = diffuse_a.rgb;
 	
 	float spec = diffuse_a.a;
 	
@@ -47,11 +51,15 @@ void main( void )
 	
   float ssao = ssao_depth(gl_TexCoord[0].xy, depth_texture, random_texture);
   
-	vec3 ambient_amount = 0.3 * diffuse * ssao;
+	vec3 ambient_amount = albedo * ssao;
 	float light_amount = max(dot(normal, lightDir), 0.0);
 	float spec_amount = spec * pow(max(dot(normal, vHalfVector),0.0), glossiness);
   
-	gl_FragColor.rgb = shadow * light_amount * diffuse + ambient_amount + shadow * spec_amount;
+  vec3 diffuse = shadow * light_amount * albedo * diffuse_light;
+  vec3 ambient = ambient_amount * ambient_light;
+  vec3 specular = shadow * spec_amount * specular_light;
+  
+	gl_FragColor.rgb = diffuse + ambient + specular;
 	gl_FragColor.a = 1.0;
 	
 } 

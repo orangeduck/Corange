@@ -227,9 +227,9 @@ void forward_renderer_use_material(material* mat) {
   glUniform3f(light_position, LIGHT->position.x, LIGHT->position.y, LIGHT->position.z);
   glUniform3f(eye_position, CAMERA->position.x, CAMERA->position.y, CAMERA->position.z);
   
-  glUniform3f(diffuse_light, LIGHT->diffuse_color.x, LIGHT->diffuse_color.y, LIGHT->diffuse_color.z);
-  glUniform3f(specular_light, LIGHT->specular_color.x, LIGHT->specular_color.y, LIGHT->specular_color.z);
-  glUniform3f(ambient_light, LIGHT->ambient_color.x, LIGHT->ambient_color.y, LIGHT->ambient_color.z);
+  glUniform3f(diffuse_light, LIGHT->diffuse_color.r, LIGHT->diffuse_color.g, LIGHT->diffuse_color.b);
+  glUniform3f(specular_light, LIGHT->specular_color.r, LIGHT->specular_color.g, LIGHT->specular_color.b);
+  glUniform3f(ambient_light, LIGHT->ambient_color.r, LIGHT->ambient_color.g, LIGHT->ambient_color.b);
 
   glUniform1f(time,timer);
   

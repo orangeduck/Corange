@@ -73,7 +73,7 @@ void ui_text_update_string(ui_text* text, char* string) {
 
 void ui_text_update(ui_text* text) {
   
-  const float base_scale = 256;
+  const float base_scale = 250;
   
   font* f = text->font;
   
@@ -85,7 +85,7 @@ void ui_text_update(ui_text* text) {
   
   float space_length = 0.025 * text->scale.x * base_scale;
   float tap_length = space_length * 4;
-  float newline_height = 0.05 * text->scale.y * base_scale;
+  float newline_height = 0.06 * text->scale.y * base_scale;
   
   float* vert_texcoords = malloc(sizeof(float) * text->buffersize * 8);
   float* vert_positions = malloc(sizeof(float) * text->buffersize * 12);
@@ -147,8 +147,8 @@ void ui_text_update(ui_text* text) {
     
     /* Positions */
     
-    float o_x = x + (f->offsets[ord].x  * text->scale.x * base_scale);
-    float o_y = y + (f->offsets[ord].y  * text->scale.y * base_scale);
+    float o_x = x + (f->offsets[ord].x * text->scale.x * base_scale);
+    float o_y = y + (f->offsets[ord].y * text->scale.y * base_scale);
     
     vert_positions[pos_i] = o_x; pos_i++;
     vert_positions[pos_i] = o_y; pos_i++;

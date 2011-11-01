@@ -75,7 +75,7 @@ void main() {
   
   vec3 final_diffuse = (diffuse * diffuse_light * shadow * n_dot_l);
   final_diffuse = mix(final_diffuse, env, env_amount);
-  vec3 final_ambient = ambient_light * diffuse * 0.5;
+  vec3 final_ambient = ambient_light * diffuse;
   vec3 final_spec = (spec * specular_light * shadow * pow( n_dot_h, glossiness ) * specular_level );
   
   vec3 final = final_diffuse + final_ambient + final_spec;

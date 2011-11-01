@@ -9,7 +9,8 @@ static renderable* r_skybox;
 
 static font* console_font;
 static ui_text* txt_framerate;
-static ui_text* txt_test_text;
+static ui_text* txt_renderer;
+static ui_text* txt_info;
 
 static camera* cam;
 static light* sun;
@@ -33,7 +34,10 @@ static void swap_renderer() {
     forward_renderer_set_light(sun);
     forward_renderer_set_shadow_texture( shadow_mapper_depth_texture() );
     
+    ui_text_update_string(txt_renderer,"Forward Renderer");
+    
     use_deferred = 0;
+    
   } else {
     
     forward_renderer_finish();
@@ -41,6 +45,8 @@ static void swap_renderer() {
     deferred_renderer_set_camera(cam);
     deferred_renderer_set_light(sun);
     deferred_renderer_set_shadow_texture( shadow_mapper_depth_texture() );
+    
+    ui_text_update_string(txt_renderer,"Deferred Renderer");
     
     use_deferred = 1;
   }
@@ -95,9 +101,13 @@ void cello_init() {
   txt_framerate->position = v2(10, 10);
   ui_text_update(txt_framerate);
   
-  txt_test_text = ui_text_new("mouse to move\n'p' to switch object\n'r' to switch renderer", console_font);
-  txt_test_text->position = v2(10, 30);
-  ui_text_update(txt_test_text);
+  txt_renderer = ui_text_new("Deferred Renderer", console_font);
+  txt_renderer->position = v2(10, 30);
+  ui_text_update(txt_renderer);
+  
+  txt_info = ui_text_new("Click and drag mouse to move\n'p' to switch object\n'r' to switch renderer", console_font);
+  txt_info->position = v2(10, 50);
+  ui_text_update(txt_info);
   
   /* Init render engine */
   
@@ -110,8 +120,8 @@ void cello_init() {
   
   sun = light_new_type( v3(30,43,-26), light_type_spot );
   
-  sun->ambient_color = v3(0.749, 0.855, 0.902);
-  sun->diffuse_color = v3(1.0, 0.875, 0.573);
+  sun->ambient_color = v3(0.3, 0.3, 0.3);
+  sun->diffuse_color = v3(1.0, 1.0, 1.0);
   
   /* Renderer Setup */
 
@@ -152,6 +162,8 @@ void cello_update() {
 
   mouse_x = 0;
   mouse_y = 0;
+  
+  ui_text_update_string(txt_framerate, frame_rate_string());
   
 }
 
@@ -236,11 +248,10 @@ void cello_render() {
   }
 
   /* Render text */
-  
-  ui_text_update_string(txt_framerate, frame_rate_string());
-  
+    
   ui_text_render(txt_framerate);
-  ui_text_render(txt_test_text);
+  ui_text_render(txt_info);
+  ui_text_render(txt_renderer);
   
 }
 
@@ -255,7 +266,8 @@ void cello_finish() {
   light_delete(sun);
 
   ui_text_delete(txt_framerate);
-  ui_text_delete(txt_test_text);
+  ui_text_delete(txt_info);
+  ui_text_delete(txt_renderer);
   
   if (use_deferred) {
     deferred_renderer_finish();
