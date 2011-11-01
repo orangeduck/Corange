@@ -120,8 +120,8 @@ void cello_init() {
   
   sun = light_new_type( v3(30,43,-26), light_type_spot );
   
-  sun->ambient_color = v3(0.3, 0.3, 0.3);
-  sun->diffuse_color = v3(1.0, 1.0, 1.0);
+  sun->ambient_color = v3(0.5, 0.5, 0.5);
+  sun->diffuse_color = v3(0.75, 0.75, 0.75);
   
   /* Renderer Setup */
 

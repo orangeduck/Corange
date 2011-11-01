@@ -21,6 +21,8 @@ uniform mat4 light_proj;
 
 float ssao_depth(vec2 texcoords, sampler2D depth_texture, sampler2D random_texture);
 float shadow_amount_soft_pcf25(vec4 light_pos, sampler2D light_depth, float hardness);
+vec3 to_gamma(vec3 color);
+vec3 from_gamma(vec3 color);
 
 /* End */
 
@@ -59,7 +61,7 @@ void main( void )
   vec3 ambient = ambient_amount * ambient_light;
   vec3 specular = shadow * spec_amount * specular_light;
   
-	gl_FragColor.rgb = diffuse + ambient + specular;
+	gl_FragColor.rgb = to_gamma(diffuse + ambient + specular);
 	gl_FragColor.a = 1.0;
 	
 } 

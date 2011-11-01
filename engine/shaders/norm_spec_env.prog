@@ -1,3 +1,4 @@
 vertex_shader : ./engine/shaders/norm_spec_env.vs
 fragment_shader : ./engine/shaders/norm_spec_env.fs
 fragment_shader : ./engine/shaders/shadows.fs
+fragment_shader : ./engine/shaders/colors.fs

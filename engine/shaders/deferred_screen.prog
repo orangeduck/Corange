@@ -1,4 +1,5 @@
 vertex_shader : ./engine/shaders/deferred_screen.vs
 fragment_shader : ./engine/shaders/deferred_screen.fs
 fragment_shader : ./engine/shaders/shadows.fs
-fragment_shader : ./engine/shaders/screen_ambient_occlusion.fs
+fragment_shader : ./engine/shaders/colors.fs
+fragment_shader : ./engine/shaders/screen_ao.fs
