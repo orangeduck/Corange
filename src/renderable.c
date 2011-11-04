@@ -6,38 +6,17 @@
 
 #include "renderable.h"
 
-renderable* renderable_new(char* name) {
+static void renderable_add_mesh(renderable* r, mesh* m) {
   
-  renderable* r = malloc(sizeof(renderable));
+  renderable_surface* surface = renderable_surface_new(m);
   
-  r->name = malloc(strlen(name) + 1);
-  strcpy(r->name, name);
+  r->num_surfaces++;
+  r->surfaces = realloc(r->surfaces, sizeof(renderable_surface*) *  r->num_surfaces);
+  r->surfaces[r->num_surfaces-1] = surface;
   
-  r->num_surfaces = 0;
-  r->surfaces = NULL;
-  r->position = v3_zero();
-  r->scale = v3_one();
-  r->rotation = v4_quaternion_id();
-  r->recieve_shadows = 1;
-  r->active = 1;
-  
-  return r;
-
 }
 
-void renderable_delete(renderable* r) {
-
-  free(r->name);
-  int i;
-  for(i = 0; i < r->num_surfaces; i++) {
-    renderable_surface_delete( r->surfaces[i] );
-  }
-  
-  free(r);
-
-}
-
-void renderable_add_model(renderable* r, model* m) {
+static void renderable_add_model(renderable* r, model* m) {
 
   int i;
   for(i = 0; i < m->num_meshes; i++) {
@@ -46,13 +25,28 @@ void renderable_add_model(renderable* r, model* m) {
   
 }
 
-void renderable_add_mesh(renderable* r, mesh* m) {
+renderable* renderable_new(model* m) {
   
-  renderable_surface* surface = renderable_surface_new(m);
+  renderable* r = malloc(sizeof(renderable));
   
-  r->num_surfaces++;
-  r->surfaces = realloc(r->surfaces, sizeof(renderable_surface*) *  r->num_surfaces);
-  r->surfaces[r->num_surfaces-1] = surface;
+  r->num_surfaces = 0;
+  r->surfaces = NULL;
+    
+  renderable_add_model(r, m);
+    
+  return r;
+
+}
+
+void renderable_delete(renderable* r) {
+  
+  int i;
+  for(i = 0; i < r->num_surfaces; i++) {
+    renderable_surface_delete( r->surfaces[i] );
+  }
+  
+  free(r);
+
 }
 
 void renderable_set_material(renderable* r, material* m) {
@@ -155,7 +149,5 @@ void renderable_surface_delete(renderable_surface* s) {
 }
 
 void renderable_surface_set_material(renderable_surface* s, material* m) {
-  
   s->base = m;
-  
 }

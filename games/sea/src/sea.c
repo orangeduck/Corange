@@ -1,11 +1,6 @@
 
 #include "corange.h"
 
-static camera* cam;
-static light* sun;
-
-static model* seaplane;
-static material* seaplane_mat;
 static renderable* r_seaplane;
 
 static int mouse_x;
@@ -15,26 +10,19 @@ static int mouse_right_down;
 
 static int wireframe = 0;
 
-static texture* noise1;
-static texture* noise2;
-static texture* noise3;
-static texture* noise4;
-static texture* noise5;
-
-static texture* skydome;
-
-static texture* water_calm;
-static texture* water_foam;
-
 void sea_init() {
 
   viewport_set_vsync(1);
 
-  cam = camera_new( v3(20.0, 0.0, 0.0) , v3_zero() );
-  sun = light_new_type( v3(30,43,-26), light_type_spot );
+  camera* cam = entity_new("camera", entity_type_camera);
+  cam->position = v3(20.0, 0.0, 0.0);
+  cam->target = v3_zero();
   
-  sun->ambient_color = v3(0.749, 0.855, 0.902);
-  sun->diffuse_color = v3(1.0, 0.875, 0.573);
+  light* sun = entity_new("sun", entity_type_light);
+  sun->position = v3(30,43,-26);
+  sun->ambient_color = v3(0.5, 0.5, 0.5);
+  sun->diffuse_color = v3(0.75, 0.75, 0.75);
+  light_set_type(sun, light_type_spot);
   
   shadow_mapper_init(sun);  
 
@@ -45,19 +33,19 @@ void sea_init() {
     
   load_folder("/resources/");
     
-  noise1 = asset_get("/resources/noise1.dds");
-  noise2 = asset_get("/resources/noise2.dds");
-  noise3 = asset_get("/resources/noise3.dds");
-  noise4 = asset_get("/resources/noise4.dds");
-  noise5 = asset_get("/resources/noise5.dds");
+  texture* noise1 = asset_get("/resources/noise1.dds");
+  texture* noise2 = asset_get("/resources/noise2.dds");
+  texture* noise3 = asset_get("/resources/noise3.dds");
+  texture* noise4 = asset_get("/resources/noise4.dds");
+  texture* noise5 = asset_get("/resources/noise5.dds");
   
-  skydome = asset_get("/resources/skybox_cloud_10.dds");
+  texture* skydome = asset_get("/resources/skybox_cloud_10.dds");
 
-  water_calm = asset_get("/resources/water_calm.dds");
-  water_foam = asset_get("/resources/water_foam.dds");
+  texture* water_calm = asset_get("/resources/water_calm.dds");
+  texture* water_foam = asset_get("/resources/water_foam.dds");
   
-  seaplane = asset_get("/resources/seaplane.obj");
-  seaplane_mat = asset_get("/resources/seaplane.mat");
+  model* seaplane = asset_get("/resources/seaplane.obj");
+  material* seaplane_mat = asset_get("/resources/seaplane.mat");
   
   material_set_property(seaplane_mat, "tex_noise1", noise1, mat_type_texture);
   material_set_property(seaplane_mat, "tex_noise2", noise2, mat_type_texture);
@@ -70,13 +58,17 @@ void sea_init() {
   material_set_property(seaplane_mat, "tex_calm_water", water_calm, mat_type_texture);
   material_set_property(seaplane_mat, "tex_foam_water", water_foam, mat_type_texture);
   
-  r_seaplane = renderable_new("seaplane");
-  renderable_add_model(r_seaplane, seaplane);
+  r_seaplane = renderable_new(seaplane);
   renderable_set_material(r_seaplane, seaplane_mat);
-    
+  
+  entity_add("seaplane", entity_type_static, static_object_new(r_seaplane));
+  
 }
 
 void sea_update() {
+
+  camera* cam = entity_get("camera");
+  light* sun = entity_get("sun");
 
   Uint8 keystate = SDL_GetMouseState(NULL, NULL);
   if(keystate & SDL_BUTTON(1)){
@@ -102,6 +94,8 @@ void sea_update() {
 
 void sea_render() {
 
+  static_object* s_seaplane = entity_get("seaplane");
+
   forward_renderer_begin();
   
   if(wireframe) {
@@ -110,7 +104,7 @@ void sea_render() {
   
   glClearColor(1.0f, 0.769f, 0.0f, 0.0f);
   glClear(GL_COLOR_BUFFER_BIT);
-  forward_renderer_render_renderable(r_seaplane);
+  forward_renderer_render_static(s_seaplane);
   
   if(wireframe) {
     glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
@@ -121,6 +115,9 @@ void sea_render() {
 }
 
 void sea_event(SDL_Event event) {
+
+  camera* cam = entity_get("camera");
+  light* sun = entity_get("sun");
 
   switch(event.type){
   case SDL_KEYUP:
@@ -149,9 +146,6 @@ void sea_finish() {
 
   renderable_delete(r_seaplane);
 
-  camera_delete(cam);
-  light_delete(sun);
-  
   forward_renderer_finish();
 
 }

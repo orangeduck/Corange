@@ -1,8 +1,5 @@
 #include "corange.h"
 
-static camera* cam;
-static light* sun;
-
 static material* nmapper_mat;
 static float* strength;
 
@@ -21,8 +18,15 @@ void nmapper_init() {
   viewport_set_width(512);
   viewport_set_height(512);
   
-  cam = camera_new( v3(20.0, 0.0, 0.0) , v3_zero() );
-  sun = light_new_type( v3(30,43,-26), light_type_spot );
+  camera* cam = entity_new("camera", entity_type_camera);
+  cam->position = v3(20.0, 0.0, 0.0);
+  cam->target = v3_zero();
+  
+  light* sun = entity_new("sun", entity_type_light);
+  sun->position = v3(30,43,-26);
+  sun->ambient_color = v3(0.5, 0.5, 0.5);
+  sun->diffuse_color = v3(0.75, 0.75, 0.75);
+  light_set_type(sun, light_type_spot);
   
   forward_renderer_init();
   forward_renderer_set_camera(cam);
@@ -40,13 +44,13 @@ void nmapper_init() {
   model* m_cello = asset_get("/resources/meshes/cello.obj");
   model* m_torus = asset_get("/resources/meshes/torus.obj");
  
-  r_cello = renderable_new("cello");
-  renderable_add_model(r_cello, m_cello);
+  r_cello = renderable_new(m_cello);
   renderable_set_material(r_cello, nmapper_mat);
+  entity_add("cello", entity_type_static, static_object_new(r_cello));
   
-  r_torus = renderable_new("torus");
-  renderable_add_model(r_torus, m_torus);
+  r_torus = renderable_new(m_torus);
   renderable_set_material(r_torus, nmapper_mat);
+  entity_add("torus", entity_type_static, static_object_new(r_torus));
   
   strength = malloc(sizeof(float));
   *strength = 1.0f;
@@ -83,6 +87,9 @@ static int mouse_y;
 
 void nmapper_update() {
 
+  camera* cam = entity_get("camera");
+  light* sun = entity_get("sun");
+
   #define PI 3.14159265
 
   sprintf(strength_string, "Strength: %.2f", *strength);
@@ -110,12 +117,13 @@ void nmapper_update() {
 
 void nmapper_render() {
 
+  static_object* s_cello = entity_get("cello");
+
   forward_renderer_begin();
   
   glClear(GL_COLOR_BUFFER_BIT);
   
-  forward_renderer_render_renderable(r_cello);
-  //forward_renderer_render_renderable(r_torus);
+  forward_renderer_render_static(s_cello);
   forward_renderer_end();
   
   ui_text_render(txt_strength);
@@ -124,6 +132,9 @@ void nmapper_render() {
 }
 
 void nmapper_event(SDL_Event event) {
+
+  camera* cam = entity_get("camera");
+  light* sun = entity_get("sun");
 
   switch(event.type){
   case SDL_KEYUP:
@@ -195,8 +206,6 @@ void nmapper_finish() {
   
   renderable_delete(r_cello);
   renderable_delete(r_torus);
-  
-  camera_delete(cam);
   
   forward_renderer_finish();
 

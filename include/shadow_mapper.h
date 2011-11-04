@@ -1,7 +1,7 @@
 #ifndef shadow_mapper_h
 #define shadow_mapper_h
 
-#include "renderable.h"
+#include "static_object.h"
 #include "light.h"
 #include "texture.h"
 
@@ -11,7 +11,7 @@ void shadow_mapper_finish();
 void shadow_mapper_begin();
 void shadow_mapper_end();
 void shadow_mapper_setup_camera();
-void shadow_mapper_render_renderable(renderable* r);
+void shadow_mapper_render_static(static_object* s);
 
 texture* shadow_mapper_depth_texture();
 

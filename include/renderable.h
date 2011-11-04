@@ -25,26 +25,14 @@ typedef struct {
 
 typedef struct {
 
-  char* name;
-
   renderable_surface** surfaces;
   int num_surfaces;
-  
-  vector3 position;
-  vector3 scale;
-  vector4 rotation;
-  
-  int active;
-  int recieve_shadows;
   
 } renderable;
 
 
-renderable* renderable_new(char* name);
+renderable* renderable_new(model* m);
 void renderable_delete(renderable* r);
-
-void renderable_add_model(renderable* r, model* m);
-void renderable_add_mesh(renderable* r, mesh* m);
 
 void renderable_set_material(renderable* r, material* m);
 

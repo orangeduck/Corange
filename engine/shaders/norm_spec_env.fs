@@ -31,10 +31,10 @@ varying float depth;
 /* Headers */
 
 float shadow_amount_soft_pcf25(vec4 light_pos, sampler2D light_depth, float hardness);
+
 vec3 to_gamma(vec3 color);
 vec3 from_gamma(vec3 color);
 vec3 swap_red_green(vec3 color);
-vec3 swap_invert_red_green(vec3 color);
 
 /* End */
 

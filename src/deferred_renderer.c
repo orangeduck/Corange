@@ -5,8 +5,10 @@
 #include "shader.h"
 #include "camera.h"
 #include "texture.h"
+#include "renderable.h"
 #include "material.h"
 #include "asset_manager.h"
+#include "shadow_mapper.h"
 
 #include "viewport.h"
 
@@ -380,10 +382,12 @@ void deferred_renderer_render_model(render_model* m, material* mat) {
 
 };
 
-void deferred_renderer_render_renderable(renderable* r) {
+void deferred_renderer_render_static(static_object* s) {
 
-  matrix_4x4 r_world_matrix = m44_world( r->position, r->scale, r->rotation );
+  matrix_4x4 r_world_matrix = m44_world( s->position, s->scale, s->rotation );
   m44_to_array(r_world_matrix, WORLD_MATRIX);
+  
+  renderable* r = s->renderable;
   
   int i;
   for(i=0; i < r->num_surfaces; i++) {

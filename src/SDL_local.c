@@ -46,6 +46,53 @@ GLRENDERBUFFERSTORAGEFN glRenderbufferStorage;
 GLDRAWBUFFERSFN glDrawBuffers;
 GLGENERATEMIPMAPFN glGenerateMipmap;
 GLCOMPRESSEDTEXIMAGE2DFN glCompressedTexImage2D;
+GLTEXIMAGE3DFN glTexImage3D;
+
+void SDL_CheckOpenGLError(const char* name) {
+  switch (glGetError()) {
+    
+    case GL_INVALID_ENUM:
+      printf("OpenGL Error on %s: Invalid Enum\n", name);
+      exit(EXIT_FAILURE);
+    break;
+    
+    case GL_INVALID_VALUE:
+      printf("OpenGL Error on %s: Invalid Value\n", name);
+      exit(EXIT_FAILURE);
+    break;
+    
+    case GL_INVALID_OPERATION:
+      printf("OpenGL Error on %s: Invalid Operation\n", name);
+      exit(EXIT_FAILURE);
+    break;
+  
+    case GL_OUT_OF_MEMORY:
+      printf("OpenGL Error on %s: Out of Memory\n", name);
+      exit(EXIT_FAILURE);
+    break;
+  
+    case GL_INVALID_FRAMEBUFFER_OPERATION:
+      printf("OpenGL Error on %s: Invalid FrameBuffer Operation\n", name);
+      exit(EXIT_FAILURE);
+    break;
+  
+    case GL_STACK_OVERFLOW:
+      printf("OpenGL Error on %s: Stack Overflow\n", name);
+      exit(EXIT_FAILURE);
+    break;
+    
+    case GL_STACK_UNDERFLOW:
+      printf("OpenGL Error on %s: Stack Underflow\n", name);
+      exit(EXIT_FAILURE);
+    break;
+    
+    case GL_TABLE_TOO_LARGE:
+      printf("OpenGL Error on %s: Table Too Large\n", name);
+      exit(EXIT_FAILURE);
+    break;
+
+  }
+}
 
 void SDL_LoadOpenGLExtensions() {
 
@@ -89,6 +136,7 @@ void SDL_LoadOpenGLExtensions() {
   glActiveTexture            = (GLACTIVETEXTUREFN)SDL_GL_GetProcAddress( "glActiveTexture" ); SDL_CheckOpenGLExtension("glActiveTexture", glActiveTexture);
   glGenerateMipmap           = (GLGENERATEMIPMAPFN)SDL_GL_GetProcAddress( "glGenerateMipmap" ); SDL_CheckOpenGLExtension("glGenerateMipmap", glGenerateMipmap);
   glCompressedTexImage2D     = (GLCOMPRESSEDTEXIMAGE2DFN)SDL_GL_GetProcAddress( "glCompressedTexImage2D" ); SDL_CheckOpenGLExtension("glCompressedTexImage2D", glCompressedTexImage2D);
+  glTexImage3D               = (GLTEXIMAGE3DFN)SDL_GL_GetProcAddress( "glTexImage3D" ); SDL_CheckOpenGLExtension("glTexImage3D", glTexImage3D);
 
   /* Buffers */
   

@@ -8,10 +8,6 @@
 
 #include "CL/cl.h"
 
-/* Main Engine Files */
-
-#include "asset_manager.h"
-
 /* Info and Utilities */
 
 #include "timing.h"
@@ -21,9 +17,21 @@
 
 /* Engine Entities */
 
-#include "image.h"
+#include "entity_manager.h"
+
+#include "static_object.h"
 #include "camera.h"
 #include "light.h"
+
+/* Engine Objects */
+
+#include "renderable.h"
+#include "image.h"
+
+/* Engine Assets */
+
+#include "asset_manager.h"
+
 #include "font.h"
 #include "material.h"
 #include "shader.h"
@@ -31,7 +39,6 @@
 
 /* Rendering */
 
-#include "renderable.h"
 #include "forward_renderer.h"
 #include "deferred_renderer.h"
 #include "shadow_mapper.h"
@@ -46,8 +53,8 @@
 #include "list.h"
 #include "int_list.h"
 #include "vertex_list.h"
-#include "dictionary.h"
 #include "vertex_hashtable.h"
+#include "dictionary.h"
 
 /* Maths */
 

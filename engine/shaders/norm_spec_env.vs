@@ -14,10 +14,10 @@ void main() {
   vec2 temp_uvs = vec2(gl_MultiTexCoord0);
   uvs = vec2(temp_uvs.x, -temp_uvs.y);
   
-  vec4 w_position = gl_Vertex;
-  vec4 w_tangent = vec4(tangent, 0.0);
-  vec4 w_binormal = vec4(binormal, 0.0);
-  vec4 w_normal = vec4(gl_Normal, 0.0);
+  vec4 w_position = world_matrix * gl_Vertex;
+  vec4 w_tangent = world_matrix * vec4(tangent, 0.0);
+  vec4 w_binormal = world_matrix * vec4(binormal, 0.0);
+  vec4 w_normal = world_matrix * vec4(gl_Normal, 0.0);
   
   TBN = mat4( vec4(w_tangent),
 			  vec4(w_binormal),

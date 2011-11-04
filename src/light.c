@@ -14,17 +14,22 @@ light* light_new(vector3 position) {
 }
 
 light* light_new_type(vector3 position, int type) {
-  
+   
+  light* l = malloc(sizeof(light));
+
+  l->position = position;
+  l->target = v3_zero();
+  l->diffuse_color = v3(1,1,1);
+  l->specular_color = v3(1,1,1);
+  l->ambient_color = v3(0.25,0.25,0.25);
+
+  light_set_type(l, type);
+   
+}
+
+void light_set_type(light* l, int type) {
+
   if(type == light_type_directional) {
-  
-    light* l = malloc(sizeof(light));
-    
-    l->position = position;
-    l->target = v3_zero();
-    
-    l->diffuse_color = v3(1,1,1);
-    l->specular_color = v3(1,1,1);
-    l->ambient_color = v3(0.25,0.25,0.25);
     
     l->type = light_type_directional;
     
@@ -41,19 +46,8 @@ light* light_new_type(vector3 position, int type) {
     l->shadow_color = v3_zero();
     l->shadow_map_width = -1;
     l->shadow_map_height = -1;
-    
-    return l;
   
   } else if (type == light_type_point) {
-  
-    light* l = malloc(sizeof(light));
-    
-    l->position = position;
-    l->target = v3_zero();
-    
-    l->diffuse_color = v3(1,1,1);
-    l->specular_color = v3(1,1,1);
-    l->ambient_color = v3(0.25,0.25,0.25);
     
     l->type = light_type_point;
     
@@ -70,19 +64,8 @@ light* light_new_type(vector3 position, int type) {
     l->shadow_color = v3_zero();
     l->shadow_map_width = -1;
     l->shadow_map_height = -1;
-    
-    return l;
   
   } else if (type == light_type_sun) {
-  
-    light* l = malloc(sizeof(light));
-    
-    l->position = position;
-    l->target = v3_zero();
-    
-    l->diffuse_color = v3(1,1,1);
-    l->specular_color = v3(1,1,1);
-    l->ambient_color = v3(0.5,0.5,0.5);
     
     l->type = light_type_sun;
     
@@ -99,19 +82,8 @@ light* light_new_type(vector3 position, int type) {
     l->shadow_color = v3_zero();
     l->shadow_map_width = 1024;
     l->shadow_map_height = 1024;
-    
-    return l;
   
   } else if (type == light_type_spot) {
-  
-    light* l = malloc(sizeof(light));
-    
-    l->position = position;
-    l->target = v3_zero();
-    
-    l->diffuse_color = v3(1,1,1);
-    l->specular_color = v3(1,1,1);
-    l->ambient_color = v3(0.75,0.75,0.75);
     
     l->type = light_type_spot;
     
@@ -129,10 +101,8 @@ light* light_new_type(vector3 position, int type) {
     l->shadow_map_width = 1024;
     l->shadow_map_height = 1024;
     
-    return l;
-    
   }
-   
+
 }
 
 void light_delete(light* l) {

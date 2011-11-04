@@ -4,11 +4,7 @@
 #include "vector.h"
 #include "matrix.h"
 
-enum camera_type { orbit };
-
 typedef struct {
-  
-  enum camera_type type;
   
   vector3 position;
   vector3 target;

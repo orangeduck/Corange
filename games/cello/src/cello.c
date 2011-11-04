@@ -7,13 +7,9 @@ static renderable* r_piano;
 static renderable* r_floor;
 static renderable* r_skybox;
 
-static font* console_font;
 static ui_text* txt_framerate;
 static ui_text* txt_renderer;
 static ui_text* txt_info;
-
-static camera* cam;
-static light* sun;
 
 static int mouse_x;
 static int mouse_y;
@@ -21,10 +17,12 @@ static int mouse_down;
 static int mouse_right_down;
 
 static int use_piano = 1;
-
 static int use_deferred = 1;
 
 static void swap_renderer() {
+  
+  camera* cam = entity_get("camera");
+  light* sun = entity_get("sun");
   
   if (use_deferred) {
     
@@ -63,41 +61,28 @@ void cello_init() {
   load_folder("/resources/piano/");
   load_folder("/resources/floor/");
   load_folder("/resources/skybox/");
-  load_folder("/resources/shaders/");
   
-  model* cello = asset_get("/resources/cello/cello.obj");
-  material* cello_mat = asset_get("/resources/cello/cello.mat");
+  r_cello = renderable_new(asset_get("/resources/cello/cello.obj"));
+  renderable_set_material(r_cello, asset_get("/resources/cello/cello.mat"));
+  entity_add("cello", entity_type_static, static_object_new(r_cello));
   
-  r_cello = renderable_new("cello");
-  renderable_add_model(r_cello, cello);
-  renderable_set_material(r_cello, cello_mat);
+  r_piano = renderable_new(asset_get("/resources/piano/piano.obj"));
+  renderable_set_material(r_piano, asset_get("/resources/piano/piano.mat"));
+  entity_add("piano", entity_type_static, static_object_new(r_piano));
   
-  model* piano = asset_get("/resources/piano/piano.obj");
-  material* piano_mat = asset_get("/resources/piano/piano.mat");
+  r_floor = renderable_new(asset_get("/resources/floor/floor.obj"));
+  renderable_set_material(r_floor, asset_get("/resources/floor/floor.mat"));
+  entity_add("floor", entity_type_static, static_object_new(r_floor));
   
-  r_piano = renderable_new("piano");
-  renderable_add_model(r_piano, piano);
-  renderable_set_material(r_piano, piano_mat);
-  
-  model* floor = asset_get("/resources/floor/floor.obj");
-  material* floor_mat = asset_get("/resources/floor/floor.mat");
-  
-  r_floor = renderable_new("floor");
-  renderable_add_model(r_floor, floor);
-  renderable_set_material(r_floor, floor_mat);
-  
-  model* skybox = asset_get("/resources/skybox/skybox.obj");
-  material* skybox_mat = asset_get("/resources/skybox/skybox.mat");
-  
-  r_skybox = renderable_new("skybox");
-  renderable_add_model(r_skybox, skybox);
-  renderable_set_material(r_skybox, skybox_mat);
+  r_skybox = renderable_new(asset_get("/resources/skybox/skybox.obj"));
+  renderable_set_material(r_skybox, asset_get("/resources/skybox/skybox.mat"));
+  entity_add("skybox", entity_type_static, static_object_new(r_skybox));
   
   /* Put some text on the screen */
   
-  console_font = asset_get("./engine/fonts/console_font.fnt");
+  font* console_font = asset_get("./engine/fonts/console_font.fnt");
   
-  txt_framerate = ui_text_new("hello", console_font);
+  txt_framerate = ui_text_new("framerate", console_font);
   txt_framerate->position = v2(10, 10);
   ui_text_update(txt_framerate);
   
@@ -109,39 +94,38 @@ void cello_init() {
   txt_info->position = v2(10, 50);
   ui_text_update(txt_info);
   
-  /* Init render engine */
+  /* New Camera and light */
   
-  viewport_set_vsync(1);
-  //viewport_set_dimensions( v2(800 * 1.5, 600 * 1.5) );
+  camera* cam = entity_new("camera", entity_type_camera);
+  cam->position = v3(20.0, 0.0, 0.0);
+  cam->target = v3_zero();
   
-  /* New Camera */
-  
-  cam = camera_new( v3(20.0, 0.0, 0.0) , v3_zero() );
-  
-  sun = light_new_type( v3(30,43,-26), light_type_spot );
-  
+  light* sun = entity_new("sun", entity_type_light);
+  sun->position = v3(30,43,-26);
   sun->ambient_color = v3(0.5, 0.5, 0.5);
   sun->diffuse_color = v3(0.75, 0.75, 0.75);
+  light_set_type(sun, light_type_spot);
   
   /* Renderer Setup */
 
-  shadow_mapper_init(sun);  
+  viewport_set_vsync(1);
+  //viewport_set_dimensions( v2(800 * 1.5, 600 * 1.5) );  
+  
+  shadow_mapper_init(sun);
+  
+  deferred_renderer_init();
+  deferred_renderer_set_camera(cam);
+  deferred_renderer_set_light(sun);
+  deferred_renderer_set_shadow_texture( shadow_mapper_depth_texture() );
 
-  if (use_deferred) {
-    deferred_renderer_init();
-    deferred_renderer_set_camera(cam);
-    deferred_renderer_set_light(sun);
-    deferred_renderer_set_shadow_texture( shadow_mapper_depth_texture() );
-  } else {
-    forward_renderer_init();
-    forward_renderer_set_camera(cam);
-    forward_renderer_set_light(sun);
-    forward_renderer_set_shadow_texture( shadow_mapper_depth_texture() );
-  }
+  use_deferred = 1;
   
 }
 
 void cello_update() {
+
+  camera* cam = entity_get("camera");
+  light* sun = entity_get("sun");
 
   Uint8 keystate = SDL_GetMouseState(NULL, NULL);
   if(keystate & SDL_BUTTON(1)){
@@ -168,19 +152,23 @@ void cello_update() {
 }
 
 void cello_event(SDL_Event event) {
+  
+  camera* cam = entity_get("camera");
+  light* sun = entity_get("sun");
+  static_object* s_cello = entity_get("cello");
 
   switch(event.type){
   case SDL_KEYUP:
     
-    if (event.key.keysym.sym == SDLK_UP) { r_cello->position.y += 1; }
-    if (event.key.keysym.sym == SDLK_DOWN) { r_cello->position.y -= 1; }
+    if (event.key.keysym.sym == SDLK_UP) { s_cello->position.y += 1; }
+    if (event.key.keysym.sym == SDLK_DOWN) { s_cello->position.y -= 1; }
     if (event.key.keysym.sym == SDLK_p) { if(use_piano == 1){use_piano = 0;} else { use_piano = 1;} }
     if (event.key.keysym.sym == SDLK_r) { swap_renderer(); }
     
-    if (event.key.keysym.sym == SDLK_LEFT) { r_cello->rotation = v4_quaternion_mul(
-        v4_quaternion_yaw(0.1) , r_cello->rotation); }
-    if (event.key.keysym.sym == SDLK_RIGHT) { r_cello->rotation = v4_quaternion_mul(
-        v4_quaternion_yaw(-0.1) , r_cello->rotation); }   
+    if (event.key.keysym.sym == SDLK_LEFT) { s_cello->rotation = v4_quaternion_mul(
+        v4_quaternion_yaw(0.1) , s_cello->rotation); }
+    if (event.key.keysym.sym == SDLK_RIGHT) { s_cello->rotation = v4_quaternion_mul(
+        v4_quaternion_yaw(-0.1) , s_cello->rotation); }   
         
   break;
 
@@ -205,12 +193,17 @@ void cello_event(SDL_Event event) {
 
 void cello_render() {
 
+  static_object* s_piano = entity_get("piano");
+  static_object* s_floor = entity_get("floor");
+  static_object* s_skybox = entity_get("skybox");
+  static_object* s_cello = entity_get("cello");
+
   shadow_mapper_begin();
   if(use_piano) {
-    shadow_mapper_render_renderable(r_piano);
-    shadow_mapper_render_renderable(r_floor);
+    shadow_mapper_render_static(s_piano);
+    shadow_mapper_render_static(s_floor);
   } else {
-    shadow_mapper_render_renderable(r_cello);
+    shadow_mapper_render_static(s_cello);
   }
   shadow_mapper_end();
 
@@ -218,13 +211,13 @@ void cello_render() {
   
     deferred_renderer_begin();
     
-    deferred_renderer_render_renderable(r_skybox);
+    deferred_renderer_render_static(s_skybox);
     
     if(use_piano) {
-      deferred_renderer_render_renderable(r_floor);
-      deferred_renderer_render_renderable(r_piano);
+      deferred_renderer_render_static(s_floor);
+      deferred_renderer_render_static(s_piano);
     } else {
-      deferred_renderer_render_renderable(r_cello);
+      deferred_renderer_render_static(s_cello);
     }
     deferred_renderer_end();
     
@@ -235,13 +228,13 @@ void cello_render() {
     glClearColor(1.0f, 0.769f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
     
-    forward_renderer_render_renderable(r_skybox);
+    forward_renderer_render_static(s_skybox);
 
     if(use_piano) {
-      forward_renderer_render_renderable(r_floor);
-      forward_renderer_render_renderable(r_piano);
+      forward_renderer_render_static(s_floor);
+      forward_renderer_render_static(s_piano);
     } else {
-      forward_renderer_render_renderable(r_cello);
+      forward_renderer_render_static(s_cello);
     }
     
     forward_renderer_end();
@@ -256,14 +249,11 @@ void cello_render() {
 }
 
 void cello_finish() {
-
+  
   renderable_delete(r_cello);
   renderable_delete(r_piano);
   renderable_delete(r_floor);
   renderable_delete(r_skybox);
-  
-  camera_delete(cam);
-  light_delete(sun);
 
   ui_text_delete(txt_framerate);
   ui_text_delete(txt_info);

@@ -1,12 +1,8 @@
 #include "corange.h"
 
 #include "particles.h"
+#include "volume_renderer.h"
 
-static camera* cam;
-static light* sun;
-
-static model* floor;
-static material* floor_mat;
 static renderable* r_floor;
 
 static int mouse_x;
@@ -18,10 +14,6 @@ GLuint billboard_positions;
 GLuint billboard_uvs;
 const int max_particles = 1000;
 
-static shader_program* particle_program;
-static texture* particle_texture;
-
-static font* console_font;
 static ui_text* ui_framerate;
 static ui_rectangle* ui_box;
 
@@ -35,24 +27,25 @@ void metaballs_init() {
   load_folder("/resources/particles/");
   load_folder("/resources/shaders/");
   
-  particle_program = asset_get("/resources/shaders/particles.prog");
+  model* floor = asset_get("/resources/floor/floor.obj");
+  material* floor_mat = asset_get("/resources/floor/floor.mat");
   
-  particle_texture = asset_get("/resources/particles/white.dds");
-  
-  floor = asset_get("/resources/floor/floor.obj");
-  floor_mat = asset_get("/resources/floor/floor.mat");
-  
-  r_floor = renderable_new("floor");
-  renderable_add_model(r_floor, floor);
+  r_floor = renderable_new(floor);
   renderable_set_material(r_floor, floor_mat);
+  
+  entity_add("floor", entity_type_static, static_object_new(r_floor));
   
   viewport_set_vsync(1);
   
-  cam = camera_new( v3(20.0, 10.0, 0.0) , v3(0.0, 5.0, 0.0) );
-  sun = light_new_type( v3(30,43,-26), light_type_spot );
+  camera* cam = entity_new("camera", entity_type_camera);
+  cam->position = v3(20.0, 20.0, 0.0);
+  cam->target = v3(0.0, 5.0, 0.0);
   
-  sun->ambient_color = v3(0.749, 0.855, 0.902);
-  sun->diffuse_color = v3(1.0, 0.875, 0.573);
+  light* sun = entity_new("sun", entity_type_light);
+  sun->position = v3(30,43,-26);
+  sun->ambient_color = v3(0.5, 0.5, 0.5);
+  sun->diffuse_color = v3(0.75, 0.75, 0.75);
+  light_set_type(sun, light_type_spot);  
   
   shadow_mapper_init(sun);  
   
@@ -93,7 +86,7 @@ void metaballs_init() {
   
   free(temp_uvs);
   
-  console_font = asset_get("./engine/fonts/console_font.fnt");
+  font* console_font = asset_get("./engine/fonts/console_font.fnt");
   
   ui_framerate = ui_text_new("", console_font);
   ui_framerate->position = v2( 20, 20 );
@@ -106,9 +99,14 @@ void metaballs_init() {
   ui_box->border_size = 2;
   ui_box->border_color = v4_white();
   
+  volume_renderer_init();
+  
 }
 
 void metaballs_update() {
+
+  camera* cam = entity_get("camera");
+  light* sun = entity_get("sun");
 
   Uint8 keystate = SDL_GetMouseState(NULL, NULL);
   if(keystate & SDL_BUTTON(1)){
@@ -140,8 +138,15 @@ static float view_matrix[16];
 
 void metaballs_render() {
 
+  static_object* s_floor = entity_get("floor");
+  camera* cam = entity_get("camera");
+  light* sun = entity_get("sun");
+  
+  shader_program* particle_program = asset_get("/resources/shaders/particles.prog");
+  texture* particle_texture = asset_get("/resources/particles/white.dds");
+
   shadow_mapper_begin();
-  shadow_mapper_render_renderable(r_floor);
+  shadow_mapper_render_static(s_floor);
   shadow_mapper_end();
 
   forward_renderer_begin();
@@ -149,7 +154,7 @@ void metaballs_render() {
   glClearColor(0.75f, 0.75f, 0.75f, 0.75f);
   glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
   
-  forward_renderer_render_renderable(r_floor);
+  forward_renderer_render_static(s_floor);
   
     glUseProgram(*particle_program);
     
@@ -202,12 +207,18 @@ void metaballs_render() {
   
   forward_renderer_end();
   
+  //volume_renderer_begin();
+  //volume_renderer_end();
+  
   ui_rectangle_render(ui_box);
   ui_text_render(ui_framerate);
   
 }
 
 void metaballs_event(SDL_Event event) {
+
+  camera* cam = entity_get("camera");
+  light* sun = entity_get("sun");
 
   switch(event.type){
 
@@ -252,9 +263,6 @@ void metaballs_finish() {
 
   ui_rectangle_delete(ui_box);
   ui_text_delete(ui_framerate);
-
-  camera_delete(cam);
-  light_delete(sun);
   
   forward_renderer_finish();
   
@@ -264,5 +272,7 @@ void metaballs_finish() {
 
   glDeleteBuffers(1, &billboard_positions);
   glDeleteBuffers(1, &billboard_uvs);
+  
+  volume_renderer_finish();
   
 }

@@ -69,6 +69,10 @@ int main(int argc, char* argv[]) {
   
   scripting_init();
   
+  /* Entity Manager */
+  
+  entity_manager_init();
+  
   /* Load Game */
   
   game_load(game_name_arg);
@@ -111,6 +115,8 @@ int main(int argc, char* argv[]) {
   game_unload();
   
   /* Unload assets */
+  
+  entity_manager_finish();
   
   asset_manager_finish();
   

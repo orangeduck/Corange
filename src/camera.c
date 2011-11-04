@@ -15,7 +15,6 @@ camera* camera_new(vector3 position, vector3 target) {
 
   camera* cam = malloc(sizeof(camera));
   
-  cam->type = orbit;
   cam->position = position;
   cam->target = target;
   cam->fov = DEFAULT_FOV;

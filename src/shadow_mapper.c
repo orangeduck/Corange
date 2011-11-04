@@ -3,6 +3,7 @@
 #include "SDL/SDL_local.h"
 
 #include "shader.h"
+#include "renderable.h"
 #include "viewport.h"
 #include "asset_manager.h"
 
@@ -113,12 +114,23 @@ void shadow_mapper_end() {
   
 }
 
-void shadow_mapper_render_renderable(renderable* r) {
+void shadow_mapper_render_static(static_object* s) {
   
-  matrix_4x4 r_world_matrix = m44_world( r->position, r->scale, r->rotation );
+  matrix_4x4 r_world_matrix = m44_world( s->position, s->scale, s->rotation );
   m44_to_array(r_world_matrix, world_matrix);
   
   glUseProgram(*depth_shader);
+  
+  GLint world_matrix_u = glGetUniformLocation(*depth_shader, "world_matrix");
+  glUniformMatrix4fv(world_matrix_u, 1, 0, world_matrix);
+  
+  GLint proj_matrix_u = glGetUniformLocation(*depth_shader, "proj_matrix");
+  glUniformMatrix4fv(proj_matrix_u, 1, 0, proj_matrix);
+  
+  GLint view_matrix_u = glGetUniformLocation(*depth_shader, "view_matrix");
+  glUniformMatrix4fv(view_matrix_u, 1, 0, view_matrix);
+  
+  renderable* r = s->renderable;
   
   int i;
   for(i=0; i < r->num_surfaces; i++) {

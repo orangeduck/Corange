@@ -3,10 +3,9 @@
 
 #include "camera.h"
 #include "light.h"
-#include "shadow_mapper.h"
 #include "geometry.h"
 #include "material.h"
-#include "renderable.h"
+#include "static_object.h"
 
 void deferred_renderer_init();
 void deferred_renderer_finish();
@@ -20,6 +19,6 @@ void deferred_renderer_begin();
 void deferred_renderer_end();
 
 void deferred_renderer_render_model(render_model* m, material* mat);
-void deferred_renderer_render_renderable(renderable* r);
+void deferred_renderer_render_static(static_object* s);
 
 #endif
