@@ -25,7 +25,8 @@ void kernel_delete(kernel k);
 
 kernel_memory kernel_memory_allocate(int size);
 kernel_memory kernel_memory_from_glbuffer(int buff_obj);
-kernel_memory kernel_memory_from_gltexture(int tex_obj);
+kernel_memory kernel_memory_from_gltexture2D(int tex_obj);
+kernel_memory kernel_memory_from_gltexture3D(int tex_obj);
 
 void kernel_memory_gl_aquire(kernel_memory km);
 void kernel_memory_gl_release(kernel_memory km);

@@ -29,6 +29,7 @@ void entity_manager_finish() {
   int i;
   for (i = 0; i < entity_names->num_items; i++) {
     char* name = list_get(entity_names, i);
+    printf("Deleting Entity %s\n", name);
     entity_delete(name);
   }
   
@@ -47,7 +48,7 @@ int entity_exists(char* name) {
 
 entity* entity_new(char* name, int type) {
 
-  if ( entity_exists(name) ) {
+  if ( dictionary_contains(entities, name) ) {
     printf("Warning: Entity Manager already contains entity called %s! Not added.\n", name);
     return;
   }
@@ -77,7 +78,9 @@ entity* entity_new(char* name, int type) {
   
   dictionary_set(entity_types, name, type_ptr);
   
-  list_push_back(entity_names, name);
+  char* name_copy = malloc(strlen(name) + 1);
+  strcpy(name_copy, name);
+  list_push_back(entity_names, name_copy);
 
   return e;
 }
@@ -95,7 +98,9 @@ void entity_add(char* name, int type, entity* entity) {
   
   dictionary_set(entity_types, name, type_ptr);
   
-  list_push_back(entity_names, name);
+  char* name_copy = malloc(strlen(name) + 1);
+  strcpy(name_copy, name);
+  list_push_back(entity_names, name_copy);
 }
 
 entity* entity_get(char* name) {

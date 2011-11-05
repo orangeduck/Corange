@@ -48,6 +48,7 @@ int main(int argc, char* argv[]) {
   asset_manager_handler("obj", (void*(*)(char*))obj_load_file, (void(*)(void*))model_delete);
   
   asset_manager_handler("dds", (void*(*)(char*))dds_load_file, (void(*)(void*))texture_delete);
+  asset_manager_handler("lut", (void*(*)(char*))lut_load_file, (void(*)(void*))texture_delete);
   
   asset_manager_handler("vs" , (void*(*)(char*))vs_load_file,  (void(*)(void*))shader_delete);
   asset_manager_handler("fs" , (void*(*)(char*))fs_load_file,  (void(*)(void*))shader_delete);

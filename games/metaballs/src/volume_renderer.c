@@ -37,6 +37,11 @@
 
 */
 
+int width = 256;
+int depth = 256;
+int height = 256;
+
+float threshold = 0.0;
 
 GLuint intensity_volume;
 GLuint color_volume;
@@ -45,12 +50,16 @@ GLuint normals_volume;
 GLuint proj_texture;
 GLuint stencil_texture;
 
-void volume_renderer_init() {
+kernel_memory k_intensity_volume;
+kernel_memory k_color_volume;
+kernel_memory k_normals_volume;
 
-  int grainularity = 256;
-  int width = grainularity;
-  int depth = grainularity;
-  int height = grainularity;
+kernel_memory k_proj_texture;
+kernel_memory k_stencil_texture;
+
+kernel k_flatten;
+
+void volume_renderer_init() {
   
   float* blank_float_volume = calloc(width * height * depth, sizeof(float));
   char* blank_byte_volume = calloc(width * height * depth * 4, sizeof(char));
@@ -74,41 +83,64 @@ void volume_renderer_init() {
   free(blank_byte_volume);
   free(blank_float_volume);
   
-  unsigned char* blank_byte_texture = calloc(width * height * 4, sizeof(char));
-  unsigned char* blank_stencil_texture = calloc(width * height, sizeof(char));
-  
-  int i;
-  for(i = 0; i <width * height * 4; i++) {
-    blank_byte_texture[i] = 128;
-  }
+  char* blank_byte_texture = calloc(width * height * 4, sizeof(char));
+  char* blank_stencil_texture = calloc(width * height, sizeof(char));
   
   glDisable(GL_TEXTURE_3D);
   
   glEnable(GL_TEXTURE_2D);
   glGenTextures(1, &proj_texture);
   glBindTexture(GL_TEXTURE_2D, proj_texture);
+  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, blank_byte_texture);
   SDL_CheckOpenGLError("glTexImage2D");
   
   glGenTextures(1, &stencil_texture);
   glBindTexture(GL_TEXTURE_2D, stencil_texture);
+  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width, height, 0, GL_RED, GL_UNSIGNED_BYTE, blank_stencil_texture);
   SDL_CheckOpenGLError("glTexImage2D");
   
   free(blank_stencil_texture);
   free(blank_byte_texture);
+ 
+  k_intensity_volume = kernel_memory_from_gltexture3D(intensity_volume);
+  k_color_volume = kernel_memory_from_gltexture3D(color_volume);
+  k_normals_volume = kernel_memory_from_gltexture3D(normals_volume);
   
-  SDL_CheckOpenGLError("Blah");
+  k_proj_texture = kernel_memory_from_gltexture2D(proj_texture);
+  k_stencil_texture = kernel_memory_from_gltexture2D(stencil_texture);
+ 
+  kernel_program* program = asset_get("/kernels/volume_rendering.cl");
   
+  k_flatten = kernel_program_get_kernel(program, "volume_flatten");
+  kernel_set_argument(k_flatten, 0, sizeof(cl_int), &width);
+  kernel_set_argument(k_flatten, 1, sizeof(cl_int), &height);
+  kernel_set_argument(k_flatten, 2, sizeof(cl_int), &depth);
+  kernel_set_argument(k_flatten, 3, sizeof(cl_float), &threshold);
+  kernel_set_argument(k_flatten, 4, sizeof(kernel_memory), &k_proj_texture);
+  kernel_set_argument(k_flatten, 5, sizeof(kernel_memory), &k_stencil_texture);
+  kernel_set_argument(k_flatten, 6, sizeof(kernel_memory), &k_intensity_volume);
+  kernel_set_argument(k_flatten, 7, sizeof(kernel_memory), &k_color_volume);
+  kernel_set_argument(k_flatten, 8, sizeof(kernel_memory), &k_normals_volume);
+ 
 }
 
 void volume_renderer_finish() {
+
+  kernel_memory_delete(k_intensity_volume);
+  kernel_memory_delete(k_color_volume);
+  kernel_memory_delete(k_normals_volume);
+  
+  kernel_memory_delete(k_proj_texture);
+  kernel_memory_delete(k_stencil_texture);
 
   glEnable(GL_TEXTURE_3D);
   glDeleteTextures(1, &intensity_volume);
   glDeleteTextures(1, &color_volume);
   glDeleteTextures(1, &normals_volume);
-  
   glDisable(GL_TEXTURE_3D);
   
   glEnable(GL_TEXTURE_2D);
@@ -122,6 +154,20 @@ void volume_renderer_begin() {
 }
 
 void volume_renderer_end() {
+  
+  kernel_memory_gl_aquire(k_proj_texture);
+  kernel_memory_gl_aquire(k_stencil_texture);
+  kernel_memory_gl_aquire(k_intensity_volume);
+  kernel_memory_gl_aquire(k_color_volume);
+  kernel_memory_gl_aquire(k_normals_volume);
+  
+  kernel_run(k_flatten, width * height, width);
+  
+  kernel_memory_gl_release(k_proj_texture);
+  kernel_memory_gl_release(k_stencil_texture);
+  kernel_memory_gl_release(k_intensity_volume);
+  kernel_memory_gl_release(k_color_volume);
+  kernel_memory_gl_release(k_normals_volume);
   
 	glMatrixMode(GL_PROJECTION);
   glPushMatrix();
@@ -139,8 +185,8 @@ void volume_renderer_end() {
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   
   glActiveTexture(GL_TEXTURE0 + 0 );
-  glEnable(GL_TEXTURE_2D);
   glBindTexture(GL_TEXTURE_2D, proj_texture);
+  glEnable(GL_TEXTURE_2D);
   
 	glBegin(GL_QUADS);
 		glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0, -1.0,  0.0f);
@@ -164,7 +210,18 @@ void volume_renderer_end() {
   
 }
 
-void volume_renderer_render_function() {
+void volume_renderer_render_point(vector3 point, camera* cam) {
+  
+  matrix_4x4 view_matrix = camera_view_matrix(cam);
+  matrix_4x4 proj_matrix = camera_proj_matrix(cam, viewport_ratio());
+  
+  
+  
+}
 
+void volume_renderer_render_function() {
+  
+  
+  
 }
 

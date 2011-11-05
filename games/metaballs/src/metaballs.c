@@ -207,8 +207,8 @@ void metaballs_render() {
   
   forward_renderer_end();
   
-  //volume_renderer_begin();
-  //volume_renderer_end();
+  volume_renderer_begin();
+  volume_renderer_end();
   
   ui_rectangle_render(ui_box);
   ui_text_render(ui_framerate);

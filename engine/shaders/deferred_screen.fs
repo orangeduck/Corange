@@ -7,6 +7,8 @@ uniform sampler2D shadows_texture;
 
 uniform sampler2D random_texture;
 
+uniform sampler3D color_correction;
+
 uniform vec3 camera_position;
 uniform vec3 light_position;
 
@@ -61,7 +63,11 @@ void main( void )
   vec3 ambient = ambient_amount * ambient_light;
   vec3 specular = shadow * spec_amount * specular_light;
   
-	gl_FragColor.rgb = to_gamma(diffuse + ambient + specular);
+  vec3 total = (diffuse + ambient + specular);
+  
+  vec3 final =  texture3D(color_correction, clamp(total,0.01,0.99));
+  
+	gl_FragColor.rgb = to_gamma(final);
 	gl_FragColor.a = 1.0;
 	
 } 

@@ -83,6 +83,13 @@ void kernels_init_with_opengl() {
 
 #endif
 
+  char* extensions = malloc(1024);
+  int size;
+  error = clGetDeviceInfo(device, CL_DEVICE_EXTENSIONS, 1024, extensions, &size);
+  
+  printf("Extensions: %s\n", extensions);
+  free(extensions);
+
 }
 
 void kernels_finish() {
@@ -167,12 +174,20 @@ kernel_memory kernel_memory_from_glbuffer(int buff_obj) {
   return mem;
 }
 
-kernel_memory kernel_memory_from_gltexture(int tex_obj) {
+kernel_memory kernel_memory_from_gltexture2D(int tex_obj) {
   /* 3553 is for GL_TEXTURE_2D - avoids dependancies. */
   kernel_memory mem = clCreateFromGLTexture2D(context, CL_MEM_READ_WRITE, 3553, 0, tex_obj, &error);
   kernels_check_error("clCreateFromGLTexture2D");
   return mem;
 }
+
+kernel_memory kernel_memory_from_gltexture3D(int tex_obj) {
+  /* 32879 is for GL_TEXTURE_3D - avoids dependancies. */
+  kernel_memory mem = clCreateFromGLTexture3D(context, CL_MEM_READ_WRITE, 32879, 0, tex_obj, &error);
+  kernels_check_error("clCreateFromGLTexture3D");
+  return mem;
+}
+
 
 void kernel_memory_gl_aquire(kernel_memory km) {
   error = clEnqueueAcquireGLObjects(queue, 1, &km, 0, NULL, NULL);
