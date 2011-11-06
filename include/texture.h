@@ -22,5 +22,6 @@ texture* dds_load_file( char* filename );
 texture* lut_load_file( char* filename );
 
 void texture_write_to_file(texture* t, char* filename);
+void texture3d_write_to_file(texture* t, char* filename);
 
 #endif

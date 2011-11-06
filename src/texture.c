@@ -92,6 +92,9 @@ texture* lut_load_file( char* filename ) {
   glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB, lut_size, lut_size, lut_size, 0, GL_RGB, GL_UNSIGNED_BYTE, contents + offset);
   glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+  glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+  glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_MIRRORED_REPEAT);
   glDisable(GL_TEXTURE_3D);
   
   *t = tex_id;
@@ -100,6 +103,41 @@ texture* lut_load_file( char* filename ) {
   
   return t;
   
+}
+
+void texture3d_write_to_file(texture* t, char* filename) {
+  
+  int t_width; 
+  int t_height;
+  int t_depth;
+  
+  glEnable(GL_TEXTURE_3D);
+  glBindTexture(GL_TEXTURE_3D, *t);
+  glGetTexLevelParameteriv(GL_TEXTURE_3D, 0, GL_TEXTURE_WIDTH, &t_width);
+  glGetTexLevelParameteriv(GL_TEXTURE_3D, 0, GL_TEXTURE_HEIGHT, &t_height);
+  glGetTexLevelParameteriv(GL_TEXTURE_3D, 0, GL_TEXTURE_DEPTH, &t_depth);
+  
+  int width = t_width;
+  int height = t_height * t_depth;
+  
+  unsigned char* data = malloc(width * height * 4);
+  
+  glGetTexImage(GL_TEXTURE_3D, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+  glDisable(GL_TEXTURE_3D);
+  
+  int xa= width % 256;
+  int xb= (width-xa)/256;
+
+  int ya= height % 256;
+  int yb= (height-ya)/256;
+  unsigned char header[18]={0,0,2,0,0,0,0,0,0,0,0,0,(char)xa,(char)xb,(char)ya,(char)yb,32,0};
+  
+  SDL_RWops* file = SDL_RWFromFile(filename, "wb");
+  SDL_RWwrite(file, header, sizeof(header), 1);
+  SDL_RWwrite(file, data, width * height * 4, 1 );
+  SDL_RWclose(file);
+  
+  free(data);
 }
 
 /* BEGIN DDS STUFF */

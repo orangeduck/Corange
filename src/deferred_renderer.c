@@ -287,9 +287,9 @@ void deferred_renderer_end() {
   glUniform1i(glGetUniformLocation(*SCREEN_PROGRAM, "random_texture"), 5);
   
   glActiveTexture(GL_TEXTURE0 + 6 );
-  glBindTexture(GL_TEXTURE_3D, *(texture*)asset_get("./engine/resources/identity.lut"));
+  glBindTexture(GL_TEXTURE_3D, *(texture*)asset_get("./engine/resources/bluey.lut"));
   glEnable(GL_TEXTURE_3D);
-  glUniform1i(glGetUniformLocation(*SCREEN_PROGRAM, "color_correction"), 6);
+  glUniform1i(glGetUniformLocation(*SCREEN_PROGRAM, "lut"), 6);
   
   GLint cam_position = glGetUniformLocation(*SCREEN_PROGRAM, "camera_position");
   glUniform3f(cam_position, CAMERA->position.x, CAMERA->position.y, CAMERA->position.z);

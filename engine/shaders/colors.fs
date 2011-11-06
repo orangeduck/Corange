@@ -12,6 +12,8 @@ vec3 swap_invert_red_green(vec3 color);
 vec3 tonemap(vec3 color, float exposure, float brightmax);
 vec3 filmic_tonemap(vec3 color, float exposure);
 
+vec3 color_correction(vec3 color, sampler3D lut, int lut_size);
+
 /* End */
 
 vec3 to_gamma(vec3 color) {
@@ -72,4 +74,12 @@ vec3 filmic_tonemap(vec3 color, float exposure) {
   vec3 curr = filmic_map( exposure * color );
   vec3 white_scale = 1.0 / 1.0 / filmic_map( vec3(W,W,W) );
   return curr * white_scale;
+}
+
+vec3 color_correction(vec3 color, sampler3D lut, int lut_size) {
+
+  float scale = (lut_size - 1.0) / lut_size;
+  float offset = 1.0 / (2.0 * lut_size);
+
+  return texture3D(lut, clamp(color, 0, 1) * scale + offset).rgb;
 }
