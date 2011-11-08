@@ -31,6 +31,8 @@ kernel_memory kernel_memory_from_gltexture3D(int tex_obj);
 void kernel_memory_gl_aquire(kernel_memory km);
 void kernel_memory_gl_release(kernel_memory km);
 
+void kernel_memory_copy_to_texture(kernel_memory km, kernel_memory tex, int width, int height, int depth);
+
 void kernel_memory_delete(kernel_memory km);
 void kernel_memory_write(kernel_memory km, int size, void* src);
 void kernel_memory_read(kernel_memory km, int size, void* dst);

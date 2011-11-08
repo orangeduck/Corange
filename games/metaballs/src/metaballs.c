@@ -100,6 +100,7 @@ void metaballs_init() {
   ui_box->border_color = v4_white();
   
   volume_renderer_init();
+  volume_renderer_set_camera(cam);
   
 }
 
@@ -131,6 +132,7 @@ void metaballs_update() {
   particles_update(frame_time() / 10);
   
   ui_text_update_string(ui_framerate, frame_rate_string());
+  
 }
 
 static float proj_matrix[16];
@@ -155,7 +157,9 @@ void metaballs_render() {
   glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
   
   forward_renderer_render_static(s_floor);
-  
+    
+    /*
+    
     glUseProgram(*particle_program);
     
     glDisable(GL_DEPTH_TEST);
@@ -204,10 +208,13 @@ void metaballs_render() {
     glDisable(GL_BLEND);
     
     glUseProgram(0);
+    
+    */
   
   forward_renderer_end();
   
   volume_renderer_begin();
+  volume_renderer_render_point(v3(5,5,5), v3_blue());
   volume_renderer_end();
   
   ui_rectangle_render(ui_box);

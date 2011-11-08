@@ -188,6 +188,12 @@ kernel_memory kernel_memory_from_gltexture3D(int tex_obj) {
   return mem;
 }
 
+void kernel_memory_copy_to_texture(kernel_memory km, kernel_memory tex, int width, int height, int depth) {
+  const size_t origin[3] = {0, 0, 0};
+  const size_t range[3] = {width, height, depth};
+  error = clEnqueueCopyBufferToImage(queue, km, tex, 0, origin, range, 0, NULL, NULL);
+  kernels_check_error("clEnqueueCopyBufferToImage");
+}
 
 void kernel_memory_gl_aquire(kernel_memory km) {
   error = clEnqueueAcquireGLObjects(queue, 1, &km, 0, NULL, NULL);

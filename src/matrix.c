@@ -1,5 +1,6 @@
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "matrix.h"
 
@@ -25,13 +26,24 @@ matrix_2x2 m22_zero() {
   return mat;
 }
 
+matrix_2x2 m22(float xx, float xy, float yx, float yy) {
+  matrix_2x2 mat;
+  
+  mat.xx = xx;
+  mat.xy = xy;
+  mat.yx = yx;
+  mat.yy = yy;
+  
+  return mat;
+}
+
 matrix_2x2 m22_mul_m22(matrix_2x2 m1, matrix_2x2 m2) {
   matrix_2x2 mat;
   
   mat.xx = m1.xx * m2.xx + m1.xy * m2.yx;
   mat.xy = m1.xx * m2.xy + m1.xy * m2.yy;
   mat.yx = m1.yx * m2.xx + m1.yy * m2.yx;
-  mat.yx = m1.yx * m2.xy + m1.yy * m2.yy;
+  mat.yy = m1.yx * m2.xy + m1.yy * m2.yy;
   
   return mat;
 }
@@ -43,6 +55,38 @@ vector2 m22_mul_v2(matrix_2x2 m, vector2 v) {
   vec.y = v.x * m.yx + v.y * m.yy;
   
   return vec;
+}
+
+matrix_2x2 m22_transpose(matrix_2x2 m) {
+  matrix_2x2 ret;
+  ret.xx = m.xx;
+  ret.xy = m.yx;
+  ret.yx = m.xy;
+  ret.yy = m.yy;
+  return ret;
+}
+
+float m22_det(matrix_2x2 m) {
+  return m.xx * m.yy - m.xy * m.yx;
+}
+
+matrix_2x2 m22_inverse(matrix_2x2 m) {
+  float det = m22_det(m);
+  printf("Det: %f\n", det);
+  if (det == 0) {
+    printf("Error: Inverting non-singular 2x2 matrix.\n");
+    exit(EXIT_FAILURE);
+  }
+  float fac = 1.0 / det;
+  
+  matrix_2x2 ret;
+  
+  ret.xx = fac * m.yy;
+  ret.xy = fac * -m.xy;
+  ret.yx = fac * -m.yx;
+  ret.yy = fac * m.xx;
+  
+  return ret; 
 }
 
 void m22_to_array(matrix_2x2 m, float* out) {
@@ -69,6 +113,8 @@ matrix_2x2 m22_rotation(float a) {
   
   return m;
 }
+
+/* Matrix 3x3 */
 
 matrix_3x3 m33_zero() {
   matrix_3x3 mat;
@@ -106,6 +152,25 @@ matrix_3x3 m33_id() {
   return mat;
 }
 
+matrix_3x3 m33(float xx, float xy, float xz,
+               float yx, float yy, float yz,
+               float zx, float zy, float zz) {
+  matrix_3x3 mat;
+  
+  mat.xx = xx;
+  mat.xy = xy;
+  mat.xz = xz;
+  
+  mat.yx = yx;
+  mat.yy = yy;
+  mat.yz = yz;
+  
+  mat.zx = zx;
+  mat.zy = zy;
+  mat.zz = zz;   
+  
+  return mat;         
+}
 
 matrix_3x3 m33_mul_m33(matrix_3x3 m1, matrix_3x3 m2) {
   matrix_3x3 mat;
@@ -138,6 +203,54 @@ vector3 m33_mul_v3(matrix_3x3 m, vector3 v) {
 
 }
 
+matrix_3x3 m33_transpose(matrix_3x3 m) {
+  matrix_3x3 ret;
+  ret.xx = m.xx;
+  ret.xy = m.yx;
+  ret.xz = m.zx;
+  
+  ret.yx = m.xy;
+  ret.yy = m.yy;
+  ret.yz = m.zy;
+  
+  ret.zx = m.xz;
+  ret.zy = m.yz;
+  ret.zz = m.zz;
+  return ret;
+}
+
+float m33_det(matrix_3x3 m) {
+  return (m.xx * m.yy * m.zz) + (m.xy * m.yz * m.zx) + (m.xz * m.yx * m.zy) -
+         (m.xz * m.yy * m.zx) - (m.xy * m.yx * m.zz) - (m.xx * m.yz * m.zy);
+}
+
+matrix_3x3 m33_inverse(matrix_3x3 m) {
+
+  float det = m33_det(m);
+  printf("Det: %f\n",det);
+  if (det == 0) {
+    printf("Error: Inverting non-singular 3x3 matrix.\n");
+    exit(EXIT_FAILURE);
+  }
+  
+  float fac = 1.0 / det;
+  
+  matrix_3x3 ret;
+  ret.xx = fac * m22_det(m22(m.yy, m.yz, m.zy, m.zz));
+  ret.xy = fac * m22_det(m22(m.xz, m.xy, m.zz, m.zy));
+  ret.xz = fac * m22_det(m22(m.xy, m.xz, m.yy, m.yz));
+  
+  ret.yx = fac * m22_det(m22(m.yz, m.yx, m.zz, m.zx));
+  ret.yy = fac * m22_det(m22(m.xx, m.xz, m.zx, m.zz));
+  ret.yz = fac * m22_det(m22(m.xz, m.xx, m.yz, m.yx));
+  
+  ret.zx = fac * m22_det(m22(m.yx, m.yy, m.zx, m.zy));
+  ret.zy = fac * m22_det(m22(m.xy, m.xx, m.zy, m.zx));
+  ret.zz = fac * m22_det(m22(m.xx, m.xy, m.yx, m.yy));
+  
+  return ret;
+  
+}
 
 void m33_to_array(matrix_3x3 m, float* out) {
 
@@ -153,6 +266,12 @@ void m33_to_array(matrix_3x3 m, float* out) {
   out[7] = m.yz;
   out[8] = m.zz;
   
+}
+
+void m33_print(matrix_3x3 m) {
+  printf("|%4.2f, %4.2f, %4.2f|\n", m.xx, m.xy, m.xz);
+  printf("|%4.2f, %4.2f, %4.2f|\n", m.yx, m.yy, m.yz);
+  printf("|%4.2f, %4.2f, %4.2f|\n", m.yx, m.yy, m.zz);
 }
 
 matrix_3x3 m33_rotation_x(float a) {
@@ -217,6 +336,8 @@ matrix_3x3 m33_rotation_axis_angle(vector3 v, float angle) {
   return m;
 }
 
+/* Matrix 4x4 */
+
 matrix_4x4 m44_zero() {
   matrix_4x4 mat;
   
@@ -241,7 +362,7 @@ matrix_4x4 m44_zero() {
   mat.ww = 0.0f;
   
   return mat;
-};
+}
 
 matrix_4x4 m44_id(){
   
@@ -254,7 +375,37 @@ matrix_4x4 m44_id(){
   
   
   return mat;
-};
+}
+
+matrix_4x4 m44(float xx, float xy, float xz, float xw,
+               float yx, float yy, float yz, float yw,
+               float zx, float zy, float zz, float zw,
+               float wx, float wy, float wz, float ww) {
+         
+  matrix_4x4 mat;
+  
+  mat.xx = xx;
+  mat.xy = xy;
+  mat.xz = xz;
+  mat.xw = xw;
+  
+  mat.yx = yx;
+  mat.yy = yy;
+  mat.yz = yz;
+  mat.yw = yw;
+  
+  mat.zx = zx;
+  mat.zy = zy;  
+  mat.zz = zz;
+  mat.zw = zw;
+  
+  mat.wx = wx;
+  mat.wy = wy;
+  mat.wz = wz;
+  mat.ww = ww;
+  
+  return mat;         
+}
 
 matrix_4x4 m44_transpose(matrix_4x4 m) {
   matrix_4x4 mat;
@@ -272,7 +423,7 @@ matrix_4x4 m44_transpose(matrix_4x4 m) {
   mat.zx = m.xz;
   mat.zy = m.yz;  
   mat.zz = m.zz;
-  mat.zw = m.xw;
+  mat.zw = m.wz;
   
   mat.wx = m.xw;
   mat.wy = m.yw;
@@ -307,7 +458,7 @@ matrix_4x4 m33_to_m44(matrix_3x3 m) {
   mat.wz = 1.0f;
   
   return mat;
-};
+}
 
 matrix_4x4 m44_mul_m44(matrix_4x4 m1, matrix_4x4 m2) {
 
@@ -367,8 +518,54 @@ matrix_3x3 m44_to_m33(matrix_4x4 m) {
   
   return mat;
   
-};
+}
 
+float m44_det(matrix_4x4 m) {
+  
+  float cofact_xx =  m33_det(m33(m.yy, m.yz, m.yw, m.zy, m.zz, m.zw, m.wy, m.wz, m.ww));
+  float cofact_xy = -m33_det(m33(m.yx, m.yz, m.yw, m.zx, m.zz, m.zw, m.wx, m.wz, m.ww));
+  float cofact_xz =  m33_det(m33(m.yx, m.yy, m.yw, m.zx, m.zy, m.zw, m.wx, m.wy, m.ww));
+  float cofact_xw = -m33_det(m33(m.yx, m.yy, m.yz, m.zx, m.zy, m.zz, m.wx, m.wy, m.wz));
+  
+  return (cofact_xx * m.xx) + (cofact_xy * m.xy) + (cofact_xz * m.xz) + (cofact_xw * m.xw);
+}
+
+matrix_4x4 m44_inverse(matrix_4x4 m) {
+    
+  float det = m44_det(m);
+  
+  if (det == 0) {
+    printf("Error: Inverting non-singular 4x4 matrix.\n");
+    exit(EXIT_FAILURE);
+  }
+  
+  float fac = 1.0 / det;
+  
+  matrix_4x4 ret;
+  ret.xx = fac *  m33_det(m33(m.yy, m.yz, m.yw, m.zy, m.zz, m.zw, m.wy, m.wz, m.ww));
+  ret.xy = fac * -m33_det(m33(m.yx, m.yz, m.yw, m.zx, m.zz, m.zw, m.wx, m.wz, m.ww));
+  ret.xz = fac *  m33_det(m33(m.yx, m.yy, m.yw, m.zx, m.zy, m.zw, m.wx, m.wy, m.ww));
+  ret.xw = fac * -m33_det(m33(m.yx, m.yy, m.yz, m.zx, m.zy, m.zz, m.wx, m.wy, m.wz));
+  
+  ret.yx = fac * -m33_det(m33(m.xy, m.xz, m.xw, m.zy, m.zz, m.zw, m.wy, m.wz, m.ww));
+  ret.yy = fac *  m33_det(m33(m.xx, m.xz, m.xw, m.zx, m.zz, m.zw, m.wx, m.wz, m.ww));
+  ret.yz = fac * -m33_det(m33(m.xx, m.xy, m.xw, m.zx, m.zy, m.zw, m.wx, m.wy, m.ww));
+  ret.yw = fac *  m33_det(m33(m.xx, m.xy, m.xz, m.zx, m.zy, m.zz, m.wx, m.wy, m.wz));
+  
+  ret.zx = fac *  m33_det(m33(m.xy, m.xz, m.xw, m.yy, m.yz, m.yw, m.wy, m.wz, m.ww));
+  ret.zy = fac * -m33_det(m33(m.xx, m.xz, m.xw, m.yx, m.yz, m.yw, m.wx, m.wz, m.ww));
+  ret.zz = fac *  m33_det(m33(m.xx, m.xy, m.xw, m.yx, m.yy, m.yw, m.wx, m.wy, m.ww));
+  ret.zw = fac * -m33_det(m33(m.xx, m.xy, m.xz, m.yx, m.yy, m.yz, m.wx, m.wy, m.wz));
+  
+  ret.wx = fac * -m33_det(m33(m.xy, m.xz, m.xw, m.yy, m.yz, m.yw, m.zy, m.zz, m.zw));
+  ret.wy = fac *  m33_det(m33(m.xx, m.xz, m.xw, m.yx, m.yz, m.yw, m.zx, m.zz, m.zw));
+  ret.wz = fac * -m33_det(m33(m.xx, m.xy, m.xw, m.yx, m.yy, m.yw, m.zx, m.zy, m.zw));
+  ret.ww = fac *  m33_det(m33(m.xx, m.xy, m.xz, m.yx, m.yy, m.yz, m.zx, m.zy, m.zz));
+  
+  ret = m44_transpose(ret);
+  
+  return ret;
+}
 
 void m44_to_array(matrix_4x4 m, float* out) {
   
