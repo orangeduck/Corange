@@ -362,16 +362,16 @@ void material_print(material* mat) {
       printf("Float : %s : %f\n", key, *((float*)property) );
     
     } else if (*type == mat_type_vector2) {
-      printf("Vector2 : %s : "); v2_print(*((vector2*)property)); printf("\n");
+      printf("Vector2 : %s : ", key); v2_print(*((vector2*)property)); printf("\n");
     
     } else if (*type == mat_type_vector3) {
-      printf("Vector3 : %s : "); v3_print(*((vector3*)property)); printf("\n");
+      printf("Vector3 : %s : ", key); v3_print(*((vector3*)property)); printf("\n");
   
     } else if (*type == mat_type_vector4) {
-      printf("Vector4 : %s : "); v4_print(*((vector4*)property)); printf("\n");
+      printf("Vector4 : %s : ", key); v4_print(*((vector4*)property)); printf("\n");
     
     } else {
-      printf("Unknown Type %s\n");
+      printf("Unknown Type %s\n", key);
     }
      
   }

@@ -54,6 +54,7 @@ void model_delete(model* m);
 void model_generate_tangents(model* m);
 void model_generate_orthagonal_tangents(model* m);
 void model_add_mesh(model* main_model, mesh* sub_mesh);
+void model_merge_model(model* m1, model* m2);
 void model_print(model* m);
 float model_surface_area(model* m);
 

@@ -130,11 +130,11 @@ void particles_update(float timestep) {
   kernel_memory_gl_aquire(k_particle_lifetimes);
   kernel_memory_gl_aquire(k_particle_randoms);
   
-  kernel_set_argument(k_update, 6, sizeof(float), &timestep);
-  kernel_set_argument(k_update, 7, sizeof(int), &reset);
-  kernel_run(k_update, particle_count, particle_count);
-  
-  reset = 0;
+    kernel_set_argument(k_update, 6, sizeof(float), &timestep);
+    kernel_set_argument(k_update, 7, sizeof(int), &reset);
+    kernel_run(k_update, particle_count);
+    
+    reset = 0;
   
   kernel_memory_gl_release(k_particle_positions);
   kernel_memory_gl_release(k_particle_velocities);

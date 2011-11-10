@@ -26,7 +26,7 @@ void scripting_finish() {
 
 script* lua_load_file(const char* filename) {
 
-  printf("loading: %s\n");
+  printf("loading: %s\n", filename);
 
   script* s = malloc(sizeof(script));
   

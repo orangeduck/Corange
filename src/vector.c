@@ -85,6 +85,7 @@ float binearest_neighbor_interpolation(float top_left, float top_right, float bo
   if( !x_amount && !y_amount ) { return bottom_left; }
   if( x_amount && y_amount ) { return top_right; }
   
+  return 0.0f;
 }
 
 float bilinear_interpolation(float top_left, float top_right, float bottom_left, float bottom_right, float x_amount, float y_amount) {

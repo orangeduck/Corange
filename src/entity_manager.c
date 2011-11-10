@@ -50,7 +50,7 @@ entity* entity_new(char* name, int type) {
 
   if ( dictionary_contains(entities, name) ) {
     printf("Warning: Entity Manager already contains entity called %s! Not added.\n", name);
-    return;
+    exit(EXIT_FAILURE);
   }
   
   entity* e;
@@ -81,7 +81,7 @@ entity* entity_new(char* name, int type) {
   char* name_copy = malloc(strlen(name) + 1);
   strcpy(name_copy, name);
   list_push_back(entity_names, name_copy);
-
+  
   return e;
 }
 

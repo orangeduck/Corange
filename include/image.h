@@ -19,7 +19,7 @@ const static int image_repeat_mirror = 2;
 const static int image_sample_linear = 0;
 const static int image_sample_nearest = 1;
 
-image* image_new(int width, int height, char* data);
+image* image_new(int width, int height, unsigned char* data);
 image* image_empty(int width, int height);
 image* image_blank(int width, int height);
 

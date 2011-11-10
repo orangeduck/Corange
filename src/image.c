@@ -12,7 +12,7 @@
 
 #include "SDL/SDL.h"
 
-image* image_new(int width, int height, char* data) {
+image* image_new(int width, int height, unsigned char* data) {
   
   image* i = malloc(sizeof(image));
   i->data = malloc(width * height * 4);
@@ -404,6 +404,9 @@ vector4 image_sample(image* i, vector2 uv) {
     return v4_bilinear_interpolation(s1, s2, s3, s4, amount_x, amount_y);
   } else if ( i->sample_type == image_sample_nearest ) {
     return v4_binearest_neighbor_interpolation(s1, s2, s3, s4, amount_x, amount_y);
+  } else {
+    printf("Error: Unknown Sampling type %i\n", i->sample_type);
+    exit(EXIT_FAILURE);
   }
   
 }
@@ -898,7 +901,7 @@ void image_write_to_file(image* i, char* filename) {
   if ( strcmp(ext, "tga") == 0 ) {
     tga_save_file(i, filename);
   } else {
-    printf("Error: Cannot save texture to &s, unknown file extension %s. Try .tga!\n", filename, ext);
+    printf("Error: Cannot save texture to %s, unknown file extension %s. Try .tga!\n", filename, ext);
   }
   
   free(ext);
@@ -911,12 +914,13 @@ image* bmp_load_file(char* filename) {
   surface = SDL_LoadBMP(filename);
    
   if (!surface) {
-    printf("Error: Could not load file %s: %s\n",filename , SDL_GetError());
-    return NULL;
+    printf("Error: Could not load file %s\n", filename);
+    exit(EXIT_FAILURE);
   }
   
   if (surface->format->BytesPerPixel != 4) {
-    printf("Error loading %s. Needs four channels!");
+    printf("Error loading %s. Needs four channels!", filename);
+    exit(EXIT_FAILURE);
   }
 
   image* i = image_new(surface->w, surface->h, surface->pixels);

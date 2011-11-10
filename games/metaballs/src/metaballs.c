@@ -17,6 +17,9 @@ const int max_particles = 1000;
 static ui_text* ui_framerate;
 static ui_rectangle* ui_box;
 
+vector3 pos1;
+vector3 pos2;
+
 void metaballs_init() {
   
   load_folder("/kernels/");
@@ -42,7 +45,7 @@ void metaballs_init() {
   cam->target = v3(0.0, 5.0, 0.0);
   
   light* sun = entity_new("sun", entity_type_light);
-  sun->position = v3(30,43,-26);
+  sun->position = v3(30,20,-26);
   sun->ambient_color = v3(0.5, 0.5, 0.5);
   sun->diffuse_color = v3(0.75, 0.75, 0.75);
   light_set_type(sun, light_type_spot);  
@@ -101,6 +104,10 @@ void metaballs_init() {
   
   volume_renderer_init();
   volume_renderer_set_camera(cam);
+  volume_renderer_set_light(sun);
+  
+  pos1 = v3(0, 10, 0);
+  pos2 = v3(0, 5, 0);
   
 }
 
@@ -214,7 +221,9 @@ void metaballs_render() {
   forward_renderer_end();
   
   volume_renderer_begin();
-  volume_renderer_render_point(v3(5,5,5), v3_blue());
+  volume_renderer_render_point(sun->position, v3_blue());
+  volume_renderer_render_metaball(pos1, v3_red());
+  volume_renderer_render_metaball(pos2, v3_green());
   volume_renderer_end();
   
   ui_rectangle_render(ui_box);
@@ -233,6 +242,13 @@ void metaballs_event(SDL_Event event) {
     
     if (event.key.keysym.sym == SDLK_SPACE) { 
       particles_reset();
+    }
+    
+    if(event.key.keysym.sym == SDLK_UP) {
+      pos1 = v3_add(pos1, v3(0, 0.1, 0));
+    }
+    if(event.key.keysym.sym == SDLK_DOWN) {
+      pos1 = v3_sub(pos1, v3(0, 0.1, 0));
     }
     
   break;

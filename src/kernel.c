@@ -85,7 +85,7 @@ void kernels_init_with_opengl() {
 
   char* extensions = malloc(1024);
   int size;
-  error = clGetDeviceInfo(device, CL_DEVICE_EXTENSIONS, 1024, extensions, &size);
+  error = clGetDeviceInfo(device, CL_DEVICE_EXTENSIONS, 1024, extensions, (size_t*)&size);
   
   printf("Extensions: %s\n", extensions);
   free(extensions);
@@ -112,17 +112,17 @@ kernel_program* cl_load_file(char* filename) {
   const char* source_const = source;
   int src_len = strlen(source);
   
-  cl_program program = clCreateProgramWithSource(context, 1, &source_const, &src_len, &error);
+  cl_program program = clCreateProgramWithSource(context, 1, &source_const, (const size_t*)&src_len, &error);
   kernels_check_error("clCreateProgramWithSource");
 
   error = clBuildProgram(program, 1, &device, NULL, NULL, NULL);
   
   char* build_log;
   int log_size;
-  clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
+  clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG, 0, NULL, (size_t*)&log_size);
   build_log = malloc(log_size+1);
   
-  clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG, log_size, build_log, NULL);
+  clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG, (const size_t)log_size, build_log, NULL);
   build_log[log_size] = '\0';
   printf("%s\n", build_log);
   free(build_log);
@@ -157,8 +157,8 @@ void kernel_delete(kernel k) {
   clReleaseKernel(k);
 }
 
-void kernel_run(kernel k, int worker_count, int work_group_size) {
-  error = clEnqueueNDRangeKernel(queue, k, 1, NULL, &worker_count, &work_group_size, 0, NULL, NULL);
+void kernel_run(kernel k, int worker_count) {
+  error = clEnqueueNDRangeKernel(queue, k, 1, NULL, (const size_t*)&worker_count, NULL, 0, NULL, NULL);
   kernels_check_error("clEnqueueNDRangeKernel");
 }
 

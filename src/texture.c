@@ -76,7 +76,7 @@ void texture_write_to_file(texture* t, char* filename){
 
 texture* lut_load_file( char* filename ) {
   
-  unsigned char* contents = asset_file_contents(filename);
+  char* contents = asset_file_contents(filename);
   
   int head = sizeof("CORANGE-LUT")-1;
   int lut_size = (unsigned char)contents[head] | (unsigned char)contents[head + 1];
@@ -204,6 +204,7 @@ void texture3d_write_to_file(texture* t, char* filename) {
    (pf.dwBBitMask == 0xff) && \
    (pf.dwAlphaBitMask == 0xff000000U))
 
+/* This test will always equal false... */
 #define PF_IS_BGR8(pf) \
   ((pf.dwFlags & DDPF_ALPHAPIXELS) && \
   !(pf.dwFlags & DDPF_ALPHAPIXELS) && \
@@ -317,7 +318,6 @@ texture* dds_load_file( char* filename ){
   glBindTexture(GL_TEXTURE_2D, my_texture);
 
   DDS_header hdr;
-  size_t s = 0;
   int x = 0;
   int y = 0;
   int mipMapCount = 0;
@@ -360,10 +360,9 @@ texture* dds_load_file( char* filename ){
   }
   else if( PF_IS_INDEX8( hdr.sPixelFormat ) ) {
     li = &loadInfoIndex8;
-  }
-  else {
+  } else {
     printf("Error Loading File %s: Unknown DDS File format type.\n", filename);
-    return NULL;
+    exit(EXIT_FAILURE);
   }
   
   glTexParameteri( GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_FALSE );
@@ -411,7 +410,7 @@ texture* dds_load_file( char* filename ){
       SDL_RWread(f, data, 1, size);
       
       for( zz = 0; zz < size; ++zz ) {
-        unpacked[ zz ] = palette[ data[ zz ] ];
+        unpacked[ zz ] = palette[ (short)data[ zz ] ];
       }
       
       glPixelStorei( GL_UNPACK_ROW_LENGTH, y );

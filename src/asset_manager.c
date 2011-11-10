@@ -340,10 +340,10 @@ char* asset_file_location(char* filename) {
   i++;
   len++;
   
-  char* main = malloc(len+1);
-  memcpy(main, filename, len);
-  main[len] = '\0';
+  char* loc = malloc(len+1);
+  memcpy(loc, filename, len);
+  loc[len] = '\0';
   
-  return main;
+  return loc;
   
 }

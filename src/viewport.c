@@ -1,5 +1,6 @@
 #include "texture.h"
 #include "game.h"
+#include "timing.h"
 
 #include "viewport.h"
 
