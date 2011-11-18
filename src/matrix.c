@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "error.h"
+
 #include "matrix.h"
 
 matrix_2x2 m22_id() {
@@ -71,11 +73,10 @@ float m22_det(matrix_2x2 m) {
 }
 
 matrix_2x2 m22_inverse(matrix_2x2 m) {
+
   float det = m22_det(m);
-  printf("Det: %f\n", det);
   if (det == 0) {
-    printf("Error: Inverting non-singular 2x2 matrix.\n");
-    exit(EXIT_FAILURE);
+    error("Cannot Invert non-singular 2x2 matrix.");
   }
   float fac = 1.0 / det;
   
@@ -227,10 +228,8 @@ float m33_det(matrix_3x3 m) {
 matrix_3x3 m33_inverse(matrix_3x3 m) {
 
   float det = m33_det(m);
-  printf("Det: %f\n",det);
   if (det == 0) {
-    printf("Error: Inverting non-singular 3x3 matrix.\n");
-    exit(EXIT_FAILURE);
+    error("Cannot Invert non-singular 3x3 matrix.");
   }
   
   float fac = 1.0 / det;
@@ -533,10 +532,8 @@ float m44_det(matrix_4x4 m) {
 matrix_4x4 m44_inverse(matrix_4x4 m) {
     
   float det = m44_det(m);
-  
   if (det == 0) {
-    printf("Error: Inverting non-singular 4x4 matrix.\n");
-    exit(EXIT_FAILURE);
+    error("Cannot Invert non-singular 4x4 matrix.");
   }
   
   float fac = 1.0 / det;

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "error.h"
 #include "asset_manager.h"
 #include "vector.h"
 #include "texture.h"
@@ -302,8 +303,7 @@ void material_parse_line(material* mat, char* line) {
     return;
   }
   
-  printf("Error reading material file line: %s\n", line);
-  exit(EXIT_FAILURE);
+  error("Cannot read material file line: %s\n", line);
   
 }
 

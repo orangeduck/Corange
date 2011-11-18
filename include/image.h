@@ -76,6 +76,7 @@ void image_mask_nor(image* i, image* i2);
 void image_mask_nand(image* i, image* i2);
 void image_mask_xnor(image* i, image* i2);
 
+image* tga_load_file(char* filename);
 image* bmp_load_file(char* filename);
 
 void tga_save_file(image* i, char* filename);

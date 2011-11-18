@@ -2,6 +2,8 @@
 #include <dirent.h>
 #include <stdio.h>
 
+#include "error.h"
+
 #include "SDL/SDL_rwops.h"
 
 #include "asset_manager.h"
@@ -16,8 +18,9 @@ typedef struct {
 
 } asset_handler;
 
-static asset_handler asset_handlers[512];
-static int num_handlers = 0;
+#define MAX_HANDLERS 512
+asset_handler asset_handlers[MAX_HANDLERS];
+int num_handlers = 0;
 
 static char* asset_manager_game_name;
 
@@ -46,7 +49,7 @@ char* asset_map_filename(char* filename) {
     return new_filename;
     
   } else {
-    printf("Warning: Unsure how to convert path '%s' into a real path.\n", filename);
+    warning("Unsure how to convert path '%s' into an asset path.", filename);
     return filename;
   }
 
@@ -112,14 +115,18 @@ void asset_manager_finish() {
 }
 
 
-void asset_manager_handler(char* extension, void* load_func(char*) , void del_func(void*) ) {
+void asset_manager_handler(char* extension, void* asset_loader(char* filename) , void asset_deleter(void* asset) ) {
+  
+  if(num_handlers == MAX_HANDLERS) {
+    warning("Max number of asset handlers reached. Handler for extension %s not added.", extension);
+  }
   
   asset_handler h;
   char* c = malloc(strlen(extension) + 1);
   strcpy(c, extension);
   h.extension = c;
-  h.load_func = load_func;
-  h.del_func = del_func;
+  h.load_func = asset_loader;
+  h.del_func = asset_deleter;
 
   asset_handlers[num_handlers] = h;
   num_handlers++;
@@ -131,8 +138,7 @@ void load_file(char* filename) {
   filename = asset_map_filename(filename);
   
   if (dictionary_contains(asset_dictionary, filename)) {
-    printf("Error: Asset %s already loaded\n", filename);
-    exit(EXIT_FAILURE);
+    error("Asset %s already loaded", filename);
   }
   
   char* ext = asset_file_extension(filename);
@@ -181,7 +187,7 @@ void load_folder(char* folder) {
     printf("\n\n"); fflush(stdout);
   
   } else {
-    printf("Error: Could not open directory %s\n", folder); fflush(stdout);
+    error("Could not open directory %s", folder);
   }
   
 };
@@ -254,7 +260,7 @@ void unload_folder(char* folder) {
     printf("\n\n"); fflush(stdout);
   
   } else {
-    printf("Error: Could not open directory %s\n", folder); fflush(stdout);
+    warning("Could not open directory %s\n", folder);
   }
 
 };
@@ -263,9 +269,8 @@ void* asset_get(char* path) {
   path = asset_map_filename(path);
   void* val = dictionary_get(asset_dictionary, path);
   if (val == NULL) {
-    printf("Error: Could not find asset %s. Perhaps it is not loaded yet?", path);
-    exit(EXIT_FAILURE);
-  };
+    error("Could not find asset %s. Perhaps it is not loaded yet?", path);
+  }
   return val;
 };
 
@@ -285,8 +290,7 @@ char* asset_file_contents(char* filename) {
   SDL_RWops* file = SDL_RWFromFile(filename, "r");
   
   if(file == NULL) {
-    printf("Error Loading File %s: Can't find file.\n", filename);
-    exit(EXIT_FAILURE);
+    error("Can't find file %s", filename);
   }
   
   long size = SDL_RWseek(file,0,SEEK_END);

@@ -7,6 +7,7 @@
 #endif
 
 #include "asset_manager.h"
+#include "error.h"
 
 #include "CL/cl_gl.h"
 
@@ -78,17 +79,9 @@ void kernels_init_with_opengl() {
   
 #else
   
-  printf("Error: Can't interlop CL with GL unless on windows!\n");
-  exit(STATUS_FAILURE);
+  error("Can't interlop CL with GL unless on windows!");
 
 #endif
-
-  char* extensions = malloc(1024);
-  int size;
-  error = clGetDeviceInfo(device, CL_DEVICE_EXTENSIONS, 1024, extensions, (size_t*)&size);
-  
-  printf("Extensions: %s\n", extensions);
-  free(extensions);
 
 }
 
@@ -101,8 +94,7 @@ void kernels_finish() {
 
 void kernels_check_error(const char* name) {
   if (error != CL_SUCCESS) {
-    printf("OpenCL Error on %s: %i\n", name, error);
-    exit(EXIT_FAILURE);
+    error("OpenCL Error on function %s, id: %i", name, error);
   }
 }
 

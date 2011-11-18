@@ -11,7 +11,7 @@
 /* Info and Utilities */
 
 #include "timing.h"
-#include "logger.h"
+#include "error.h"
 #include "scripting.h"
 #include "viewport.h"
 

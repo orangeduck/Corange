@@ -1,5 +1,6 @@
 #include "asset_manager.h"
 #include "vector.h"
+#include "error.h"
 
 #include "texture.h"
 
@@ -328,14 +329,13 @@ texture* dds_load_file( char* filename ){
   if( hdr.dwMagic != DDS_MAGIC || hdr.dwSize != 124 ||
     !(hdr.dwFlags & DDSD_PIXELFORMAT) || !(hdr.dwFlags & DDSD_CAPS) ) {
     
-    printf("Error Loading File %s: Does not appear to be a .dds file.\n", filename);
-    return NULL;
+    error("Cannot Load File %s: Does not appear to be a .dds file.\n", filename);
   }
 
   x = hdr.dwWidth;
   y = hdr.dwHeight;
 
-  DdsLoadInfo* li;
+  DdsLoadInfo* li = &loadInfoDXT1;
 
   if( PF_IS_DXT1( hdr.sPixelFormat ) ) {
     li = &loadInfoDXT1;
@@ -361,8 +361,7 @@ texture* dds_load_file( char* filename ){
   else if( PF_IS_INDEX8( hdr.sPixelFormat ) ) {
     li = &loadInfoIndex8;
   } else {
-    printf("Error Loading File %s: Unknown DDS File format type.\n", filename);
-    exit(EXIT_FAILURE);
+    error("Cannot Load File %s: Unknown DDS File format type.", filename);
   }
   
   glTexParameteri( GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_FALSE );
@@ -376,8 +375,7 @@ texture* dds_load_file( char* filename ){
     char* data = malloc( size );
     
     if( !data ) {
-      printf("Error Loading File %s: Does not appear to contain any data.\n", filename);
-      return NULL;
+      error("Cannot Load File %s: Does not appear to contain any data.", filename);
     }
     
     cFormat = li->internalFormat;

@@ -1,4 +1,5 @@
 #include "asset_manager.h"
+#include "error.h"
 
 #include "shader.h"
 
@@ -31,8 +32,7 @@ shader* vs_load_file(char* filename) {
   int error = 0;
   glGetShaderiv(*new_shader, GL_COMPILE_STATUS, &error);
   if (error == GL_FALSE) {
-    printf("Error Compiling Shader %s.\n", filename);
-    exit(EXIT_FAILURE);
+    error("Compiler Error on Shader %s.", filename);
   }
   
   return new_shader;
@@ -57,8 +57,7 @@ shader* fs_load_file(char* filename) {
   int error = 0;
   glGetShaderiv(*new_shader, GL_COMPILE_STATUS, &error);
   if (error == GL_FALSE) {
-    printf("Error Compiling Shader %s.\n", filename);
-    exit(EXIT_FAILURE);
+    error("Compiler Error on Shader %s.", filename);
   }
   
   return new_shader;
@@ -149,8 +148,7 @@ shader_program* prog_load_file(char* filename) {
   int error = 0;
   glGetProgramiv(*sp, GL_LINK_STATUS, &error);
   if (error == GL_FALSE) {
-    printf("Error Linking Shader Program %s.\n", filename);
-    exit(EXIT_FAILURE);
+    error("Linking Error on Shader Program %s.", filename);
   }
   
   return sp;
@@ -210,8 +208,7 @@ void shader_program_parse_line(shader_program* program, char* line) {
     return;
   }
   
-  printf("Error reading shader file line: %s\n", line);
-  exit(EXIT_FAILURE);
+  error("Error Reading shader file line: %s", line);
   
 } 
 

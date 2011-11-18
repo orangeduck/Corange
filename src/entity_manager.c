@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "error.h"
 #include "dictionary.h"
 #include "list.h"
 #include "camera.h"
@@ -49,8 +50,7 @@ int entity_exists(char* name) {
 entity* entity_new(char* name, int type) {
 
   if ( dictionary_contains(entities, name) ) {
-    printf("Warning: Entity Manager already contains entity called %s! Not added.\n", name);
-    exit(EXIT_FAILURE);
+    error("Entity Manager already contains entity called %s! Not added.", name);
   }
   
   entity* e;
@@ -68,8 +68,7 @@ entity* entity_new(char* name, int type) {
     e = static_object_new(NULL);
     
   } else {
-    printf("Error: Don't know how to create entity %s. Unknown type id %i!\n", name, type);
-    exit(EXIT_FAILURE);
+    error("Don't know how to create entity %s. Unknown type id %i!", name, type);
   }
   
   dictionary_set(entities, name, e);
@@ -88,7 +87,7 @@ entity* entity_new(char* name, int type) {
 void entity_add(char* name, int type, entity* entity) {
 
   if ( entity_exists(name) ) {
-    printf("Warning: Entity Manager already contains entity called %s! Not added.\n", name);
+    warning("Entity Manager already contains entity called %s! Not added.", name);
     return;
   }
   
@@ -106,8 +105,7 @@ void entity_add(char* name, int type, entity* entity) {
 entity* entity_get(char* name) {
   
   if ( !entity_exists(name) ) {
-    printf("Error: Entity %s does not exist!", name);
-    exit(EXIT_FAILURE);
+    error("Entity %s does not exist!", name);
   }
   
   return dictionary_get(entities, name);
@@ -132,8 +130,7 @@ void entity_delete(char* name) {
    dictionary_remove_with(entities, name, (void (*)(void *))static_object_delete);
     
   } else {
-    printf("Error: Don't know how to delete entity %s. Unknown type id %i!\n", name, type);
-    exit(EXIT_FAILURE);
+    error("Don't know how to delete entity %s. Unknown type id %i!", name, type);
   }
   
 }

@@ -6,8 +6,7 @@
 
 #include "vector.h"
 
-int rawcast(float x)
-{
+int rawcast(float x) {
   union {
     float f;
     int i;

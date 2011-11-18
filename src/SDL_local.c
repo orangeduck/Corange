@@ -1,5 +1,7 @@
-#include "SDL/SDL_local.h"
+#include "error.h"
+
 #include "SDL/SDL_rwops.h"
+#include "SDL/SDL_local.h"
 
 GLCREATESHADERFN glCreateShader;
 GLCREATEPROGRAMFN glCreateProgram;
@@ -52,43 +54,36 @@ void SDL_CheckOpenGLError(const char* name) {
   switch (glGetError()) {
     
     case GL_INVALID_ENUM:
-      printf("OpenGL Error on %s: Invalid Enum\n", name);
-      exit(EXIT_FAILURE);
+      error("OpenGL Error on function %s: Invalid Enum", name);
     break;
     
     case GL_INVALID_VALUE:
-      printf("OpenGL Error on %s: Invalid Value\n", name);
-      exit(EXIT_FAILURE);
+      error("OpenGL Error on function %s: Invalid Value", name);
     break;
     
     case GL_INVALID_OPERATION:
-      printf("OpenGL Error on %s: Invalid Operation\n", name);
+      error("OpenGL Error on function %s: Invalid Operation", name);
       exit(EXIT_FAILURE);
     break;
   
     case GL_OUT_OF_MEMORY:
-      printf("OpenGL Error on %s: Out of Memory\n", name);
-      exit(EXIT_FAILURE);
+      error("OpenGL Error on function %s: Out of Memory", name);
     break;
   
     case GL_INVALID_FRAMEBUFFER_OPERATION:
-      printf("OpenGL Error on %s: Invalid FrameBuffer Operation\n", name);
-      exit(EXIT_FAILURE);
+      error("OpenGL Error on function %s: Invalid FrameBuffer Operation", name);
     break;
   
     case GL_STACK_OVERFLOW:
-      printf("OpenGL Error on %s: Stack Overflow\n", name);
-      exit(EXIT_FAILURE);
+      error("OpenGL Error on function %s: Stack Overflow", name);
     break;
     
     case GL_STACK_UNDERFLOW:
-      printf("OpenGL Error on %s: Stack Underflow\n", name);
-      exit(EXIT_FAILURE);
+      error("OpenGL Error on function %s: Stack Underflow", name);
     break;
     
     case GL_TABLE_TOO_LARGE:
-      printf("OpenGL Error on %s: Table Too Large\n", name);
-      exit(EXIT_FAILURE);
+      error("OpenGL Error on function %s: Table Too Large", name);
     break;
 
   }
@@ -164,7 +159,6 @@ void SDL_LoadOpenGLExtensions() {
 
 void SDL_CheckOpenGLExtension(const char* name, void* function_pointer) {
   if (function_pointer == NULL) {
-    printf("Failed to load OpenGL extension %s\n", name);
-    exit(EXIT_FAILURE);
+    error("Failed to load OpenGL extension %s", name);
   }  
 }
