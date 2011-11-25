@@ -5,9 +5,6 @@
 
 int vertex_hash(vertex_hashtable* ht, vertex v) {
   int val = abs(v3_hash(v.position) ^ v3_hash(v.normal) ^ v2_hash(v.uvs));
-  
-  //printf("SIZE: %i\n");fflush(stdout);
-  
   return val % ht->table_size;
 }
 

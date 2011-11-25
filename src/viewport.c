@@ -1,5 +1,7 @@
-#include "texture.h"
+#include "error.h"
+#include "image.h"
 #include "game.h"
+#include "timing.h"
 
 #include "viewport.h"
 
@@ -63,7 +65,7 @@ void viewport_restart() {
   // get window handle from SDL
   SDL_VERSION(&info.version);
   if (SDL_GetWMInfo(&info) == -1) {
-  printf("SDL_GetWMInfo #1 failed\n");
+    error("Could not get SDL version info.");
   }
 
   // get device context handle
@@ -72,13 +74,13 @@ void viewport_restart() {
   // create temporary context
   HGLRC tempRC = wglCreateContext( tempDC );
   if (tempRC == NULL) {
-  printf("wglCreateContext failed\n");
+    error("Could not create OpenGL context");
   }
 
   // share resources to temporary context
   SetLastError(0);
   if (!wglShareLists(info.hglrc, tempRC)) {
-  printf("wglShareLists #1 failed\n");
+    error("Could not get OpenGL share lists.");
   }
 #endif
   
@@ -102,17 +104,17 @@ void viewport_restart() {
 #ifdef _WIN32
   SDL_VERSION(&info.version);
   if (SDL_GetWMInfo(&info) == -1) {
-  printf("SDL_GetWMInfo #2 failed\n");
+    error("Could not get SDL version info.");
   }
 
   // share resources to new SDL-created context
   if (!wglShareLists(tempRC, info.hglrc)) {
-  printf("wglShareLists #2 failed\n");
+    error("Could not create OpenGL context");
   }
 
   // we no longer need our temporary context
   if (!wglDeleteContext(tempRC)) {
-  printf("wglDeleteContext failed\n");
+    error("Could not get OpenGL share lists.");
   }
 #endif
   
@@ -201,14 +203,11 @@ static char screenshot_string[256];
 void viewport_screenshot() {
   
   unsigned char* image_data = malloc( sizeof(unsigned char) * viewport_width() * viewport_height() * 4 );
-  glReadPixels( 0, 0, viewport_width(), viewport_height(), GL_BGRA, GL_UNSIGNED_BYTE, image_data ); 
+  glReadPixels( 0, 0, viewport_width(), viewport_height(), GL_RGBA, GL_UNSIGNED_BYTE, image_data ); 
   
-  int xa= viewport_width() % 256;
-  int xb= (viewport_width()-xa)/256;
-
-  int ya= viewport_height() % 256;
-  int yb= (viewport_height()-ya)/256;
-  unsigned char header[18]={0,0,2,0,0,0,0,0,0,0,0,0,(char)xa,(char)xb,(char)ya,(char)yb,32,0};
+  image* i = image_new(viewport_width(), viewport_height(), image_data);
+  
+  free(image_data);
   
   timestamp_sm(timestamp_string);
 
@@ -219,11 +218,8 @@ void viewport_screenshot() {
   strcat(screenshot_string, timestamp_string);
   strcat(screenshot_string, ".tga");
   
-  SDL_RWops* file = SDL_RWFromFile(screenshot_string, "wb");
-  SDL_RWwrite(file, header, sizeof(char) * 18, 1);
-  SDL_RWwrite(file, image_data, sizeof(char) * viewport_width() * viewport_height() * 4, 1 );
-  SDL_RWclose(file);
+  image_write_to_file(i, screenshot_string);
   
-  free(image_data);
+  image_delete(i);
   
 }

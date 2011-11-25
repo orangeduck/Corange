@@ -1,5 +1,6 @@
-Automatic linking of materials to renderables.
-Sometimes computer freezes running corange. NO IDEA WHY.
-Skydome - time of day etc
+PLY loader
+Skydome
+Time of day lighting
+SMD loader
 Skeletal animation
 Fur Shader

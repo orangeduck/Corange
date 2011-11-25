@@ -1,18 +1,20 @@
-#include "image.h"
-
-#include "asset_manager.h"
-
-#include "int_list.h"
-
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
 #include <assert.h>
 
+#include "asset_manager.h"
+
+#include "error.h"
+#include "int_list.h"
+
 #include "SDL/SDL.h"
 
-image* image_new(int width, int height, char* data) {
+#include "image.h"
+
+
+image* image_new(int width, int height, unsigned char* data) {
   
   image* i = malloc(sizeof(image));
   i->data = malloc(width * height * 4);
@@ -304,9 +306,6 @@ image* image_difference_mask(image* src, vector4 color, float tolerance){
 
 }
 
-
-
-
 void image_delete(image* i) {
   free(i->data);
   free(i);
@@ -404,6 +403,8 @@ vector4 image_sample(image* i, vector2 uv) {
     return v4_bilinear_interpolation(s1, s2, s3, s4, amount_x, amount_y);
   } else if ( i->sample_type == image_sample_nearest ) {
     return v4_binearest_neighbor_interpolation(s1, s2, s3, s4, amount_x, amount_y);
+  } else {
+    error("Unknown Sampling type %i\n", i->sample_type);
   }
   
 }
@@ -898,10 +899,74 @@ void image_write_to_file(image* i, char* filename) {
   if ( strcmp(ext, "tga") == 0 ) {
     tga_save_file(i, filename);
   } else {
-    printf("Error: Cannot save texture to &s, unknown file extension %s. Try .tga!\n", filename, ext);
+    warning("Cannot save texture to %s, unknown file extension %s. Try .tga!\n", filename, ext);
   }
   
   free(ext);
+}
+
+image* tga_load_file(char* filename) {
+
+  SDL_RWops* file = SDL_RWFromFile(filename, "rb");
+	if (file == NULL) {
+		error("Cannot open file %s", filename);
+	}
+	
+  uint16_t width, height, depth;
+	
+	/* Seek to the width */
+	SDL_RWseek(file, 12, SEEK_SET);
+	SDL_RWread(file, &width, sizeof(uint16_t), 1);
+	
+	/* Seek to the height */
+	SDL_RWseek(file, 14, SEEK_SET);
+	SDL_RWread(file, &height, sizeof(uint16_t), 1);
+	
+	/* Seek to the depth */
+	SDL_RWseek(file, 16, SEEK_SET);
+	SDL_RWread(file, &depth, sizeof(uint16_t), 1);
+  
+  image* i = image_empty(width, height);
+  
+  int channels;
+	if(depth == 24) {
+		channels = 3;
+	} else {
+		channels = 4;
+	}
+
+	int size = height * width * channels;
+	unsigned char* image_data = malloc(sizeof(unsigned char) * size);
+
+	/* Seek to the image data. */
+	SDL_RWseek(file, 18, SEEK_SET);
+	SDL_RWread(file, image_data, sizeof(unsigned char), size);
+
+  SDL_RWclose(file);
+
+  if(channels == 4) {
+    
+    //memcpy(i->data, image_data, size);
+    
+  } else if (channels == 3) {
+    
+    int x, y;
+    for( x = 0; x < i->width; x++)
+    for( y = 0; y < i->width; y++) {
+      i->data[x * 4 + y * i->width * 4 + 0] = image_data[x * 3 + y * width * 3 + 0];
+      i->data[x * 4 + y * i->width * 4 + 1] = image_data[x * 3 + y * width * 3 + 1];
+      i->data[x * 4 + y * i->width * 4 + 2] = image_data[x * 3 + y * width * 3 + 2];
+      i->data[x * 4 + y * i->width * 4 + 3] = 0;
+    }
+    
+  }
+    
+  free(image_data);
+  
+  image_bgr_to_rgb(i);
+  
+  return i;
+  
 }
 
 image* bmp_load_file(char* filename) {
@@ -911,15 +976,31 @@ image* bmp_load_file(char* filename) {
   surface = SDL_LoadBMP(filename);
    
   if (!surface) {
-    printf("Error: Could not load file %s: %s\n",filename , SDL_GetError());
-    return NULL;
+    error("Could not load file %s\n", filename);
   }
   
-  if (surface->format->BytesPerPixel != 4) {
-    printf("Error loading %s. Needs four channels!");
+  unsigned char* image_data = malloc(sizeof(unsigned char) * 4 * surface->w * surface->h);
+  
+  if (surface->format->BytesPerPixel == 3) {
+    
+    int x, y;
+    for(x = 0; x < surface->w; x++)
+    for(y = 0; y < surface->h; y++) {
+      image_data[x * 4 + y * surface->w * 4 + 0] = ((unsigned char*)surface->pixels)[x * 3 + y * surface->w * 3 + 0];
+      image_data[x * 4 + y * surface->w * 4 + 1] = ((unsigned char*)surface->pixels)[x * 3 + y * surface->w * 3 + 1];
+      image_data[x * 4 + y * surface->w * 4 + 2] = ((unsigned char*)surface->pixels)[x * 3 + y * surface->w * 3 + 2];
+      image_data[x * 4 + y * surface->w * 4 + 3] = 0;
+    }
+    
+  } else if (surface->format->BytesPerPixel == 4) {
+    memcpy(image_data, surface->pixels, sizeof(unsigned char) * 4 * surface->w * surface->h);
+  } else {
+    error("File %s has %i channels, don't know how to load it!", filename, surface->format->BytesPerPixel);
   }
 
-  image* i = image_new(surface->w, surface->h, surface->pixels);
+  image* i = image_new(surface->w, surface->h, image_data);
+  
+  free(image_data);
   
   SDL_FreeSurface(surface);
   

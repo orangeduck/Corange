@@ -19,7 +19,7 @@ const static int image_repeat_mirror = 2;
 const static int image_sample_linear = 0;
 const static int image_sample_nearest = 1;
 
-image* image_new(int width, int height, char* data);
+image* image_new(int width, int height, unsigned char* data);
 image* image_empty(int width, int height);
 image* image_blank(int width, int height);
 
@@ -76,6 +76,7 @@ void image_mask_nor(image* i, image* i2);
 void image_mask_nand(image* i, image* i2);
 void image_mask_xnor(image* i, image* i2);
 
+image* tga_load_file(char* filename);
 image* bmp_load_file(char* filename);
 
 void tga_save_file(image* i, char* filename);

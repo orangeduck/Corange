@@ -136,21 +136,39 @@ void shadow_mapper_render_static(static_object* s) {
   for(i=0; i < r->num_surfaces; i++) {
     
     renderable_surface* s = r->surfaces[i];
+    if(s->is_rigged) {
     
-    GLsizei stride = sizeof(float) * 18;
-    
-    glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
-        
-    glVertexPointer(3, GL_FLOAT, stride, (void*)0);
-    glEnableClientState(GL_VERTEX_ARRAY);
-    
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
-    glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
-    
-    glDisableClientState(GL_VERTEX_ARRAY);
-    
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+      GLsizei stride = sizeof(float) * 24;
+      
+      glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
+          
+      glVertexPointer(3, GL_FLOAT, stride, (void*)0);
+      glEnableClientState(GL_VERTEX_ARRAY);
+      
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
+      glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
+      
+      glDisableClientState(GL_VERTEX_ARRAY);
+      
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+      glBindBuffer(GL_ARRAY_BUFFER, 0);
+      
+    } else {
+      GLsizei stride = sizeof(float) * 18;
+      
+      glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
+          
+      glVertexPointer(3, GL_FLOAT, stride, (void*)0);
+      glEnableClientState(GL_VERTEX_ARRAY);
+      
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
+      glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
+      
+      glDisableClientState(GL_VERTEX_ARRAY);
+      
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+      glBindBuffer(GL_ARRAY_BUFFER, 0);
+    }
 
   }
   

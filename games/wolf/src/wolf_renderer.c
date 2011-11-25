@@ -462,7 +462,7 @@ void wolf_renderer_end() {
   /* Draw to HDR texture */
   
   glBindFramebuffer(GL_FRAMEBUFFER, composition_hdr_fbo);
-  glUseProgramObjectARB(*COMPOSITION_PROGRAM_HDR);
+  glUseProgram(*COMPOSITION_PROGRAM_HDR);
   
   GLenum hdr_buffers[] = { GL_COLOR_ATTACHMENT0 };
   glDrawBuffers(1, hdr_buffers);
@@ -470,27 +470,27 @@ void wolf_renderer_end() {
   glActiveTexture(GL_TEXTURE0 + 0 );
   glBindTexture(GL_TEXTURE_2D, diffuse_texture);
   glEnable(GL_TEXTURE_2D);
-  glUniform1iARB(glGetUniformLocation(*COMPOSITION_PROGRAM_HDR, "diffuse_texture"), 0);
+  glUniform1i(glGetUniformLocation(*COMPOSITION_PROGRAM_HDR, "diffuse_texture"), 0);
   
   glActiveTexture(GL_TEXTURE0 + 1 );
   glBindTexture(GL_TEXTURE_2D, positions_texture);
   glEnable(GL_TEXTURE_2D);
-  glUniform1iARB(glGetUniformLocation(*COMPOSITION_PROGRAM_HDR, "positions_texture"), 1);
+  glUniform1i(glGetUniformLocation(*COMPOSITION_PROGRAM_HDR, "positions_texture"), 1);
   
   glActiveTexture(GL_TEXTURE0 + 2 );
   glBindTexture(GL_TEXTURE_2D, normals_texture);
   glEnable(GL_TEXTURE_2D);
-  glUniform1iARB(glGetUniformLocation(*COMPOSITION_PROGRAM_HDR, "normals_texture"), 2);
+  glUniform1i(glGetUniformLocation(*COMPOSITION_PROGRAM_HDR, "normals_texture"), 2);
   
   glActiveTexture(GL_TEXTURE0 + 3 );
   glBindTexture(GL_TEXTURE_2D, depth_texture);
   glEnable(GL_TEXTURE_2D);
-  glUniform1iARB(glGetUniformLocation(*COMPOSITION_PROGRAM_HDR, "depth_texture"), 3);
+  glUniform1i(glGetUniformLocation(*COMPOSITION_PROGRAM_HDR, "depth_texture"), 3);
   
   glActiveTexture(GL_TEXTURE0 + 4 );
   glBindTexture(GL_TEXTURE_2D, *SHADOW_TEX);
   glEnable(GL_TEXTURE_2D);
-  glUniform1iARB(glGetUniformLocation(*COMPOSITION_PROGRAM_HDR, "shadows_texture"), 4);
+  glUniform1i(glGetUniformLocation(*COMPOSITION_PROGRAM_HDR, "shadows_texture"), 4);
   
   GLint cam_position = glGetUniformLocation(*COMPOSITION_PROGRAM_HDR, "camera_position");
   glUniform3f(cam_position, CAMERA->position.x, CAMERA->position.y, CAMERA->position.z);
@@ -505,10 +505,10 @@ void wolf_renderer_end() {
   glUniformMatrix4fv(lview_matrix_u, 1, 0, LIGHT_VIEW_MATRIX);
   
 	glBegin(GL_QUADS);
-		glMultiTexCoord2f(GL_TEXTURE0, 0.0f, 0.0f); glVertex3f(-1.0, -1.0,  0.0f);
-		glMultiTexCoord2f(GL_TEXTURE0, 1.0f, 0.0f); glVertex3f(1.0, -1.0,  0.0f);
-		glMultiTexCoord2f(GL_TEXTURE0, 1.0f, 1.0f); glVertex3f(1.0,  1.0,  0.0f);
-		glMultiTexCoord2f(GL_TEXTURE0, 0.0f, 1.0f); glVertex3f(-1.0,  1.0,  0.0f);
+		glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0, -1.0,  0.0f);
+		glTexCoord2f(1.0f, 0.0f); glVertex3f(1.0, -1.0,  0.0f);
+		glTexCoord2f(1.0f, 1.0f); glVertex3f(1.0,  1.0,  0.0f);
+		glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0,  1.0,  0.0f);
 	glEnd();
   
   glActiveTexture(GL_TEXTURE0 + 0 );
@@ -529,7 +529,7 @@ void wolf_renderer_end() {
   /* Draw to LDR texture */
   
   glBindFramebuffer(GL_FRAMEBUFFER, composition_ldr_fbo);
-  glUseProgramObjectARB(*COMPOSITION_PROGRAM_LDR);
+  glUseProgram(*COMPOSITION_PROGRAM_LDR);
   
   GLenum ldr_buffers[] = { GL_COLOR_ATTACHMENT0 };
   glDrawBuffers(1, ldr_buffers);
@@ -537,13 +537,13 @@ void wolf_renderer_end() {
   glActiveTexture(GL_TEXTURE0 + 0 );
   glBindTexture(GL_TEXTURE_2D, composed_texture_hdr);
   glEnable(GL_TEXTURE_2D);
-  glUniform1iARB(glGetUniformLocation(*COMPOSITION_PROGRAM_LDR, "hdr_texture"), 0);
+  glUniform1i(glGetUniformLocation(*COMPOSITION_PROGRAM_LDR, "hdr_texture"), 0);
   
 	glBegin(GL_QUADS);
-		glMultiTexCoord2f(GL_TEXTURE0, 0.0f, 0.0f); glVertex3f(-1.0, -1.0,  0.0f);
-		glMultiTexCoord2f(GL_TEXTURE0, 1.0f, 0.0f); glVertex3f(1.0, -1.0,  0.0f);
-		glMultiTexCoord2f(GL_TEXTURE0, 1.0f, 1.0f); glVertex3f(1.0,  1.0,  0.0f);
-		glMultiTexCoord2f(GL_TEXTURE0, 0.0f, 1.0f); glVertex3f(-1.0,  1.0,  0.0f);
+		glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0, -1.0,  0.0f);
+		glTexCoord2f(1.0f, 0.0f); glVertex3f(1.0, -1.0,  0.0f);
+		glTexCoord2f(1.0f, 1.0f); glVertex3f(1.0,  1.0,  0.0f);
+		glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0,  1.0,  0.0f);
 	glEnd();
   
   glActiveTexture(GL_TEXTURE0 + 0 );
@@ -555,7 +555,8 @@ void wolf_renderer_draw(wolf_renderable* wr) {
 
   renderable* r = wr->renderable;
 
-  matrix_4x4 r_world_matrix = m44_world( r->position, r->scale, r->rotation );
+  //matrix_4x4 r_world_matrix = m44_world( r->position, r->scale, r->rotation );
+  matrix_4x4 r_world_matrix = m44_id();
   m44_to_array(r_world_matrix, WORLD_MATRIX);
   
   int i;
@@ -563,7 +564,7 @@ void wolf_renderer_draw(wolf_renderable* wr) {
     
     renderable_surface* s = r->surfaces[i];
           
-    glUseProgramObjectARB(*DEFERRED_PROGRAM);
+    glUseProgram(*DEFERRED_PROGRAM);
     
     wolf_renderer_use_material(s->base);
     
@@ -599,7 +600,7 @@ void wolf_renderer_draw(wolf_renderable* wr) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     
-    glUseProgramObjectARB(0);
+    glUseProgram(0);
 
   }
 
@@ -616,17 +617,17 @@ void wolf_renderer_begin_painting() {
   /* Draw composed ldr texture to screen */
   
   glViewport(0, 0, viewport_width(), viewport_height());
-  glUseProgramObjectARB(0);
+  glUseProgram(0);
   
   glActiveTexture(GL_TEXTURE0 + 0 );
   glBindTexture(GL_TEXTURE_2D, composed_texture_ldr);
   glEnable(GL_TEXTURE_2D);
   
 	glBegin(GL_QUADS);
-		glMultiTexCoord2f(GL_TEXTURE0, 0.0f, 0.0f); glVertex3f(-1.0, -1.0,  0.0f);
-		glMultiTexCoord2f(GL_TEXTURE0, 1.0f, 0.0f); glVertex3f(1.0, -1.0,  0.0f);
-		glMultiTexCoord2f(GL_TEXTURE0, 1.0f, 1.0f); glVertex3f(1.0,  1.0,  0.0f);
-		glMultiTexCoord2f(GL_TEXTURE0, 0.0f, 1.0f); glVertex3f(-1.0,  1.0,  0.0f);
+		glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0, -1.0,  0.0f);
+		glTexCoord2f(1.0f, 0.0f); glVertex3f(1.0, -1.0,  0.0f);
+		glTexCoord2f(1.0f, 1.0f); glVertex3f(1.0,  1.0,  0.0f);
+		glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0,  1.0,  0.0f);
 	glEnd();
   
   glActiveTexture(GL_TEXTURE0 + 0 );
@@ -640,7 +641,7 @@ void wolf_renderer_begin_painting() {
   glMatrixMode(GL_MODELVIEW);
   glPopMatrix();
   
-  glUseProgramObjectARB(*PAINTING_PROGRAM);
+  glUseProgram(*PAINTING_PROGRAM);
   
   glBindTexture(GL_TEXTURE_2D, composed_texture_ldr);
   glGenerateMipmap(GL_TEXTURE_2D);
@@ -715,7 +716,7 @@ void wolf_renderer_end_painting() {
   
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   glViewport(0, 0, viewport_width(), viewport_height());
-  glUseProgramObjectARB(0);
+  glUseProgram(0);
   
 	glMatrixMode(GL_PROJECTION);
   glPushMatrix();
@@ -731,10 +732,10 @@ void wolf_renderer_end_painting() {
   glEnable(GL_TEXTURE_2D);
   
 	glBegin(GL_QUADS);
-		glMultiTexCoord2f(GL_TEXTURE0, 0.0f, 0.0f); glVertex3f(-1.0, -1.0,  0.0f);
-		glMultiTexCoord2f(GL_TEXTURE0, 1.0f, 0.0f); glVertex3f(1.0, -1.0,  0.0f);
-		glMultiTexCoord2f(GL_TEXTURE0, 1.0f, 1.0f); glVertex3f(1.0,  1.0,  0.0f);
-		glMultiTexCoord2f(GL_TEXTURE0, 0.0f, 1.0f); glVertex3f(-1.0,  1.0,  0.0f);
+		glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0, -1.0,  0.0f);
+		glTexCoord2f(1.0f, 0.0f); glVertex3f(1.0, -1.0,  0.0f);
+		glTexCoord2f(1.0f, 1.0f); glVertex3f(1.0,  1.0,  0.0f);
+		glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0,  1.0,  0.0f);
 	glEnd();
   
   glActiveTexture(GL_TEXTURE0 + 0 );

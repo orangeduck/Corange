@@ -20,7 +20,7 @@ void kernel_program_delete(kernel_program* k);
 kernel kernel_program_get_kernel(kernel_program* kp, char* kernel_name);
 
 void kernel_set_argument(kernel k, int arg_num, int arg_type_size, void* value);
-void kernel_run(kernel k, int worker_count, int work_group_size);
+void kernel_run(kernel k, int worker_count);
 void kernel_delete(kernel k);
 
 kernel_memory kernel_memory_allocate(int size);
@@ -30,6 +30,8 @@ kernel_memory kernel_memory_from_gltexture3D(int tex_obj);
 
 void kernel_memory_gl_aquire(kernel_memory km);
 void kernel_memory_gl_release(kernel_memory km);
+
+void kernel_memory_copy_to_texture(kernel_memory km, kernel_memory tex, int width, int height, int depth);
 
 void kernel_memory_delete(kernel_memory km);
 void kernel_memory_write(kernel_memory km, int size, void* src);

@@ -6,8 +6,7 @@
 
 #include "vector.h"
 
-int rawcast(float x)
-{
+int rawcast(float x) {
   union {
     float f;
     int i;
@@ -85,6 +84,7 @@ float binearest_neighbor_interpolation(float top_left, float top_right, float bo
   if( !x_amount && !y_amount ) { return bottom_left; }
   if( x_amount && y_amount ) { return top_right; }
   
+  return 0.0f;
 }
 
 float bilinear_interpolation(float top_left, float top_right, float bottom_left, float bottom_right, float x_amount, float y_amount) {
@@ -824,4 +824,13 @@ vector4 v4_quaternion_pitch(float a) {
 
 vector4 v4_quaternion_roll(float a) {
   return v4( 0, 0, sinf(a / 2.0), cosf(a / 2.0) );
+}
+
+vector4 v4_quaternion_euler(float roll, float pitch, float yaw) {
+  vector4 q;
+  q.x = cos(roll/2)*sin(pitch/2)*cos(yaw/2) + sin(roll/2)*cos(pitch/2)*sin(yaw/2);
+  q.y = cos(roll/2)*cos(pitch/2)*sin(yaw/2) - sin(roll/2)*sin(pitch/2)*cos(yaw/2);
+  q.z = cos(roll/2)*cos(pitch/2)*cos(yaw/2) + sin(roll/2)*sin(pitch/2)*sin(yaw/2);
+  q.w = sin(roll/2)*cos(pitch/2)*cos(yaw/2) - cos(roll/2)*sin(pitch/2)*sin(yaw/2);
+  return q;
 }

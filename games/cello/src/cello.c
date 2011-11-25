@@ -2,11 +2,6 @@
 
 #include "corange.h"
 
-static renderable* r_cello;
-static renderable* r_piano;
-static renderable* r_floor;
-static renderable* r_skybox;
-
 static ui_text* txt_framerate;
 static ui_text* txt_renderer;
 static ui_text* txt_info;
@@ -62,21 +57,24 @@ void cello_init() {
   load_folder("/resources/floor/");
   load_folder("/resources/skybox/");
   
-  r_cello = renderable_new(asset_get("/resources/cello/cello.obj"));
+  renderable* r_cello = asset_get("/resources/cello/cello.obj");
   renderable_set_material(r_cello, asset_get("/resources/cello/cello.mat"));
   entity_add("cello", entity_type_static, static_object_new(r_cello));
   
-  r_piano = renderable_new(asset_get("/resources/piano/piano.obj"));
+  renderable* r_piano = asset_get("/resources/piano/piano.obj");
   renderable_set_material(r_piano, asset_get("/resources/piano/piano.mat"));
   entity_add("piano", entity_type_static, static_object_new(r_piano));
   
-  r_floor = renderable_new(asset_get("/resources/floor/floor.obj"));
+  renderable* r_floor = asset_get("/resources/floor/floor.obj");
   renderable_set_material(r_floor, asset_get("/resources/floor/floor.mat"));
   entity_add("floor", entity_type_static, static_object_new(r_floor));
   
-  r_skybox = renderable_new(asset_get("/resources/skybox/skybox.obj"));
+  renderable* r_skybox = asset_get("/resources/skybox/skybox.obj");
   renderable_set_material(r_skybox, asset_get("/resources/skybox/skybox.mat"));
   entity_add("skybox", entity_type_static, static_object_new(r_skybox));
+  
+  renderable* r_pirate_coat = asset_get("./engine/resources/pirate_shirt.smd");
+  entity_add("pirate_coat", entity_type_static, static_object_new(r_pirate_coat));
   
   /* Put some text on the screen */
   
@@ -197,13 +195,15 @@ void cello_render() {
   static_object* s_floor = entity_get("floor");
   static_object* s_skybox = entity_get("skybox");
   static_object* s_cello = entity_get("cello");
+  static_object* s_pirate = entity_get("pirate_coat");
 
   shadow_mapper_begin();
   if(use_piano) {
     shadow_mapper_render_static(s_piano);
     shadow_mapper_render_static(s_floor);
   } else {
-    shadow_mapper_render_static(s_cello);
+    //shadow_mapper_render_static(s_cello);
+    shadow_mapper_render_static(s_pirate);
   }
   shadow_mapper_end();
 
@@ -217,7 +217,8 @@ void cello_render() {
       deferred_renderer_render_static(s_floor);
       deferred_renderer_render_static(s_piano);
     } else {
-      deferred_renderer_render_static(s_cello);
+      //deferred_renderer_render_static(s_cello);
+      deferred_renderer_render_static(s_pirate);
     }
     deferred_renderer_end();
     
@@ -234,7 +235,8 @@ void cello_render() {
       forward_renderer_render_static(s_floor);
       forward_renderer_render_static(s_piano);
     } else {
-      forward_renderer_render_static(s_cello);
+      //forward_renderer_render_static(s_cello);
+      forward_renderer_render_static(s_pirate);
     }
     
     forward_renderer_end();
@@ -249,11 +251,6 @@ void cello_render() {
 }
 
 void cello_finish() {
-  
-  renderable_delete(r_cello);
-  renderable_delete(r_piano);
-  renderable_delete(r_floor);
-  renderable_delete(r_skybox);
 
   ui_text_delete(txt_framerate);
   ui_text_delete(txt_info);

@@ -5,7 +5,7 @@
 
 #include "particles.h"
 
-int particle_count = 256;
+#define particle_count 25
 
 GLuint positions_buffer;
 GLuint velocities_buffer;
@@ -130,11 +130,11 @@ void particles_update(float timestep) {
   kernel_memory_gl_aquire(k_particle_lifetimes);
   kernel_memory_gl_aquire(k_particle_randoms);
   
-  kernel_set_argument(k_update, 6, sizeof(float), &timestep);
-  kernel_set_argument(k_update, 7, sizeof(int), &reset);
-  kernel_run(k_update, particle_count, particle_count);
-  
-  reset = 0;
+    kernel_set_argument(k_update, 6, sizeof(float), &timestep);
+    kernel_set_argument(k_update, 7, sizeof(int), &reset);
+    kernel_run(k_update, particle_count);
+    
+    reset = 0;
   
   kernel_memory_gl_release(k_particle_positions);
   kernel_memory_gl_release(k_particle_velocities);
@@ -156,4 +156,21 @@ GLuint particle_positions_buffer() {
 
 GLuint particle_velocities_buffer() {
   return velocities_buffer;
+}
+
+vector4 positions_ret[particle_count];
+vector4 positions_large[particle_count * 4];
+
+vector4* particle_positions() {
+  
+  kernel_memory_gl_aquire(k_particle_positions);
+  kernel_memory_read(k_particle_positions, sizeof(vector4) * 4 * particle_count, positions_large);
+  kernel_memory_gl_release(k_particle_positions);
+  
+  int i=0;
+  for(i = 0; i < particle_count; i ++) {
+    positions_ret[i] = positions_large[i*4];
+  }
+  
+  return positions_ret;
 }

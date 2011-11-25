@@ -1,5 +1,6 @@
 #include "asset_manager.h"
 #include "vector.h"
+#include "error.h"
 
 #include "texture.h"
 
@@ -76,7 +77,7 @@ void texture_write_to_file(texture* t, char* filename){
 
 texture* lut_load_file( char* filename ) {
   
-  unsigned char* contents = asset_file_contents(filename);
+  char* contents = asset_file_contents(filename);
   
   int head = sizeof("CORANGE-LUT")-1;
   int lut_size = (unsigned char)contents[head] | (unsigned char)contents[head + 1];
@@ -140,13 +141,13 @@ void texture3d_write_to_file(texture* t, char* filename) {
   free(data);
 }
 
-/* BEGIN DDS STUFF */
+/* DDS file stuff */
 
-//  little-endian, of course
+/* little-endian, of course */
 #define DDS_MAGIC 0x20534444
 
 
-//  DDS_header.dwFlags
+/* DDS_header.dwFlags */
 #define DDSD_CAPS                   0x00000001 
 #define DDSD_HEIGHT                 0x00000002 
 #define DDSD_WIDTH                  0x00000004 
@@ -156,18 +157,18 @@ void texture3d_write_to_file(texture* t, char* filename) {
 #define DDSD_LINEARSIZE             0x00080000 
 #define DDSD_DEPTH                  0x00800000 
 
-//  DDS_header.sPixelFormat.dwFlags
+/* DDS_header.sPixelFormat.dwFlags */
 #define DDPF_ALPHAPIXELS            0x00000001 
 #define DDPF_FOURCC                 0x00000004 
 #define DDPF_INDEXED                0x00000020 
 #define DDPF_RGB                    0x00000040 
 
-//  DDS_header.sCaps.dwCaps1
+/* DDS_header.sCaps.dwCaps1 */
 #define DDSCAPS_COMPLEX             0x00000008 
 #define DDSCAPS_TEXTURE             0x00001000 
 #define DDSCAPS_MIPMAP              0x00400000 
 
-//  DDS_header.sCaps.dwCaps2
+/* DDS_header.sCaps.dwCaps2 */
 #define DDSCAPS2_CUBEMAP            0x00000200 
 #define DDSCAPS2_CUBEMAP_POSITIVEX  0x00000400 
 #define DDSCAPS2_CUBEMAP_NEGATIVEX  0x00000800 
@@ -177,11 +178,11 @@ void texture3d_write_to_file(texture* t, char* filename) {
 #define DDSCAPS2_CUBEMAP_NEGATIVEZ  0x00008000 
 #define DDSCAPS2_VOLUME             0x00200000 
 
-#define D3DFMT_DXT1     0x31545844    //  DXT1 compression texture format 
-#define D3DFMT_DXT2     0x32545844    //  DXT2 compression texture format 
-#define D3DFMT_DXT3     0x33545844    //  DXT3 compression texture format 
-#define D3DFMT_DXT4     0x34545844    //  DXT4 compression texture format 
-#define D3DFMT_DXT5     0x35545844    //  DXT5 compression texture format 
+#define D3DFMT_DXT1     0x31545844    /* DXT1 compression texture format */
+#define D3DFMT_DXT2     0x32545844    /* DXT2 compression texture format */
+#define D3DFMT_DXT3     0x33545844    /* DXT3 compression texture format */
+#define D3DFMT_DXT4     0x34545844    /* DXT4 compression texture format */
+#define D3DFMT_DXT5     0x35545844    /* DXT5 compression texture format */
 
 #define PF_IS_DXT1(pf) \
   ((pf.dwFlags & DDPF_FOURCC) && \
@@ -205,7 +206,7 @@ void texture3d_write_to_file(texture* t, char* filename) {
    (pf.dwAlphaBitMask == 0xff000000U))
 
 #define PF_IS_BGR8(pf) \
-  ((pf.dwFlags & DDPF_ALPHAPIXELS) && \
+  ((pf.dwFlags & DDPF_RGB) && \
   !(pf.dwFlags & DDPF_ALPHAPIXELS) && \
    (pf.dwRGBBitCount == 24) && \
    (pf.dwRBitMask == 0xff0000) && \
@@ -234,40 +235,38 @@ void texture3d_write_to_file(texture* t, char* filename) {
    (pf.dwRGBBitCount == 8))
 
 
-typedef union {
+typedef struct {
+  unsigned int    dwMagic;
+  unsigned int    dwSize;
+  unsigned int    dwFlags;
+  unsigned int    dwHeight;
+  unsigned int    dwWidth;
+  unsigned int    dwPitchOrLinearSize;
+  unsigned int    dwDepth;
+  unsigned int    dwMipMapCount;
+  unsigned int    dwReserved1[ 11 ];
+
+  /* DDPIXELFORMAT */
   struct {
-    unsigned int    dwMagic;
     unsigned int    dwSize;
     unsigned int    dwFlags;
-    unsigned int    dwHeight;
-    unsigned int    dwWidth;
-    unsigned int    dwPitchOrLinearSize;
-    unsigned int    dwDepth;
-    unsigned int    dwMipMapCount;
-    unsigned int    dwReserved1[ 11 ];
+    unsigned int    dwFourCC;
+    unsigned int    dwRGBBitCount;
+    unsigned int    dwRBitMask;
+    unsigned int    dwGBitMask;
+    unsigned int    dwBBitMask;
+    unsigned int    dwAlphaBitMask;
+  } sPixelFormat;
 
-    //  DDPIXELFORMAT
-    struct {
-      unsigned int    dwSize;
-      unsigned int    dwFlags;
-      unsigned int    dwFourCC;
-      unsigned int    dwRGBBitCount;
-      unsigned int    dwRBitMask;
-      unsigned int    dwGBitMask;
-      unsigned int    dwBBitMask;
-      unsigned int    dwAlphaBitMask;
-    }               sPixelFormat;
-
-    //  DDCAPS2
-    struct {
-      unsigned int    dwCaps1;
-      unsigned int    dwCaps2;
-      unsigned int    dwDDSX;
-      unsigned int    dwReserved;
-    }               sCaps;
-    unsigned int    dwReserved2;
-  };
-  char data[ 128 ];
+  /* DDCAPS2 */
+  struct {
+    unsigned int    dwCaps1;
+    unsigned int    dwCaps2;
+    unsigned int    dwDDSX;
+    unsigned int    dwReserved;
+  } sCaps;
+  
+  unsigned int dwReserved2;
 } DDS_header ;
 
 typedef struct {
@@ -286,13 +285,13 @@ typedef struct {
 texture* dds_load_file( char* filename ){
   
   DdsLoadInfo loadInfoDXT1 = {
-    1, 0, 0, 4, 8, GL_COMPRESSED_RGBA_S3TC_DXT1_EXT
+    1, 0, 0, 4, 8, GL_COMPRESSED_RGBA_S3TC_DXT1
   };
   DdsLoadInfo loadInfoDXT3 = {
-    1, 0, 0, 4, 16, GL_COMPRESSED_RGBA_S3TC_DXT3_EXT
+    1, 0, 0, 4, 16, GL_COMPRESSED_RGBA_S3TC_DXT3
   };
   DdsLoadInfo loadInfoDXT5 = {
-    1, 0, 0, 4, 16, GL_COMPRESSED_RGBA_S3TC_DXT5_EXT
+    1, 0, 0, 4, 16, GL_COMPRESSED_RGBA_S3TC_DXT5
   };
   DdsLoadInfo loadInfoBGRA8 = {
     0, 0, 0, 1, 4, GL_RGBA8, GL_BGRA, GL_UNSIGNED_BYTE
@@ -310,32 +309,35 @@ texture* dds_load_file( char* filename ){
     0, 0, 1, 1, 1, GL_RGB8, GL_BGRA, GL_UNSIGNED_BYTE
   };
   
-  printf("Loading: %s\n", filename);
+  
   
   texture my_texture;
   glGenTextures(1, &my_texture);
   glBindTexture(GL_TEXTURE_2D, my_texture);
 
   DDS_header hdr;
-  size_t s = 0;
   int x = 0;
   int y = 0;
   int mipMapCount = 0;
   
   SDL_RWops* f = SDL_RWFromFile(filename, "rb");
+  if (f == NULL) {
+    error("Cannot load file %s", filename);
+  }
   SDL_RWread(f, &hdr, 1, sizeof(hdr));
+  
+  printf("Loading: %s\n", filename);
   
   if( hdr.dwMagic != DDS_MAGIC || hdr.dwSize != 124 ||
     !(hdr.dwFlags & DDSD_PIXELFORMAT) || !(hdr.dwFlags & DDSD_CAPS) ) {
     
-    printf("Error Loading File %s: Does not appear to be a .dds file.\n", filename);
-    return NULL;
+    error("Cannot Load File %s: Does not appear to be a .dds file.\n", filename);
   }
 
   x = hdr.dwWidth;
   y = hdr.dwHeight;
 
-  DdsLoadInfo* li;
+  DdsLoadInfo* li = &loadInfoDXT1;
 
   if( PF_IS_DXT1( hdr.sPixelFormat ) ) {
     li = &loadInfoDXT1;
@@ -360,10 +362,8 @@ texture* dds_load_file( char* filename ){
   }
   else if( PF_IS_INDEX8( hdr.sPixelFormat ) ) {
     li = &loadInfoIndex8;
-  }
-  else {
-    printf("Error Loading File %s: Unknown DDS File format type.\n", filename);
-    return NULL;
+  } else {
+    error("Cannot Load File %s: Unknown DDS File format type.", filename);
   }
   
   glTexParameteri( GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_FALSE );
@@ -377,8 +377,7 @@ texture* dds_load_file( char* filename ){
     char* data = malloc( size );
     
     if( !data ) {
-      printf("Error Loading File %s: Does not appear to contain any data.\n", filename);
-      return NULL;
+      error("Cannot Load File %s: Does not appear to contain any data.", filename);
     }
     
     cFormat = li->internalFormat;
@@ -411,7 +410,7 @@ texture* dds_load_file( char* filename ){
       SDL_RWread(f, data, 1, size);
       
       for( zz = 0; zz < size; ++zz ) {
-        unpacked[ zz ] = palette[ data[ zz ] ];
+        unpacked[ zz ] = palette[ (short)data[ zz ] ];
       }
       
       glPixelStorei( GL_UNPACK_ROW_LENGTH, y );
@@ -435,7 +434,7 @@ texture* dds_load_file( char* filename ){
     format = li->externalFormat;
     cFormat = li->internalFormat;
     char * data = malloc( size );
-    //fixme: how are MIP maps stored for 24-bit if pitch != ySize*3 ?
+    /* fixme: how are MIP maps stored for 24-bit if pitch != ySize*3 ? */
     for( ix = 0; ix < mipMapCount; ++ix ) {
     
       SDL_RWread(f, data, 1, size);

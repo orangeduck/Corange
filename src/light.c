@@ -24,7 +24,8 @@ light* light_new_type(vector3 position, int type) {
   l->ambient_color = v3(0.25,0.25,0.25);
 
   light_set_type(l, type);
-   
+  
+  return l;
 }
 
 void light_set_type(light* l, int type) {

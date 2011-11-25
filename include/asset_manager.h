@@ -6,9 +6,9 @@
 void asset_manager_init(char* game_name);
 void asset_manager_finish();
 
-char* asset_map_filename(char* filename);
-
-void asset_manager_handler(char* extension, void* load_func(char*) , void del_func(void*) );
+#define asset_loader_t void*(*)(char*)
+#define asset_deleter_t void(*)(void*)
+void asset_manager_handler(char* extension, void* asset_loader(char* filename) , void asset_deleter(void* asset) );
 
 void load_file(char* filename);
 void load_folder(char* folder);
@@ -21,6 +21,9 @@ void unload_folder(char* folder);
 
 void* asset_get(char* path);
 int asset_loaded(char* path);
+
+/* User is responsible for freeing strings returned by these */
+char* asset_map_filename(char* filename);
 
 char* asset_file_contents(char* filename);
 char* asset_file_extension(char* filename);

@@ -404,44 +404,87 @@ void deferred_renderer_render_static(static_object* s) {
   for(i=0; i < r->num_surfaces; i++) {
     
     renderable_surface* s = r->surfaces[i];
+    if(s->is_rigged) {
+      
+      glUseProgram(*PROGRAM);
+      
+      deferred_renderer_use_material(s->base);
+      
+      GLsizei stride = sizeof(float) * 24;
+      
+      glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
           
-    glUseProgram(*PROGRAM);
+      glVertexPointer(3, GL_FLOAT, stride, (void*)0);
+      glEnableClientState(GL_VERTEX_ARRAY);
+      
+      glVertexAttribPointer(NORMAL, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 3));
+      glEnableVertexAttribArray(NORMAL);
+      
+      glVertexAttribPointer(TANGENT, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 6));
+      glEnableVertexAttribArray(TANGENT);
+      
+      glVertexAttribPointer(BINORMAL, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 9));
+      glEnableVertexAttribArray(BINORMAL);
+      
+      glTexCoordPointer(2, GL_FLOAT, stride, (void*)(sizeof(float) * 12));
+      glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+      
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
+      glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
+      
+      glDisableClientState(GL_VERTEX_ARRAY);
+      glDisableClientState(GL_TEXTURE_COORD_ARRAY);  
+      
+      glDisableVertexAttribArray(NORMAL);
+      glDisableVertexAttribArray(TANGENT);
+      glDisableVertexAttribArray(BINORMAL);
+      
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+      glBindBuffer(GL_ARRAY_BUFFER, 0);
+      
+      glUseProgram(0);
+      
+    } else {
     
-    deferred_renderer_use_material(s->base);
+      glUseProgram(*PROGRAM);
+      
+      deferred_renderer_use_material(s->base);
+      
+      GLsizei stride = sizeof(float) * 18;
+      
+      glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
+          
+      glVertexPointer(3, GL_FLOAT, stride, (void*)0);
+      glEnableClientState(GL_VERTEX_ARRAY);
+      
+      glVertexAttribPointer(NORMAL, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 3));
+      glEnableVertexAttribArray(NORMAL);
+      
+      glVertexAttribPointer(TANGENT, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 6));
+      glEnableVertexAttribArray(TANGENT);
+      
+      glVertexAttribPointer(BINORMAL, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 9));
+      glEnableVertexAttribArray(BINORMAL);
+      
+      glTexCoordPointer(2, GL_FLOAT, stride, (void*)(sizeof(float) * 12));
+      glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+      
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
+      glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
+      
+      glDisableClientState(GL_VERTEX_ARRAY);
+      glDisableClientState(GL_TEXTURE_COORD_ARRAY);  
+      
+      glDisableVertexAttribArray(NORMAL);
+      glDisableVertexAttribArray(TANGENT);
+      glDisableVertexAttribArray(BINORMAL);
+      
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+      glBindBuffer(GL_ARRAY_BUFFER, 0);
+      
+      glUseProgram(0);
     
-    GLsizei stride = sizeof(float) * 18;
-    
-    glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
-        
-    glVertexPointer(3, GL_FLOAT, stride, (void*)0);
-    glEnableClientState(GL_VERTEX_ARRAY);
-    
-    glVertexAttribPointer(NORMAL, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 3));
-    glEnableVertexAttribArray(NORMAL);
-    
-    glVertexAttribPointer(TANGENT, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 6));
-    glEnableVertexAttribArray(TANGENT);
-    
-    glVertexAttribPointer(BINORMAL, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 9));
-    glEnableVertexAttribArray(BINORMAL);
-    
-    glTexCoordPointer(2, GL_FLOAT, stride, (void*)(sizeof(float) * 12));
-    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-    
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
-    glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
-    
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glDisableClientState(GL_TEXTURE_COORD_ARRAY);  
-    
-    glDisableVertexAttribArray(NORMAL);
-    glDisableVertexAttribArray(TANGENT);
-    glDisableVertexAttribArray(BINORMAL);
-    
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    
-    glUseProgram(0);
+    }
 
   }
 

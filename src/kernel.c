@@ -7,6 +7,7 @@
 #endif
 
 #include "asset_manager.h"
+#include "error.h"
 
 #include "CL/cl_gl.h"
 
@@ -78,17 +79,9 @@ void kernels_init_with_opengl() {
   
 #else
   
-  printf("Error: Can't interlop CL with GL unless on windows!\n");
-  exit(STATUS_FAILURE);
+  error("Can't interlop CL with GL unless on windows!");
 
 #endif
-
-  char* extensions = malloc(1024);
-  int size;
-  error = clGetDeviceInfo(device, CL_DEVICE_EXTENSIONS, 1024, extensions, &size);
-  
-  printf("Extensions: %s\n", extensions);
-  free(extensions);
 
 }
 
@@ -101,8 +94,7 @@ void kernels_finish() {
 
 void kernels_check_error(const char* name) {
   if (error != CL_SUCCESS) {
-    printf("OpenCL Error on %s: %i\n", name, error);
-    exit(EXIT_FAILURE);
+    error("OpenCL Error on function %s, id: %i", name, error);
   }
 }
 
@@ -112,17 +104,17 @@ kernel_program* cl_load_file(char* filename) {
   const char* source_const = source;
   int src_len = strlen(source);
   
-  cl_program program = clCreateProgramWithSource(context, 1, &source_const, &src_len, &error);
+  cl_program program = clCreateProgramWithSource(context, 1, &source_const, (const size_t*)&src_len, &error);
   kernels_check_error("clCreateProgramWithSource");
 
   error = clBuildProgram(program, 1, &device, NULL, NULL, NULL);
   
   char* build_log;
   int log_size;
-  clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
+  clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG, 0, NULL, (size_t*)&log_size);
   build_log = malloc(log_size+1);
   
-  clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG, log_size, build_log, NULL);
+  clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG, (const size_t)log_size, build_log, NULL);
   build_log[log_size] = '\0';
   printf("%s\n", build_log);
   free(build_log);
@@ -157,8 +149,8 @@ void kernel_delete(kernel k) {
   clReleaseKernel(k);
 }
 
-void kernel_run(kernel k, int worker_count, int work_group_size) {
-  error = clEnqueueNDRangeKernel(queue, k, 1, NULL, &worker_count, &work_group_size, 0, NULL, NULL);
+void kernel_run(kernel k, int worker_count) {
+  error = clEnqueueNDRangeKernel(queue, k, 1, NULL, (const size_t*)&worker_count, NULL, 0, NULL, NULL);
   kernels_check_error("clEnqueueNDRangeKernel");
 }
 
@@ -188,6 +180,12 @@ kernel_memory kernel_memory_from_gltexture3D(int tex_obj) {
   return mem;
 }
 
+void kernel_memory_copy_to_texture(kernel_memory km, kernel_memory tex, int width, int height, int depth) {
+  const size_t origin[3] = {0, 0, 0};
+  const size_t range[3] = {width, height, depth};
+  error = clEnqueueCopyBufferToImage(queue, km, tex, 0, origin, range, 0, NULL, NULL);
+  kernels_check_error("clEnqueueCopyBufferToImage");
+}
 
 void kernel_memory_gl_aquire(kernel_memory km) {
   error = clEnqueueAcquireGLObjects(queue, 1, &km, 0, NULL, NULL);

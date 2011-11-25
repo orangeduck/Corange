@@ -13,7 +13,7 @@ cello.dll: $(OBJ_FILES)
 	$(CC) --enable-auto-import -g $(OBJ_FILES) $(LFLAGS) -shared -o $@
 
 obj/%.o: src/%.c
-	$(CC) $< -c -g $(CFLAGS) -o $@ 
+	$(CC) $< -c -g $(CFLAGS) -o $@
 	
 clean:
 	rm $(OBJ_FILES)

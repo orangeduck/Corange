@@ -3,8 +3,6 @@
 #include "particles.h"
 #include "volume_renderer.h"
 
-static renderable* r_floor;
-
 static int mouse_x;
 static int mouse_y;
 static int mouse_down;
@@ -12,10 +10,13 @@ static int mouse_right_down;
 
 GLuint billboard_positions;
 GLuint billboard_uvs;
-const int max_particles = 1000;
+const int max_particles = 1024;
 
 static ui_text* ui_framerate;
 static ui_rectangle* ui_box;
+
+vector3 pos1;
+vector3 pos2;
 
 void metaballs_init() {
   
@@ -26,11 +27,10 @@ void metaballs_init() {
   load_folder("/resources/floor/");
   load_folder("/resources/particles/");
   load_folder("/resources/shaders/");
-  
-  model* floor = asset_get("/resources/floor/floor.obj");
+   
   material* floor_mat = asset_get("/resources/floor/floor.mat");
   
-  r_floor = renderable_new(floor);
+  renderable* r_floor = asset_get("/resources/floor/floor.obj");
   renderable_set_material(r_floor, floor_mat);
   
   entity_add("floor", entity_type_static, static_object_new(r_floor));
@@ -42,7 +42,7 @@ void metaballs_init() {
   cam->target = v3(0.0, 5.0, 0.0);
   
   light* sun = entity_new("sun", entity_type_light);
-  sun->position = v3(30,43,-26);
+  sun->position = v3(30,20,-26);
   sun->ambient_color = v3(0.5, 0.5, 0.5);
   sun->diffuse_color = v3(0.75, 0.75, 0.75);
   light_set_type(sun, light_type_spot);  
@@ -100,6 +100,11 @@ void metaballs_init() {
   ui_box->border_color = v4_white();
   
   volume_renderer_init();
+  volume_renderer_set_camera(cam);
+  volume_renderer_set_light(sun);
+  
+  pos1 = v3(0, 10, 0);
+  pos2 = v3(0, 5, 0);
   
 }
 
@@ -131,6 +136,7 @@ void metaballs_update() {
   particles_update(frame_time() / 10);
   
   ui_text_update_string(ui_framerate, frame_rate_string());
+  
 }
 
 static float proj_matrix[16];
@@ -151,11 +157,13 @@ void metaballs_render() {
 
   forward_renderer_begin();
   
-  glClearColor(0.75f, 0.75f, 0.75f, 0.75f);
-  glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-  
-  forward_renderer_render_static(s_floor);
-  
+    glClearColor(0.75f, 0.75f, 0.75f, 0.75f);
+    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+    
+    //forward_renderer_render_static(s_floor);
+
+    /*
+    
     glUseProgram(*particle_program);
     
     glDisable(GL_DEPTH_TEST);
@@ -205,9 +213,24 @@ void metaballs_render() {
     
     glUseProgram(0);
   
+    */
+  
   forward_renderer_end();
   
   volume_renderer_begin();
+  volume_renderer_render_point(sun->position, v3_blue());
+  
+  srand(time(NULL));
+  
+  vector4* positions = particle_positions();
+  int i;
+  for(i = 0; i < 25; i++) {
+    vector3 pos = v3(positions[i].x, positions[i].y, positions[i].z);
+    pos = v3_mul(pos, 50);
+    //vector3 col = v3((float)rand() / RAND_MAX, (float)rand() / RAND_MAX, (float)rand() / RAND_MAX);
+    vector3 col = v3(1, 0, 0);
+    volume_renderer_render_metaball(pos, col);
+  }
   volume_renderer_end();
   
   ui_rectangle_render(ui_box);
@@ -226,6 +249,13 @@ void metaballs_event(SDL_Event event) {
     
     if (event.key.keysym.sym == SDLK_SPACE) { 
       particles_reset();
+    }
+    
+    if(event.key.keysym.sym == SDLK_UP) {
+      pos1 = v3_add(pos1, v3(0, 0.1, 0));
+    }
+    if(event.key.keysym.sym == SDLK_DOWN) {
+      pos1 = v3_sub(pos1, v3(0, 0.1, 0));
     }
     
   break;

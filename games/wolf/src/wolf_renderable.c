@@ -8,8 +8,7 @@
 wolf_renderable* wolf_renderable_new(char* name, model* m, texture* brush_texture, int num_brushes, vector2 brush_scale, float density) {
   
   wolf_renderable* w = malloc(sizeof(wolf_renderable));
-  w->renderable = renderable_new(name);
-  renderable_add_model(w->renderable, m);
+  w->renderable = renderable_new(m);
   
   w->brush_texture = brush_texture;
   w->num_brushes = num_brushes;

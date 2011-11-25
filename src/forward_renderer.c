@@ -4,6 +4,8 @@
 #include "SDL/SDL_opengl.h"
 #include "SDL/SDL_local.h"
 
+#include "error.h"
+
 #include "viewport.h"
 
 #include "renderable.h"
@@ -34,6 +36,8 @@ static float timer = 0.0;
 static int TANGENT;
 static int BINORMAL;
 static int COLOR;
+static int BONE_IDS;
+static int BONE_WEIGHTS;
 
 void forward_renderer_init() {
   
@@ -80,6 +84,13 @@ void forward_renderer_begin() {
 
 void forward_renderer_setup_camera() {
 
+  if (CAMERA == NULL) {
+    error("Camera not set yet!");
+  }
+  if (LIGHT == NULL) {
+    error("Light not set yet!");
+  }
+
   matrix_4x4 viewm = camera_view_matrix(CAMERA);
   matrix_4x4 projm = camera_proj_matrix(CAMERA, viewport_ratio() );
   
@@ -117,7 +128,9 @@ static void forward_renderer_use_material(material* mat) {
   TANGENT = glGetAttribLocation(*prog, "tangent");
   BINORMAL = glGetAttribLocation(*prog, "binormal");
   COLOR = glGetAttribLocation(*prog, "color");
-    
+  BONE_IDS = glGetAttribLocation(*prog, "bone_ids");
+  BONE_WEIGHTS = glGetAttribLocation(*prog, "bone_weights");
+  
   GLint light_position = glGetUniformLocation(*prog, "light_position");
   GLint eye_position = glGetUniformLocation(*prog, "eye_position");
   
@@ -265,50 +278,174 @@ void forward_renderer_render_static(static_object* s) {
   for(i=0; i < r->num_surfaces; i++) {
     
     renderable_surface* s = r->surfaces[i];
-        
-    forward_renderer_use_material(s->base);    
-    //forward_renderer_use_material(s->instance);
-    
-    GLsizei stride = sizeof(float) * 18;
-    
-    glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
-        
-    glVertexPointer(3, GL_FLOAT, stride, (void*)0);
-    glEnableClientState(GL_VERTEX_ARRAY);
-    
-    glNormalPointer(GL_FLOAT, stride, (void*)(sizeof(float) * 3));
-    glEnableClientState(GL_NORMAL_ARRAY);
-    
-    glVertexAttribPointer(TANGENT, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 6));
-    glEnableVertexAttribArray(TANGENT);
-    
-    glVertexAttribPointer(BINORMAL, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 9));
-    glEnableVertexAttribArray(BINORMAL);
-    
-    glTexCoordPointer(2, GL_FLOAT, stride, (void*)(sizeof(float) * 12));
-    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-    
-    glVertexAttribPointer(COLOR, 4, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 14));
-    glEnableVertexAttribArray(COLOR);
-    
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
-    glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
-    
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glDisableClientState(GL_NORMAL_ARRAY);
-    glDisableClientState(GL_TEXTURE_COORD_ARRAY);  
-    
-    glDisableVertexAttribArray(TANGENT);
-    glDisableVertexAttribArray(BINORMAL);
-    glDisableVertexAttribArray(COLOR);  
-    
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    if(s->is_rigged) {
 
-    /* DISABLE PROGRAM */
-    glUseProgram(0);
+      forward_renderer_use_material(s->base);    
+      //forward_renderer_use_material(s->instance);
+      
+      GLsizei stride = sizeof(float) * 24;
+      
+      glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
+          
+      glVertexPointer(3, GL_FLOAT, stride, (void*)0);
+      glEnableClientState(GL_VERTEX_ARRAY);
+      
+      glNormalPointer(GL_FLOAT, stride, (void*)(sizeof(float) * 3));
+      glEnableClientState(GL_NORMAL_ARRAY);
+      
+      glVertexAttribPointer(TANGENT, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 6));
+      glEnableVertexAttribArray(TANGENT);
+      
+      glVertexAttribPointer(BINORMAL, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 9));
+      glEnableVertexAttribArray(BINORMAL);
+      
+      glTexCoordPointer(2, GL_FLOAT, stride, (void*)(sizeof(float) * 12));
+      glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+      
+      glVertexAttribPointer(COLOR, 4, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 14));
+      glEnableVertexAttribArray(COLOR);
+      
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
+      glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
+      
+      glDisableClientState(GL_VERTEX_ARRAY);
+      glDisableClientState(GL_NORMAL_ARRAY);
+      glDisableClientState(GL_TEXTURE_COORD_ARRAY);  
+      
+      glDisableVertexAttribArray(TANGENT);
+      glDisableVertexAttribArray(BINORMAL);
+      glDisableVertexAttribArray(COLOR);  
+      
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+      glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+      glUseProgram(0);    
+    
+    } else {
+    
+      forward_renderer_use_material(s->base);    
+      //forward_renderer_use_material(s->instance);
+      
+      GLsizei stride = sizeof(float) * 18;
+      
+      glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
+          
+      glVertexPointer(3, GL_FLOAT, stride, (void*)0);
+      glEnableClientState(GL_VERTEX_ARRAY);
+      
+      glNormalPointer(GL_FLOAT, stride, (void*)(sizeof(float) * 3));
+      glEnableClientState(GL_NORMAL_ARRAY);
+      
+      glVertexAttribPointer(TANGENT, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 6));
+      glEnableVertexAttribArray(TANGENT);
+      
+      glVertexAttribPointer(BINORMAL, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 9));
+      glEnableVertexAttribArray(BINORMAL);
+      
+      glTexCoordPointer(2, GL_FLOAT, stride, (void*)(sizeof(float) * 12));
+      glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+      
+      glVertexAttribPointer(COLOR, 4, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 14));
+      glEnableVertexAttribArray(COLOR);
+      
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
+      glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
+      
+      glDisableClientState(GL_VERTEX_ARRAY);
+      glDisableClientState(GL_NORMAL_ARRAY);
+      glDisableClientState(GL_TEXTURE_COORD_ARRAY);  
+      
+      glDisableVertexAttribArray(TANGENT);
+      glDisableVertexAttribArray(BINORMAL);
+      glDisableVertexAttribArray(COLOR);  
+      
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+      glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+      glUseProgram(0);
+    
+    }
 
   }
   
+}
+
+#define MAX_BONES 64
+static matrix_4x4 bone_matrices[MAX_BONES];
+
+void forward_renderer_render_animated(animated_object* ao) {
+
+  if (ao->skeleton->num_bones > MAX_BONES) {
+    error("animated object skeleton has too many bones (over %i)", MAX_BONES);
+  }
+  
+  matrix_4x4 r_world_matrix = m44_world( ao->position, ao->scale, ao->rotation );
+  m44_to_array(r_world_matrix, world_matrix);
+  
+  renderable* r = ao->renderable;
+  
+  int i;
+  for(i=0; i < r->num_surfaces; i++) {
+    
+    renderable_surface* s = r->surfaces[i];
+    if(s->is_rigged) {
+
+      forward_renderer_use_material(s->base);    
+      //forward_renderer_use_material(s->instance);
+      
+      GLsizei stride = sizeof(float) * 24;
+      
+      glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
+          
+      glVertexPointer(3, GL_FLOAT, stride, (void*)0);
+      glEnableClientState(GL_VERTEX_ARRAY);
+      
+      glNormalPointer(GL_FLOAT, stride, (void*)(sizeof(float) * 3));
+      glEnableClientState(GL_NORMAL_ARRAY);
+      
+      glVertexAttribPointer(TANGENT, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 6));
+      glEnableVertexAttribArray(TANGENT);
+      
+      glVertexAttribPointer(BINORMAL, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 9));
+      glEnableVertexAttribArray(BINORMAL);
+      
+      glTexCoordPointer(2, GL_FLOAT, stride, (void*)(sizeof(float) * 12));
+      glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+      
+      glVertexAttribPointer(COLOR, 4, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 14));
+      glEnableVertexAttribArray(COLOR);
+      
+      glVertexAttribPointer(BONE_IDS, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 18));
+      glEnableVertexAttribArray(BONE_IDS);
+      
+      glVertexAttribPointer(BONE_WEIGHTS, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 21));
+      glEnableVertexAttribArray(BONE_WEIGHTS);
+      
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
+      glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
+      
+      glDisableClientState(GL_VERTEX_ARRAY);
+      glDisableClientState(GL_NORMAL_ARRAY);
+      glDisableClientState(GL_TEXTURE_COORD_ARRAY);  
+      
+      glDisableVertexAttribArray(TANGENT);
+      glDisableVertexAttribArray(BINORMAL);
+      glDisableVertexAttribArray(COLOR);  
+      glDisableVertexAttribArray(BONE_IDS);  
+      glDisableVertexAttribArray(BONE_WEIGHTS);  
+      
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+      glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+      glUseProgram(0);    
+    
+    } else {
+      
+      error("animated object is not rigged");
+    
+    }
+
+  }
+
 }
 

@@ -11,7 +11,7 @@
 /* Info and Utilities */
 
 #include "timing.h"
-#include "logger.h"
+#include "error.h"
 #include "scripting.h"
 #include "viewport.h"
 
@@ -20,22 +20,22 @@
 #include "entity_manager.h"
 
 #include "static_object.h"
+#include "animated_object.h"
 #include "camera.h"
 #include "light.h"
-
-/* Engine Objects */
-
-#include "renderable.h"
-#include "image.h"
 
 /* Engine Assets */
 
 #include "asset_manager.h"
 
+#include "animation.h"
+#include "skeleton.h"
+#include "renderable.h"
 #include "font.h"
 #include "material.h"
 #include "shader.h"
 #include "texture.h"
+#include "image.h"
 
 /* Rendering */
 
@@ -61,10 +61,6 @@
 #include "vector.h"
 #include "matrix.h"
 #include "geometry.h"
-
-/* Importers */
-
-#include "obj_loader.h"
 
 /* Processing */
 

@@ -1,5 +1,7 @@
 #include <stdlib.h>
 
+#include "type.h"
+
 #include "corange.h"
 
 static char* game_name_arg;
@@ -15,8 +17,7 @@ int main(int argc, char* argv[]) {
   /* SDL Setup */
   
   if (SDL_Init(SDL_INIT_VIDEO) != 0) {
-    printf("Unable to initialize SDL: %s\n", SDL_GetError());
-    exit(EXIT_FAILURE);
+    error("Unable to initialize SDL: %s\n", SDL_GetError());
   }
   
   viewport_init();
@@ -45,19 +46,26 @@ int main(int argc, char* argv[]) {
   
   asset_manager_init(game_name_arg);
   
-  asset_manager_handler("obj", (void*(*)(char*))obj_load_file, (void(*)(void*))model_delete);
+  asset_manager_handler("obj", (asset_loader_t)obj_load_file, (asset_deleter_t)renderable_delete);
+  asset_manager_handler("smd", (asset_loader_t)smd_load_file, (asset_deleter_t)renderable_delete);
+  asset_manager_handler("skl", (asset_loader_t)skl_load_file, (asset_deleter_t)skeleton_delete);
+  asset_manager_handler("ani", (asset_loader_t)ani_load_file, (asset_deleter_t)animation_delete);
   
-  asset_manager_handler("dds", (void*(*)(char*))dds_load_file, (void(*)(void*))texture_delete);
-  asset_manager_handler("lut", (void*(*)(char*))lut_load_file, (void(*)(void*))texture_delete);
+  asset_manager_handler("bmp", (asset_loader_t)bmp_load_file, (asset_deleter_t)image_delete);
+  asset_manager_handler("tga", (asset_loader_t)tga_load_file, (asset_deleter_t)image_delete);
+  asset_manager_handler("dds", (asset_loader_t)dds_load_file, (asset_deleter_t)texture_delete);
+  asset_manager_handler("lut", (asset_loader_t)lut_load_file, (asset_deleter_t)texture_delete);
   
-  asset_manager_handler("vs" , (void*(*)(char*))vs_load_file,  (void(*)(void*))shader_delete);
-  asset_manager_handler("fs" , (void*(*)(char*))fs_load_file,  (void(*)(void*))shader_delete);
-  asset_manager_handler("prog",(void*(*)(char*))prog_load_file,(void(*)(void*))shader_program_delete);
+  asset_manager_handler("vs" , (asset_loader_t)vs_load_file,  (asset_deleter_t)shader_delete);
+  asset_manager_handler("fs" , (asset_loader_t)fs_load_file,  (asset_deleter_t)shader_delete);
+  asset_manager_handler("prog",(asset_loader_t)prog_load_file,(asset_deleter_t)shader_program_delete);
   
-  asset_manager_handler("fnt", (void*(*)(char*))font_load_file,(void(*)(void*))font_delete);
-  asset_manager_handler("mat", (void*(*)(char*))mat_load_file, (void(*)(void*))material_delete);
-  asset_manager_handler("lua", (void*(*)(char*))lua_load_file, (void(*)(void*))script_delete);
-  asset_manager_handler("cl" , (void*(*)(char*))cl_load_file,  (void(*)(void*))kernel_program_delete);
+  asset_manager_handler("fnt", (asset_loader_t)font_load_file,(asset_deleter_t)font_delete);
+  asset_manager_handler("mat", (asset_loader_t)mat_load_file, (asset_deleter_t)material_delete);
+  asset_manager_handler("lua", (asset_loader_t)lua_load_file, (asset_deleter_t)script_delete);
+  asset_manager_handler("cl" , (asset_loader_t)cl_load_file,  (asset_deleter_t)kernel_program_delete);
+  
+  load_file("./engine/resources/basic.mat");
   
   load_folder("./engine/shaders/");
   load_folder("./engine/fonts/");

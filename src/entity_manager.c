@@ -2,11 +2,13 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "error.h"
 #include "dictionary.h"
 #include "list.h"
 #include "camera.h"
 #include "light.h"
 #include "static_object.h"
+#include "animated_object.h"
 
 #include "asset_manager.h"
 
@@ -49,8 +51,7 @@ int entity_exists(char* name) {
 entity* entity_new(char* name, int type) {
 
   if ( dictionary_contains(entities, name) ) {
-    printf("Warning: Entity Manager already contains entity called %s! Not added.\n", name);
-    return;
+    error("Entity Manager already contains entity called %s! Not added.", name);
   }
   
   entity* e;
@@ -66,10 +67,12 @@ entity* entity_new(char* name, int type) {
     
   } else if (type == entity_type_static) {
     e = static_object_new(NULL);
-    
+  
+  } else if (type == entity_type_animated) {
+    e = animated_object_new(NULL, NULL);
+  
   } else {
-    printf("Error: Don't know how to create entity %s. Unknown type id %i!\n", name, type);
-    exit(EXIT_FAILURE);
+    error("Don't know how to create entity %s. Unknown type id %i!", name, type);
   }
   
   dictionary_set(entities, name, e);
@@ -81,14 +84,14 @@ entity* entity_new(char* name, int type) {
   char* name_copy = malloc(strlen(name) + 1);
   strcpy(name_copy, name);
   list_push_back(entity_names, name_copy);
-
+  
   return e;
 }
 
 void entity_add(char* name, int type, entity* entity) {
 
   if ( entity_exists(name) ) {
-    printf("Warning: Entity Manager already contains entity called %s! Not added.\n", name);
+    warning("Entity Manager already contains entity called %s! Not added.", name);
     return;
   }
   
@@ -106,8 +109,7 @@ void entity_add(char* name, int type, entity* entity) {
 entity* entity_get(char* name) {
   
   if ( !entity_exists(name) ) {
-    printf("Error: Entity %s does not exist!", name);
-    exit(EXIT_FAILURE);
+    error("Entity %s does not exist!", name);
   }
   
   return dictionary_get(entities, name);
@@ -129,11 +131,13 @@ void entity_delete(char* name) {
     dictionary_remove_with(entities, name, (void (*)(void *))light_delete);
     
   } else if (type == entity_type_static) {
-   dictionary_remove_with(entities, name, (void (*)(void *))static_object_delete);
+    dictionary_remove_with(entities, name, (void (*)(void *))static_object_delete);
+    
+  } else if (type == entity_type_animated) {
+    dictionary_remove_with(entities, name, (void (*)(void *))animated_object_delete);
     
   } else {
-    printf("Error: Don't know how to delete entity %s. Unknown type id %i!\n", name, type);
-    exit(EXIT_FAILURE);
+    error("Don't know how to delete entity %s. Unknown type id %i!", name, type);
   }
   
 }
