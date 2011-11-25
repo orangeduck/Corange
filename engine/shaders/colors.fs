@@ -81,5 +81,5 @@ vec3 color_correction(vec3 color, sampler3D lut, int lut_size) {
   float scale = (lut_size - 1.0) / lut_size;
   float offset = 1.0 / (2.0 * lut_size);
 
-  return texture3D(lut, clamp(color, 0, 1) * scale + offset).rgb;
+  return texture3D(lut, clamp(color, 0.0, 1.0) * scale + offset).rgb;
 }

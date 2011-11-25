@@ -19,7 +19,7 @@ float shadow_amount(vec4 light_pos, sampler2D light_depth) {
   light_pos = vec4(light_pos.xyz / light_pos.w, 1);
   
   if ((abs(light_pos.x) > 1) || (abs(light_pos.y) > 1) || (abs(light_pos.z) > 1)) {
-    return 1;
+    return 1.0;
   }
   
   vec4 shadow_coord = light_pos / 2.0 + 0.5;
@@ -41,7 +41,7 @@ float shadow_amount_pcf4(vec4 light_pos, sampler2D light_depth, float kernel) {
   light_pos = vec4(light_pos.xyz / light_pos.w, 1);
   
   if ((abs(light_pos.x) > 1) || (abs(light_pos.y) > 1) || (abs(light_pos.z) > 1)) {
-    return 1;
+    return 1.0;
   }
   
   vec4 shadow_coord = light_pos / 2.0 + 0.5;
@@ -71,7 +71,7 @@ float shadow_amount_pcf9(vec4 light_pos, sampler2D light_depth, float kernel) {
   light_pos = vec4(light_pos.xyz / light_pos.w, 1);
   
   if ((abs(light_pos.x) > 1) || (abs(light_pos.y) > 1) || (abs(light_pos.z) > 1)) {
-    return 1;
+    return 1.0;
   }
   
   vec4 shadow_coord = light_pos / 2.0 + 0.5;
@@ -106,7 +106,7 @@ float shadow_amount_pcf16(vec4 light_pos, sampler2D light_depth, float kernel) {
   light_pos = vec4(light_pos.xyz / light_pos.w, 1);
   
   if ((abs(light_pos.x) > 1) || (abs(light_pos.y) > 1) || (abs(light_pos.z) > 1)) {
-    return 1;
+    return 1.0;
   }
   
   vec4 shadow_coord = light_pos / 2.0 + 0.5;
@@ -152,7 +152,7 @@ float shadow_amount_pcf25(vec4 light_pos, sampler2D light_depth, float kernel) {
   light_pos = vec4(light_pos.xyz / light_pos.w, 1);
   
   if ((abs(light_pos.x) > 1) || (abs(light_pos.y) > 1) || (abs(light_pos.z) > 1)) {
-    return 1;
+    return 1.0;
   }
   
   vec4 shadow_coord = light_pos / 2.0 + 0.5;
@@ -206,7 +206,7 @@ float shadow_amount_soft_pcf25(vec4 light_pos, sampler2D light_depth, float hard
   light_pos = vec4(light_pos.xyz / light_pos.w, 1);
   
   if ((abs(light_pos.x) > 1) || (abs(light_pos.y) > 1) || (abs(light_pos.z) > 1)) {
-    return 1;
+    return 1.0;
   }
   
   vec4 shadow_coord = light_pos / 2.0 + 0.5;
@@ -255,9 +255,9 @@ float shadow_amount_soft_pcf25(vec4 light_pos, sampler2D light_depth, float hard
   
   blocked_depth = blocked_depth / 25;
   
-  float prenumbra = max((our_depth - blocked_depth) * hardness * 0.25,0) / blocked_depth;
+  float prenumbra = max((our_depth - blocked_depth) * hardness * 0.25, 0.0) / blocked_depth;
   
-  float kernel = prenumbra * 1000 + 0.00025;
+  float kernel = prenumbra * 1000.0 + 0.00025;
   
   vec2 samples[25] = vec2[25]( vec2(-2.0*kernel, -2.0*kernel),
                        vec2(-2.0*kernel,  -kernel),
