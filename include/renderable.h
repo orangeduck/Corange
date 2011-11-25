@@ -20,6 +20,8 @@ typedef struct {
   material* instance;
   material* base;
   
+  int is_rigged;
+	
 } renderable_surface;
 
 
@@ -31,16 +33,26 @@ typedef struct {
 } renderable;
 
 
-renderable* renderable_new(model* m);
+renderable* renderable_new();
 void renderable_delete(renderable* r);
 
 void renderable_set_material(renderable* r, material* m);
 
 /* Renderable Surface */
 
+typedef struct {
+  int bone_ids[3];
+  float bone_weights[3];
+} vertex_weight;
+
 renderable_surface* renderable_surface_new(mesh* m);
+renderable_surface* renderable_surface_new_rigged(mesh* m, vertex_weight* weights);
 void renderable_surface_delete(renderable_surface* surface);
 
 void renderable_surface_set_material(renderable_surface* s, material* m);
+
+
+renderable* obj_load_file(char* filename);
+renderable* smd_load_file(char* filename);
 
 #endif

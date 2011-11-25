@@ -14,8 +14,8 @@ static renderable* r_piano;
 static wolf_renderable* wr_piano;
 
 static font* console_font;
-static render_text* rt_framerate;
-static render_text* rt_test_text;
+static ui_text* rt_framerate;
+static ui_text* rt_test_text;
 
 static camera* cam;
 static light* sun;
@@ -40,8 +40,7 @@ void wolf_init() {
   piano = asset_get("/resources/piano/piano.obj");
   piano_mat = asset_get("/resources/piano/piano.mat");
 
-  r_piano = renderable_new("piano");
-  renderable_add_model(r_piano, piano);
+  r_piano = renderable_new(piano);
   renderable_set_material(r_piano, piano_mat);
   
   wr_piano = wolf_renderable_new("wr_piano", piano, brush, 8, v2(1,1), 800.0 );
@@ -51,17 +50,17 @@ void wolf_init() {
   
   console_font = asset_get("./engine/fonts/console_font.fnt");
   
-  rt_framerate = render_text_new("hello", 10, console_font);
+  rt_framerate = ui_text_new("hello", console_font);
   rt_framerate->position = v2(-0.95,-0.95);
   rt_framerate->scale = v2(0.7,0.7);
   rt_framerate->color = v4(1,1,1,1);
-  render_text_update(rt_framerate);
+  ui_text_update(rt_framerate);
   
-  rt_test_text = render_text_new("Painting Renderer\nmouse to move\n'p' to switch object.", 512, console_font);
+  rt_test_text = ui_text_new("Painting Renderer\nmouse to move\n'p' to switch object.", console_font);
   rt_test_text->position = v2(-0.95,-0.90);
   rt_test_text->scale = v2(0.7,0.7);
   rt_test_text->color = v4(1,1,1,1);
-  render_text_update(rt_test_text);
+  ui_text_update(rt_test_text);
   
   /* Init render engine */
   
@@ -142,7 +141,7 @@ void wolf_event(SDL_Event event) {
 void wolf_render() {
 
   shadow_mapper_begin();
-  shadow_mapper_render_renderable(r_piano);
+  //shadow_mapper_render_renderable(r_piano);
   shadow_mapper_end();
 
   wolf_renderer_begin();
@@ -173,8 +172,8 @@ void wolf_finish() {
   camera_delete(cam);
   light_delete(sun);
 
-  render_text_delete(rt_framerate);
-  render_text_delete(rt_test_text);
+  ui_text_delete(rt_framerate);
+  ui_text_delete(rt_test_text);
 
   printf("Cello game finish!\n");
 

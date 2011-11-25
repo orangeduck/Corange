@@ -3,9 +3,6 @@
 
 #include "list.h"
 
-#include "light.h"
-#include "camera.h"
-
 typedef void entity;
 
 void entity_manager_init();
@@ -29,5 +26,6 @@ const static int entity_type_none = 0;
 const static int entity_type_camera = 1;
 const static int entity_type_light = 2;
 const static int entity_type_static = 3;
+const static int entity_type_animated = 4;
 
 #endif

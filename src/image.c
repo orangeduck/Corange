@@ -979,11 +979,28 @@ image* bmp_load_file(char* filename) {
     error("Could not load file %s\n", filename);
   }
   
-  if (surface->format->BytesPerPixel != 4) {
-    error("File %s. Needs four channels!", filename);
+  unsigned char* image_data = malloc(sizeof(unsigned char) * 4 * surface->w * surface->h);
+  
+  if (surface->format->BytesPerPixel == 3) {
+    
+    int x, y;
+    for(x = 0; x < surface->w; x++)
+    for(y = 0; y < surface->h; y++) {
+      image_data[x * 4 + y * surface->w * 4 + 0] = ((unsigned char*)surface->pixels)[x * 3 + y * surface->w * 3 + 0];
+      image_data[x * 4 + y * surface->w * 4 + 1] = ((unsigned char*)surface->pixels)[x * 3 + y * surface->w * 3 + 1];
+      image_data[x * 4 + y * surface->w * 4 + 2] = ((unsigned char*)surface->pixels)[x * 3 + y * surface->w * 3 + 2];
+      image_data[x * 4 + y * surface->w * 4 + 3] = 0;
+    }
+    
+  } else if (surface->format->BytesPerPixel == 4) {
+    memcpy(image_data, surface->pixels, sizeof(unsigned char) * 4 * surface->w * surface->h);
+  } else {
+    error("File %s has %i channels, don't know how to load it!", filename, surface->format->BytesPerPixel);
   }
 
-  image* i = image_new(surface->w, surface->h, surface->pixels);
+  image* i = image_new(surface->w, surface->h, image_data);
+  
+  free(image_data);
   
   SDL_FreeSurface(surface);
   

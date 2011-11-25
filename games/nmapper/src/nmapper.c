@@ -9,9 +9,6 @@ static char* fov_string;
 static ui_text* txt_strength;
 static ui_text* txt_fov;
 
-static renderable* r_cello;
-static renderable* r_torus;
-
 void nmapper_init() {
   
   viewport_set_multisamples(8);
@@ -40,15 +37,12 @@ void nmapper_init() {
   
   texture* t_cello = asset_get("/resources/textures/cello_nm.dds");
   texture* t_blank = asset_get("/resources/textures/blank_nm.dds");
-  
-  model* m_cello = asset_get("/resources/meshes/cello.obj");
-  model* m_torus = asset_get("/resources/meshes/torus.obj");
  
-  r_cello = renderable_new(m_cello);
+  renderable* r_cello = asset_get("/resources/meshes/cello.obj");
   renderable_set_material(r_cello, nmapper_mat);
   entity_add("cello", entity_type_static, static_object_new(r_cello));
   
-  r_torus = renderable_new(m_torus);
+  renderable* r_torus = asset_get("/resources/meshes/torus.obj");
   renderable_set_material(r_torus, nmapper_mat);
   entity_add("torus", entity_type_static, static_object_new(r_torus));
   
@@ -203,9 +197,6 @@ void nmapper_finish() {
 
   ui_text_delete(txt_strength);
   ui_text_delete(txt_fov);
-  
-  renderable_delete(r_cello);
-  renderable_delete(r_torus);
   
   forward_renderer_finish();
 

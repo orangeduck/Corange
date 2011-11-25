@@ -191,7 +191,7 @@ void volume_renderer_begin() {
   
   kernel_set_argument(k_clear_volume, 3, sizeof(kernel_memory), &k_normals_volume);
   kernel_set_argument(k_clear_volume, 4, sizeof(vector4), &norm);
-  kernel_run(k_clear_volume, width * height * depthh);
+  kernel_run(k_clear_volume, width * height * depth);
   
   kernel_memory_gl_aquire(k_proj_texture);
   kernel_memory_gl_aquire(k_stencil_texture);

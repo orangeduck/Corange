@@ -1,8 +1,6 @@
 
 #include "corange.h"
 
-static renderable* r_seaplane;
-
 static int mouse_x;
 static int mouse_y;
 static int mouse_down;
@@ -44,7 +42,6 @@ void sea_init() {
   texture* water_calm = asset_get("/resources/water_calm.dds");
   texture* water_foam = asset_get("/resources/water_foam.dds");
   
-  model* seaplane = asset_get("/resources/seaplane.obj");
   material* seaplane_mat = asset_get("/resources/seaplane.mat");
   
   material_set_property(seaplane_mat, "tex_noise1", noise1, mat_type_texture);
@@ -58,7 +55,7 @@ void sea_init() {
   material_set_property(seaplane_mat, "tex_calm_water", water_calm, mat_type_texture);
   material_set_property(seaplane_mat, "tex_foam_water", water_foam, mat_type_texture);
   
-  r_seaplane = renderable_new(seaplane);
+  renderable* r_seaplane = asset_get("/resources/seaplane.obj");
   renderable_set_material(r_seaplane, seaplane_mat);
   
   entity_add("seaplane", entity_type_static, static_object_new(r_seaplane));
@@ -143,8 +140,6 @@ void sea_event(SDL_Event event) {
 }
 
 void sea_finish() {
-
-  renderable_delete(r_seaplane);
 
   forward_renderer_finish();
 

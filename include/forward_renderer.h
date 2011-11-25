@@ -7,6 +7,7 @@
 #include "texture.h"
 #include "material.h"
 #include "static_object.h"
+#include "animated_object.h"
 
 void forward_renderer_init();
 void forward_renderer_finish();
@@ -22,6 +23,6 @@ void forward_renderer_end();
 
 void forward_renderer_render_model(render_model* m, material* mat);
 void forward_renderer_render_static(static_object* s);
-
+void forward_renderer_render_animated(animated_object* ao);
 
 #endif

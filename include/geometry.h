@@ -16,6 +16,7 @@ typedef struct {
 } vertex;
 
 int vertex_equal(vertex v1, vertex v2);
+void vertex_print(vertex v);
 
 typedef struct {
   

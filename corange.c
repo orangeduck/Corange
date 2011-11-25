@@ -1,5 +1,7 @@
 #include <stdlib.h>
 
+#include "type.h"
+
 #include "corange.h"
 
 static char* game_name_arg;
@@ -44,7 +46,10 @@ int main(int argc, char* argv[]) {
   
   asset_manager_init(game_name_arg);
   
-  asset_manager_handler("obj", (asset_loader_t)obj_load_file, (asset_deleter_t)model_delete);
+  asset_manager_handler("obj", (asset_loader_t)obj_load_file, (asset_deleter_t)renderable_delete);
+  asset_manager_handler("smd", (asset_loader_t)smd_load_file, (asset_deleter_t)renderable_delete);
+  asset_manager_handler("skl", (asset_loader_t)skl_load_file, (asset_deleter_t)skeleton_delete);
+  asset_manager_handler("ani", (asset_loader_t)ani_load_file, (asset_deleter_t)animation_delete);
   
   asset_manager_handler("bmp", (asset_loader_t)bmp_load_file, (asset_deleter_t)image_delete);
   asset_manager_handler("tga", (asset_loader_t)tga_load_file, (asset_deleter_t)image_delete);
@@ -59,6 +64,8 @@ int main(int argc, char* argv[]) {
   asset_manager_handler("mat", (asset_loader_t)mat_load_file, (asset_deleter_t)material_delete);
   asset_manager_handler("lua", (asset_loader_t)lua_load_file, (asset_deleter_t)script_delete);
   asset_manager_handler("cl" , (asset_loader_t)cl_load_file,  (asset_deleter_t)kernel_program_delete);
+  
+  load_file("./engine/resources/basic.mat");
   
   load_folder("./engine/shaders/");
   load_folder("./engine/fonts/");

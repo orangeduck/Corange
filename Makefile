@@ -16,7 +16,7 @@ corange.dll: $(OBJ_FILES)
 	$(CC) -g $(OBJ_FILES) $(LFLAGS) -shared -o $@
 
 obj/%.o: src/%.c
-	$(CC) $< -c -Wall -Wno-unused -O3 -g $(CFLAGS) -o $@ 
+	$(CC) $< -c -Wall -Wno-unused -O3 -g $(CFLAGS) -o $@
 
 clean:
 	rm $(OBJ_FILES)

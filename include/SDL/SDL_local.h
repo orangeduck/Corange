@@ -11,8 +11,11 @@
   #define GLsizeiptr int
 #endif
 
-void SDL_CheckOpenGLExtension(const char* name, void* function_pointer);
+void SDL_RWsize(SDL_RWops* file, int* size);
+void SDL_RWreadline(SDL_RWops* file, char* buffer);
+
 void SDL_LoadOpenGLExtensions();
+void SDL_CheckOpenGLExtension(const char* name, void* function_pointer);
 void SDL_CheckOpenGLError(const char* name);
 
 typedef GLuint (APIENTRY * GLCREATESHADERFN)( GLenum type );
@@ -109,7 +112,7 @@ extern GLGENERATEMIPMAPFN glGenerateMipmap;
 extern GLCOMPRESSEDTEXIMAGE2DFN glCompressedTexImage2D;
 extern GLTEXIMAGE3DFN glTexImage3D;
 
-/* Found these from glew */
+/* Extension Constants - Found these from glew and Google */
 
 #define GL_FRAMEBUFFER 0x8D40
 #define GL_RENDERBUFFER 0x8D41
@@ -136,9 +139,9 @@ extern GLTEXIMAGE3DFN glTexImage3D;
 #define GL_RGBA16F 0x881A
 #define GL_BGRA 0x80E1
 #define GL_BGR 0x80E0
-#define GL_COMPRESSED_RGBA_S3TC_DXT1_EXT 0x83F1
-#define GL_COMPRESSED_RGBA_S3TC_DXT3_EXT 0x83F2
-#define GL_COMPRESSED_RGBA_S3TC_DXT5_EXT 0x83F3
+#define GL_COMPRESSED_RGBA_S3TC_DXT1 0x83F1
+#define GL_COMPRESSED_RGBA_S3TC_DXT3 0x83F2
+#define GL_COMPRESSED_RGBA_S3TC_DXT5 0x83F3
 #define GL_UNSIGNED_SHORT_1_5_5_5_REV 0x8366
 #define GL_UNSIGNED_SHORT_5_6_5 0x8363
 #define GL_DEPTH_COMPONENT24 0x81A6

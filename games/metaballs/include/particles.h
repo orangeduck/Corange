@@ -12,8 +12,7 @@ int particles_count();
 
 void particles_reset();
 
-vector4 particle_position(int id);
-vector4 particle_velocity(int id);
+vector4* particle_positions();
 
 GLuint particle_positions_buffer();
 GLuint particle_velocities_buffer();

@@ -203,4 +203,6 @@ vector4 v4_quaternion_yaw(float angle);
 vector4 v4_quaternion_pitch(float angle);
 vector4 v4_quaternion_roll(float angle);
 
+vector4 v4_quaternion_euler(float roll, float pitch, float yaw);
+
 #endif

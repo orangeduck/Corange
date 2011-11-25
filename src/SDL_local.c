@@ -50,6 +50,30 @@ GLGENERATEMIPMAPFN glGenerateMipmap;
 GLCOMPRESSEDTEXIMAGE2DFN glCompressedTexImage2D;
 GLTEXIMAGE3DFN glTexImage3D;
 
+void SDL_RWsize(SDL_RWops* file, int* size) {
+  int pos = SDL_RWtell(file);
+  *size = SDL_RWseek(file, 0, SEEK_END);
+  SDL_RWseek(file, pos, SEEK_SET);
+}
+
+void SDL_RWreadline(SDL_RWops* file, char* buffer) {
+  
+  char c;
+  
+  int i = 0;
+  while(i) {
+    SDL_RWread(file, &c, 1, 1);
+    if (c == '\0') { break; }
+    if (c == '\r') { SDL_RWread(file, &c, 1, 1); break; } /* Read extra '\n' character */
+    if (c == '\n') { break; }
+    
+    buffer[i] = c;
+    i++;
+  }
+  
+  buffer[i] = '\0';
+}
+
 void SDL_CheckOpenGLError(const char* name) {
   switch (glGetError()) {
     

@@ -283,7 +283,7 @@ int asset_loaded(char* path) {
 
 char* asset_file_contents(char* filename) {
   
-  filename = asset_map_filename(filename);
+  //filename = asset_map_filename(filename);
   
   printf("Loading: %s\n", filename); fflush(stdout);
   

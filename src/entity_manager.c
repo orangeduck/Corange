@@ -8,6 +8,7 @@
 #include "camera.h"
 #include "light.h"
 #include "static_object.h"
+#include "animated_object.h"
 
 #include "asset_manager.h"
 
@@ -66,7 +67,10 @@ entity* entity_new(char* name, int type) {
     
   } else if (type == entity_type_static) {
     e = static_object_new(NULL);
-    
+  
+  } else if (type == entity_type_animated) {
+    e = animated_object_new(NULL, NULL);
+  
   } else {
     error("Don't know how to create entity %s. Unknown type id %i!", name, type);
   }
@@ -127,7 +131,10 @@ void entity_delete(char* name) {
     dictionary_remove_with(entities, name, (void (*)(void *))light_delete);
     
   } else if (type == entity_type_static) {
-   dictionary_remove_with(entities, name, (void (*)(void *))static_object_delete);
+    dictionary_remove_with(entities, name, (void (*)(void *))static_object_delete);
+    
+  } else if (type == entity_type_animated) {
+    dictionary_remove_with(entities, name, (void (*)(void *))animated_object_delete);
     
   } else {
     error("Don't know how to delete entity %s. Unknown type id %i!", name, type);
