@@ -3,6 +3,7 @@
 
 #include "SDL/SDL_loadso.h"
 
+#include "error.h"
 #include "game.h"
 
 static char game_name_str[128];
@@ -43,13 +44,13 @@ void game_load(char* name) {
     game_unload();
   }
   
-  game_dll_location = malloc( strlen("./Games/") + 
+  game_dll_location = malloc( strlen("./games/") + 
                               strlen(name) + 
                               strlen("/") + 
                               strlen(name) + 
                               strlen(".dll") + 1 );
   
-  strcpy(game_dll_location, "./Games/");
+  strcpy(game_dll_location, "./games/");
   strcat(game_dll_location, name);
   strcat(game_dll_location, "/");
   strcat(game_dll_location, name);
@@ -58,7 +59,7 @@ void game_load(char* name) {
   game_library = SDL_LoadObject(game_dll_location);
   if( game_library == NULL) {
      
-     printf("Could not load game '%s'!\n", name);
+     error("Could not load game %s as %s doesn't exist\n", name, game_dll_location);
      
   } else {
     
@@ -79,21 +80,21 @@ void game_load(char* name) {
     
     game_init_func = (void(*)(void))SDL_LoadFunction(game_library, game_init_func_name);
     if ( game_init_func == NULL ) {
-      printf("Couldn't find init function '%s' for game '%s'\n", game_init_func_name, name);
+      warning("Couldn't find init function '%s' for game '%s'\n", game_init_func_name, name);
     } else {
       game_has_init = 1;
     }
     
     game_update_func = (void(*)(void))SDL_LoadFunction(game_library, game_update_func_name);
     if ( game_update_func == NULL ) {
-      printf("Couldn't find update function '%s' for game '%s'\n", game_update_func_name, name);
+      warning("Couldn't find update function '%s' for game '%s'\n", game_update_func_name, name);
     } else {
       game_has_update = 1;
     }
     
     game_render_func = (void(*)(void))SDL_LoadFunction(game_library, game_render_func_name);
     if ( game_render_func == NULL ) {
-      printf("Couldn't find render function '%s' for game '%s'\n", game_render_func_name, name);
+      warning("Couldn't find render function '%s' for game '%s'\n", game_render_func_name, name);
     } else {
       game_has_render = 1;
     }
@@ -101,14 +102,14 @@ void game_load(char* name) {
     
     game_finish_func = (void(*)(void))SDL_LoadFunction(game_library, game_finish_func_name);
     if ( game_finish_func == NULL ) {
-      printf("Couldn't find finish function '%s' for game '%s'\n", game_finish_func_name, name);
+      warning("Couldn't find finish function '%s' for game '%s'\n", game_finish_func_name, name);
     } else {
       game_has_finish = 1;
     }
     
     game_event_func = (void(*)(SDL_Event))SDL_LoadFunction(game_library, game_event_func_name);
     if ( game_event_func == NULL ) {
-      printf("Couldn't find event function '%s' for game '%s'\n", game_event_func_name, name);
+      warning("Couldn't find event function '%s' for game '%s'\n", game_event_func_name, name);
     } else {
       game_has_event = 1;
     }
@@ -120,6 +121,7 @@ void game_load(char* name) {
 void game_unload() {
   
   SDL_UnloadObject(game_library);
+  
   free(game_dll_location);
   
   free(game_init_func_name);

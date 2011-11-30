@@ -94,12 +94,12 @@ void m44_print(matrix_4x4 m);
 
 matrix_4x4 m44_translation(vector3 v);
 matrix_4x4 m44_scale(vector3 v);
-matrix_4x4 m44_rotation(vector3 v);
 
 matrix_4x4 m44_rotation_x(float a);
 matrix_4x4 m44_rotation_y(float a);
 matrix_4x4 m44_rotation_z(float a);
 
+matrix_4x4 m44_rotation_euler(float x, float y, float z);
 matrix_4x4 m44_rotation_quaternion(vector4 q);
 
 matrix_4x4 m44_view_look_at(vector3 position, vector3 target, vector3 up);

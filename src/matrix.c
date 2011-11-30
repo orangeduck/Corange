@@ -704,7 +704,7 @@ matrix_4x4 m44_translation(vector3 v) {
 
   return m;
   
-};
+}
 
 matrix_4x4 m44_scale(vector3 v) {
 
@@ -714,7 +714,7 @@ matrix_4x4 m44_scale(vector3 v) {
   m.zz = v.z;
 
   return m;
-};
+}
 
 matrix_4x4 m44_rotation_x(float a) {
 
@@ -727,7 +727,7 @@ matrix_4x4 m44_rotation_x(float a) {
   
   return m;
   
-};
+}
 
 matrix_4x4 m44_rotation_y(float a) {
 
@@ -740,7 +740,7 @@ matrix_4x4 m44_rotation_y(float a) {
 
   return m;
   
-};
+}
 
 matrix_4x4 m44_rotation_z(float a) {
 
@@ -753,18 +753,36 @@ matrix_4x4 m44_rotation_z(float a) {
 
   return m;
   
-};
+}
 
-matrix_4x4 m44_rotation(vector3 v) {
+matrix_4x4 m44_rotation_euler(float x, float y, float z) {
 
-  matrix_4x4 m = m44_id();
-  m = m44_mul_m44(m , m44_rotation_x(v.x) );
-  m = m44_mul_m44(m , m44_rotation_y(v.y) );
-  m = m44_mul_m44(m , m44_rotation_z(v.z) );
+  matrix_4x4 m = m44_zero();
+
+	float cosx = cos(x);
+	float cosy = cos(y);
+	float cosz = cos(z);
+	float sinx = sin(x);
+	float siny = sin(y);
+	float sinz = sin(z);
+
+	m.xx = cosy * cosz;
+	m.yx = -cosx * sinz + sinx * siny * cosz;
+	m.zx = sinx * sinz + cosx * siny * cosz;
+
+	m.xy = cosy * sinz;
+	m.yy = cosx * cosz + sinx * siny * sinz;
+	m.zy = -sinx * cosz + cosx * siny * sinz;
+
+	m.xz = -siny;
+	m.yz = sinx * cosy;
+	m.zz = cosx * cosy;
+
+	m.ww = 1;
   
   return m;
   
-};
+}
 
 matrix_4x4 m44_rotation_quaternion(vector4 q) {
 
@@ -785,7 +803,7 @@ matrix_4x4 m44_rotation_quaternion(vector4 q) {
   m.zz = 1.0 - 2 * q.x * q.x - 2 * q.y * q.y;
   
   return m;
-};
+}
 
 matrix_4x4 m44_world(vector3 position, vector3 scale, vector4 rotation) {
   
@@ -797,8 +815,8 @@ matrix_4x4 m44_world(vector3 position, vector3 scale, vector4 rotation) {
   
   result = m44_id();
   result = m44_mul_m44( result, pos_m );
-  result = m44_mul_m44( result, sca_m );
   result = m44_mul_m44( result, rot_m );
+  result = m44_mul_m44( result, sca_m );
   
   return result;
   

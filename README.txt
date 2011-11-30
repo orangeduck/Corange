@@ -2,10 +2,9 @@
 	|  Corange game engine  |
 	~~~~~~~~~~~~~~~~~~~~~~~~~
 	
-	Written in Pure C
-		(Why? Because it is beautiful)
+	Written in Pure C (Because it is beautiful)
 	
-	With SDL and OpenGL.
+	Depends on SDL and OpenGL.
 	
 	:: Running ::
 	
@@ -17,18 +16,26 @@
 	
 		You can also run any of the demo .bat files
 	
-	:: Features ::
-	
-		* Clean and simple asset management
-		* Deferred and forward renderers
-		* Text renderer
-		* LUA scripting
-		* Dynamically loaded game modules
-		* Loads obj files and dds files
-		* Small, Simple and powerful
-	
-	
 	:: Compiling ::
 	
-		To compile on Windows you need MinGW with gcc and from that it should just compile
-		To compile on Unix you need probably lots of things including a new Makefile and changes to the code.
+		To compile on Windows you need MinGW and then you should be able to run "make" as usual.
+		To compile on Unix you need probably need some changes to the Makefile but it should be pretty straight forward.
+	
+	:: Main Features ::
+		
+		* Small, simple and powerful
+		* Clean and easy Asset and Entity management
+		* Forward, Deferred, Text renderers
+		* Dynamically loaded game modules
+	
+	:: Other Things It does ::
+	
+		* Color correction, LUT generation, splines, photoshop curves
+		* LUA scripting
+		* Perlin noise
+		* OpenCL support
+		* Basic UI stuff
+		* Loaders for OBJ, SMD, DDS, TGA, BMP and others
+		* Skeletal Animation
+		
+		

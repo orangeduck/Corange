@@ -73,9 +73,6 @@ void cello_init() {
   renderable_set_material(r_skybox, asset_get("/resources/skybox/skybox.mat"));
   entity_add("skybox", entity_type_static, static_object_new(r_skybox));
   
-  renderable* r_pirate_coat = asset_get("./engine/resources/pirate_shirt.smd");
-  entity_add("pirate_coat", entity_type_static, static_object_new(r_pirate_coat));
-  
   /* Put some text on the screen */
   
   font* console_font = asset_get("./engine/fonts/console_font.fnt");
@@ -195,15 +192,13 @@ void cello_render() {
   static_object* s_floor = entity_get("floor");
   static_object* s_skybox = entity_get("skybox");
   static_object* s_cello = entity_get("cello");
-  static_object* s_pirate = entity_get("pirate_coat");
 
   shadow_mapper_begin();
   if(use_piano) {
     shadow_mapper_render_static(s_piano);
     shadow_mapper_render_static(s_floor);
   } else {
-    //shadow_mapper_render_static(s_cello);
-    shadow_mapper_render_static(s_pirate);
+    shadow_mapper_render_static(s_cello);
   }
   shadow_mapper_end();
 
@@ -217,8 +212,7 @@ void cello_render() {
       deferred_renderer_render_static(s_floor);
       deferred_renderer_render_static(s_piano);
     } else {
-      //deferred_renderer_render_static(s_cello);
-      deferred_renderer_render_static(s_pirate);
+      deferred_renderer_render_static(s_cello);
     }
     deferred_renderer_end();
     
@@ -235,8 +229,7 @@ void cello_render() {
       forward_renderer_render_static(s_floor);
       forward_renderer_render_static(s_piano);
     } else {
-      //forward_renderer_render_static(s_cello);
-      forward_renderer_render_static(s_pirate);
+      forward_renderer_render_static(s_cello);
     }
     
     forward_renderer_end();

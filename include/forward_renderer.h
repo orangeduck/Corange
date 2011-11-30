@@ -3,6 +3,7 @@
 
 #include "camera.h"
 #include "light.h"
+#include "skeleton.h"
 #include "geometry.h"
 #include "texture.h"
 #include "material.h"
@@ -24,5 +25,7 @@ void forward_renderer_end();
 void forward_renderer_render_model(render_model* m, material* mat);
 void forward_renderer_render_static(static_object* s);
 void forward_renderer_render_animated(animated_object* ao);
+void forward_renderer_render_skeleton(skeleton* s);
+void forward_renderer_render_axis(matrix_4x4 position);
 
 #endif

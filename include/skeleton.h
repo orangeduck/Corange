@@ -1,13 +1,15 @@
 #ifndef skeleton_h
 #define skeleton_h
 
-#include "vector.h"
+#include "matrix.h"
 
 struct bone {
   int id;
   char* name;
+  
   vector3 position;
-  vector4 rotation;
+  matrix_4x4 rotation;
+  
   struct bone* parent;
 };
 
@@ -16,14 +18,16 @@ typedef struct bone bone;
 
 bone* bone_new(int id, char* name);
 void bone_delete(bone* b);
-
+matrix_4x4 bone_transform(bone* b);
 
 typedef struct {
   int num_bones;
   bone** bones;
+  
 } skeleton;
 
 skeleton* skeleton_new();
+skeleton* skeleton_copy(skeleton* s);
 void skeleton_delete(skeleton* s);
 
 bone* skeleton_bone_id(skeleton* s, int id);

@@ -1,6 +1,7 @@
 #ifndef animated_object_h
 #define animated_object_h
 
+#include "matrix.h"
 #include "renderable.h"
 #include "skeleton.h"
 #include "animation.h"
@@ -18,18 +19,12 @@ typedef struct {
   renderable* renderable;
   skeleton* skeleton;
   
-  int num_animations;
-  animation** animations;
-  int curr_animation;
   float animation_time;
+  animation* animation;
   
 } animated_object;
 
 animated_object* animated_object_new(renderable* r, skeleton* s);
 void animated_object_delete(animated_object* ao);
-
-void animated_object_add_animation(animated_object* ao, animation* a);
-
-void animated_object_bone_matrices(animated_object* ao, matrix_4x4* matricies);
 
 #endif

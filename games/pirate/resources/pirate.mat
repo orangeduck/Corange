@@ -1,5 +1,5 @@
 string name = pirate
-program prog = ./engine/shaders/norm_spec_env.prog
+program prog = ./engine/shaders/basic_animated.prog
 
 texture diffuse_map = /resources/pirate.dds
 texture bump_map = /resources/pirate_nm.dds

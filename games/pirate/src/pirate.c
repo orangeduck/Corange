@@ -5,6 +5,8 @@ static int mouse_y;
 static int mouse_down;
 static int mouse_right_down;
 
+static float animation_time = 0;
+
 void pirate_init() {
   
   load_folder("/resources/");
@@ -19,7 +21,7 @@ void pirate_init() {
   animated_object* pirate = entity_new("pirate", entity_type_animated);
   pirate->skeleton = skel_pirate;
   pirate->renderable = r_pirate;
-  animated_object_add_animation(pirate, ani_defend);
+  pirate->animation = ani_defend;
   
   camera* cam = entity_new("camera", entity_type_camera);
   cam->position = v3(20.0, 20.0, 20.0);
@@ -69,6 +71,9 @@ void pirate_update() {
   mouse_x = 0;
   mouse_y = 0;
 
+  animated_object* pirate = entity_get("pirate");
+  animation_time += 0.1;
+  pirate->animation_time = animation_time;
 }
 
 void pirate_render() {
@@ -95,9 +100,11 @@ void pirate_event(SDL_Event event) {
   camera* cam = entity_get("camera");
   light* sun = entity_get("sun");
 
+  animated_object* pirate = entity_get("pirate");
+  
   switch(event.type){
   case SDL_KEYUP:
-        
+    
   break;
 
   case SDL_MOUSEBUTTONDOWN:
