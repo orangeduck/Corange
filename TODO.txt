@@ -1,6 +1,5 @@
 PLY loader
 Skydome
 Time of day lighting
-SMD loader
 Skeletal animation
 Fur Shader

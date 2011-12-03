@@ -1,3 +1,5 @@
+#include <math.h>
+
 #include "SDL/SDL.h"
 #include "SDL/SDL_opengl.h"
 #include "SDL/SDL_local.h"
@@ -6,10 +8,12 @@
 #include "renderable.h"
 #include "viewport.h"
 #include "asset_manager.h"
+#include "error.h"
 
 #include "shadow_mapper.h"
 
 static shader_program* depth_shader;
+static shader_program* depth_shader_animated;
 static texture* texture_ptr;
 
 static GLuint fbo;
@@ -29,6 +33,7 @@ void shadow_mapper_init(light* l) {
   LIGHT = l;
   
   depth_shader = asset_get("./engine/shaders/depth.prog");
+  depth_shader_animated = asset_get("./engine/shaders/depth_animated.prog");
   
   glGenFramebuffers(1, &fbo);
   glBindFramebuffer(GL_FRAMEBUFFER, fbo);
@@ -87,8 +92,6 @@ void shadow_mapper_begin() {
 
 void shadow_mapper_setup_camera() {
   
-  //matrix_4x4 viewm = camera_view_matrix(CAMERA);
-  //matrix_4x4 projm = camera_proj_matrix(CAMERA, viewport_ratio());
   matrix_4x4 viewm = light_view_matrix(LIGHT);
   matrix_4x4 projm = light_proj_matrix(LIGHT);
   
@@ -168,6 +171,85 @@ void shadow_mapper_render_static(static_object* s) {
       
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
       glBindBuffer(GL_ARRAY_BUFFER, 0);
+    }
+
+  }
+  
+  glUseProgram(0);
+  
+}
+
+#define MAX_BONES 64
+static matrix_4x4 bone_matrices[MAX_BONES];
+static float bone_matrix_data[4 * 4 * MAX_BONES];
+
+void shadow_mapper_render_animated(animated_object* ao) {
+  
+  if (ao->skeleton->num_bones > MAX_BONES) {
+    error("animated object skeleton has too many bones (over %i)", MAX_BONES);
+  }
+  
+  matrix_4x4 r_world_matrix = m44_world( ao->position, ao->scale, ao->rotation );
+  m44_to_array(r_world_matrix, world_matrix);
+  
+  int i;
+  for(i = 0; i < ao->skeleton->num_bones; i++) {
+    matrix_4x4 base, ani;
+    base = bone_transform(ao->skeleton->bones[i]);
+    if (ao->animation == NULL) {
+      ani = bone_transform(ao->skeleton->bones[i]);
+    } else {
+      float time = fmod(ao->animation_time, ao->animation->end_time);
+      ani = bone_transform(ao->animation->frames[(int)time]->bones[i]);
+    }
+    
+    bone_matrices[i] = m44_mul_m44(ani, m44_inverse(base));
+    m44_to_array(bone_matrices[i], bone_matrix_data + (i * 4 * 4));
+  }
+  
+  glUseProgram(*depth_shader_animated);
+  
+  GLint bone_world_matrices_u = glGetUniformLocation(*depth_shader_animated, "bone_world_matrices");
+  glUniformMatrix4fv(bone_world_matrices_u, ao->skeleton->num_bones, GL_FALSE, bone_matrix_data);
+  
+  GLint bone_count_u = glGetUniformLocation(*depth_shader_animated, "bone_count");
+  glUniform1i(bone_count_u, ao->skeleton->num_bones);
+  
+  GLint world_matrix_u = glGetUniformLocation(*depth_shader_animated, "world_matrix");
+  glUniformMatrix4fv(world_matrix_u, 1, 0, world_matrix);
+  
+  GLint proj_matrix_u = glGetUniformLocation(*depth_shader_animated, "proj_matrix");
+  glUniformMatrix4fv(proj_matrix_u, 1, 0, proj_matrix);
+  
+  GLint view_matrix_u = glGetUniformLocation(*depth_shader_animated, "view_matrix");
+  glUniformMatrix4fv(view_matrix_u, 1, 0, view_matrix);
+  
+  renderable* r = ao->renderable;
+  
+  for(i = 0; i < r->num_surfaces; i++) {
+    
+    renderable_surface* s = r->surfaces[i];
+    if(s->is_rigged) {
+    
+      GLsizei stride = sizeof(float) * 24;
+      
+      glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
+          
+      glVertexPointer(3, GL_FLOAT, stride, (void*)0);
+      glEnableClientState(GL_VERTEX_ARRAY);
+      
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
+      glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
+      
+      glDisableClientState(GL_VERTEX_ARRAY);
+      
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+      glBindBuffer(GL_ARRAY_BUFFER, 0);
+      
+    } else {
+      
+      error("animated object is not rigged");
+      
     }
 
   }

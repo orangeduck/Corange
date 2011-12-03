@@ -411,8 +411,10 @@ void forward_renderer_render_animated(animated_object* ao) {
       //forward_renderer_use_material(s->instance);
       
       shader_program* prog = dictionary_get(s->base->properties, "program");
+      
       GLint bone_world_matrices_u = glGetUniformLocation(*prog, "bone_world_matrices");
       glUniformMatrix4fv(bone_world_matrices_u, ao->skeleton->num_bones, GL_FALSE, bone_matrix_data);
+      
       GLint bone_count_u = glGetUniformLocation(*prog, "bone_count");
       glUniform1i(bone_count_u, ao->skeleton->num_bones);
       
@@ -467,8 +469,12 @@ void forward_renderer_render_animated(animated_object* ao) {
       error("animated object is not rigged");
     
     }
-
+    
+    float time = fmod(ao->animation_time, ao->animation->end_time);
+    forward_renderer_render_skeleton(ao->animation->frames[(int)time]);
+    
   }
+  
 }
 
 void forward_renderer_render_skeleton(skeleton* s) {

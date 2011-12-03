@@ -104,7 +104,7 @@ void cello_init() {
   /* Renderer Setup */
 
   viewport_set_vsync(1);
-  //viewport_set_dimensions( v2(800 * 1.5, 600 * 1.5) );  
+  viewport_set_dimensions( v2(800 * 1.5, 600 * 1.5) );  
   
   shadow_mapper_init(sun);
   

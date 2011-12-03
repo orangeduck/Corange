@@ -78,5 +78,6 @@ void main() {
   vec3 final = final_diffuse + final_ambient + final_spec;
   
   gl_FragColor = vec4( to_gamma(final) , diffuse_a.a);
+  //gl_FragColor = vec4( bump , diffuse_a.a);
 
 }

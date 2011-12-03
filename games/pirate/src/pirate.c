@@ -9,12 +9,13 @@ static float animation_time = 0;
 
 void pirate_init() {
   
-  load_folder("/resources/");
+  load_folder("/resources/pirate/");
+  load_folder("/resources/skybox/");
   
-  renderable* r_pirate = asset_get("/resources/pirate.smd");
-  skeleton* skel_pirate = asset_get("/resources/pirate.skl");
-  animation* ani_defend = asset_get("/resources/defend.ani");
-  material* mat_pirate = asset_get("/resources/pirate.mat");
+  renderable* r_pirate = asset_get("/resources/pirate/pirate.smd");
+  skeleton* skel_pirate = asset_get("/resources/pirate/pirate.skl");
+  animation* ani_defend = asset_get("/resources/pirate/defend.ani");
+  material* mat_pirate = asset_get("/resources/pirate/pirate.mat");
   
   renderable_set_material(r_pirate, mat_pirate);
   
@@ -22,6 +23,9 @@ void pirate_init() {
   pirate->skeleton = skel_pirate;
   pirate->renderable = r_pirate;
   pirate->animation = ani_defend;
+  
+  renderable* r_skybox = asset_get("/resources/skybox/skybox.obj");
+  entity_add("skybox", entity_type_static, static_object_new(r_skybox));
   
   camera* cam = entity_new("camera", entity_type_camera);
   cam->position = v3(20.0, 20.0, 20.0);
@@ -79,11 +83,10 @@ void pirate_update() {
 void pirate_render() {
 
   animated_object* pirate = entity_get("pirate");
-
-  skeleton* skel_pirate = asset_get("/resources/pirate.skl");
-  
+  static_object* skybox = entity_get("skybox");
+    
   shadow_mapper_begin();
-  //shadow_mapper_render_animated(pirate);
+  shadow_mapper_render_animated(pirate);
   shadow_mapper_end();
   
   forward_renderer_begin();
@@ -91,8 +94,8 @@ void pirate_render() {
   glClearColor(1.0f, 0.769f, 0.0f, 0.0f);
   glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
   
+  forward_renderer_render_static(skybox);
   forward_renderer_render_animated(pirate);
-  forward_renderer_render_skeleton(skel_pirate);
   
   forward_renderer_end();
 

@@ -65,8 +65,6 @@ int main(int argc, char* argv[]) {
   asset_manager_handler("lua", (asset_loader_t)lua_load_file, (asset_deleter_t)script_delete);
   asset_manager_handler("cl" , (asset_loader_t)cl_load_file,  (asset_deleter_t)kernel_program_delete);
   
-  load_file("./engine/resources/basic.mat");
-  
   load_folder("./engine/shaders/");
   load_folder("./engine/fonts/");
   load_folder("./engine/scripts/");

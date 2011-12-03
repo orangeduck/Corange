@@ -131,13 +131,11 @@ void dictionary_remove_with(dictionary* dict, char* string, void func(void*)) {
   
   /* No buckets in list */
   if (b == NULL) {
-    printf("No buckets!\n");
     return;
   }
   
   /* First Bucket */
   if(strcmp(b->string, string) == 0) {
-    printf("First bucket!\n");
     if(b->next == NULL) {
       bucket_delete_with(b, func);
       dict->buckets[index] = NULL;
