@@ -1,2 +1,2 @@
 vertex_shader : ./engine/shaders/basic_animated.vs
-fragment_shader : ./engine/shaders/basic_animated.fs
+fragment_shader : ./engine/shaders/basic.fs

@@ -40,7 +40,9 @@ dictionary* dictionary_new(int table_size) {
 void dictionary_delete(dictionary* dict) {
   int i;
   for(i=0; i< dict->table_size; i++) {
-    bucket_delete_recursive(dict->buckets[i]);
+    if (dict->buckets[i] != NULL) {
+      bucket_delete_recursive(dict->buckets[i]);
+    }
   }
   free(dict->buckets);
   free(dict);
@@ -129,26 +131,41 @@ void dictionary_remove_with(dictionary* dict, char* string, void func(void*)) {
   
   /* No buckets in list */
   if (b == NULL) {
+    printf("No buckets!\n");
     return;
   }
   
-  /* Single Bucket in list, remove */
-  if( strcmp(b->string, string) == 0) {
-    bucket_delete_with(b, func);
-    dict->buckets[index] = NULL;
+  /* First Bucket */
+  if(strcmp(b->string, string) == 0) {
+    printf("First bucket!\n");
+    if(b->next == NULL) {
+      bucket_delete_with(b, func);
+      dict->buckets[index] = NULL;
+    } else {
+      bucket* next = b->next;
+      bucket_delete_with(b, func);
+      dict->buckets[index] = next;
+    }
     return;
   }
   
-  /* Multiple Buckets */
+  /* One or more Buckets */
   while(1) {
-  
+    
     if(b->next == NULL) {
       return;
     }
-  
+    
     if(strcmp(b->next->string, string) == 0) {
-      bucket_delete_with(b->next, func);
-      b->next = NULL;
+      if (b->next->next == NULL) {
+        bucket_delete_with(b->next, func);
+        b->next = NULL;
+      } else {
+        bucket* next_next = b->next->next;
+        bucket_delete_with(b->next, func);
+        b->next = next_next;
+        next_next->prev = b;
+      }
       return;
     }
     b = b->next;
@@ -175,16 +192,30 @@ void dictionary_filter_map(dictionary* dict, int filter(void*) , void func(void*
   
 }
 
-
+void dictionary_print(dictionary* dict) {
+  int num_bucket_lists = 0;
+  
+  int i;
+  for(i = 0; i < dict->table_size; i++) {
+    bucket* b = dict->buckets[i];
+    if(b != NULL) {
+      printf("%i - ", i); bucket_print(b); printf("\n");
+      num_bucket_lists++;
+    }
+  }
+  
+  printf("Num slots with bucketlists: %i\n", num_bucket_lists);
+  
+}
 
 bucket* bucket_new(char* string, void* item) {
   
-  char* s = malloc(strlen(string) + 1);
-  strcpy(s, string);
-  
   bucket* b = malloc(sizeof(bucket));
   b->item = item;
-  b->string = s;
+  
+  b->string = malloc(strlen(string) + 1);
+  strcpy(b->string, string);
+  
   b->next = NULL;
   b->prev = NULL;
   
@@ -217,12 +248,17 @@ void bucket_delete_with(bucket* b, void func(void*) ){
 }
 
 void bucket_delete_recursive(bucket* b) {
+  if(b->next != NULL) { bucket_delete_recursive(b->next); }
   
-  if(b == NULL) { return; }
-  bucket_delete_recursive(b->next);
-  
-  //free(b->item);
   free(b->string);
   free(b);
+}
+
+void bucket_print(bucket* b) {
+  
+  printf("(%s : %i)", b->string, (int)b->item);
+  if (b->next != NULL) {
+    printf(" -> "); bucket_print(b->next);
+  }
   
 }

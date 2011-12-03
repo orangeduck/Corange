@@ -202,7 +202,7 @@ void reload_file(char* filename) {
   
   load_file(filename);
   
-};
+}
 
 void reload_folder(char* folder) {
 
@@ -210,7 +210,7 @@ void reload_folder(char* folder) {
 
   unload_folder(folder);
   load_folder(folder);
-};
+}
 
 void unload_file(char* filename) {
   
@@ -228,9 +228,8 @@ void unload_file(char* filename) {
     
   }
   
-  free(ext);
-  
-};
+  free(ext); 
+}
 
 void unload_folder(char* folder) {
     
@@ -262,8 +261,7 @@ void unload_folder(char* folder) {
   } else {
     warning("Could not open directory %s\n", folder);
   }
-
-};
+}
 
 void* asset_get(char* path) {
   path = asset_map_filename(path);
@@ -272,11 +270,15 @@ void* asset_get(char* path) {
     error("Could not find asset %s. Perhaps it is not loaded yet?", path);
   }
   return val;
-};
+}
 
 int asset_loaded(char* path) {
   path = asset_map_filename(path);
   return dictionary_contains(asset_dictionary, path);
+}
+
+void asset_state_print() {
+  dictionary_print(asset_dictionary);
 }
 
 /* Asset Loader helper commands */

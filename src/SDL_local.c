@@ -56,13 +56,19 @@ void SDL_RWsize(SDL_RWops* file, int* size) {
   SDL_RWseek(file, pos, SEEK_SET);
 }
 
-void SDL_RWreadline(SDL_RWops* file, char* buffer) {
+int SDL_RWreadline(SDL_RWops* file, char* buffer, int buffersize) {
   
   char c;
   
   int i = 0;
-  while(i) {
-    SDL_RWread(file, &c, 1, 1);
+  while(1) {
+    if (i == buffersize-1) {
+      error("cannot read line, buffer not big enough.");
+    }
+  
+    int num = SDL_RWread(file, &c, 1, 1);
+    if (num == -1) { return -1; }
+    if (num == 0) { return 0; }
     if (c == '\0') { break; }
     if (c == '\r') { SDL_RWread(file, &c, 1, 1); break; } /* Read extra '\n' character */
     if (c == '\n') { break; }
@@ -72,6 +78,7 @@ void SDL_RWreadline(SDL_RWops* file, char* buffer) {
   }
   
   buffer[i] = '\0';
+  return i;
 }
 
 void SDL_CheckOpenGLError(const char* name) {

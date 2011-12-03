@@ -1,49 +1,12 @@
 #include <string.h>
 
+#include "SDL/SDL_RWops.h"
+#include "SDL/SDL_local.h"
+
+#include "error.h"
 #include "asset_manager.h"
 
 #include "font.h"
-
-static void parse_char_line(font* f, char* c) {
-  
-  int i = 0;
-  char* end;
-  
-  while (*c != '=' ) c++; c++;
-  int id = strtoul(c, &end, 0);
-  c = end;
-  
-  while (*c != '=' ) c++; c++;
-  int x_loc = strtoul(c, &end, 0);
-  c = end;
-  
-  while (*c != '=' ) c++; c++;
-  int y_loc = strtoul(c, &end, 0);
-  c = end;
-
-  while (*c != '=' ) c++; c++;
-  int width = strtoul(c, &end, 0);
-  c = end;
-  
-  while (*c != '=' ) c++; c++;
-  int height = strtoul(c, &end, 0);
-  c = end;
-  
-  while (*c != '=' ) c++; c++;
-  int x_off = strtoul(c, &end, 0);
-  c = end;
-  
-  while (*c != '=' ) c++; c++;
-  int y_off = strtoul(c, &end, 0);
-  c = end;
-  
-  //printf("Line Details: %i %i %i %i %i %i %i \n", id, x_loc, y_loc, width, height, x_off, y_off);
-  
-  f->locations[id] = v2((float)x_loc / f->width, (float)y_loc / f->height);
-  f->sizes[id] = v2((float)width / f->width, (float)height / f->height);
-  f->offsets[id] = v2((float)x_off / f->width, (float)y_off / f->height);
-  
-}
 
 font* font_load_file(char* filename) {
   
@@ -56,89 +19,58 @@ font* font_load_file(char* filename) {
 
   f->texture_map = 0;
   
-  char* c = asset_file_contents(filename);
+  SDL_RWops* file = SDL_RWFromFile(filename, "r");
   
-  /* Begin parsing font data */
-  
-  char* line = malloc(1024);
-  
-  int i = 0;
-  int j = 0;
-  
-  while(1) {
-  
-    /* If end of string then exit. */
-    if( c[i] == '\0') { break; }
-    
-    /* End of line reached */
-    if( c[i] == '\n') {
-    
-      /* Null terminate line buffer */
-      line[j-1] = '\0';
-      
-      //printf("LINE: %s \n",line);
-      
-      /* Might be nice to change this later */
-      if (line[0] == 'p' && line[1] == 'a' && line[2] == 'g' && line[3] == 'e') {
-      
-        char* tex = strstr(line, "file=") + 6;
-        int k = 0;
-        while(tex[k] != '"') k++;
-        
-        char* root = asset_file_location(filename);
-        
-        char* filename = malloc(k+1);
-        memcpy(filename, tex, k);
-        filename[k] = '\0';
-        
-        char* full = malloc(strlen(root) + strlen(filename) + 1 );
-        strcpy(full, root);
-        strcat(full, filename);
-        
-        if(asset_loaded(full)) {
-          f->texture_map = (texture*)asset_get(full);
-        } else {
-          load_file(full);
-          f->texture_map = (texture*)asset_get(full);
-        }
-        
-        
-        free(root);
-        free(filename);
-        free(full);
-        
-      } else if (line[0] == 'c' && line[1] == 'o' && line[2] == 'm') {
-      
-        char* sizeline;
-        sizeline = strstr(line, "scaleW=") + 7;
-        f->width = strtoul(sizeline, NULL, 0);
-        
-        sizeline = strstr(line, "scaleH=") + 7;
-        f->height = strtoul(sizeline, NULL, 0);
-        
-      } else if (line[0] == 'c' && line[1] == 'h' && line[2] == 'a' && line[3] == 'r' && line[4] == ' ') {
-        
-        parse_char_line(f, line);
-      
-      }
-      
-      /* Reset line buffer index */
-      j = 0;
-      
-    } else {
-    
-      /* Otherwise add character to line buffer */
-      line[j] = c[i];
-      j++;
-    }
-    i++;
+  if(file == NULL) {
+    error("Could not load file %s", filename);
   }
   
-  free(line);
+  char line[1024];
+  while(SDL_RWreadline(file, line, 1024)) {
+    
+    int tex_id;
+    char texture_filename[1024];
+    if (sscanf(line, "page id=%i file=\%s", &tex_id, texture_filename) > 0) {
+      
+      char* root = asset_file_location(filename);
+      
+      char* full = malloc(strlen(root) + strlen(texture_filename) + 1 );
+      strcpy(full, root);
+      
+      strcat(full, texture_filename+1); /* +1 to remove beginning quotation */
+      full[strlen(full)-1] = '\0'; /* remove ending quotation */
+      
+      if(asset_loaded(full)) {
+        f->texture_map = asset_get(full);
+      } else {
+        load_file(full);
+        f->texture_map = asset_get(full);
+      }
+      
+      free(root);
+      free(full);
+    }
+    
+    int lineheight, base, scalew, scaleh, pages, packed, a_chan, r_chan, g_chan, b_chan;
+    if (sscanf(line, "common lineHeight=%i base=%i scaleW=%i scaleH=%i pages=%i packed=%i alphaChnl=%i redChnl=%i greenChnl=%i blueChnl=%i", &lineheight, &base, &scalew, &scaleh, &pages, &packed, &a_chan, &r_chan, &g_chan, &b_chan) > 0) {
+      
+      f->width = scalew;
+      f->height = scaleh;
+      
+    }
+    
+    int id, x, y, w, h, x_off, y_off, x_adv, page, chnl;
+    if (sscanf(line, "char id=%i x=%i y=%i width=%i height=%i xoffset=%i yoffset=%i xadvance=%i page=%i chnl=%i", &id, &x, &y, &w, &h, &x_off, &y_off, &x_adv, &page, &chnl) > 0) {
+      
+      f->locations[id] = v2((float)x / f->width, (float)y / f->height);
+      f->sizes[id] = v2((float)w / f->width, (float)h / f->height);
+      f->offsets[id] = v2((float)x_off / f->width, (float)y_off / f->height);
+    
+    }
+    
+  }
   
-  /* End parsing font data */
-  
-  free(c);
+  SDL_RWclose(file);
   
   return f;
   

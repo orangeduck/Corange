@@ -43,273 +43,135 @@ material* mat_load_file(char* filename) {
   material* mat = material_new();
   mat->name = name;
   
-  char* c = asset_file_contents(filename);
+  SDL_RWops* file = SDL_RWFromFile(filename, "r");
+  char line[1024];
+  while(SDL_RWreadline(file, line, 1024)) {
   
-  char* line = malloc(1024);
-  
-  int i = 0;
-  int j = 0;
-  
-  while(1) {
+    char type[512];
+    char name[512];
+    char value[512];
     
-    /* End of line reached */
-    if((c[i] == '\n') || (c[i] == '\0')) {
+    if (sscanf(line, "%s %s = %s", type, name, value) > 0) {
+      
+      char* property = malloc(strlen(name)+1);
+      strcpy(property, name);
     
-      /* Null terminate line buffer */
-      line[j] = '\0';
-      
-      material_parse_line(mat, line);
-      //printf("LINE: %s \n",line);
-      
-      /* Reset line buffer index */
-      j = 0;
-      
-      if( c[i] == '\0') { break; }
-      
-    } else {
+      int* mat_type;
+      void* result = NULL;
     
-      /* Otherwise add character to line buffer */
-      line[j] = c[i];
-      j++;
+      if (strcmp(type, "program") == 0) {
+        
+        mat_type = &mat_type_program;
+        
+        property = realloc(property, strlen("program")+1);
+        strcpy(property, "program");
+        
+        if(asset_loaded(value)) {
+          result = asset_get(value);
+        } else {
+          load_file(value);
+          result = asset_get(value);
+        }
+        
+      } else if (strcmp(type, "texture") == 0) {
+        
+        mat_type = &mat_type_texture;
+        
+        if(asset_loaded(value)) {
+          result = asset_get(value);
+        } else {
+          load_file(value);
+          result = asset_get(value);
+        }
+      
+      } else if (strcmp(type, "string") == 0) {
+        
+        mat_type = &mat_type_string;
+        
+        char* typed_result = malloc(strlen(value)+1);
+        strcpy(typed_result, value);
+        result = typed_result;
+      
+      } else if (strcmp(type, "int") == 0) {
+        
+        mat_type = &mat_type_int;
+        
+        int* typed_result = malloc(sizeof(int));
+        *typed_result = atoi(value);
+        result = typed_result;
+        
+      } else if (strcmp(type, "float") == 0) {
+        
+        mat_type = &mat_type_float;
+        
+        float* typed_result = malloc(sizeof(float));
+        *typed_result = atof(value);
+        result = typed_result;
+      
+      } else if (strcmp(type, "vector2") == 0) {
+        
+        mat_type = &mat_type_vector2;
+        
+        char* end;
+        float f1, f2;
+        f1 = strtod(value,&end);
+        f2 = strtod(end,NULL);
+        
+        vector2* typed_result = malloc(sizeof(vector2));
+        *typed_result = v2(f1, f2);
+        result = typed_result;
+        
+      } else if (strcmp(type, "vector3") == 0) {
+        
+        mat_type = &mat_type_vector3;
+        
+        char* end;
+        float f1, f2, f3;
+        f1 = strtod(value,&end);
+        f2 = strtod(end,&end);
+        f3 = strtod(end,NULL);
+        
+        vector3* typed_result = malloc(sizeof(vector3));
+        *typed_result = v3(f1, f2, f3);
+        result = typed_result;
+      
+      } else if (strcmp(type, "vector4") == 0) {
+        
+        mat_type = &mat_type_vector4;
+        
+        char* end;
+        float f1, f2, f3, f4;
+        f1 = strtod(value,&end);
+        f2 = strtod(end,&end);
+        f3 = strtod(end,&end);
+        f4 = strtod(end,NULL);
+        
+        vector4* typed_result = malloc(sizeof(vector4));
+        *typed_result = v4(f1, f2, f3, f4);
+        result = typed_result;
+      
+      } else {
+        error("Cannot parse line \"%s\" in material file %s, %s is not a type", line, filename, type);
+      }
+      
+      if(result == NULL) {
+        error("Cannot parse line \"\%s\" in material file %s, unassigned value", line, filename);
+      }
+      
+      dictionary_set(mat->types, property, mat_type);
+      dictionary_set(mat->properties, property, result);    
+      list_push_back(mat->keys, property);
+      
     }
-    i++;
   }
   
-  free(line);
-  
-  free(c);
+  SDL_RWclose(file);
     
   return mat;
 
-};
-
-
-static char type[128];
-static char name[128];
-static char value[128];
-
-void material_parse_line(material* mat, char* line) {
-  
- /* Return on zero lines */
-  if (strlen(line) == 0)
-    return;
-  
-  char c;
-  
-  /* Find type */
-  int i = 0;
-  while(1) {
-    c = line[i];
-    if (c == ' ') {
-      strncpy(type, line, i);
-      type[i] = '\0';
-      trim(type);
-      break;
-    }
-    i++;
-  }
-  
-  /* Find name */
-  int j = i;
-  while(1) {
-    c = line[j];
-    if (c == '=') {
-      char* begin = line+i+1;
-      int end = j-i-1;
-      strncpy(name, begin, end); 
-      name[end] = '\0';
-      trim(name);
-      break;
-    }
-    j++;
-  }
-  
-  /* Find value */
-  int k = j;
-  while(1) {
-    c = line[k];
-    if ( c == '\0' ) {
-      char* begin = line+j+1;
-      int end = k-j-1;
-      strncpy(value, begin, end);
-      value[end] = '\0';
-      trim(value);
-      k++;
-      break;
-    }
-    k++;
-  }
-  
-  /*
-  printf("LINE: |%s|\n", line);
-  printf("TYPE: |%s|\n", type);
-  printf("NAME: |%s|\n", name);
-  printf("VALUE: |%s|\n", value);
-  printf("\n");
-  */
-    
-  if (strcmp(type, "program") == 0) {
-  
-    /* for the program we ignore the property name */
-    char* property = malloc(strlen("program")+1);
-    strcpy(property, "program");
-    
-    shader_program* program;
-    
-    if(asset_loaded(value)) {
-      program = asset_get(value);
-    } else {
-      load_file(value);
-      program = asset_get(value);
-    }
-        
-    dictionary_set(mat->types, "program", &mat_type_program);
-    dictionary_set(mat->properties, "program", program);    
-    list_push_back(mat->keys, property);
-    
-    return;
-  }
-  
-  if (strcmp(type, "texture") == 0) {
-        
-    char* property = malloc(strlen(name)+1);
-    strcpy(property, name);
-    
-    texture* texture_ptr;
-    
-    if(asset_loaded(value)) {
-      texture_ptr = asset_get(value);
-    } else {
-      load_file(value);
-      texture_ptr = asset_get(value);
-    }
-    
-    dictionary_set(mat->types, property, &mat_type_texture);
-    dictionary_set(mat->properties, property, texture_ptr);    
-    list_push_back(mat->keys, property);
-    
-    return;
-  }
-  
-  if (strcmp(type, "string") == 0) {
-    
-    char* property = malloc(strlen(name)+1);
-    strcpy(property, name);
-    
-    char* result = malloc(strlen(value)+1);
-    strcpy(result, value);
-            
-    dictionary_set(mat->types, property, &mat_type_string);
-    dictionary_set(mat->properties, property, result);    
-    list_push_back(mat->keys, property);
-    
-    return;
-  }
-  
-  if (strcmp(type, "int") == 0) {
-    
-    char* property = malloc(strlen(name)+1);
-    strcpy(property, name);
-    
-    int* result = malloc(sizeof(int));
-    *result = atoi(value);
-    
-    dictionary_set(mat->types, property, &mat_type_int);
-    dictionary_set(mat->properties, property, result);    
-    list_push_back(mat->keys, property);
-    
-    return;
-  }
-  
-  if (strcmp(type, "float") == 0) {
-    
-    char* property = malloc(strlen(name)+1);
-    strcpy(property, name);
-    
-    float* result = malloc(sizeof(float));
-    *result = atof(value);
-    
-    dictionary_set(mat->types, property, &mat_type_float);
-    dictionary_set(mat->properties, property, result);    
-    list_push_back(mat->keys, property);
-    
-    return;
-  }
-  
-  if (strcmp(type, "vector2") == 0) {
-    
-    char* property = malloc(strlen(name)+1);
-    strcpy(property, name);
-    
-    char* end;
-    float f1, f2;
-    f1 = strtod(value,&end);
-    f2 = strtod(end,NULL);
-    
-    vector2* result = malloc(sizeof(vector2));
-    *result = v2(f1, f2);
-    
-    dictionary_set(mat->types, property, &mat_type_vector2);
-    dictionary_set(mat->properties, property, result);    
-    list_push_back(mat->keys, property);
-    
-    return;
-  }
-  
-  if (strcmp(type, "vector3") == 0) {
-    
-    char* property = malloc(strlen(name)+1);
-    strcpy(property, name);
-    
-    char* end;
-    float f1, f2, f3;
-    f1 = strtod(value,&end);
-    f2 = strtod(end,&end);
-    f3 = strtod(end,NULL);
-    
-    vector3* result = malloc(sizeof(vector3));
-    *result = v3(f1, f2, f3);
-    
-    dictionary_set(mat->types, property, &mat_type_vector3);
-    dictionary_set(mat->properties, property, result);    
-    list_push_back(mat->keys, property);
-    
-    return;
-  }
-  
-  if (strcmp(type, "vector4") == 0) {
-    
-    char* property = malloc(strlen(name)+1);
-    strcpy(property, name);
-    
-    char* end;
-    float f1, f2, f3, f4;
-    f1 = strtod(value,&end);
-    f2 = strtod(end,&end);
-    f3 = strtod(end,&end);
-    f4 = strtod(end,NULL);
-    
-    vector4* result = malloc(sizeof(vector4));
-    *result = v4(f1, f2, f3, f4);
-    
-    dictionary_set(mat->types, property, &mat_type_vector4);
-    dictionary_set(mat->properties, property, result);    
-    list_push_back(mat->keys, property);
-    
-    return;
-  }
-  
-  if (strcmp(type, "\r\n\0")) {
-    return;
-  }
-  
-  error("Cannot read material file line: %s\n", line);
-  
 }
 
 void material_delete(material* mat) {
-    
-  free(mat->name);
   
   int i;
   for(i = 0; i < mat->keys->num_items; i++) {
@@ -321,9 +183,20 @@ void material_delete(material* mat) {
       /* Do nothing */
     } else if (*type == mat_type_texture) {
       /* Do nothing */
+    } else if (*type == mat_type_string) {
+      free((char*)property);
+    } else if (*type == mat_type_int) {
+      free((int*)property);
+    } else if (*type == mat_type_float) {
+      free((float*)property);
+    } else if (*type == mat_type_vector2) {
+      free((vector2*)property);
+    } else if (*type == mat_type_vector3) {
+      free((vector3*)property);
+    } else if (*type == mat_type_vector4) {
+      free((vector4*)property);
     } else {
-      /* All the rest are structs that can be freed in one call */
-      free(property);
+      error("Unknown material property type id %i for material %s", *type, mat->name);
     }
      
   }
@@ -332,6 +205,7 @@ void material_delete(material* mat) {
   dictionary_delete(mat->properties);
   list_delete_with(mat->keys, free);  
   
+  free(mat->name);
   free(mat);
     
 }
@@ -347,10 +221,10 @@ void material_print(material* mat) {
     void* property = dictionary_get(mat->properties, key);
     
     if (*type == mat_type_program) {
-      printf("Program : %s : [asset]\n", key);
+      printf("Program : %s : [shader]\n", key);
     
     } else if (*type == mat_type_texture) {
-      printf("Texture : %s : [asset]\n", key);
+      printf("Texture : %s : [texture]\n", key);
     
     } else if (*type == mat_type_string) {
       printf("String : %s : %s\n", key, (char*)property);

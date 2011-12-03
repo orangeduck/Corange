@@ -13,7 +13,6 @@ uniform int bone_count;
 varying vec3 normal;
 
 void main() {
-  
   vec4 blendpos = vec4(0,0,0,0);
   for (int i = 0; i < 3; i++) {
     blendpos += vec4((bone_world_matrices[int(bone_indicies[i])] * gl_Vertex).xyz, 1.0) * bone_weights[i];
@@ -25,7 +24,5 @@ void main() {
   }
   
   normal = blendnorm;
-  //normal = gl_Normal;
   gl_Position = proj_matrix * view_matrix * world_matrix * blendpos;
-  //gl_Position = proj_matrix * view_matrix * world_matrix * gl_Vertex;
 }

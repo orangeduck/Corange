@@ -80,6 +80,8 @@ void pirate_render() {
 
   animated_object* pirate = entity_get("pirate");
 
+  skeleton* skel_pirate = asset_get("/resources/pirate.skl");
+  
   shadow_mapper_begin();
   //shadow_mapper_render_animated(pirate);
   shadow_mapper_end();
@@ -90,6 +92,7 @@ void pirate_render() {
   glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
   
   forward_renderer_render_animated(pirate);
+  forward_renderer_render_skeleton(skel_pirate);
   
   forward_renderer_end();
 
@@ -99,8 +102,6 @@ void pirate_event(SDL_Event event) {
 
   camera* cam = entity_get("camera");
   light* sun = entity_get("sun");
-
-  animated_object* pirate = entity_get("pirate");
   
   switch(event.type){
   case SDL_KEYUP:

@@ -6,6 +6,9 @@
   #include <windows.h>
 #endif
 
+#include "SDL/SDL_rwops.h"
+#include "SDL/SDL_local.h"
+
 #include "asset_manager.h"
 #include "error.h"
 
@@ -100,7 +103,14 @@ void kernels_check_error(const char* name) {
 
 kernel_program* cl_load_file(char* filename) {
   
-  char* source = asset_file_contents(filename);
+  int size;
+  SDL_RWops* file = SDL_RWFromFile(filename, "r");
+  SDL_RWsize(file, &size);
+  
+  char* source = malloc(size+1);
+  source[size] = '\0';
+  SDL_RWread(file, source, size, 1);
+  
   const char* source_const = source;
   int src_len = strlen(source);
   
@@ -120,6 +130,7 @@ kernel_program* cl_load_file(char* filename) {
   free(build_log);
   
   free(source);
+  SDL_RWclose(file);
   
   kernels_check_error("clBuildProgram");
   

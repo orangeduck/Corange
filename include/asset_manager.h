@@ -22,6 +22,8 @@ void unload_folder(char* folder);
 void* asset_get(char* path);
 int asset_loaded(char* path);
 
+void asset_state_print();
+
 /* User is responsible for freeing strings returned by these */
 char* asset_map_filename(char* filename);
 

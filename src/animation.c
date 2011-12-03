@@ -2,9 +2,10 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "error.h"
+#include "SDL/SDL_rwops.h"
+#include "SDL/SDL_local.h"
 
-#include "asset_manager.h"
+#include "error.h"
 
 #include "animation.h"
 
@@ -60,106 +61,89 @@ static int state_load_nodes = 2;
 
 animation* ani_load_file(char* filename) {
   
-  char line[1024];
-  
-  char* c = asset_file_contents(filename);
-  
-  int i = 0;
-  int j = 0;
   int state = state_load_empty;
   
   animation* a =  animation_new();
   skeleton* base = skeleton_new();
   skeleton* frame = NULL;
   
-  while(1) {
-    if( c[i] == '\0') { break; }
-    if((c[i] == '\n') || (c[i] == '\r')) {
-      
-        line[j] = '\0';
-        
-        /* Process line */
-        if (state == state_load_empty) {
-          
-          int version;
-          if (sscanf(line, "version %i", &version) > 0) {
-            if (version != 1) {
-              error("Can't load skl file %s. Don't know how to load version %i\n", filename, version);
-            }
-          }
-          
-          if (strcmp(line, "nodes") == 0) {
-            state = state_load_nodes;
-          }
-          
-          if (strcmp(line, "skeleton") == 0) {
-            state = state_load_skeleton;
-          }
-        }
-        
-        else if (state == state_load_nodes) {
-          char name[1024];
-          int id, parent_id;
-          if (sscanf(line, "%i %s %i", &id, name, &parent_id) > 0) {
-            skeleton_add_bone(base, name, id, parent_id);
-          }
-          
-          if (strcmp(line, "end") == 0) {
-            state = state_load_empty;
-          }
-        }
-        
-        else if (state == state_load_skeleton) {
-        
-          float time;
-          if (sscanf(line, "time %f", &time) > 0) {
-            frame = animation_new_frame(a, time, base);
-            a->end_time = max(a->end_time, time);
-            if(time != 0)
-            a->start_time = min(a->start_time, time);
-          }
-        
-          int id;
-          float x, y, z, rx, ry, rz;
-          if (sscanf(line, "%i %f %f %f %f %f %f", &id, &x, &y, &z, &rx, &ry, &rz) > 0) {
-            bone* b = skeleton_bone_id(frame, id);
-            /* Swap z and y */
-            b->position = v3(x, z, y);
-            
-            matrix_4x4 rotation = m44_rotation_euler(rx, ry, rz);
-            matrix_4x4 handedflip = m44(1,0,0,0,
-                                        0,0,1,0,
-                                        0,1,0,0,
-                                        0,0,0,1);
-            
-            rotation = m44_mul_m44(handedflip, rotation);
-            rotation = m44_mul_m44(rotation, handedflip);
-            rotation = m44_transpose(rotation);
-            b->rotation = rotation;
-            
-          }
-          
-          if (strcmp(line, "end") == 0) {
-            state = state_load_empty;
-          }
-        }
-        
-        /* End Process line */
-      
-      /* Reset line buffer index */
-      j = 0;
-      
-    } else {
-    
-      line[j] = c[i];
-      j++;
-    
-    }
-    
-    i++;
+  SDL_RWops* file = SDL_RWFromFile(filename, "r");
+  
+  if(file == NULL) {
+    error("Could not load file %s", filename);
   }
   
-  free(c);
+  char line[1024];
+  while(SDL_RWreadline(file, line, 1024)) {
+    
+    /* Process line */
+    if (state == state_load_empty) {
+      
+      int version;
+      if (sscanf(line, "version %i", &version) > 0) {
+        if (version != 1) {
+          error("Can't load skl file %s. Don't know how to load version %i\n", filename, version);
+        }
+      }
+      
+      if (strcmp(line, "nodes") == 0) {
+        state = state_load_nodes;
+      }
+      
+      if (strcmp(line, "skeleton") == 0) {
+        state = state_load_skeleton;
+      }
+    }
+    
+    else if (state == state_load_nodes) {
+      char name[1024];
+      int id, parent_id;
+      if (sscanf(line, "%i %s %i", &id, name, &parent_id) > 0) {
+        skeleton_add_bone(base, name, id, parent_id);
+      }
+      
+      if (strcmp(line, "end") == 0) {
+        state = state_load_empty;
+      }
+    }
+    
+    else if (state == state_load_skeleton) {
+    
+      float time;
+      if (sscanf(line, "time %f", &time) > 0) {
+        frame = animation_new_frame(a, time, base);
+        a->end_time = max(a->end_time, time);
+        if(time != 0)
+        a->start_time = min(a->start_time, time);
+      }
+    
+      int id;
+      float x, y, z, rx, ry, rz;
+      if (sscanf(line, "%i %f %f %f %f %f %f", &id, &x, &y, &z, &rx, &ry, &rz) > 0) {
+        bone* b = skeleton_bone_id(frame, id);
+        /* Swap z and y */
+        b->position = v3(x, z, y);
+        
+        matrix_4x4 rotation = m44_rotation_euler(rx, ry, rz);
+        matrix_4x4 handedflip = m44(1,0,0,0,
+                                    0,0,1,0,
+                                    0,1,0,0,
+                                    0,0,0,1);
+        
+        rotation = m44_mul_m44(handedflip, rotation);
+        rotation = m44_mul_m44(rotation, handedflip);
+        rotation = m44_transpose(rotation);
+        b->rotation = rotation;
+        
+      }
+      
+      if (strcmp(line, "end") == 0) {
+        state = state_load_empty;
+      }
+    }
+  }
+  
+  SDL_RWclose(file);
   
   return a;
 }
