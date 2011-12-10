@@ -107,40 +107,28 @@ shader_program* prog_load_file(char* filename) {
 
   shader_program* sp = shader_program_new();
   
-  char* c = asset_file_contents(filename);
+  SDL_RWops* file = SDL_RWFromFile(filename, "r");
   
-  char* line = malloc(1024);
-  
-  int i = 0;
-  int j = 0;
-  
-  while(1) {
-  
-    /* End of line reached */
-    if(( c[i] == '\n' ) || ( c[i] == '\0')) {
-    
-      /* Null terminate line buffer */
-      line[j] = '\0';
-      
-      shader_program_parse_line(sp, line);
-      
-      /* Reset line buffer index */
-      j = 0;
-      
-      if( c[i] == '\0') { break; }
-      
-    } else {
-    
-      /* Otherwise add character to line buffer */
-      line[j] = c[i];
-      j++;
-    }
-    i++;
+  if(file == NULL) {
+    error("Could not load file %s", filename);
   }
   
-  free(line);
+  char line[1024];
+  while(SDL_RWreadline(file, line, 1024)) {
+    
+    char type[256];
+    char path[1024];
+    if (sscanf(line, "%256s : %1024s", type, path) == 2) {
+      if(!asset_loaded(path)) {
+        load_file(path);
+      }
+      shader* s = asset_get(path);
+      shader_program_attach_shader(sp, s);
+    }
   
-  free(c);
+  }
+  
+  SDL_RWclose(file);
   
   shader_program_link(sp);
   shader_program_print_log(sp);
@@ -153,69 +141,12 @@ shader_program* prog_load_file(char* filename) {
   
   return sp;
   
-};
-
-static char type[25];
-static char path[512];
-void shader_program_parse_line(shader_program* program, char* line) {
-  
-  char c;
-  
-  /* Find type */
-  int i = 0;
-  while(1) {
-    c = line[i];
-    if (c == ':') {
-      strncpy(type, line, i);
-      type[i] = '\0';
-      trim(type);
-      break;
-    }
-    i++;
-  }
-  
-  /* Find path */
-  int j = i;
-  while(1) {
-    c = line[j];
-    if (c == '\0') {
-      char* begin = line+i+1;
-      int end = j-i-1;
-      strncpy(path, begin, end); 
-      path[end] = '\0';
-      trim(path);
-      break;
-    }
-    j++;
-  }
-  
-  if ((strcmp(type, "vertex_shader") == 0) || (strcmp(type, "fragment_shader") == 0))  {
-    
-    shader* s;
-    
-    if(asset_loaded(path)) {
-      s = (shader*)asset_get(path);
-    } else {
-      load_file(path);
-      s = (shader*)asset_get(path);
-    }
-    
-    shader_program_attach_shader(program, s);
-    return;
-  }
-  
-  if (strcmp(type, "\r\n\0")) {
-    return;
-  }
-  
-  error("Error Reading shader file line: %s", line);
-  
 } 
 
 void shader_program_delete(shader_program* program) {
   glDeleteProgram(*program);
   free(program);
-};
+}
 
 void shader_delete(shader* shader) {
   glDeleteShader(*shader);

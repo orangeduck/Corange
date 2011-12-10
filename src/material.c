@@ -51,7 +51,7 @@ material* mat_load_file(char* filename) {
     char name[512];
     char value[512];
     
-    if (sscanf(line, "%s %s = %s", type, name, value) > 0) {
+    if (sscanf(line, "%512s %512s = %512s", type, name, value) > 0) {
       
       char* property = malloc(strlen(name)+1);
       strcpy(property, name);

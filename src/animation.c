@@ -86,11 +86,11 @@ animation* ani_load_file(char* filename) {
         }
       }
       
-      if (strcmp(line, "nodes") == 0) {
+      if (strstr(line, "nodes")) {
         state = state_load_nodes;
       }
       
-      if (strcmp(line, "skeleton") == 0) {
+      if (strstr(line, "skeleton")) {
         state = state_load_skeleton;
       }
     }
@@ -98,11 +98,11 @@ animation* ani_load_file(char* filename) {
     else if (state == state_load_nodes) {
       char name[1024];
       int id, parent_id;
-      if (sscanf(line, "%i %s %i", &id, name, &parent_id) > 0) {
+      if (sscanf(line, "%i %1024s %i", &id, name, &parent_id) == 3) {
         skeleton_add_bone(base, name, id, parent_id);
       }
       
-      if (strcmp(line, "end") == 0) {
+      if (strstr(line, "end")) {
         state = state_load_empty;
       }
     }
@@ -110,7 +110,7 @@ animation* ani_load_file(char* filename) {
     else if (state == state_load_skeleton) {
     
       float time;
-      if (sscanf(line, "time %f", &time) > 0) {
+      if (sscanf(line, "time %f", &time) == 1) {
         frame = animation_new_frame(a, time, base);
         a->end_time = max(a->end_time, time);
         if(time != 0)
@@ -137,7 +137,7 @@ animation* ani_load_file(char* filename) {
         
       }
       
-      if (strcmp(line, "end") == 0) {
+      if (strstr(line, "end")) {
         state = state_load_empty;
       }
     }

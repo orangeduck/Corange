@@ -59,26 +59,26 @@ void SDL_RWsize(SDL_RWops* file, int* size) {
 int SDL_RWreadline(SDL_RWops* file, char* buffer, int buffersize) {
   
   char c;
-  
   int i = 0;
-  while(1) {
-    if (i == buffersize-1) {
-      error("cannot read line, buffer not big enough.");
-    }
-  
-    int num = SDL_RWread(file, &c, 1, 1);
-    if (num == -1) { return -1; }
-    if (num == 0) { return 0; }
-    if (c == '\0') { break; }
-    if (c == '\r') { SDL_RWread(file, &c, 1, 1); break; } /* Read extra '\n' character */
-    if (c == '\n') { break; }
-    
+  while( SDL_RWread(file, &c, 1, 1) ) {
     buffer[i] = c;
     i++;
+    
+    if (c == '\n') {
+      buffer[i] = '\0';
+      return i;
+    }
   }
   
-  buffer[i] = '\0';
-  return i;
+  if(i > 0) {
+    /* End of file but actually data on the final line */
+    buffer[i] = '\0';
+    return i;
+  } else {
+    /* Actual end of file */
+    return 0;
+  }
+  
 }
 
 void SDL_CheckOpenGLError(const char* name) {

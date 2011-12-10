@@ -6,6 +6,12 @@
 #include "vector.h"
 #include "geometry.h"
 
+vertex vertex_new() {
+  vertex v;
+  memset(&v, 0, sizeof(vertex));
+  return v;
+}
+
 int vertex_equal(vertex v1, vertex v2) {
   
   if(!v3_equ(v1.position, v2.position)) { return 0; }
@@ -26,60 +32,6 @@ void vertex_print(vertex v) {
   printf(")");
   
 }
-
-int mesh_contains_vert(mesh* m, vertex v, int* position) {
-  
-  int i = 0;  
-  for (i = 0; i < m->num_verts; i++) {
-    if (vertex_equal(v, m->verticies[i])) { 
-      *position = i;
-      return 1;
-      }
-  }
-  
-  return 0;
-}
-
-static int pos;
-void mesh_add_vertex(mesh* m, vertex v) {
-  
-  /* If mesh already has vertex in list, then point triangle toward this one */
-  if ( mesh_contains_vert(m, v, &pos) ) {  
-  
-    m->triangles[m->num_triangles_3] = pos;
-    m->num_triangles_3++;
-  
-  /* Otherwise add to vertex list, point triangle toward new entry */
-  } else {  
-  
-    m->verticies[m->num_verts] = v;
-    m->triangles[m->num_triangles_3] = m->num_verts;
-    
-    m->num_triangles_3++;
-    m->num_verts++;
-    
-  }
-
-}
-
-int mesh_append_vertex(mesh* m, vertex v) {
-
-    m->verticies[m->num_verts] = v;
-    m->triangles[m->num_triangles_3] = m->num_verts;
-    
-    m->num_triangles_3++;
-    m->num_verts++;
-
-    return (m->num_verts - 1);
-}
-
-int mesh_append_triangle_entry(mesh* m, int pos) {
-
-    m->triangles[m->num_triangles_3] = pos;
-    m->num_triangles_3++;
-    
-    return (m->num_triangles_3 - 1);
-} 
 
 void mesh_print(mesh* m) {
   
@@ -163,6 +115,50 @@ void mesh_generate_tangents(mesh* m) {
   
 }
 
+void mesh_generate_normals(mesh* m) {
+  
+  int i;
+  
+  /* Clear all normals to 0,0,0 */
+  
+  for(i = 0; i < m->num_verts; i++) {
+    m->verticies[i].normal = v3_zero();
+  }
+  
+  /* Loop over faces, calculate normals and append to verticies of that face */
+  
+  i = 0;
+  while( i < m->num_triangles_3) {
+    
+    int t_i1 = m->triangles[i];
+    int t_i2 = m->triangles[i+1];
+    int t_i3 = m->triangles[i+2];
+    
+    vertex v1 = m->verticies[t_i1];
+    vertex v2 = m->verticies[t_i2];
+    vertex v3 = m->verticies[t_i3];
+    
+    vector3 face_normal = triangle_normal(v1, v2, v3);
+    
+    v1.normal = v3_add(face_normal, v1.normal);
+    v2.normal = v3_add(face_normal, v2.normal);
+    v3.normal = v3_add(face_normal, v3.normal);
+    
+    m->verticies[t_i1] = v1;
+    m->verticies[t_i2] = v2;
+    m->verticies[t_i3] = v3;
+    
+    i = i + 3;
+  }
+  
+  /* normalize all normals */
+  
+  for(i = 0; i < m->num_verts; i++) {
+    m->verticies[i].normal = v3_normalize( m->verticies[i].normal );
+  }
+  
+}
+
 void mesh_generate_orthagonal_tangents(mesh* m) {
   
   int i;
@@ -215,6 +211,34 @@ void mesh_generate_orthagonal_tangents(mesh* m) {
     m->verticies[i].tangent = v3_normalize( m->verticies[i].tangent );
     m->verticies[i].binormal = v3_normalize( m->verticies[i].binormal );
   }
+  
+}
+
+void mesh_generate_texcoords_cylinder(mesh* m) {
+  
+	vector2 unwrap_vector = v2(1, 0);
+	
+	float max_height = -99999999;
+	float min_height = 99999999;
+	
+  int i;
+	for(i = 0; i < m->num_verts; i++) {
+		float v = m->verticies[i].position.y;
+		max_height = max(max_height, v);
+		min_height = min(min_height, v);
+		
+		vector2 proj_position = v2(m->verticies[i].position.x, m->verticies[i].position.z);
+		vector2 from_center = v2_normalize(proj_position);
+		float u = (v2_dot(from_center, unwrap_vector) + 1) / 8;
+		
+		m->verticies[i].uvs = v2(u, v);
+	}
+	
+	float scale = (max_height - min_height);
+	
+	for(i = 0; i < m->num_verts; i++) {
+		m->verticies[i].uvs = v2(m->verticies[i].uvs.x, m->verticies[i].uvs.y / scale);
+	}
   
 }
 
@@ -295,6 +319,15 @@ void model_delete(model* m) {
   
 }
 
+void model_generate_normals(model* m) {
+
+  int i;
+  for(i=0; i<m->num_meshes; i++) {
+    mesh_generate_normals( m->meshes[i] );
+  }
+  
+}
+
 void model_generate_tangents(model* m) {
 
   int i;
@@ -313,6 +346,15 @@ void model_generate_orthagonal_tangents(model* m) {
 
 }
 
+void model_generate_texcoords_cylinder(model* m) {
+
+  int i;
+  for(i=0; i<m->num_meshes; i++) {
+    mesh_generate_texcoords_cylinder( m->meshes[i] );
+  }
+
+}
+
 float model_surface_area(model* m) {
   float total = 0.0f;
   int i;
@@ -321,201 +363,6 @@ float model_surface_area(model* m) {
   }
   
   return total;
-}
-
-render_mesh* to_render_mesh(mesh* old_mesh){
-  
-  render_mesh* new_mesh = malloc(sizeof(render_mesh));
-  new_mesh->name = malloc(strlen(old_mesh->name) + 1);
-  strcpy(new_mesh->name, old_mesh->name);
-  
-  new_mesh->material = malloc(strlen(old_mesh->material) + 1);
-  strcpy(new_mesh->material, old_mesh->material);
-  
-  new_mesh->num_verts = old_mesh->num_verts;
-  new_mesh->num_triangles = old_mesh->num_triangles;
-  new_mesh->num_triangles_3 = old_mesh->num_triangles_3;
-  
-  new_mesh->vertex_positions = malloc(sizeof(float) * old_mesh->num_verts * 3);
-  new_mesh->vertex_normals = malloc(sizeof(float) * old_mesh->num_verts * 3);
-  new_mesh->vertex_tangents = malloc(sizeof(float) * old_mesh->num_verts * 3);
-  new_mesh->vertex_binormals = malloc(sizeof(float) * old_mesh->num_verts * 3);
-  
-  new_mesh->vertex_colors = malloc(sizeof(float) * old_mesh->num_verts * 4);
-  new_mesh->vertex_uvs = malloc(sizeof(float) * old_mesh->num_verts * 2);
-  
-  new_mesh->triangles = malloc(sizeof(int) * old_mesh->num_triangles_3);
-  
-  /* Copy vertex data */
-  vertex vert;
-  
-  int j, j_2, j_3, j_4;
-  for(j=0; j < old_mesh->num_verts; j++) {
-  
-    vert = old_mesh->verticies[j];
-    
-    j_4 = j*4;
-    j_3 = j*3;
-    j_2 = j*2;
-    
-    new_mesh->vertex_positions[j_3] = vert.position.x;
-    new_mesh->vertex_positions[j_3+1] = vert.position.y;
-    new_mesh->vertex_positions[j_3+2] = vert.position.z;
-    
-    new_mesh->vertex_normals[j_3] = vert.normal.x;
-    new_mesh->vertex_normals[j_3+1] = vert.normal.y;
-    new_mesh->vertex_normals[j_3+2] = vert.normal.z;
-    
-    new_mesh->vertex_tangents[j_3] = vert.tangent.x;
-    new_mesh->vertex_tangents[j_3+1] = vert.tangent.y;
-    new_mesh->vertex_tangents[j_3+2] = vert.tangent.z;
-    
-    new_mesh->vertex_binormals[j_3] = vert.binormal.x;
-    new_mesh->vertex_binormals[j_3+1] = vert.binormal.y;
-    new_mesh->vertex_binormals[j_3+2] = vert.binormal.z;
-    
-    new_mesh->vertex_colors[j_4] = vert.color.w;
-    new_mesh->vertex_colors[j_4+1] = vert.color.x;
-    new_mesh->vertex_colors[j_4+2] = vert.color.y;
-    new_mesh->vertex_colors[j_4+3] = vert.color.z;
-    
-    new_mesh->vertex_uvs[j_2] = vert.uvs.x;
-    new_mesh->vertex_uvs[j_2+1] = vert.uvs.y;
-    
-  }
-  
-  /* Copy Triangle Data */
-  int k;
-  for(k=0; k < old_mesh->num_triangles_3; k++) {
-    new_mesh->triangles[k] = old_mesh->triangles[k];
-  }
-  
-  return new_mesh;
-
-}
-
-void render_mesh_print(render_mesh* m) {
-  
-  int i;
-  
-  printf("Mesh Name: %s\n", m->name);
-  printf("Material Name: %s\n", m->material);
-  printf("Num Verts: %i\n", m->num_verts);
-  printf("Num Tris: %i\n", m->num_triangles);
-  printf("Vertex Positions:");
-  for(i=0; i < m->num_verts * 3; i++) {
-    printf("%4.2f ", m->vertex_positions[i]);
-  }
-  printf("\n");
-  printf("Vertex Normals:");
-  for(i=0; i < m->num_verts * 3; i++) {
-    printf("%4.2f ", m->vertex_normals[i]);
-  }
-  printf("\n");
-  printf("Vertex Tangents:");
-  for(i=0; i < m->num_verts * 3; i++) {
-    printf("%4.2f ", m->vertex_tangents[i]);
-  }
-  printf("\n");
-  printf("Vertex Binormals:");
-  for(i=0; i < m->num_verts * 3; i++) {
-    printf("%4.2f ", m->vertex_binormals[i]);
-  }
-  printf("\n");
-  printf("Vertex Uvs:");
-  for(i=0; i < m->num_verts * 2; i++) {
-    printf("%4.2f ", m->vertex_uvs[i]);
-  }
-  printf("\n");
-  printf("Vertex Colors:");
-  for(i=0; i < m->num_verts * 4; i++) {
-    printf("%4.2f ", m->vertex_colors[i]);
-  }
-  printf("\n");
-  printf("Triangle Indicies:");
-  for(i=0; i < m->num_triangles_3; i++) {
-    printf("%i ", m->triangles[i]);
-  }
-  
-  printf("\n");
-  
-};
-
-void render_mesh_delete(render_mesh* m) {
-
-  free(m->name);
-  free(m->material);
-  
-  free(m->vertex_positions);
-  free(m->vertex_normals);
-  free(m->vertex_tangents);
-  free(m->vertex_binormals);
-  free(m->vertex_colors);
-  free(m->vertex_uvs);
-  
-  free(m->triangles);
-  
-  free(m);
-  
-}
-
-render_model* to_render_model(model* m) {
-  
-  render_model* new_model = malloc(sizeof(render_model));
-  new_model->name = malloc( strlen(m->name) + 1);
-  strcpy(new_model->name, m->name);
-  
-  new_model->num_meshes = m->num_meshes;
-  
-  new_model->meshes = malloc(sizeof(render_mesh*) * new_model->num_meshes);
-  
-  int i;
-  for( i=0; i < m->num_meshes; i++) {
-    render_mesh* new_mesh = to_render_mesh(m->meshes[i]);
-    new_model->meshes[i] = new_mesh;
-  }
-  
-  return new_model;
-};
-
-render_model* render_model_from_render_mesh(render_mesh* m) {
-
-  render_model* new_model = malloc(sizeof(render_model));
-  new_model->name = m->name;
-  new_model->num_meshes = 1;
-  new_model->meshes = malloc(sizeof(render_mesh*) * new_model->num_meshes);
-  new_model->meshes[1] = m;
-  
-  return new_model;
-
-};
-
-render_model* render_model_from_render_mesh(render_mesh* m);
-
-void render_model_print(render_model* m) {
-  
-  printf("Model Name: %s\n", m->name);
-  printf("Num meshes: %i\n", m->num_meshes);
-  
-  int i;
-  for(i=0; i < m->num_meshes; i++) {
-    render_mesh* me = m->meshes[i];
-    render_mesh_print(me);
-  }
-  
-};
-
-void render_model_delete(render_model* m) {
-  
-  int i;
-  for(i=0; i < m->num_meshes; i++) {
-    render_mesh* me = m->meshes[i];
-    render_mesh_delete(me);
-  }
-  
-  free(m->name);
-  free(m);
-  
 }
 
 vector3 triangle_tangent(vertex vert1, vertex vert2, vertex vert3) {
@@ -612,8 +459,6 @@ float triangle_area(vertex v1, vertex v2, vertex v3) {
   vector3 ac = v3_sub(v1.position, v3.position);
   
   float area = 0.5 * v3_length(v3_cross(ab, ac));
-  
-  //printf("Area: %f\n", area);
   
   return area;
   
@@ -717,36 +562,4 @@ float triangle_difference_v(vertex v1, vertex v2, vertex v3) {
   
   return max - min;
 
-}
-
-/* CBM format - Corange Binary Model */
-
-/* TODO: Change all int values in the model specification and loaders to longs */
-
-/*
-  
-  -- Details --
-  
-  CBM
-  [num_objects : int]
-  [object list]
-  
-  -- Object --
-  
-  [name_len : int][name]
-  [mat_name_len : int][mat_name]
-  [num_verts : long]
-    [verts : position, normal, tangent, binormal, uv, color]
-  [num_triangles : long]
-    [triangle_indicies : long]
-    
-*/
-
-render_model* cbm_load_file(char* filename) {
-  return NULL;
-}
-
-
-void cbm_write_file(render_model* model) {
-  return;
 }

@@ -12,7 +12,6 @@
 #include "renderable.h"
 #include "camera.h"
 #include "matrix.h"
-#include "geometry.h"
 #include "shader.h"
 #include "texture.h"
 #include "dictionary.h"
@@ -223,48 +222,6 @@ static void forward_renderer_use_material(material* mat) {
     tex_counter++;
   
   }
-
-}
-
-void forward_renderer_render_model(render_model* m, material* mat) {
-  
-  glEnableClientState(GL_VERTEX_ARRAY);
-  glEnableClientState(GL_NORMAL_ARRAY);
-  glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-  
-    int i;
-    for(i=0; i < m->num_meshes; i++) {
-      
-      render_mesh* me = m->meshes[i];
-      
-      forward_renderer_use_material(mat);
-      
-      glEnableVertexAttribArray(TANGENT);
-      glEnableVertexAttribArray(BINORMAL);
-      glEnableVertexAttribArray(COLOR);
-      
-      glVertexPointer(3, GL_FLOAT, 0, me->vertex_positions);
-      glNormalPointer(GL_FLOAT, 0, me->vertex_normals);
-      glTexCoordPointer(2, GL_FLOAT, 0, me->vertex_uvs);
-      
-      glVertexAttribPointer(TANGENT, 3, GL_FLOAT, GL_TRUE, 0, me->vertex_tangents);
-      glVertexAttribPointer(BINORMAL, 3, GL_FLOAT, GL_TRUE, 0, me->vertex_binormals);
-      glVertexAttribPointer(COLOR, 4, GL_FLOAT, GL_TRUE, 0, me->vertex_colors);
-      
-      glDrawElements(GL_TRIANGLES, me->num_triangles_3, GL_UNSIGNED_INT, me->triangles);
-  
-      glDisableVertexAttribArray(TANGENT);
-      glDisableVertexAttribArray(BINORMAL);
-      glDisableVertexAttribArray(COLOR);  
-  
-      /* DISABLE PROGRAM */
-      glUseProgram(0);
-  
-    }
-    
-  glDisableClientState(GL_VERTEX_ARRAY);
-  glDisableClientState(GL_NORMAL_ARRAY);
-  glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 
 }
 

@@ -351,47 +351,7 @@ void deferred_renderer_end() {
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_LIGHTING);
 
-};
-
-void deferred_renderer_render_model(render_model* m, material* mat) {
-
-  glEnableClientState(GL_VERTEX_ARRAY);
-  glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-  
-  glEnableVertexAttribArray(NORMAL);
-  glEnableVertexAttribArray(TANGENT);
-  glEnableVertexAttribArray(BINORMAL);
-  
-    int i;
-    for(i=0; i < m->num_meshes; i++) {
-      
-      render_mesh* me = m->meshes[i];
-            
-      glUseProgram(*PROGRAM);
-      
-      deferred_renderer_use_material(mat);
-      
-      glVertexPointer(3, GL_FLOAT, 0, me->vertex_positions);
-      glTexCoordPointer(2, GL_FLOAT, 0, me->vertex_uvs);
-      
-      glVertexAttribPointer(NORMAL, 3, GL_FLOAT, GL_TRUE, 0, me->vertex_normals);
-      glVertexAttribPointer(TANGENT, 3, GL_FLOAT, GL_TRUE, 0, me->vertex_tangents);
-      glVertexAttribPointer(BINORMAL, 3, GL_FLOAT, GL_TRUE, 0, me->vertex_binormals);
-      
-      glDrawElements(GL_TRIANGLES, me->num_triangles_3, GL_UNSIGNED_INT, me->triangles);
-  
-      glUseProgram(0);
-  
-    }
-    
-  glDisableClientState(GL_VERTEX_ARRAY);
-  glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-  
-  glDisableVertexAttribArray(NORMAL);
-  glDisableVertexAttribArray(TANGENT);
-  glDisableVertexAttribArray(BINORMAL);
-
-};
+}
 
 void deferred_renderer_render_static(static_object* s) {
 

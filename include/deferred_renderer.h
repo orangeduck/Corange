@@ -3,7 +3,6 @@
 
 #include "camera.h"
 #include "light.h"
-#include "geometry.h"
 #include "material.h"
 #include "static_object.h"
 
@@ -18,7 +17,6 @@ void deferred_renderer_set_viewport(int width, int height);
 void deferred_renderer_begin();
 void deferred_renderer_end();
 
-void deferred_renderer_render_model(render_model* m, material* mat);
 void deferred_renderer_render_static(static_object* s);
 
 #endif

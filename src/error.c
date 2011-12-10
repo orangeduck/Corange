@@ -3,6 +3,10 @@
 
 #include "error.h"
 
+void error_bp() {}
+void warning_bp() {}
+void info_bp() {}
+
 void disable_errors() {
   errors_enabled = 0;
 }
