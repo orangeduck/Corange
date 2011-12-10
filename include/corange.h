@@ -8,6 +8,10 @@
 
 #include "CL/cl.h"
 
+/* Game */
+
+#include "game.h"
+
 /* Info and Utilities */
 
 #include "timing.h"

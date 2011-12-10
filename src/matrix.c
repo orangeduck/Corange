@@ -821,3 +821,55 @@ matrix_4x4 m44_world(vector3 position, vector3 scale, vector4 rotation) {
   return result;
   
 }
+
+matrix_4x4 m44_lerp(matrix_4x4 m1, matrix_4x4 m2, float amount) {
+  matrix_4x4 m;
+  
+  m.xx = lerp(m1.xx, m2.xx, amount);
+  m.xy = lerp(m1.xy, m2.xy, amount);
+  m.xz = lerp(m1.xz, m2.xz, amount);
+  m.xw = lerp(m1.xw, m2.xw, amount);
+  
+  m.yx = lerp(m1.yx, m2.yx, amount);
+  m.yy = lerp(m1.yy, m2.yy, amount);
+  m.yz = lerp(m1.yz, m2.yz, amount);
+  m.yw = lerp(m1.yw, m2.yw, amount);
+  
+  m.zx = lerp(m1.zx, m2.zx, amount);
+  m.zy = lerp(m1.zy, m2.zy, amount);
+  m.zz = lerp(m1.zz, m2.zz, amount);
+  m.zw = lerp(m1.zw, m2.zw, amount);
+  
+  m.wx = lerp(m1.wx, m2.wx, amount);
+  m.wy = lerp(m1.wy, m2.wy, amount);
+  m.wz = lerp(m1.wz, m2.wz, amount);
+  m.ww = lerp(m1.ww, m2.ww, amount);
+  
+  return m;
+}
+
+matrix_4x4 m44_smoothstep(matrix_4x4 m1, matrix_4x4 m2, float amount) {
+  matrix_4x4 m;
+  
+  m.xx = smoothstep(m1.xx, m2.xx, amount);
+  m.xy = smoothstep(m1.xy, m2.xy, amount);
+  m.xz = smoothstep(m1.xz, m2.xz, amount);
+  m.xw = smoothstep(m1.xw, m2.xw, amount);
+  
+  m.yx = smoothstep(m1.yx, m2.yx, amount);
+  m.yy = smoothstep(m1.yy, m2.yy, amount);
+  m.yz = smoothstep(m1.yz, m2.yz, amount);
+  m.yw = smoothstep(m1.yw, m2.yw, amount);
+  
+  m.zx = smoothstep(m1.zx, m2.zx, amount);
+  m.zy = smoothstep(m1.zy, m2.zy, amount);
+  m.zz = smoothstep(m1.zz, m2.zz, amount);
+  m.zw = smoothstep(m1.zw, m2.zw, amount);
+  
+  m.wx = smoothstep(m1.wx, m2.wx, amount);
+  m.wy = smoothstep(m1.wy, m2.wy, amount);
+  m.wz = smoothstep(m1.wz, m2.wz, amount);
+  m.ww = smoothstep(m1.ww, m2.ww, amount);
+  
+  return m;
+}

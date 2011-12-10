@@ -371,7 +371,7 @@ void forward_renderer_render_static(static_object* s) {
   
 }
 
-#define MAX_BONES 64
+#define MAX_BONES 32
 static matrix_4x4 bone_matrices[MAX_BONES];
 static float bone_matrix_data[4 * 4 * MAX_BONES];
 
@@ -388,15 +388,9 @@ void forward_renderer_render_animated(animated_object* ao) {
   for(i = 0; i < ao->skeleton->num_bones; i++) {
     matrix_4x4 base, ani;
     base = bone_transform(ao->skeleton->bones[i]);
-    if (ao->animation == NULL) {
-      ani = bone_transform(ao->skeleton->bones[i]);
-    } else {
-      float time = fmod(ao->animation_time, ao->animation->end_time);
-      ani = bone_transform(ao->animation->frames[(int)time]->bones[i]);
-    }
+    ani = bone_transform(ao->pose->bones[i]);
     
     bone_matrices[i] = m44_mul_m44(ani, m44_inverse(base));
-    //bone_matrices[i] = m44_translation(v3(-bone_matrices[i].xw, -bone_matrices[i].yw, -bone_matrices[i].zw));
     m44_to_array(bone_matrices[i], bone_matrix_data + (i * 4 * 4));
   }
   
@@ -465,14 +459,10 @@ void forward_renderer_render_animated(animated_object* ao) {
       glUseProgram(0);    
     
     } else {
-      
       error("animated object is not rigged");
-    
     }
     
-    float time = fmod(ao->animation_time, ao->animation->end_time);
-    forward_renderer_render_skeleton(ao->animation->frames[(int)time]);
-    
+    //forward_renderer_render_skeleton(ao->pose);
   }
   
 }

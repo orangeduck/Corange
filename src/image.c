@@ -407,6 +407,7 @@ vector4 image_sample(image* i, vector2 uv) {
     error("Unknown Sampling type %i\n", i->sample_type);
   }
   
+  return v4_zero();
 }
 
 void image_paint(image* i, vector2 uv, vector4 color) {

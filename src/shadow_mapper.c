@@ -28,12 +28,18 @@ static float proj_matrix[16];
 static float view_matrix[16];
 static float world_matrix[16];
 
+static int BONE_INDICIES;
+static int BONE_WEIGHTS;
+
 void shadow_mapper_init(light* l) {
 
   LIGHT = l;
   
   depth_shader = asset_get("./engine/shaders/depth.prog");
   depth_shader_animated = asset_get("./engine/shaders/depth_animated.prog");
+  
+  BONE_INDICIES = glGetAttribLocation(*depth_shader_animated, "bone_indicies");
+  BONE_WEIGHTS = glGetAttribLocation(*depth_shader_animated, "bone_weights");
   
   glGenFramebuffers(1, &fbo);
   glBindFramebuffer(GL_FRAMEBUFFER, fbo);
@@ -179,7 +185,7 @@ void shadow_mapper_render_static(static_object* s) {
   
 }
 
-#define MAX_BONES 64
+#define MAX_BONES 32
 static matrix_4x4 bone_matrices[MAX_BONES];
 static float bone_matrix_data[4 * 4 * MAX_BONES];
 
@@ -196,12 +202,7 @@ void shadow_mapper_render_animated(animated_object* ao) {
   for(i = 0; i < ao->skeleton->num_bones; i++) {
     matrix_4x4 base, ani;
     base = bone_transform(ao->skeleton->bones[i]);
-    if (ao->animation == NULL) {
-      ani = bone_transform(ao->skeleton->bones[i]);
-    } else {
-      float time = fmod(ao->animation_time, ao->animation->end_time);
-      ani = bone_transform(ao->animation->frames[(int)time]->bones[i]);
-    }
+    ani = bone_transform(ao->pose->bones[i]);
     
     bone_matrices[i] = m44_mul_m44(ani, m44_inverse(base));
     m44_to_array(bone_matrices[i], bone_matrix_data + (i * 4 * 4));
@@ -238,18 +239,24 @@ void shadow_mapper_render_animated(animated_object* ao) {
       glVertexPointer(3, GL_FLOAT, stride, (void*)0);
       glEnableClientState(GL_VERTEX_ARRAY);
       
+      glVertexAttribPointer(BONE_INDICIES, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 18));
+      glEnableVertexAttribArray(BONE_INDICIES);
+      
+      glVertexAttribPointer(BONE_WEIGHTS, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 21));
+      glEnableVertexAttribArray(BONE_WEIGHTS);
+      
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
       glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
       
       glDisableClientState(GL_VERTEX_ARRAY);
+      glDisableVertexAttribArray(BONE_INDICIES);  
+      glDisableVertexAttribArray(BONE_WEIGHTS);  
       
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
       glBindBuffer(GL_ARRAY_BUFFER, 0);
       
     } else {
-      
       error("animated object is not rigged");
-      
     }
 
   }

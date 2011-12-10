@@ -22,9 +22,13 @@ typedef struct {
   float animation_time;
   animation* animation;
   
+  skeleton* pose;
+  
 } animated_object;
 
 animated_object* animated_object_new(renderable* r, skeleton* s);
 void animated_object_delete(animated_object* ao);
+
+void animated_object_update(animated_object* ao, float timestep);
 
 #endif

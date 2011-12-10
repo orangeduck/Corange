@@ -11,6 +11,7 @@ float shadow_amount_soft_pcf25(vec4 light_pos, sampler2D light_depth, float hard
 
 /* End */
 
+const float shadow_bias = 0.0002;
 
 float shadow_amount(vec4 light_pos, sampler2D light_depth) {
 
@@ -26,7 +27,7 @@ float shadow_amount(vec4 light_pos, sampler2D light_depth) {
   float our_depth = shadow_coord.z;
   float shadow_depth = texture2D( light_depth, shadow_coord.xy ).r;
   
-  if (our_depth >= shadow_depth) {
+  if (our_depth >= shadow_depth + shadow_bias) {
     shadow = 0.1;
   }
   
@@ -56,7 +57,7 @@ float shadow_amount_pcf4(vec4 light_pos, sampler2D light_depth, float kernel) {
     vec2 offset = samples[i];
     float shadow_depth = texture2D( light_depth, shadow_coord.xy + offset ).r;
     
-    if (our_depth >= shadow_depth) {
+    if (our_depth >= shadow_depth + shadow_bias) {
       shadow = shadow - 0.20;
     }
   }
@@ -91,7 +92,7 @@ float shadow_amount_pcf9(vec4 light_pos, sampler2D light_depth, float kernel) {
     vec2 offset = samples[i];
     float shadow_depth = texture2D( light_depth, shadow_coord.xy + offset ).r;
     
-    if (our_depth >= shadow_depth) {
+    if (our_depth >= shadow_depth + shadow_bias) {
       shadow = shadow - 0.1;
     }
   }
@@ -137,7 +138,7 @@ float shadow_amount_pcf16(vec4 light_pos, sampler2D light_depth, float kernel) {
     vec2 offset = samples[i];
     float shadow_depth = texture2D( light_depth, shadow_coord.xy + offset ).r;
     
-    if (our_depth >= shadow_depth) {
+    if (our_depth >= shadow_depth + shadow_bias) {
       shadow = shadow - (1.0 / 16.0);
     }
   }
@@ -193,7 +194,7 @@ float shadow_amount_pcf25(vec4 light_pos, sampler2D light_depth, float kernel) {
     vec2 offset = samples[i];
     float shadow_depth = texture2D( light_depth, shadow_coord.xy + offset ).r;
     
-    if (our_depth >= shadow_depth) {
+    if (our_depth >= shadow_depth + shadow_bias) {
       shadow = shadow - (1.0 / 25.0);
     }
   }
@@ -295,11 +296,10 @@ float shadow_amount_soft_pcf25(vec4 light_pos, sampler2D light_depth, float hard
     vec2 offset = samples[i];
     float shadow_depth = texture2D( light_depth, shadow_coord.xy + offset ).r;
     
-    if (our_depth >= shadow_depth) {
+    if (our_depth >= shadow_depth + shadow_bias) {
       shadow = shadow - (1.0 / 25.0);
     }
   }
   
-  //return kernel * 100;
   return shadow;
 }

@@ -296,7 +296,9 @@ static model* obj_load_object(char* c) {
   
   /* Allocate a new model */
   model* obj_model = malloc(sizeof(model));
-  obj_model->name = "Temp Model Part";
+  
+  obj_model->name = malloc(strlen("Temp Model Part"));
+  strcpy(obj_model->name, "Temp Model Part");
   
   /* Init counters */
   int mesh_count = 0;
@@ -603,134 +605,121 @@ static int state_load_triangles = 1;
 
 renderable* smd_load_file(char* filename) {
   
-  char line[1024];
-  
-  char* c = asset_file_contents(filename);
-  
-  int i = 0;
-  int j = 0;
-  
   int state = state_load_empty;
   
   vertex_hashtable* hashes = vertex_hashtable_new(1024);
-  
   vertex_list* vert_list = vertex_list_new();
   int_list* tri_list = int_list_new();
-  vertex_weight* weights = malloc(sizeof(vertex_weight) * 10000);
+  vertex_weight* weights = malloc(sizeof(vertex_weight) * 20000);
   
   int vert_index = 0;
   
-  while(1) {
-    if( c[i] == '\0') { break; }
-    
-    if( c[i] == '\n' ) {
+  SDL_RWops* file = SDL_RWFromFile(filename, "r");
+  
+  if(file == NULL) {
+    error("Could not load file %s", filename);
+  }
+  
+  char line[1024];
+  while(SDL_RWreadline(file, line, 1024)) {
+  
+    if (state == state_load_empty) {
       
-      line[j] = '\0';
-      
-        /* Process line */
-        if (state == state_load_empty) {
-          
-          int version;
-          if (sscanf(line, "version %i", &version) > 0) {
-            if (version != 1) {
-              error("Can't load SMD file %s. Don't know how to load version %i\n", filename, version);
-            }
-          }
-          
-          if (strcmp(line, "triangles") == 0) {
-            
-            state = state_load_triangles;
-          }
-          
+      int version;
+      if (sscanf(line, "version %i", &version) > 0) {
+        if (version != 1) {
+          error("Can't load SMD file %s. Don't know how to load version %i\n", filename, version);
         }
-        
-        else if (state == state_load_triangles) {
-          
-          int id, l1_id, l2_id, l3_id;
-          int num_links = 0;
-          float x, y, z, nx, ny, nz, u, v, l1_amount, l2_amount, l3_amount;
-          char links[1024];
-          if (sscanf(line, "%i %f %f %f %f %f %f %f %f %i %i %f %i %f %i %f", 
-              &id, &x, &y, &z, &nx, &ny, &nz, &u, &v, &num_links, 
-              &l1_id, &l1_amount, &l2_id, &l2_amount, &l3_id, &l3_amount) > 0) {
-            
-            vertex vert;
-            /* Swap y and z axis */
-            vert.position = v3(x, z, y);
-            vert.normal = v3(nx, nz, ny);
-            vert.uvs = v2(u, v);
-            vert.color = v4_one();
-            vert.tangent = v3_zero();
-            vert.binormal = v3_zero();
-            
-            int vert_pos = vertex_hashtable_get(hashes, vert);
-            if (vert_pos == -1) {
-              vertex_hashtable_set(hashes, vert, vert_index);
-              vert_pos = vert_index;
-              vertex_list_push_back(vert_list, vert);
-              vert_index++;
-            }
-            
-            if (num_links > 3) {
-              warning("Loading file %s. More than 3 bones rigged to vertex. Ignoring other bones", filename);
-              num_links = 3;
-            }
-            
-            vertex_weight vw;
-            if (num_links == 3) {
-              vw.bone_ids[0] = l1_id; vw.bone_ids[1] = l2_id; vw.bone_ids[2] = l3_id;
-              vw.bone_weights[0] = l1_amount; vw.bone_weights[1] = l2_amount; vw.bone_weights[2] = l3_amount;
-            } else if (num_links == 2) {
-              vw.bone_ids[0] = l1_id; vw.bone_ids[1] = l2_id; vw.bone_ids[2] = 0;
-              vw.bone_weights[0] = l1_amount; vw.bone_weights[1] = l2_amount; vw.bone_weights[2] = 0;
-            } else if (num_links == 1) {
-              vw.bone_ids[0] = l1_id; vw.bone_ids[1] = 0; vw.bone_ids[2] = 0;
-              vw.bone_weights[0] = 1; vw.bone_weights[1] = 0; vw.bone_weights[2] = 0;
-            } else if (num_links == 0) {
-              warning("Loading file %s. Unrigged vertex!", filename);
-              vw.bone_ids[0] = 0; vw.bone_ids[1] = 0; vw.bone_ids[2] = 0;
-              vw.bone_weights[0] = 1; vw.bone_weights[1] = 0; vw.bone_weights[2] = 0;
-            }
-            weights[vert_pos] = vw;
-            
-            int_list_push_back(tri_list, vert_pos);
-            
-          }
-          
-          if (strcmp(line, "end") == 0) {
-            state = state_load_empty;
-          }
-          
-        }
-        
-        /* End Process line */
+      }
       
-      /* Reset line buffer index */
-      j = 0;
-      
-    } else {
-    
-      line[j] = c[i];
-      j++;
-    
+      if (strcmp(line, "triangles") == 0) {
+        state = state_load_triangles;
+      }
     }
     
-    i++;
+    else if (state == state_load_triangles) {
+      
+      int id, l1_id, l2_id, l3_id;
+      int num_links = 0;
+      float x, y, z, nx, ny, nz, u, v, l1_amount, l2_amount, l3_amount;
+      if (sscanf(line, "%i %f %f %f %f %f %f %f %f %i %i %f %i %f %i %f", 
+          &id, &x, &y, &z, &nx, &ny, &nz, &u, &v, &num_links, 
+          &l1_id, &l1_amount, &l2_id, &l2_amount, &l3_id, &l3_amount) > 0) {
+        
+        if (num_links > 3) {
+          warning("Loading file %s. More than 3 bones rigged to vertex. Ignoring other bones", filename);
+          num_links = 3;
+        }
+        
+        if (num_links == 0) {
+          warning("Loading file %s. Vertex has no direct bone links", filename);
+          num_links = 1;
+          l1_id = id;
+        }
+        
+        vertex vert;
+        /* Swap y and z axis */
+        vert.position = v3(x, z, y);
+        vert.normal = v3(nx, nz, ny);
+        vert.uvs = v2(u, v);
+        vert.color = v4_one();
+        vert.tangent = v3_zero();
+        vert.binormal = v3_zero();
+        
+        int vert_pos = vertex_hashtable_get(hashes, vert);
+        
+        /* Not already in hashtable */
+        if (vert_pos == -1) {
+          vertex_hashtable_set(hashes, vert, vert_index);
+          vert_pos = vert_index;
+          vertex_list_push_back(vert_list, vert);
+          
+          vertex_weight vw;
+          if (num_links == 3) {
+            vw.bone_ids[0] = l1_id; vw.bone_ids[1] = l2_id; vw.bone_ids[2] = l3_id;
+            vw.bone_weights[0] = l1_amount; vw.bone_weights[1] = l2_amount; vw.bone_weights[2] = l3_amount;
+          } else if (num_links == 2) {
+            vw.bone_ids[0] = l1_id; vw.bone_ids[1] = l2_id; vw.bone_ids[2] = 0;
+            vw.bone_weights[0] = l1_amount; vw.bone_weights[1] = l2_amount; vw.bone_weights[2] = 0;
+          } else if (num_links == 1) {
+            vw.bone_ids[0] = l1_id; vw.bone_ids[1] = 0; vw.bone_ids[2] = 0;
+            vw.bone_weights[0] = 1; vw.bone_weights[1] = 0; vw.bone_weights[2] = 0;
+          } else if (num_links == 0) {
+            warning("Loading file %s. Unrigged vertex!", filename);
+            vw.bone_ids[0] = 0; vw.bone_ids[1] = 0; vw.bone_ids[2] = 0;
+            vw.bone_weights[0] = 1; vw.bone_weights[1] = 0; vw.bone_weights[2] = 0;
+          }
+          weights[vert_pos] = vw;
+          
+          vert_index++;
+        }
+        
+        int_list_push_back(tri_list, vert_pos);
+        
+      }
+      
+      if (strcmp(line, "end") == 0) {
+        state = state_load_empty;
+      }
+      
+    }
   }
-
-  free(c);
   
   mesh* smd_mesh = malloc(sizeof(mesh));
-  smd_mesh->name = malloc(strlen("pirate_mesh") + 1);
-  strcpy(smd_mesh->name, "pirate_mesh");
-  smd_mesh->material = malloc(strlen("pirate_mat") + 1);
-  strcpy(smd_mesh->material, "pirate_mat");
+  smd_mesh->name = malloc(strlen(filename) + 1);
+  strcpy(smd_mesh->name, filename);
+  
+  smd_mesh->material = malloc(strlen("./engine/resources/basic_animated.mat") + 1);
+  strcpy(smd_mesh->material, "./engine/resources/basic_animated.mat");
+  
   smd_mesh->num_verts = vert_list->num_items;
   smd_mesh->num_triangles = tri_list->num_items / 3;
   smd_mesh->num_triangles_3 = tri_list->num_items;
+  
   smd_mesh->verticies = malloc(sizeof(vertex) * smd_mesh->num_verts);
   smd_mesh->triangles = malloc(sizeof(int) * smd_mesh->num_triangles_3);
   
+  int i;
   for(i = 0; i < smd_mesh->num_verts; i++) {
     smd_mesh->verticies[i] = vertex_list_get(vert_list, i);
   }
@@ -739,17 +728,16 @@ renderable* smd_load_file(char* filename) {
     smd_mesh->triangles[i] = int_list_get(tri_list, i);
   }
   
-  vertex_hashtable_delete(hashes);
-  vertex_list_delete(vert_list);
-  int_list_delete(tri_list);
-  free(weights);
-  
   mesh_generate_tangents(smd_mesh);
   
   renderable* renderable = renderable_new();
   renderable_add_mesh_rigged(renderable, smd_mesh, weights);
   
+  vertex_hashtable_delete(hashes);
+  vertex_list_delete(vert_list);
+  int_list_delete(tri_list);
   mesh_delete(smd_mesh);
+  free(weights);
   
   return renderable;
 }

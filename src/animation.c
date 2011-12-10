@@ -13,7 +13,7 @@ animation* animation_new() {
   
   animation* a = malloc(sizeof(animation));
   
-  a->start_time = 0;
+  a->start_time = 1;
   a->end_time = 1;
   
   a->num_frames = 0;

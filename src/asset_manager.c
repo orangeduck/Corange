@@ -131,10 +131,10 @@ void asset_manager_handler(char* extension, void* asset_loader(char* filename) ,
   asset_handlers[num_handlers] = h;
   num_handlers++;
   
-};
+}
 
 void load_file(char* filename) {
-  
+    
   filename = asset_map_filename(filename);
   
   if (dictionary_contains(asset_dictionary, filename)) {
@@ -146,6 +146,7 @@ void load_file(char* filename) {
   for(i=0; i < num_handlers; i++) {
     asset_handler handler = asset_handlers[i];
     if (strcmp(ext, handler.extension) == 0) {
+      printf("Loading: %s\n", filename); fflush(stdout);
       void* asset = handler.load_func(filename);
       dictionary_set(asset_dictionary, filename, asset);
       break;
@@ -155,7 +156,7 @@ void load_file(char* filename) {
   
   return;
 
-};
+}
 
 void load_folder(char* folder) {
     
@@ -222,6 +223,7 @@ void unload_file(char* filename) {
   
     asset_handler handler = asset_handlers[i];
     if (strcmp(ext, handler.extension) == 0) {
+      printf("Unloading: %s\n", filename); fflush(stdout);
       dictionary_remove_with(asset_dictionary, filename, handler.del_func);
       break;
     }
@@ -284,10 +286,6 @@ void asset_state_print() {
 /* Asset Loader helper commands */
 
 char* asset_file_contents(char* filename) {
-  
-  //filename = asset_map_filename(filename);
-  
-  printf("Loading: %s\n", filename); fflush(stdout);
   
   SDL_RWops* file = SDL_RWFromFile(filename, "r");
   

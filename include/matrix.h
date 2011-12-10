@@ -108,5 +108,7 @@ matrix_4x4 m44_orthographic(float left, float right, float bottom, float top, fl
 
 matrix_4x4 m44_world(vector3 position, vector3 scale, vector4 rotation);
 
+matrix_4x4 m44_lerp(matrix_4x4 m1, matrix_4x4 m2, float amount);
+matrix_4x4 m44_smoothstep(matrix_4x4 m1, matrix_4x4 m2, float amount);
 
 #endif

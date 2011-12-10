@@ -10,22 +10,35 @@ static float animation_time = 0;
 void pirate_init() {
   
   load_folder("/resources/pirate/");
+  load_folder("/resources/floor/");
   load_folder("/resources/skybox/");
   
   renderable* r_pirate = asset_get("/resources/pirate/pirate.smd");
-  skeleton* skel_pirate = asset_get("/resources/pirate/pirate.skl");
-  animation* ani_defend = asset_get("/resources/pirate/defend.ani");
-  material* mat_pirate = asset_get("/resources/pirate/pirate.mat");
-  
+  material* mat_pirate = asset_get("/resources/pirate/pirate.mat");  
   renderable_set_material(r_pirate, mat_pirate);
+
+  renderable* r_boots = asset_get("/resources/pirate/boots.smd");
+  material* mat_boots = asset_get("/resources/pirate/boots.mat");  
+  renderable_set_material(r_boots, mat_boots);
   
-  animated_object* pirate = entity_new("pirate", entity_type_animated);
-  pirate->skeleton = skel_pirate;
-  pirate->renderable = r_pirate;
-  pirate->animation = ani_defend;
+  animation* ani_cheer = asset_get("/resources/pirate/cheer.ani");
+  skeleton* skel_pirate = asset_get("/resources/pirate/pirate.skl");
+  
+  animated_object* pirate = animated_object_new(r_pirate, skel_pirate);
+  pirate->animation = ani_cheer;
+  entity_add("pirate", entity_type_animated, pirate);
+  
+  animated_object* boots = animated_object_new(r_boots, skel_pirate);
+  boots->animation = ani_cheer;
+  entity_add("boots", entity_type_animated, boots);
   
   renderable* r_skybox = asset_get("/resources/skybox/skybox.obj");
+  renderable_set_material(r_skybox, asset_get("/resources/skybox/skybox.mat"));
   entity_add("skybox", entity_type_static, static_object_new(r_skybox));
+  
+  renderable* r_floor = asset_get("/resources/floor/floor.obj");
+  renderable_set_material(r_floor, asset_get("/resources/floor/floor.mat"));
+  entity_add("floor", entity_type_static, static_object_new(r_floor));
   
   camera* cam = entity_new("camera", entity_type_camera);
   cam->position = v3(20.0, 20.0, 20.0);
@@ -76,17 +89,21 @@ void pirate_update() {
   mouse_y = 0;
 
   animated_object* pirate = entity_get("pirate");
-  animation_time += 0.1;
-  pirate->animation_time = animation_time;
+  animated_object* boots = entity_get("boots");
+  animated_object_update(pirate, 0.5);
+  animated_object_update(boots, 0.5);
 }
 
 void pirate_render() {
 
   animated_object* pirate = entity_get("pirate");
+  animated_object* boots = entity_get("boots");
   static_object* skybox = entity_get("skybox");
-    
+  static_object* floor = entity_get("floor");
+  
   shadow_mapper_begin();
   shadow_mapper_render_animated(pirate);
+  shadow_mapper_render_animated(boots);
   shadow_mapper_end();
   
   forward_renderer_begin();
@@ -95,8 +112,10 @@ void pirate_render() {
   glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
   
   forward_renderer_render_static(skybox);
+  forward_renderer_render_static(floor);
   forward_renderer_render_animated(pirate);
-  
+  forward_renderer_render_animated(boots);
+  forward_renderer_render_skeleton(pirate->pose);
   forward_renderer_end();
 
 }
