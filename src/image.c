@@ -878,7 +878,9 @@ void image_mask_xnor(image* i, image* i2) {
 }
 
 void tga_save_file(image* i, char* filename) {
-
+  
+  image_bgr_to_rgb(i);
+  
   int xa= i->width % 256;
   int xb= (i->width-xa)/256;
 
@@ -891,6 +893,8 @@ void tga_save_file(image* i, char* filename) {
   SDL_RWwrite(file, i->data, i->width * i->height * 4, 1 );
   SDL_RWclose(file);
 
+  image_bgr_to_rgb(i);
+  
 }
 
 void image_write_to_file(image* i, char* filename) {

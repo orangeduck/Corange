@@ -1,36 +1,65 @@
 #include "corange.h"
 
+static ui_text* txt_framerate;
+static ui_text* txt_renderer;
+static ui_text* txt_info;
+
 static int mouse_x;
 static int mouse_y;
 static int mouse_down;
 static int mouse_right_down;
 
-static float animation_time = 0;
+static int use_deferred = 1;
+
+static void swap_renderer() {
+  
+  camera* cam = entity_get("camera");
+  light* sun = entity_get("sun");
+  
+  if (use_deferred) {
+    
+    deferred_renderer_finish();
+    forward_renderer_init();
+    forward_renderer_set_camera(cam);
+    forward_renderer_set_light(sun);
+    forward_renderer_set_shadow_texture( shadow_mapper_depth_texture() );
+    
+    ui_text_update_string(txt_renderer,"Forward Renderer");
+    
+    use_deferred = 0;
+    
+  } else {
+    
+    forward_renderer_finish();
+    deferred_renderer_init();
+    deferred_renderer_set_camera(cam);
+    deferred_renderer_set_light(sun);
+    deferred_renderer_set_shadow_texture( shadow_mapper_depth_texture() );
+    
+    ui_text_update_string(txt_renderer,"Deferred Renderer");
+    
+    use_deferred = 1;
+  }
+
+}
 
 void pirate_init() {
   
+  load_folder("/resources/imrod/");
   load_folder("/resources/pirate/");
   load_folder("/resources/floor/");
   load_folder("/resources/skybox/");
   
-  renderable* r_pirate = asset_get("/resources/pirate/pirate.smd");
-  material* mat_pirate = asset_get("/resources/pirate/pirate.mat");  
-  renderable_set_material(r_pirate, mat_pirate);
-
-  renderable* r_boots = asset_get("/resources/pirate/boots.smd");
-  material* mat_boots = asset_get("/resources/pirate/boots.mat");  
-  renderable_set_material(r_boots, mat_boots);
+  renderable* r_imrod = asset_get("/resources/imrod/imrod.smd");
+  material* mat_imrod = asset_get("/resources/imrod/imrod_animated.mat");  
+  renderable_set_material(r_imrod, mat_imrod);
   
-  animation* ani_cheer = asset_get("/resources/pirate/cheer.ani");
-  skeleton* skel_pirate = asset_get("/resources/pirate/pirate.skl");
+  skeleton* skel_imrod = asset_get("/resources/imrod/imrod.skl");
+  animation* ani_stand = asset_get("/resources/pirate/stand.ani");
   
-  animated_object* pirate = animated_object_new(r_pirate, skel_pirate);
-  pirate->animation = ani_cheer;
-  entity_add("pirate", entity_type_animated, pirate);
-  
-  animated_object* boots = animated_object_new(r_boots, skel_pirate);
-  boots->animation = ani_cheer;
-  entity_add("boots", entity_type_animated, boots);
+  animated_object* imrod = animated_object_new(r_imrod, skel_imrod);
+  imrod->animation = ani_stand;
+  entity_add("imrod", entity_type_animated, imrod);
   
   renderable* r_skybox = asset_get("/resources/skybox/skybox.obj");
   renderable_set_material(r_skybox, asset_get("/resources/skybox/skybox.mat"));
@@ -50,16 +79,35 @@ void pirate_init() {
   sun->diffuse_color = v3(0.75, 0.75, 0.75);
   light_set_type(sun, light_type_spot);
   
+  /* Text */
+  
+  font* console_font = asset_get("./engine/fonts/console_font.fnt");
+  
+  txt_framerate = ui_text_new("framerate", console_font);
+  txt_framerate->position = v2(10, 10);
+  ui_text_update(txt_framerate);
+  
+  txt_renderer = ui_text_new("Deferred Renderer", console_font);
+  txt_renderer->position = v2(10, 30);
+  ui_text_update(txt_renderer);
+  
+  txt_info = ui_text_new("Click and drag mouse to move\n'p' to switch object\n'r' to switch renderer", console_font);
+  txt_info->position = v2(10, 50);
+  ui_text_update(txt_info);
+  
   /* Renderer Setup */
 
   viewport_set_vsync(1);
+  viewport_set_multisamples(16);
   
   shadow_mapper_init(sun);
   
-  forward_renderer_init();
-  forward_renderer_set_camera(cam);
-  forward_renderer_set_light(sun);
-  forward_renderer_set_shadow_texture( shadow_mapper_depth_texture() );
+  deferred_renderer_init();
+  deferred_renderer_set_camera(cam);
+  deferred_renderer_set_light(sun);
+  deferred_renderer_set_shadow_texture( shadow_mapper_depth_texture() );
+  
+  use_deferred = 1;
   
 }
 
@@ -88,36 +136,46 @@ void pirate_update() {
   mouse_x = 0;
   mouse_y = 0;
 
-  animated_object* pirate = entity_get("pirate");
-  animated_object* boots = entity_get("boots");
-  animated_object_update(pirate, 0.5);
-  animated_object_update(boots, 0.5);
+  ui_text_update_string(txt_framerate, frame_rate_string());
+  
+  animated_object* imrod = entity_get("imrod");
+  animated_object_update(imrod, 0.5);
 }
 
 void pirate_render() {
 
-  animated_object* pirate = entity_get("pirate");
-  animated_object* boots = entity_get("boots");
+
   static_object* skybox = entity_get("skybox");
   static_object* floor = entity_get("floor");
+  animated_object* imrod = entity_get("imrod");
   
   shadow_mapper_begin();
-  shadow_mapper_render_animated(pirate);
-  shadow_mapper_render_animated(boots);
+  shadow_mapper_render_animated(imrod);
+  shadow_mapper_render_static(floor);
   shadow_mapper_end();
-  
-  forward_renderer_begin();
-  
-  glClearColor(1.0f, 0.769f, 0.0f, 0.0f);
-  glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-  
-  forward_renderer_render_static(skybox);
-  forward_renderer_render_static(floor);
-  forward_renderer_render_animated(pirate);
-  forward_renderer_render_animated(boots);
-  forward_renderer_render_skeleton(pirate->pose);
-  forward_renderer_end();
 
+  if (use_deferred) {
+  
+    deferred_renderer_begin();
+    deferred_renderer_render_static(skybox);
+    deferred_renderer_render_static(floor);
+    deferred_renderer_render_animated(imrod);
+    deferred_renderer_end();
+    
+  } else {
+  
+    forward_renderer_begin();
+    
+    forward_renderer_render_static(skybox);
+    forward_renderer_render_static(floor);
+    forward_renderer_render_animated(imrod);
+    forward_renderer_end();
+  }
+
+  ui_text_render(txt_framerate);
+  ui_text_render(txt_info);
+  ui_text_render(txt_renderer);
+  
 }
 
 void pirate_event(SDL_Event event) {
@@ -127,9 +185,9 @@ void pirate_event(SDL_Event event) {
   
   switch(event.type){
   case SDL_KEYUP:
-    
+    if (event.key.keysym.sym == SDLK_r) { swap_renderer(); }
   break;
-
+  
   case SDL_MOUSEBUTTONDOWN:
 
     if (event.button.button == SDL_BUTTON_WHEELUP) {
@@ -150,8 +208,17 @@ void pirate_event(SDL_Event event) {
 }
 
 void pirate_finish() {
+  
+  ui_text_delete(txt_framerate);
+  ui_text_delete(txt_info);
+  ui_text_delete(txt_renderer);
+  
+  if (use_deferred) {
+    deferred_renderer_finish();
+  } else {
+    forward_renderer_finish();
+  }
 
-  forward_renderer_finish();
   shadow_mapper_finish();
 
 }

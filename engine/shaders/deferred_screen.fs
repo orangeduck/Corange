@@ -34,7 +34,7 @@ void main( void )
 	vec4 position = texture2D( positions_texture, gl_TexCoord[0].xy );
   
   vec4 light_pos = light_proj * light_view * vec4(position.xyz,1);
-  float shadow = shadow_amount_soft_pcf25(light_pos, shadows_texture, 0.001);
+  float shadow = shadow_amount_soft_pcf25(light_pos, shadows_texture, 0.0005);
 	
 	vec4 diffuse_a = texture2D( diffuse_texture, gl_TexCoord[0].xy );
 	vec3 albedo = diffuse_a.rgb;
@@ -54,7 +54,8 @@ void main( void )
 	vec3 eyeDir = normalize(camera_position - position.xyz);
 	vec3 vHalfVector = normalize(lightDir + eyeDir);
 	
-  float ssao = ssao_depth(gl_TexCoord[0].xy, depth_texture, random_texture);
+  //float ssao = ssao_depth(gl_TexCoord[0].xy, depth_texture, random_texture);
+  float ssao = 1;
   
 	vec3 ambient_amount = albedo * ssao;
 	float light_amount = max(dot(normal, lightDir), 0.0);

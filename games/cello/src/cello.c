@@ -104,6 +104,7 @@ void cello_init() {
   /* Renderer Setup */
 
   viewport_set_vsync(1);
+  viewport_set_multisamples(16);
   viewport_set_dimensions( v2(800 * 1.5, 600 * 1.5) );  
   
   shadow_mapper_init(sun);
@@ -112,7 +113,7 @@ void cello_init() {
   deferred_renderer_set_camera(cam);
   deferred_renderer_set_light(sun);
   deferred_renderer_set_shadow_texture( shadow_mapper_depth_texture() );
-
+  
   use_deferred = 1;
   
 }
@@ -219,9 +220,6 @@ void cello_render() {
   } else {
   
     forward_renderer_begin();
-    
-    glClearColor(1.0f, 0.769f, 0.0f, 0.0f);
-    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
     
     forward_renderer_render_static(s_skybox);
 

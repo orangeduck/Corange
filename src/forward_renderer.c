@@ -8,6 +8,7 @@
 #include "error.h"
 
 #include "viewport.h"
+#include "asset_manager.h"
 
 #include "renderable.h"
 #include "camera.h"
@@ -24,6 +25,7 @@ static int use_shadows = 0;
 static camera* CAMERA = NULL;
 static light* LIGHT = NULL;
 static texture* SHADOW_TEX = NULL;
+static texture* COLOR_CORRECTION = NULL;
 
 static float proj_matrix[16];
 static float view_matrix[16];
@@ -41,11 +43,14 @@ static int BONE_WEIGHTS;
 
 void forward_renderer_init() {
   
+  COLOR_CORRECTION = asset_get("./engine/resources/identity.lut");
+  
   /* Enables */
   glEnable(GL_TEXTURE_2D);
   glEnable(GL_MULTISAMPLE);
   glEnable(GL_DEPTH_TEST);
   
+  glClearColor(1.0f, 0.769f, 0.0f, 0.0f);
   glClearDepth(1.0f);
   
 }
@@ -73,9 +78,13 @@ void forward_renderer_set_shadow_texture(texture* t) {
   
 }
 
+void forward_renderer_set_color_correction(texture* t) {
+  COLOR_CORRECTION = t;
+}
+
 void forward_renderer_begin() {
   
-  glClear(GL_DEPTH_BUFFER_BIT);
+  glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
   
   forward_renderer_setup_camera();
   
@@ -220,8 +229,15 @@ static void forward_renderer_use_material(material* mat) {
     glActiveTexture(GL_TEXTURE0 + tex_counter);
     glBindTexture(GL_TEXTURE_2D, *SHADOW_TEX);
     tex_counter++;
-  
   }
+  
+  GLuint color_correction = glGetUniformLocation(*prog, "lut");
+  glUniform1i(color_correction, tex_counter);
+  glActiveTexture(GL_TEXTURE0 + tex_counter );
+  glBindTexture(GL_TEXTURE_3D, *COLOR_CORRECTION);
+  glEnable(GL_TEXTURE_3D);
+  tex_counter++;
+  
 
 }
 

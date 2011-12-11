@@ -21,7 +21,8 @@ uniform sampler2D bump_map;
 uniform sampler2D spec_map;
 uniform sampler2D env_map;
 uniform sampler2D shadow_map;
-uniform sampler2D paint_map;
+
+uniform sampler3D lut;
 
 varying vec2 uvs;
 varying vec4 world_position;
@@ -35,13 +36,14 @@ float shadow_amount_soft_pcf25(vec4 light_pos, sampler2D light_depth, float hard
 vec3 to_gamma(vec3 color);
 vec3 from_gamma(vec3 color);
 vec3 swap_red_green(vec3 color);
+vec3 color_correction(vec3 color, sampler3D lut, int lut_size);
 
 /* End */
 
 void main() {
   
   vec4 light_pos = light_proj * light_view * world_position;
-  float shadow = shadow_amount_soft_pcf25(light_pos, shadow_map, 0.001);
+  float shadow = shadow_amount_soft_pcf25(light_pos, shadow_map, 0.0005);
 
   vec4 diffuse_a = texture2D( diffuse_map, uvs );
   vec3 diffuse = from_gamma(diffuse_a.rgb);
@@ -67,7 +69,7 @@ void main() {
   float n_dot_h = max( dot( normal, half_vector ) , 0.0);
   
   vec3 reflected = normalize(reflect(eye_vector, normal));
-  vec3 env = from_gamma(texture2D(env_map, reflected.xy).rgb);
+  vec3 env = from_gamma(texture2D(env_map, reflected.xy).rgb * 0.5);
   float env_amount = (1.0 - dot(eye_vector, normal)) * spec.r * env_amount;
   
   vec3 final_diffuse = (diffuse * diffuse_light * shadow * n_dot_l);
@@ -75,9 +77,9 @@ void main() {
   vec3 final_ambient = ambient_light * diffuse;
   vec3 final_spec = (spec * specular_light * shadow * pow( n_dot_h, glossiness ) * specular_level );
   
-  vec3 final = final_diffuse + final_ambient + final_spec;
+  vec3 final = to_gamma(final_diffuse + final_ambient + final_spec);
   
-  gl_FragColor = vec4( to_gamma(final) , diffuse_a.a);
-  //gl_FragColor = vec4( bump , diffuse_a.a);
+  gl_FragColor.rgb = color_correction(final, lut, 64);
+  gl_FragColor.a = diffuse_a.a;
 
 }

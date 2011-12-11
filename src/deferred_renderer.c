@@ -2,6 +2,8 @@
 #include "SDL/SDL_opengl.h"
 #include "SDL/SDL_local.h"
 
+#include "error.h"
+
 #include "shader.h"
 #include "camera.h"
 #include "texture.h"
@@ -24,11 +26,18 @@ static float LIGHT_VIEW_MATRIX[16];
 static float LIGHT_PROJ_MATRIX[16];
 
 static shader_program* PROGRAM;
+static shader_program* PROGRAM_ANIMATED;
 static shader_program* SCREEN_PROGRAM;
 
 static int NORMAL;
 static int TANGENT;
 static int BINORMAL;
+
+static int NORMAL_ANIMATED;
+static int TANGENT_ANIMATED;
+static int BINORMAL_ANIMATED;
+static int BONE_INDICIES;
+static int BONE_WEIGHTS;
 
 static GLuint fbo = 0;
 static GLuint depth_buffer;
@@ -42,16 +51,26 @@ static GLuint normals_texture;
 static GLuint depth_texture;
 
 static texture* SHADOW_TEX;
+static texture* COLOR_CORRECTION;
 static light* LIGHT;
 
 void deferred_renderer_init() {
   
+  COLOR_CORRECTION = asset_get("./engine/resources/identity.lut");
+  
   PROGRAM = asset_get("./engine/shaders/deferred.prog");
+  PROGRAM_ANIMATED = asset_get("./engine/shaders/deferred_animated.prog");
   SCREEN_PROGRAM = asset_get("./engine/shaders/deferred_screen.prog");
   
-  NORMAL = glGetAttribLocation(*PROGRAM, "vNormal");
-  TANGENT = glGetAttribLocation(*PROGRAM, "vTangent");
-  BINORMAL = glGetAttribLocation(*PROGRAM, "vBiNormal");  
+  NORMAL = glGetAttribLocation(*PROGRAM, "normal");
+  TANGENT = glGetAttribLocation(*PROGRAM, "tangent");
+  BINORMAL = glGetAttribLocation(*PROGRAM, "binormal");  
+  
+  NORMAL_ANIMATED = glGetAttribLocation(*PROGRAM_ANIMATED, "normal");
+  TANGENT_ANIMATED = glGetAttribLocation(*PROGRAM_ANIMATED, "tangent");
+  BINORMAL_ANIMATED = glGetAttribLocation(*PROGRAM_ANIMATED, "binormal");  
+  BONE_INDICIES = glGetAttribLocation(*PROGRAM_ANIMATED, "bone_indicies");
+  BONE_WEIGHTS = glGetAttribLocation(*PROGRAM_ANIMATED, "bone_weights"); 
   
   glGenFramebuffers(1, &fbo);
   glBindFramebuffer(GL_FRAMEBUFFER, fbo);
@@ -139,6 +158,10 @@ void deferred_renderer_set_shadow_texture(texture* t) {
   SHADOW_TEX = t;
 }
 
+void deferred_renderer_set_color_correction(texture* t) {
+  COLOR_CORRECTION = t;
+}
+
 void deferred_renderer_set_light(light* l) {
   LIGHT = l;
 }
@@ -156,40 +179,62 @@ static void deferred_renderer_use_material(material* mat) {
     int* type = dictionary_get(mat->types, key);
     void* property = dictionary_get(mat->properties, key);
     
-    GLint loc = glGetUniformLocation(*PROGRAM, key);
+    GLint loc1 = glGetUniformLocation(*PROGRAM, key);
+    GLint loc2 = glGetUniformLocation(*PROGRAM_ANIMATED, key);
     
     GLint world_matrix_u = glGetUniformLocation(*PROGRAM, "world_matrix");
     glUniformMatrix4fv(world_matrix_u, 1, 0, WORLD_MATRIX);
+  
+    GLint proj_matrix_u = glGetUniformLocation(*PROGRAM, "proj_matrix");
+    glUniformMatrix4fv(proj_matrix_u, 1, 0, PROJ_MATRIX);
+    
+    GLint view_matrix_u = glGetUniformLocation(*PROGRAM, "view_matrix");
+    glUniformMatrix4fv(view_matrix_u, 1, 0, VIEW_MATRIX);
+    
+    world_matrix_u = glGetUniformLocation(*PROGRAM_ANIMATED, "world_matrix");
+    glUniformMatrix4fv(world_matrix_u, 1, 0, WORLD_MATRIX);
+  
+    proj_matrix_u = glGetUniformLocation(*PROGRAM_ANIMATED, "proj_matrix");
+    glUniformMatrix4fv(proj_matrix_u, 1, 0, PROJ_MATRIX);
+    
+    view_matrix_u = glGetUniformLocation(*PROGRAM_ANIMATED, "view_matrix");
+    glUniformMatrix4fv(view_matrix_u, 1, 0, VIEW_MATRIX);
     
     if (*type == mat_type_texture) {
     
-      glUniform1i(loc, tex_counter);
+      glUniform1i(loc1, tex_counter);
+      glUniform1i(loc2, tex_counter);
       glActiveTexture(GL_TEXTURE0 + tex_counter);
       glBindTexture(GL_TEXTURE_2D, *((texture*)property));
       tex_counter++;
     
     } else if (*type == mat_type_int) {
     
-      glUniform1i(loc, *((float*)property));
+      glUniform1i(loc1, *((float*)property));
+      glUniform1i(loc2, *((float*)property));
     
     } else if (*type == mat_type_float) {
     
-      glUniform1f(loc, *((float*)property));
+      glUniform1f(loc1, *((float*)property));
+      glUniform1f(loc2, *((float*)property));
       
     } else if (*type == mat_type_vector2) {
     
       vector2 v = *((vector2*)property);
-      glUniform2f(loc, v.x, v.y);
+      glUniform2f(loc1, v.x, v.y);
+      glUniform2f(loc2, v.x, v.y);
     
     } else if (*type == mat_type_vector3) {
     
       vector3 v = *((vector3*)property);
-      glUniform3f(loc, v.x, v.y, v.z);
+      glUniform3f(loc1, v.x, v.y, v.z);
+      glUniform3f(loc2, v.x, v.y, v.z);
   
     } else if (*type == mat_type_vector4) {
     
       vector4 v = *((vector4*)property);
-      glUniform4f(loc, v.w, v.x, v.y, v.z);
+      glUniform4f(loc1, v.w, v.x, v.y, v.z);
+      glUniform4f(loc2, v.w, v.x, v.y, v.z);
     
     } else {
       /* Do nothing */
@@ -287,7 +332,7 @@ void deferred_renderer_end() {
   glUniform1i(glGetUniformLocation(*SCREEN_PROGRAM, "random_texture"), 5);
   
   glActiveTexture(GL_TEXTURE0 + 6 );
-  glBindTexture(GL_TEXTURE_3D, *(texture*)asset_get("./engine/resources/bluey.lut"));
+  glBindTexture(GL_TEXTURE_3D, *COLOR_CORRECTION);
   glEnable(GL_TEXTURE_3D);
   glUniform1i(glGetUniformLocation(*SCREEN_PROGRAM, "lut"), 6);
   
@@ -443,6 +488,98 @@ void deferred_renderer_render_static(static_object* s) {
       glBindBuffer(GL_ARRAY_BUFFER, 0);
       
       glUseProgram(0);
+    
+    }
+
+  }
+
+}
+
+#define MAX_BONES 32
+static matrix_4x4 bone_matrices[MAX_BONES];
+static float bone_matrix_data[4 * 4 * MAX_BONES];
+
+void deferred_renderer_render_animated(animated_object* ao) {
+
+  if (ao->skeleton->num_bones > MAX_BONES) {
+    error("animated object skeleton has too many bones (over %i)", MAX_BONES);
+  }
+
+  matrix_4x4 r_world_matrix = m44_world( ao->position, ao->scale, ao->rotation );
+  m44_to_array(r_world_matrix, WORLD_MATRIX);
+  
+  int i;
+  for(i = 0; i < ao->skeleton->num_bones; i++) {
+    matrix_4x4 base, ani;
+    base = bone_transform(ao->skeleton->bones[i]);
+    ani = bone_transform(ao->pose->bones[i]);
+    
+    bone_matrices[i] = m44_mul_m44(ani, m44_inverse(base));
+    m44_to_array(bone_matrices[i], bone_matrix_data + (i * 4 * 4));
+  }
+  
+  renderable* r = ao->renderable;
+  
+  for(i=0; i < r->num_surfaces; i++) {
+    
+    renderable_surface* s = r->surfaces[i];
+    if(s->is_rigged) {
+      
+      glUseProgram(*PROGRAM_ANIMATED);
+      
+      deferred_renderer_use_material(s->base);
+      
+      GLint bone_world_matrices_u = glGetUniformLocation(*PROGRAM_ANIMATED, "bone_world_matrices");
+      glUniformMatrix4fv(bone_world_matrices_u, ao->skeleton->num_bones, GL_FALSE, bone_matrix_data);
+      
+      GLint bone_count_u = glGetUniformLocation(*PROGRAM_ANIMATED, "bone_count");
+      glUniform1i(bone_count_u, ao->skeleton->num_bones);
+      
+      GLsizei stride = sizeof(float) * 24;
+      
+      glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
+          
+      glVertexPointer(3, GL_FLOAT, stride, (void*)0);
+      glEnableClientState(GL_VERTEX_ARRAY);
+      
+      glVertexAttribPointer(NORMAL, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 3));
+      glEnableVertexAttribArray(NORMAL);
+      
+      glVertexAttribPointer(TANGENT, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 6));
+      glEnableVertexAttribArray(TANGENT);
+      
+      glVertexAttribPointer(BINORMAL, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 9));
+      glEnableVertexAttribArray(BINORMAL);
+      
+      glTexCoordPointer(2, GL_FLOAT, stride, (void*)(sizeof(float) * 12));
+      glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+      
+      glVertexAttribPointer(BONE_INDICIES, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 18));
+      glEnableVertexAttribArray(BONE_INDICIES);
+      
+      glVertexAttribPointer(BONE_WEIGHTS, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 21));
+      glEnableVertexAttribArray(BONE_WEIGHTS);
+      
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
+      glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
+      
+      glDisableClientState(GL_VERTEX_ARRAY);
+      glDisableClientState(GL_TEXTURE_COORD_ARRAY);  
+      
+      glDisableVertexAttribArray(NORMAL);
+      glDisableVertexAttribArray(TANGENT);
+      glDisableVertexAttribArray(BINORMAL);
+      glDisableVertexAttribArray(BONE_INDICIES);  
+      glDisableVertexAttribArray(BONE_WEIGHTS);  
+      
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+      glBindBuffer(GL_ARRAY_BUFFER, 0);
+      
+      glUseProgram(0);
+      
+    } else {
+    
+      error("Animated object is not rigged!");
     
     }
 
