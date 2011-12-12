@@ -7,5 +7,4 @@ Fur Shader
 Terrain stuff
 Entity manager takes custom types
 UI slider bar - UI manager with custom types
-Change game loading format
 LUA wrappers for asset, entity, ui managers
