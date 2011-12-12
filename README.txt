@@ -8,13 +8,7 @@
 	
 	:: Running ::
 	
-		To run a game call corange from the command line with the first arg being the name of the game to play. For example if you wish to play the "cello" demo run the command:
-			
-			$ corange cello
-			
-		Otherwise it will default to the blank game called "empty" which will just display a blank screen.
-	
-		You can also run any of the demo .bat files
+		Corange is a library, but to take a quick look at some of the things it can do run any of the exe files in the demos folder.
 	
 	:: Compiling ::
 	
