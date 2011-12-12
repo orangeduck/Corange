@@ -1,0 +1,2 @@
+string name = basic
+program prog = $CORANGE/shaders/basic.prog

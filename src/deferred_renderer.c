@@ -52,15 +52,17 @@ static GLuint depth_texture;
 
 static texture* SHADOW_TEX;
 static texture* COLOR_CORRECTION;
+static texture* RANDOM;
 static light* LIGHT;
 
 void deferred_renderer_init() {
   
-  COLOR_CORRECTION = asset_get("./engine/resources/identity.lut");
+  COLOR_CORRECTION = asset_get("$CORANGE/resources/identity.lut");
+  RANDOM = asset_get("$CORANGE/resources/random.dds");
   
-  PROGRAM = asset_get("./engine/shaders/deferred.prog");
-  PROGRAM_ANIMATED = asset_get("./engine/shaders/deferred_animated.prog");
-  SCREEN_PROGRAM = asset_get("./engine/shaders/deferred_screen.prog");
+  PROGRAM = asset_get("$CORANGE/shaders/deferred.prog");
+  PROGRAM_ANIMATED = asset_get("$CORANGE/shaders/deferred_animated.prog");
+  SCREEN_PROGRAM = asset_get("$CORANGE/shaders/deferred_screen.prog");
   
   NORMAL = glGetAttribLocation(*PROGRAM, "normal");
   TANGENT = glGetAttribLocation(*PROGRAM, "tangent");
@@ -327,7 +329,7 @@ void deferred_renderer_end() {
   glUniform1i(glGetUniformLocation(*SCREEN_PROGRAM, "shadows_texture"), 4);
   
   glActiveTexture(GL_TEXTURE0 + 5 );
-  glBindTexture(GL_TEXTURE_2D, *(texture*)asset_get("./engine/resources/random.dds"));
+  glBindTexture(GL_TEXTURE_2D, *RANDOM);
   glEnable(GL_TEXTURE_2D);
   glUniform1i(glGetUniformLocation(*SCREEN_PROGRAM, "random_texture"), 5);
   

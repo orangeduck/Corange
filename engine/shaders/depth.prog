@@ -1,2 +1,0 @@
-vertex_shader : ./engine/shaders/depth.vs
-fragment_shader : ./engine/shaders/depth.fs

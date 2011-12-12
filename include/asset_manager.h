@@ -2,8 +2,9 @@
 #define asset_manager_h
 
 #include "dictionary.h"
+#include "list.h"
 
-void asset_manager_init(char* game_name);
+void asset_manager_init();
 void asset_manager_finish();
 
 #define asset_loader_t void*(*)(char*)

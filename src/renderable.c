@@ -120,13 +120,10 @@ renderable_surface* renderable_surface_new(mesh* m) {
   
   material* base;
   
-  //printf("mat: |%s|\n", m->material); fflush(stdout);
-  
   if( asset_loaded(m->material) ) {
     s->base = asset_get(m->material);
   } else {
-    //s->base = asset_get("/resources/cello/cello.mat");
-    s->base = asset_get("./engine/resources/basic.mat");
+    s->base = asset_get("$CORANGE/resources/basic.mat");
   }
     
   /* Copy certain base attributes from base material which can't be specified as non-existant */
@@ -213,7 +210,7 @@ renderable_surface* renderable_surface_new_rigged(mesh* m, vertex_weight* weight
   if( asset_loaded(m->material) ) {
     s->base = asset_get(m->material);
   } else {
-    s->base = asset_get("./engine/resources/basic.mat");
+    s->base = asset_get("$CORANGE/resources/basic.mat");
   }
   
   /* Copy certain base attributes from base material which can't be specified as non-existant */
@@ -252,8 +249,8 @@ renderable* obj_load_file(char* filename) {
   obj_model->meshes = malloc(sizeof(mesh*) * 1);
   
   mesh* obj_mesh = malloc(sizeof(mesh));
-  obj_mesh->material = malloc(strlen("./engine/resources/basic.mat") + 1);
-  strcpy(obj_mesh->material, "./engine/resources/basic.mat");
+  obj_mesh->material = malloc(strlen("$CORANGE/resources/basic.mat") + 1);
+  strcpy(obj_mesh->material, "$CORANGE/resources/basic.mat");
   
   obj_mesh->name = malloc(strlen("mesh1") + 1);
   strcpy(obj_mesh->name, "mesh1");
@@ -565,8 +562,8 @@ renderable* smd_load_file(char* filename) {
   smd_mesh->name = malloc(strlen(filename) + 1);
   strcpy(smd_mesh->name, filename);
   
-  smd_mesh->material = malloc(strlen("./engine/resources/basic_animated.mat") + 1);
-  strcpy(smd_mesh->material, "./engine/resources/basic_animated.mat");
+  smd_mesh->material = malloc(strlen("$CORANGE/resources/basic_animated.mat") + 1);
+  strcpy(smd_mesh->material, "$CORANGE/resources/basic_animated.mat");
   
   smd_mesh->num_verts = vert_list->num_items;
   smd_mesh->num_triangles = tri_list->num_items / 3;

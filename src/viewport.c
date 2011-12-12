@@ -1,6 +1,5 @@
 #include "error.h"
 #include "image.h"
-#include "game.h"
 #include "timing.h"
 
 #include "viewport.h"
@@ -212,9 +211,7 @@ void viewport_screenshot() {
   timestamp_sm(timestamp_string);
 
   screenshot_string[0] = '\0';
-  strcat(screenshot_string, "./");
-  strcat(screenshot_string, game_name());
-  strcat(screenshot_string, "_");
+  strcat(screenshot_string, "./corange_");
   strcat(screenshot_string, timestamp_string);
   strcat(screenshot_string, ".tga");
   

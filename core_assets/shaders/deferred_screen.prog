@@ -1,0 +1,5 @@
+vertex_shader : $CORANGE/shaders/deferred_screen.vs
+fragment_shader : $CORANGE/shaders/deferred_screen.fs
+fragment_shader : $CORANGE/shaders/shadows.fs
+fragment_shader : $CORANGE/shaders/colors.fs
+fragment_shader : $CORANGE/shaders/screen_ao.fs

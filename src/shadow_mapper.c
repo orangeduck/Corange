@@ -35,8 +35,8 @@ void shadow_mapper_init(light* l) {
 
   LIGHT = l;
   
-  depth_shader = asset_get("./engine/shaders/depth.prog");
-  depth_shader_animated = asset_get("./engine/shaders/depth_animated.prog");
+  depth_shader = asset_get("$CORANGE/shaders/depth.prog");
+  depth_shader_animated = asset_get("$CORANGE/shaders/depth_animated.prog");
   
   BONE_INDICIES = glGetAttribLocation(*depth_shader_animated, "bone_indicies");
   BONE_WEIGHTS = glGetAttribLocation(*depth_shader_animated, "bone_weights");

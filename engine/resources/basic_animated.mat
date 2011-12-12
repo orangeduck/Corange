@@ -1,2 +1,0 @@
-string name = basic_animated
-program prog = ./engine/shaders/basic_animated.prog
