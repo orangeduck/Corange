@@ -73,7 +73,7 @@ GLuint stencil_texture;
 kernel_memory k_proj_texture;
 kernel_memory k_stencil_texture;
 
-kernel_memory K_color_volume;
+kernel_memory k_color_volume;
 kernel_memory k_normals_volume;
 
 kernel k_flatten;
@@ -121,10 +121,10 @@ void volume_renderer_init() {
   k_proj_texture = kernel_memory_from_gltexture2D(proj_texture);
   k_stencil_texture = kernel_memory_from_gltexture2D(stencil_texture);
   
-  K_color_volume = kernel_memory_allocate(width * height * depth * 4 * sizeof(char));
+  k_color_volume = kernel_memory_allocate(width * height * depth * 4 * sizeof(char));
   k_normals_volume = kernel_memory_allocate(width * height * depth * 4 * sizeof(char));
   
-  kernel_memory_write(K_color_volume, width * height * depth * 4 * sizeof(char), blank_byte_volume);
+  kernel_memory_write(k_color_volume, width * height * depth * 4 * sizeof(char), blank_byte_volume);
   kernel_memory_write(k_normals_volume, width * height * depth * 4 * sizeof(char), blank_byte_volume);
   
   free(blank_byte_volume);
@@ -150,7 +150,7 @@ void volume_renderer_init() {
   kernel_set_argument(k_flatten, 3, sizeof(cl_float), &threshold);
   kernel_set_argument(k_flatten, 4, sizeof(kernel_memory), &k_proj_texture);
   kernel_set_argument(k_flatten, 5, sizeof(kernel_memory), &k_stencil_texture);
-  kernel_set_argument(k_flatten, 6, sizeof(kernel_memory), &K_color_volume);
+  kernel_set_argument(k_flatten, 6, sizeof(kernel_memory), &k_color_volume);
   kernel_set_argument(k_flatten, 7, sizeof(kernel_memory), &k_normals_volume);
   
   k_blit_point = kernel_program_get_kernel(blitting, "blit_point");
@@ -158,12 +158,12 @@ void volume_renderer_init() {
   kernel_set_argument(k_blit_point, 5, sizeof(cl_int), &height);
   kernel_set_argument(k_blit_point, 6, sizeof(cl_int), &depth);
   kernel_set_argument(k_blit_point, 7, sizeof(kernel_memory), &k_stencil_texture);
-  kernel_set_argument(k_blit_point, 8, sizeof(kernel_memory), &K_color_volume);
+  kernel_set_argument(k_blit_point, 8, sizeof(kernel_memory), &k_color_volume);
   kernel_set_argument(k_blit_point, 9, sizeof(kernel_memory), &k_normals_volume);
  
   k_blit_metaball = kernel_program_get_kernel(blitting, "blit_metaball");
   kernel_set_argument(k_blit_metaball, 7, sizeof(kernel_memory), &k_stencil_texture);
-  kernel_set_argument(k_blit_metaball, 8, sizeof(kernel_memory), &K_color_volume);
+  kernel_set_argument(k_blit_metaball, 8, sizeof(kernel_memory), &k_color_volume);
   kernel_set_argument(k_blit_metaball, 9, sizeof(kernel_memory), &k_normals_volume);
 }
 
@@ -172,7 +172,7 @@ void volume_renderer_finish() {
   kernel_memory_delete(k_proj_texture);
   kernel_memory_delete(k_stencil_texture);
 
-  kernel_memory_delete(K_color_volume);
+  kernel_memory_delete(k_color_volume);
   kernel_memory_delete(k_normals_volume);
   
   glEnable(GL_TEXTURE_2D);
@@ -186,7 +186,7 @@ void volume_renderer_begin() {
   vector4 zero = v4_zero();
   vector4 norm = v4(0.5, 0.5, 0.5, 0);
   
-  kernel_set_argument(k_clear_volume, 3, sizeof(kernel_memory), &K_color_volume);
+  kernel_set_argument(k_clear_volume, 3, sizeof(kernel_memory), &k_color_volume);
   kernel_set_argument(k_clear_volume, 4, sizeof(vector4), &zero);
   kernel_run(k_clear_volume, width * height * depth);
   

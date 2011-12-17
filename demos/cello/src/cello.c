@@ -84,11 +84,11 @@ void cello_init() {
   ui_text_update(txt_framerate);
   
   txt_renderer = ui_text_new("Deferred Renderer", console_font);
-  txt_renderer->position = v2(10, 75);
+  txt_renderer->position = v2(10, 80);
   ui_text_update(txt_renderer);
   
   txt_info = ui_text_new("Click and drag mouse to move\n'p' to switch object\n'r' to switch renderer", console_font);
-  txt_info->position = v2(10, 75);
+  txt_info->position = v2(10, 30);
   ui_text_update(txt_info);
   
   /* New Camera and light */
@@ -106,7 +106,6 @@ void cello_init() {
   /* Renderer Setup */
 
   viewport_set_vsync(1);
-  viewport_set_multisamples(16);
   
   shadow_mapper_init(sun);
   

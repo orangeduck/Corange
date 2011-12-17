@@ -8,8 +8,6 @@ void corange_finish();
 
 void corange_stop_stdout_redirect();
 
-char* corange_asset_path();
-
 /* Include SDL, OpenGL */
 
 #include "SDL/SDL.h"

@@ -15,7 +15,7 @@ corange.dll: $(OBJ_FILES)
 	cp corange.dll ./demos/metaballs/corange.dll
 	cp corange.dll ./demos/noise/corange.dll
 	cp corange.dll ./demos/sea/corange.dll
-	cp corange.dll ./demos/lut_get/corange.dll
+	cp corange.dll ./demos/lut_gen/corange.dll
 
 obj/%.o: src/%.c
 	$(CC) $< -c  -O3 -g $(CFLAGS) -o $@

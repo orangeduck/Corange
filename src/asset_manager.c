@@ -18,6 +18,15 @@ typedef struct {
 asset_handler asset_handlers[MAX_HANDLERS];
 int num_handlers = 0;
 
+typedef struct {
+  char* variable;
+  char* mapping;
+} path_variable;
+
+#define MAX_PATH_VARIABLES 512
+path_variable path_variables[MAX_PATH_VARIABLES];
+int num_path_variables = 0;
+
 /*
   This whole string situation here is a bit of a mess.
   And I'm not sure how possible it is to do without memory allocation.
@@ -32,33 +41,58 @@ int num_handlers = 0;
   its use across all the functions.
 */
 
+void asset_manager_add_path_variable(char* variable, char* mapping) {
+  
+  if (num_path_variables == MAX_PATH_VARIABLES) {
+    error("Already reached maximum num of path variables (%i)", MAX_PATH_VARIABLES);
+  }
+  
+  if (variable[0] != '$') {
+    error("Variables must start with a dollar sign e.g '$CORANGE'");
+  }
+  
+  path_variable pv;
+  pv.variable = malloc(strlen(variable) + 1);
+  strcpy(pv.variable, variable);
+  pv.mapping = malloc(strlen(mapping) + 1);
+  strcpy(pv.mapping, mapping);
+  
+  path_variables[num_path_variables] = pv;
+  num_path_variables++;
+  
+}
+
 char* asset_map_filename(char* filename) {
   
-  char* sub = strstr(filename, "$CORANGE");
-  char* corange_path = corange_asset_path();
+  int i;
+  for(i = 0; i < num_path_variables; i++) {
   
-  if (!sub || (corange_path == NULL)) {
+    char* variable = path_variables[i].variable;
+    char* mapping = path_variables[i].mapping;
   
-    char* new_filename = malloc(strlen(filename) + 1);
-    strcpy(new_filename, filename);
+    char* sub = strstr(filename, variable);
+    
+    if (sub) {
+      int replace_len = strlen(mapping);
+      int start_len = strlen(filename) - strlen(sub);
+      int ext_len = strlen(sub) - strlen(variable);
+      
+      char* new_filename = malloc(replace_len + ext_len + start_len + 1);
+      new_filename[0] = '\0';
+      
+      strncpy(new_filename, filename, start_len);
+      strcat(new_filename, mapping);
+      strcat(new_filename, sub + strlen(variable));
+      
+      return new_filename;
+    }
   
-    return new_filename;
-    
-  } else {
-    
-    int replace_len = strlen(corange_asset_path());
-    int start_len = strlen(filename) - strlen(sub);
-    int ext_len = strlen(sub) - strlen("$CORANGE");
-    
-    char* new_filename = malloc(replace_len + ext_len + start_len + 1);
-    new_filename[0] = '\0';
-    
-    strncpy(new_filename, filename, start_len);
-    strcat(new_filename, corange_asset_path());
-    strcat(new_filename, sub + strlen("$CORANGE"));
-    
-    return new_filename;
   }
+  
+  char* new_filename = malloc(strlen(filename) + 1);
+  strcpy(new_filename, filename);
+
+  return new_filename;
   
 }
 
@@ -117,9 +151,14 @@ void asset_manager_finish() {
     free(asset_handlers[num_handlers].extension);
   }
   
+  for(i = 0; i < num_path_variables; i++) {
+    free(path_variables[i].variable);
+    free(path_variables[i].mapping);
+  }
+  
 }
 
-void asset_manager_handler(char* extension, void* asset_loader(char* filename) , void asset_deleter(void* asset) ) {
+void asset_manager_handler_cast(char* extension, void* asset_loader(char* filename) , void asset_deleter(void* asset) ) {
   
   if(num_handlers == MAX_HANDLERS) {
     warning("Max number of asset handlers reached. Handler for extension %s not added.", extension);

@@ -7,7 +7,7 @@ int main(int argc, char **argv) {
   corange_stop_stdout_redirect();
   
   asset_manager_init();
-  asset_manager_handler("acv", (void*(*)(char*))acv_load_file, (void(*)(void*))color_curves_delete);
+  asset_manager_handler("acv", acv_load_file, color_curves_delete);
   
   load_folder("./input/");
   

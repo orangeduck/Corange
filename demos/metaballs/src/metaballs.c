@@ -1,5 +1,6 @@
 #include "particles.h"
 #include "volume_renderer.h"
+#include "marching_cubes.h"
 #include "kernel.h"
 
 #include "metaballs.h"
@@ -16,14 +17,14 @@ const int max_particles = 1024;
 static ui_text* ui_framerate;
 static ui_rectangle* ui_box;
 
-vector3 pos1;
-vector3 pos2;
+//vector3 pos1;
+//vector3 pos2;
 
 void metaballs_init() {
   
   kernels_init_with_opengl();
   
-  asset_manager_handler("cl", (asset_loader_t)cl_load_file, (asset_deleter_t)kernel_program_delete);
+  asset_manager_handler("cl", cl_load_file, kernel_program_delete);
   
   load_folder("./kernels/");
   
@@ -44,7 +45,8 @@ void metaballs_init() {
   
   camera* cam = entity_new("camera", entity_type_camera);
   cam->position = v3(20.0, 20.0, 0.0);
-  cam->target = v3(0.0, 5.0, 0.0);
+  //cam->target = v3(0.0, 5.0, 0.0);
+  cam->target = v3(0.0, 0.0, 0.0);
   
   light* sun = entity_new("sun", entity_type_light);
   sun->position = v3(30,20,-26);
@@ -104,12 +106,14 @@ void metaballs_init() {
   ui_box->border_size = 2;
   ui_box->border_color = v4_white();
   
-  volume_renderer_init();
-  volume_renderer_set_camera(cam);
-  volume_renderer_set_light(sun);
+  //volume_renderer_init();
+  //volume_renderer_set_camera(cam);
+  //volume_renderer_set_light(sun);
   
-  pos1 = v3(0, 10, 0);
-  pos2 = v3(0, 5, 0);
+  //pos1 = v3(0, 10, 0);
+  //pos2 = v3(0, 5, 0);
+  
+  marching_cubes_init();
   
 }
 
@@ -142,6 +146,11 @@ void metaballs_update() {
   
   ui_text_update_string(ui_framerate, frame_rate_string());
   
+  marching_cubes_clear();
+  //marching_cubes_point(1, 1, 1, 1.0);
+  marching_cubes_metaball(5, 5, 5, 3);
+  marching_cubes_update();
+  
 }
 
 static float proj_matrix[16];
@@ -160,6 +169,7 @@ void metaballs_render() {
   shadow_mapper_render_static(s_floor);
   shadow_mapper_end();
 
+  
   forward_renderer_begin();
   
     glClearColor(0.75f, 0.75f, 0.75f, 0.75f);
@@ -220,8 +230,11 @@ void metaballs_render() {
   
     */
   
+    marching_cubes_render();
+  
   forward_renderer_end();
   
+  /*
   volume_renderer_begin();
   volume_renderer_render_point(sun->position, v3_blue());
   
@@ -237,6 +250,7 @@ void metaballs_render() {
     volume_renderer_render_metaball(pos, col);
   }
   volume_renderer_end();
+  */
   
   ui_rectangle_render(ui_box);
   ui_text_render(ui_framerate);
@@ -258,12 +272,14 @@ void metaballs_event(SDL_Event event) {
       particles_reset();
     }
     
+    /*
     if(event.key.keysym.sym == SDLK_UP) {
       pos1 = v3_add(pos1, v3(0, 0.1, 0));
     }
     if(event.key.keysym.sym == SDLK_DOWN) {
       pos1 = v3_sub(pos1, v3(0, 0.1, 0));
     }
+    */
     
   break;
   
@@ -310,7 +326,8 @@ void metaballs_finish() {
   glDeleteBuffers(1, &billboard_positions);
   glDeleteBuffers(1, &billboard_uvs);
   
-  volume_renderer_finish();
+  //volume_renderer_finish();
+  marching_cubes_finish();
   
   kernels_finish();
 }

@@ -55,7 +55,7 @@ void main( void )
 	vec3 vHalfVector = normalize(lightDir + eyeDir);
 	
   //float ssao = ssao_depth(gl_TexCoord[0].xy, depth_texture, random_texture);
-  float ssao = 1;
+  float ssao = 1.0;
   
 	vec3 ambient_amount = albedo * ssao;
 	float light_amount = max(dot(normal, lightDir), 0.0);

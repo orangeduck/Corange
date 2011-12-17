@@ -2,19 +2,6 @@
 
 #include "corange.h"
 
-static int path_set = 0;
-
-#define MAX_PATH_LEN 2048
-static char corange_path[MAX_PATH_LEN];
-
-char* corange_asset_path() {
-  if(!path_set) {
-    return NULL;
-  } else {
-    return corange_path;
-  }
-}
-
 void corange_stop_stdout_redirect() {
   FILE* ctt = fopen("CON", "w" );
   freopen( "CON", "w", stdout );
@@ -31,14 +18,7 @@ void corange_init(char* core_assets_path) {
   
   /* Load asset path stuff */
   
-  if (strlen(core_assets_path) >= MAX_PATH_LEN) {
-    error("core assets path too long");
-  } else {
-    strcpy(corange_path, core_assets_path);
-    path_set = 1;
-  }
-  
-  /* TODO: Check path is valid */
+  asset_manager_add_path_variable("$CORANGE", core_assets_path);
   
   /* SDL Setup */
   
@@ -49,28 +29,28 @@ void corange_init(char* core_assets_path) {
   viewport_init();
   
   SDL_LoadOpenGLExtensions();
-
+  
   /* Load Assets */
   
   asset_manager_init();
   
-  asset_manager_handler("obj", (asset_loader_t)obj_load_file, (asset_deleter_t)renderable_delete);
-  asset_manager_handler("smd", (asset_loader_t)smd_load_file, (asset_deleter_t)renderable_delete);
-  asset_manager_handler("skl", (asset_loader_t)skl_load_file, (asset_deleter_t)skeleton_delete);
-  asset_manager_handler("ani", (asset_loader_t)ani_load_file, (asset_deleter_t)animation_delete);
+  asset_manager_handler("obj", obj_load_file, renderable_delete);
+  asset_manager_handler("smd", smd_load_file, renderable_delete);
+  asset_manager_handler("skl", skl_load_file, skeleton_delete);
+  asset_manager_handler("ani", ani_load_file, animation_delete);
   
-  asset_manager_handler("bmp", (asset_loader_t)bmp_load_file, (asset_deleter_t)image_delete);
-  asset_manager_handler("tga", (asset_loader_t)tga_load_file, (asset_deleter_t)image_delete);
-  asset_manager_handler("dds", (asset_loader_t)dds_load_file, (asset_deleter_t)texture_delete);
-  asset_manager_handler("lut", (asset_loader_t)lut_load_file, (asset_deleter_t)texture_delete);
+  asset_manager_handler("bmp", bmp_load_file, image_delete);
+  asset_manager_handler("tga", tga_load_file, image_delete);
+  asset_manager_handler("dds", dds_load_file, texture_delete);
+  asset_manager_handler("lut", lut_load_file, texture_delete);
   
-  asset_manager_handler("vs" , (asset_loader_t)vs_load_file,  (asset_deleter_t)shader_delete);
-  asset_manager_handler("fs" , (asset_loader_t)fs_load_file,  (asset_deleter_t)shader_delete);
-  asset_manager_handler("prog",(asset_loader_t)prog_load_file,(asset_deleter_t)shader_program_delete);
+  asset_manager_handler("vs" , vs_load_file,  shader_delete);
+  asset_manager_handler("fs" , fs_load_file,  shader_delete);
+  asset_manager_handler("prog",prog_load_file,shader_program_delete);
   
-  asset_manager_handler("fnt", (asset_loader_t)font_load_file,(asset_deleter_t)font_delete);
-  asset_manager_handler("mat", (asset_loader_t)mat_load_file, (asset_deleter_t)material_delete);
-  asset_manager_handler("lua", (asset_loader_t)lua_load_file, (asset_deleter_t)script_delete);
+  asset_manager_handler("fnt", font_load_file,font_delete);
+  asset_manager_handler("mat", mat_load_file, material_delete);
+  asset_manager_handler("lua", lua_load_file, script_delete);
   
   load_folder("$CORANGE/shaders/");
   load_folder("$CORANGE/fonts/");

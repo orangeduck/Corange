@@ -7,9 +7,10 @@
 void asset_manager_init();
 void asset_manager_finish();
 
-#define asset_loader_t void*(*)(char*)
-#define asset_deleter_t void(*)(void*)
-void asset_manager_handler(char* extension, void* asset_loader(char* filename) , void asset_deleter(void* asset) );
+void asset_manager_add_path_variable(char* variable, char* mapping);
+
+#define asset_manager_handler(extension, loader, deleter) asset_manager_handler_cast(extension, (void*(*)(char*))loader , (void(*)(void*))deleter)
+void asset_manager_handler_cast(char* extension, void* asset_loader(char* filename) , void asset_deleter(void* asset) );
 
 void load_file(char* filename);
 void load_folder(char* folder);
