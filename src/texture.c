@@ -326,8 +326,6 @@ texture* dds_load_file( char* filename ){
   }
   SDL_RWread(f, &hdr, 1, sizeof(hdr));
   
-  printf("Loading: %s\n", filename);
-  
   if( hdr.dwMagic != DDS_MAGIC || hdr.dwSize != 124 ||
     !(hdr.dwFlags & DDSD_PIXELFORMAT) || !(hdr.dwFlags & DDSD_CAPS) ) {
     

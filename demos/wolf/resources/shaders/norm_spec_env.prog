@@ -1,0 +1,2 @@
+vertex_shader : /resources/shaders/norm_spec_env.vs
+fragment_shader : /resources/shaders/norm_spec_env.fs

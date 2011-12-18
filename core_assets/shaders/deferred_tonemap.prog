@@ -1,0 +1,2 @@
+vertex_shader : $CORANGE/shaders/deferred_tonemap.vs
+fragment_shader : $CORANGE/shaders/deferred_tonemap.fs

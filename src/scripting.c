@@ -15,16 +15,14 @@ void scripting_init() {
   luaopen_table(L);
   luaopen_string(L);
   luaopen_math(L);
-};
+}
 
 void scripting_finish() {
   lua_close(L);
-}; 
+} 
 
 
 script* lua_load_file(const char* filename) {
-
-  printf("loading: %s\n", filename);
 
   script* s = malloc(sizeof(script));
   
@@ -32,17 +30,17 @@ script* lua_load_file(const char* filename) {
   strcpy(s->filename, filename);
   
   return s;
-};
+}
 
 void script_delete(script* s) {
   free(s->filename);
   free(s);
-};
+}
 
 void scripting_run_script(script* s) {
   luaL_dofile(L, s->filename);
-};
+}
 
 void scripting_run_script_file(const char* filename) {
   luaL_dofile(L, filename);
-};
+}

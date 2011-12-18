@@ -19,18 +19,16 @@ typedef struct {
   renderable* renderable;
   skeleton* skeleton;
   
-  int num_animations;
-  animation** animations;
-  int curr_animation;
   float animation_time;
+  animation* animation;
+  
+  skeleton* pose;
   
 } animated_object;
 
 animated_object* animated_object_new(renderable* r, skeleton* s);
 void animated_object_delete(animated_object* ao);
 
-void animated_object_add_animation(animated_object* ao, animation* a);
-
-void animated_object_bone_matrices(animated_object* ao, matrix_4x4* matricies);
+void animated_object_update(animated_object* ao, float timestep);
 
 #endif

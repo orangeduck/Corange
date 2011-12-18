@@ -96,7 +96,11 @@ void ui_rectangle_render(ui_rectangle* rect) {
   
 	glMatrixMode(GL_MODELVIEW);
   glPopMatrix();
-
+  
+  if(rect->texture != NULL) {
+    glDisable(GL_TEXTURE_2D);
+  }
+ 
 }
 
 int ui_rectangle_contains_position(ui_rectangle* rect, vector2 position) {

@@ -12,7 +12,7 @@
 #endif
 
 void SDL_RWsize(SDL_RWops* file, int* size);
-void SDL_RWreadline(SDL_RWops* file, char* buffer);
+int SDL_RWreadline(SDL_RWops* file, char* buffer, int buffersize);
 
 void SDL_LoadOpenGLExtensions();
 void SDL_CheckOpenGLExtension(const char* name, void* function_pointer);

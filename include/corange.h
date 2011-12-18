@@ -1,12 +1,18 @@
+#ifndef corange_h
+#define corange_h
+
+/* Corange Functions */
+
+void corange_init(char* core_assets_path);
+void corange_finish();
+
+void corange_stop_stdout_redirect();
+
 /* Include SDL, OpenGL */
 
 #include "SDL/SDL.h"
 #include "SDL/SDL_opengl.h"
 #include "SDL/SDL_local.h"
-
-/* Include OpenCL */
-
-#include "CL/cl.h"
 
 /* Info and Utilities */
 
@@ -62,6 +68,4 @@
 #include "matrix.h"
 #include "geometry.h"
 
-/* Processing */
-
-#include "kernel.h"
+#endif

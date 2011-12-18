@@ -1,4 +1,5 @@
 #include <string.h>
+#include <math.h>
 
 #include "SDL/SDL.h"
 #include "SDL/SDL_opengl.h"
@@ -7,11 +8,11 @@
 #include "error.h"
 
 #include "viewport.h"
+#include "asset_manager.h"
 
 #include "renderable.h"
 #include "camera.h"
 #include "matrix.h"
-#include "geometry.h"
 #include "shader.h"
 #include "texture.h"
 #include "dictionary.h"
@@ -24,6 +25,7 @@ static int use_shadows = 0;
 static camera* CAMERA = NULL;
 static light* LIGHT = NULL;
 static texture* SHADOW_TEX = NULL;
+static texture* COLOR_CORRECTION = NULL;
 
 static float proj_matrix[16];
 static float view_matrix[16];
@@ -36,16 +38,19 @@ static float timer = 0.0;
 static int TANGENT;
 static int BINORMAL;
 static int COLOR;
-static int BONE_IDS;
+static int BONE_INDICIES;
 static int BONE_WEIGHTS;
 
 void forward_renderer_init() {
+  
+  COLOR_CORRECTION = asset_get("$CORANGE/resources/identity.lut");
   
   /* Enables */
   glEnable(GL_TEXTURE_2D);
   glEnable(GL_MULTISAMPLE);
   glEnable(GL_DEPTH_TEST);
   
+  glClearColor(1.0f, 0.769f, 0.0f, 0.0f);
   glClearDepth(1.0f);
   
 }
@@ -73,9 +78,13 @@ void forward_renderer_set_shadow_texture(texture* t) {
   
 }
 
+void forward_renderer_set_color_correction(texture* t) {
+  COLOR_CORRECTION = t;
+}
+
 void forward_renderer_begin() {
   
-  glClear(GL_DEPTH_BUFFER_BIT);
+  glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
   
   forward_renderer_setup_camera();
   
@@ -128,7 +137,7 @@ static void forward_renderer_use_material(material* mat) {
   TANGENT = glGetAttribLocation(*prog, "tangent");
   BINORMAL = glGetAttribLocation(*prog, "binormal");
   COLOR = glGetAttribLocation(*prog, "color");
-  BONE_IDS = glGetAttribLocation(*prog, "bone_ids");
+  BONE_INDICIES = glGetAttribLocation(*prog, "bone_indicies");
   BONE_WEIGHTS = glGetAttribLocation(*prog, "bone_weights");
   
   GLint light_position = glGetUniformLocation(*prog, "light_position");
@@ -220,50 +229,15 @@ static void forward_renderer_use_material(material* mat) {
     glActiveTexture(GL_TEXTURE0 + tex_counter);
     glBindTexture(GL_TEXTURE_2D, *SHADOW_TEX);
     tex_counter++;
-  
   }
-
-}
-
-void forward_renderer_render_model(render_model* m, material* mat) {
   
-  glEnableClientState(GL_VERTEX_ARRAY);
-  glEnableClientState(GL_NORMAL_ARRAY);
-  glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+  GLuint color_correction = glGetUniformLocation(*prog, "lut");
+  glUniform1i(color_correction, tex_counter);
+  glActiveTexture(GL_TEXTURE0 + tex_counter );
+  glBindTexture(GL_TEXTURE_3D, *COLOR_CORRECTION);
+  glEnable(GL_TEXTURE_3D);
+  tex_counter++;
   
-    int i;
-    for(i=0; i < m->num_meshes; i++) {
-      
-      render_mesh* me = m->meshes[i];
-      
-      forward_renderer_use_material(mat);
-      
-      glEnableVertexAttribArray(TANGENT);
-      glEnableVertexAttribArray(BINORMAL);
-      glEnableVertexAttribArray(COLOR);
-      
-      glVertexPointer(3, GL_FLOAT, 0, me->vertex_positions);
-      glNormalPointer(GL_FLOAT, 0, me->vertex_normals);
-      glTexCoordPointer(2, GL_FLOAT, 0, me->vertex_uvs);
-      
-      glVertexAttribPointer(TANGENT, 3, GL_FLOAT, GL_TRUE, 0, me->vertex_tangents);
-      glVertexAttribPointer(BINORMAL, 3, GL_FLOAT, GL_TRUE, 0, me->vertex_binormals);
-      glVertexAttribPointer(COLOR, 4, GL_FLOAT, GL_TRUE, 0, me->vertex_colors);
-      
-      glDrawElements(GL_TRIANGLES, me->num_triangles_3, GL_UNSIGNED_INT, me->triangles);
-  
-      glDisableVertexAttribArray(TANGENT);
-      glDisableVertexAttribArray(BINORMAL);
-      glDisableVertexAttribArray(COLOR);  
-  
-      /* DISABLE PROGRAM */
-      glUseProgram(0);
-  
-    }
-    
-  glDisableClientState(GL_VERTEX_ARRAY);
-  glDisableClientState(GL_NORMAL_ARRAY);
-  glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 
 }
 
@@ -370,8 +344,9 @@ void forward_renderer_render_static(static_object* s) {
   
 }
 
-#define MAX_BONES 64
+#define MAX_BONES 32
 static matrix_4x4 bone_matrices[MAX_BONES];
+static float bone_matrix_data[4 * 4 * MAX_BONES];
 
 void forward_renderer_render_animated(animated_object* ao) {
 
@@ -382,9 +357,18 @@ void forward_renderer_render_animated(animated_object* ao) {
   matrix_4x4 r_world_matrix = m44_world( ao->position, ao->scale, ao->rotation );
   m44_to_array(r_world_matrix, world_matrix);
   
+  int i;
+  for(i = 0; i < ao->skeleton->num_bones; i++) {
+    matrix_4x4 base, ani;
+    base = bone_transform(ao->skeleton->bones[i]);
+    ani = bone_transform(ao->pose->bones[i]);
+    
+    bone_matrices[i] = m44_mul_m44(ani, m44_inverse(base));
+    m44_to_array(bone_matrices[i], bone_matrix_data + (i * 4 * 4));
+  }
+  
   renderable* r = ao->renderable;
   
-  int i;
   for(i=0; i < r->num_surfaces; i++) {
     
     renderable_surface* s = r->surfaces[i];
@@ -392,6 +376,14 @@ void forward_renderer_render_animated(animated_object* ao) {
 
       forward_renderer_use_material(s->base);    
       //forward_renderer_use_material(s->instance);
+      
+      shader_program* prog = dictionary_get(s->base->properties, "program");
+      
+      GLint bone_world_matrices_u = glGetUniformLocation(*prog, "bone_world_matrices");
+      glUniformMatrix4fv(bone_world_matrices_u, ao->skeleton->num_bones, GL_FALSE, bone_matrix_data);
+      
+      GLint bone_count_u = glGetUniformLocation(*prog, "bone_count");
+      glUniform1i(bone_count_u, ao->skeleton->num_bones);
       
       GLsizei stride = sizeof(float) * 24;
       
@@ -415,8 +407,8 @@ void forward_renderer_render_animated(animated_object* ao) {
       glVertexAttribPointer(COLOR, 4, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 14));
       glEnableVertexAttribArray(COLOR);
       
-      glVertexAttribPointer(BONE_IDS, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 18));
-      glEnableVertexAttribArray(BONE_IDS);
+      glVertexAttribPointer(BONE_INDICIES, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 18));
+      glEnableVertexAttribArray(BONE_INDICIES);
       
       glVertexAttribPointer(BONE_WEIGHTS, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 21));
       glEnableVertexAttribArray(BONE_WEIGHTS);
@@ -431,7 +423,7 @@ void forward_renderer_render_animated(animated_object* ao) {
       glDisableVertexAttribArray(TANGENT);
       glDisableVertexAttribArray(BINORMAL);
       glDisableVertexAttribArray(COLOR);  
-      glDisableVertexAttribArray(BONE_IDS);  
+      glDisableVertexAttribArray(BONE_INDICIES);  
       glDisableVertexAttribArray(BONE_WEIGHTS);  
       
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
@@ -440,12 +432,86 @@ void forward_renderer_render_animated(animated_object* ao) {
       glUseProgram(0);    
     
     } else {
-      
       error("animated object is not rigged");
-    
     }
-
+    
+    //forward_renderer_render_skeleton(ao->pose);
   }
-
+  
 }
+
+void forward_renderer_render_skeleton(skeleton* s) {
+  
+  int i;
+  for(i = 0; i < s->num_bones; i++) {
+    bone* main = s->bones[i];
+    vector4 pos = m44_mul_v4(bone_transform(main), v4(0,0,0,1));
+    forward_renderer_render_axis(bone_transform(main));
+    
+    if (main->parent != NULL) {
+      vector4 par_pos = m44_mul_v4(bone_transform(main->parent), v4(0,0,0,1));
+      glDisable(GL_DEPTH_TEST);
+      glDisable(GL_LIGHTING);
+      glColor3f(0.0,0.0,0.0);
+      glBegin(GL_LINES);
+        glVertex3f(pos.x, pos.y, pos.z);
+        glVertex3f(par_pos.x, par_pos.y, par_pos.z);
+      glEnd();
+      glColor3f(1.0,1.0,1.0);
+      glEnable(GL_LIGHTING);
+      glEnable(GL_DEPTH_TEST);
+    }
+    
+  }
+  
+}
+
+void forward_renderer_render_axis(matrix_4x4 world) {
+  
+  
+  vector4 x_pos = m44_mul_v4(world, v4(1,0,0,1));
+  vector4 y_pos = m44_mul_v4(world, v4(0,1,0,1));
+  vector4 z_pos = m44_mul_v4(world, v4(0,0,1,1));
+  vector4 base_pos = m44_mul_v4(world, v4(0,0,0,1));
+  
+  x_pos = v4_div(x_pos, x_pos.w);
+  y_pos = v4_div(y_pos, y_pos.w);
+  z_pos = v4_div(z_pos, z_pos.w);
+  base_pos = v4_div(base_pos, base_pos.w);
+  
+  glDisable(GL_LIGHTING);
+  glDisable(GL_DEPTH_TEST);
+  
+  glLineWidth(2.0);
+  glBegin(GL_LINES);
+    glColor3f(1.0,0.0,0.0);
+    glVertex3f(x_pos.x, x_pos.y, x_pos.z);
+    glVertex3f(base_pos.x, base_pos.y, base_pos.z);
+    glColor3f(0.0,1.0,0.0);
+    glVertex3f(y_pos.x, y_pos.y, y_pos.z);
+    glVertex3f(base_pos.x, base_pos.y, base_pos.z);
+    glColor3f(0.0,0.0,1.0);
+    glVertex3f(z_pos.x, z_pos.y, z_pos.z);
+    glVertex3f(base_pos.x, base_pos.y, base_pos.z);
+  glEnd();
+  glLineWidth(1.0);
+  
+  glPointSize(5.0);
+  glBegin(GL_POINTS);
+    glColor3f(1.0,0.0,0.0);
+    glVertex3f(x_pos.x, x_pos.y, x_pos.z);
+    glColor3f(0.0,1.0,0.0);
+    glVertex3f(y_pos.x, y_pos.y, y_pos.z);
+    glColor3f(0.0,0.0,1.0);
+    glVertex3f(z_pos.x, z_pos.y, z_pos.z);
+    glColor3f(1.0,1.0,1.0);
+    glVertex3f(base_pos.x, base_pos.y, base_pos.z);
+  glEnd();
+  glPointSize(1.0);
+  
+  glEnable(GL_DEPTH_TEST);
+  glEnable(GL_LIGHTING);
+  
+}
+
 

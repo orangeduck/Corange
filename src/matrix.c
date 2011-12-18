@@ -704,7 +704,7 @@ matrix_4x4 m44_translation(vector3 v) {
 
   return m;
   
-};
+}
 
 matrix_4x4 m44_scale(vector3 v) {
 
@@ -714,7 +714,7 @@ matrix_4x4 m44_scale(vector3 v) {
   m.zz = v.z;
 
   return m;
-};
+}
 
 matrix_4x4 m44_rotation_x(float a) {
 
@@ -727,7 +727,7 @@ matrix_4x4 m44_rotation_x(float a) {
   
   return m;
   
-};
+}
 
 matrix_4x4 m44_rotation_y(float a) {
 
@@ -740,7 +740,7 @@ matrix_4x4 m44_rotation_y(float a) {
 
   return m;
   
-};
+}
 
 matrix_4x4 m44_rotation_z(float a) {
 
@@ -753,18 +753,36 @@ matrix_4x4 m44_rotation_z(float a) {
 
   return m;
   
-};
+}
 
-matrix_4x4 m44_rotation(vector3 v) {
+matrix_4x4 m44_rotation_euler(float x, float y, float z) {
 
-  matrix_4x4 m = m44_id();
-  m = m44_mul_m44(m , m44_rotation_x(v.x) );
-  m = m44_mul_m44(m , m44_rotation_y(v.y) );
-  m = m44_mul_m44(m , m44_rotation_z(v.z) );
+  matrix_4x4 m = m44_zero();
+
+	float cosx = cos(x);
+	float cosy = cos(y);
+	float cosz = cos(z);
+	float sinx = sin(x);
+	float siny = sin(y);
+	float sinz = sin(z);
+
+	m.xx = cosy * cosz;
+	m.yx = -cosx * sinz + sinx * siny * cosz;
+	m.zx = sinx * sinz + cosx * siny * cosz;
+
+	m.xy = cosy * sinz;
+	m.yy = cosx * cosz + sinx * siny * sinz;
+	m.zy = -sinx * cosz + cosx * siny * sinz;
+
+	m.xz = -siny;
+	m.yz = sinx * cosy;
+	m.zz = cosx * cosy;
+
+	m.ww = 1;
   
   return m;
   
-};
+}
 
 matrix_4x4 m44_rotation_quaternion(vector4 q) {
 
@@ -785,7 +803,7 @@ matrix_4x4 m44_rotation_quaternion(vector4 q) {
   m.zz = 1.0 - 2 * q.x * q.x - 2 * q.y * q.y;
   
   return m;
-};
+}
 
 matrix_4x4 m44_world(vector3 position, vector3 scale, vector4 rotation) {
   
@@ -797,9 +815,61 @@ matrix_4x4 m44_world(vector3 position, vector3 scale, vector4 rotation) {
   
   result = m44_id();
   result = m44_mul_m44( result, pos_m );
-  result = m44_mul_m44( result, sca_m );
   result = m44_mul_m44( result, rot_m );
+  result = m44_mul_m44( result, sca_m );
   
   return result;
   
+}
+
+matrix_4x4 m44_lerp(matrix_4x4 m1, matrix_4x4 m2, float amount) {
+  matrix_4x4 m;
+  
+  m.xx = lerp(m1.xx, m2.xx, amount);
+  m.xy = lerp(m1.xy, m2.xy, amount);
+  m.xz = lerp(m1.xz, m2.xz, amount);
+  m.xw = lerp(m1.xw, m2.xw, amount);
+  
+  m.yx = lerp(m1.yx, m2.yx, amount);
+  m.yy = lerp(m1.yy, m2.yy, amount);
+  m.yz = lerp(m1.yz, m2.yz, amount);
+  m.yw = lerp(m1.yw, m2.yw, amount);
+  
+  m.zx = lerp(m1.zx, m2.zx, amount);
+  m.zy = lerp(m1.zy, m2.zy, amount);
+  m.zz = lerp(m1.zz, m2.zz, amount);
+  m.zw = lerp(m1.zw, m2.zw, amount);
+  
+  m.wx = lerp(m1.wx, m2.wx, amount);
+  m.wy = lerp(m1.wy, m2.wy, amount);
+  m.wz = lerp(m1.wz, m2.wz, amount);
+  m.ww = lerp(m1.ww, m2.ww, amount);
+  
+  return m;
+}
+
+matrix_4x4 m44_smoothstep(matrix_4x4 m1, matrix_4x4 m2, float amount) {
+  matrix_4x4 m;
+  
+  m.xx = smoothstep(m1.xx, m2.xx, amount);
+  m.xy = smoothstep(m1.xy, m2.xy, amount);
+  m.xz = smoothstep(m1.xz, m2.xz, amount);
+  m.xw = smoothstep(m1.xw, m2.xw, amount);
+  
+  m.yx = smoothstep(m1.yx, m2.yx, amount);
+  m.yy = smoothstep(m1.yy, m2.yy, amount);
+  m.yz = smoothstep(m1.yz, m2.yz, amount);
+  m.yw = smoothstep(m1.yw, m2.yw, amount);
+  
+  m.zx = smoothstep(m1.zx, m2.zx, amount);
+  m.zy = smoothstep(m1.zy, m2.zy, amount);
+  m.zz = smoothstep(m1.zz, m2.zz, amount);
+  m.zw = smoothstep(m1.zw, m2.zw, amount);
+  
+  m.wx = smoothstep(m1.wx, m2.wx, amount);
+  m.wy = smoothstep(m1.wy, m2.wy, amount);
+  m.wz = smoothstep(m1.wz, m2.wz, amount);
+  m.ww = smoothstep(m1.ww, m2.ww, amount);
+  
+  return m;
 }

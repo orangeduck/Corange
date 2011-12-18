@@ -1,0 +1,2 @@
+vertex_shader : ./resources/shaders/particles.vs
+fragment_shader : ./resources/shaders/particles.fs

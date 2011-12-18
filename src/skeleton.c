@@ -2,8 +2,10 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "SDL/SDL_rwops.h"
+#include "SDL/SDL_local.h"
+
 #include "error.h"
-#include "asset_manager.h"
 
 #include "skeleton.h"
 
@@ -13,6 +15,30 @@ skeleton* skeleton_new() {
   s->bones = malloc(sizeof(bone*) * s->num_bones);
   return s;
 }
+
+skeleton* skeleton_copy(skeleton* old) {
+  skeleton* new =  malloc(sizeof(skeleton));
+  new->num_bones = old->num_bones;
+  new->bones = malloc(sizeof(bone*) * new->num_bones);
+  
+  int i;
+  for(i = 0; i < new->num_bones; i++) {
+    new->bones[i] = bone_new(old->bones[i]->id, old->bones[i]->name);
+    new->bones[i]->position = old->bones[i]->position;
+    new->bones[i]->rotation = old->bones[i]->rotation;
+  }
+  
+  for(i = 0; i < new->num_bones; i++) {
+    if (old->bones[i]->parent == NULL) {
+      new->bones[i]->parent = NULL;
+    } else {
+      new->bones[i]->parent = skeleton_bone_id(new, old->bones[i]->parent->id);
+    }
+  }
+  
+  return new;
+}
+
 
 void skeleton_delete(skeleton* s) {
   int i;
@@ -40,7 +66,7 @@ void skeleton_print(skeleton* s) {
     bone* b = s->bones[i];
     printf("Bone %i: %i %s ", i, b->id, b->name);
     v3_print(b->position);printf(" ");
-    v4_print(b->rotation);
+    //v4_print(b->rotation);
     if (b->parent == NULL) {
       printf(" ROOT\n");
     } else {
@@ -62,7 +88,7 @@ bone* skeleton_bone_id(skeleton* s, int id) {
     }
   }
   
-  warning("unknown bone parent id %i", id);
+  warning("unknown bone id %i", id);
   return NULL;
 }
 
@@ -72,7 +98,8 @@ bone* bone_new(int id, char* name) {
   strcpy(b->name, name);
   b->id = id;
   b->position = v3_zero();
-  b->rotation = v4_quaternion_id();
+  b->rotation = m44_id();
+  b->parent = NULL;
   return b;
 }
 
@@ -81,90 +108,110 @@ void bone_delete(bone* b) {
   free(b);
 }
 
+matrix_4x4 bone_transform(bone* b) {
+  
+  if (b->parent == NULL) {
+    matrix_4x4 ret = m44_id();
+    matrix_4x4 trans = m44_translation(b->position);
+    matrix_4x4 rot = b->rotation;
+    
+    ret = m44_mul_m44(ret, trans);
+    ret = m44_mul_m44(ret, rot);
+    
+    return ret;
+  } else {
+    matrix_4x4 prev = bone_transform(b->parent);
+    
+    matrix_4x4 ret = m44_id();
+    matrix_4x4 trans = m44_translation(b->position);
+    matrix_4x4 rot = b->rotation;
+    
+    ret = m44_mul_m44(ret, prev);
+    ret = m44_mul_m44(ret, trans);
+    ret = m44_mul_m44(ret, rot);
+    
+    return ret;
+  }
+}
+
 static int state_load_empty = 0;
 static int state_load_nodes = 1;
 static int state_load_skeleton = 2;
 
 skeleton* skl_load_file(char* filename) {
   
-  char line[1024];
-  
-  char* c = asset_file_contents(filename);
-  
-  int i = 0;
-  int j = 0;
   int state = state_load_empty;
   
   skeleton* s =  skeleton_new();
   
-  while(1) {
-    if( c[i] == '\0') { break; }
-    if( c[i] == '\n') {
-    
-      line[j-1] = '\0';
-      
-        /* Process line */
-        if (state == state_load_empty) {
-          
-          int version;
-          if (sscanf(line, "version %i", &version) > 0) {
-            if (version != 1) {
-              error("Can't load skl file %s. Don't know how to load version %i\n", filename, version);
-            }
-          }
-          
-          if (strcmp(line, "nodes") == 0) {
-            state = state_load_nodes;
-          }
-          
-          if (strcmp(line, "skeleton") == 0) {
-            state = state_load_skeleton;
-          }
-        }
-        
-        else if (state == state_load_nodes) {
-          char name[1024];
-          int id, parent_id;
-          if (sscanf(line, "%i %s %i", &id, name, &parent_id) > 0) {
-            /* Bone name might well contain quotation marks. Cant be bothered to remove atm. */
-            skeleton_add_bone(s, name, id, parent_id);
-          }
-          
-          if (strcmp(line, "end") == 0) {
-            state = state_load_empty;
-          }
-        }
-        
-        else if (state == state_load_skeleton) {
-          int id;
-          float x, y, z, rx, ry, rz;
-          if (sscanf(line, "%i %f %f %f %f %f %f", &id, &x, &y, &z, &rx, &ry, &rz) > 0) {
-            bone* b = skeleton_bone_id(s, id);
-            b->position = v3(x, y, z);
-            b->rotation = v4_quaternion_euler(rx, ry, rz);
-          }
-          
-          if (strcmp(line, "end") == 0) {
-            state = state_load_empty;
-          }
-        }
-        
-        /* End Process line */
-      
-      /* Reset line buffer index */
-      j = 0;
-      
-    } else {
-    
-      line[j] = c[i];
-      j++;
-    
-    }
-    
-    i++;
+  SDL_RWops* file = SDL_RWFromFile(filename, "r");
+  
+  if(file == NULL) {
+    error("Could not load file %s", filename);
   }
   
-  free(c);
+  char line[1024];
+  while(SDL_RWreadline(file, line, 1024)) {
+    
+    if (state == state_load_empty) {
+      
+      int version;
+      if (sscanf(line, "version %i", &version) > 0) {
+        if (version != 1) {
+          error("Can't load skl file %s. Don't know how to load version %i\n", filename, version);
+        }
+      }
+      
+      if (strstr(line, "nodes")) {
+        state = state_load_nodes;
+      }
+      
+      if (strstr(line, "skeleton")) {
+        state = state_load_skeleton;
+      }
+    }
+    
+    else if (state == state_load_nodes) {
+      char name[1024];
+      int id, parent_id;
+      if (sscanf(line, "%i %1024s %i", &id, name, &parent_id) == 3) {
+        /* Bone name might well contain quotation marks. Cant be bothered to remove atm. */
+        skeleton_add_bone(s, name, id, parent_id);
+      }
+      
+      if (strstr(line, "end")) {
+        state = state_load_empty;
+      }
+    }
+    
+    else if (state == state_load_skeleton) {
+      int id;
+      float x, y, z, rx, ry, rz;
+      if (sscanf(line, "%i %f %f %f %f %f %f", &id, &x, &y, &z, &rx, &ry, &rz) == 7) {
+        bone* b = skeleton_bone_id(s, id);
+        /* Swap z and y */
+        b->position = v3(x, z, y);
+        
+        matrix_4x4 rotation = m44_rotation_euler(rx, ry, rz);
+        matrix_4x4 handedflip = m44(1,0,0,0,
+                                    0,0,1,0,
+                                    0,1,0,0,
+                                    0,0,0,1);
+        
+        rotation = m44_mul_m44(handedflip, rotation);
+        rotation = m44_mul_m44(rotation, handedflip);
+        rotation = m44_transpose(rotation);
+        b->rotation = rotation;
+        
+      }
+      
+      if (strstr(line, "end")) {
+        state = state_load_empty;
+      }
+    }
+  }
+  
+  SDL_RWclose(file);
   
   return s;
 }

@@ -323,8 +323,7 @@ void ui_text_render(ui_text* text) {
   
   /* Disable lighting, enable blending */
   
-  glDisable(GL_DEPTH_TEST);
-  glDisable(GL_LIGHTING);  
+  glDisable(GL_DEPTH_TEST); 
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   
@@ -366,8 +365,8 @@ void ui_text_render(ui_text* text) {
   glEnd();
   
   glEnable(GL_DEPTH_TEST);
-  glEnable(GL_LIGHTING);
   glDisable(GL_BLEND);
+  glDisable(GL_TEXTURE_2D);
   
   glMatrixMode(GL_PROJECTION);
   glPopMatrix();
