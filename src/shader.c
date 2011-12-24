@@ -78,7 +78,9 @@ void shader_program_attach_shader(shader_program* program, shader* shader) {
 
 
 void shader_program_link(shader_program* program) {
+  printf("BEFORE LINK\n");fflush(stdout);
   glLinkProgram(*program);
+  printf("AFTER LINK\n");fflush(stdout);
 }
 
 void shader_program_print_log(shader_program* program) {

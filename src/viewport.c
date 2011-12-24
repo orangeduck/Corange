@@ -1,3 +1,7 @@
+#ifdef _WIN32
+  #include "SDL/SDL_syswm.h"
+#endif
+
 #include "error.h"
 #include "image.h"
 #include "timing.h"

@@ -444,12 +444,12 @@ void forward_renderer_render_skeleton(skeleton* s) {
   
   int i;
   for(i = 0; i < s->num_bones; i++) {
-    bone* main = s->bones[i];
-    vector4 pos = m44_mul_v4(bone_transform(main), v4(0,0,0,1));
-    forward_renderer_render_axis(bone_transform(main));
+    bone* main_bone = s->bones[i];
+    vector4 pos = m44_mul_v4(bone_transform(main_bone), v4(0,0,0,1));
+    forward_renderer_render_axis(bone_transform(main_bone));
     
-    if (main->parent != NULL) {
-      vector4 par_pos = m44_mul_v4(bone_transform(main->parent), v4(0,0,0,1));
+    if (main_bone->parent != NULL) {
+      vector4 par_pos = m44_mul_v4(bone_transform(main_bone->parent), v4(0,0,0,1));
       glDisable(GL_DEPTH_TEST);
       glDisable(GL_LIGHTING);
       glColor3f(0.0,0.0,0.0);

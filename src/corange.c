@@ -4,8 +4,8 @@
 
 void corange_stop_stdout_redirect() {
   FILE* ctt = fopen("CON", "w" );
-  freopen( "CON", "w", stdout );
-  freopen( "CON", "w", stderr );
+  FILE* fout = freopen( "CON", "w", stdout );
+  FILE* ferr = freopen( "CON", "w", stderr );
 }
 
 void corange_init(char* core_assets_path) {

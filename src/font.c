@@ -1,6 +1,6 @@
 #include <string.h>
 
-#include "SDL/SDL_RWops.h"
+#include "SDL/SDL_rwops.h"
 #include "SDL/SDL_local.h"
 
 #include "error.h"

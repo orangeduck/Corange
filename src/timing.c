@@ -70,7 +70,7 @@ static float frame_acc_time = 0.0;
 
 void frame_begin() {
   frame_start_time = SDL_GetTicks();
-};
+}
 
 void frame_end() {
   
@@ -86,18 +86,18 @@ void frame_end() {
     frame_acc_time = 0.0;  
   }
 
-  itoa(frame_rate_var, frame_rate_string_var, 10);
+  sprintf(frame_rate_string_var,"%d",frame_rate_var);
   
-};
+}
 
 float frame_rate() {
   return frame_rate_var;
-};
+}
 
 float frame_time() {
   return frame_time_var;
-};
+}
 
 char* frame_rate_string() {
   return frame_rate_string_var;
-};
+}

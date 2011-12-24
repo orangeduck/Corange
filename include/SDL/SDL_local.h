@@ -65,6 +65,11 @@ typedef void (APIENTRY * GLGENERATEMIPMAPFN)(GLenum target);
 typedef void (APIENTRY * GLCOMPRESSEDTEXIMAGE2DFN)(GLenum target, GLint level, GLenum format, GLsizei width, GLsizei height, GLint border, GLsizei imagesize, const GLvoid* data);
 typedef void (APIENTRY * GLTEXIMAGE3DFN)(GLenum target, GLint level, GLint internalFormat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLenum format, GLenum type, const GLvoid* data);
 
+#ifndef __linux__
+  extern GLACTIVETEXTUREFN glActiveTexture;
+  extern GLCOMPRESSEDTEXIMAGE2DFN glCompressedTexImage2D;
+  extern GLTEXIMAGE3DFN glTexImage3D;
+#endif
 extern GLCREATESHADERFN glCreateShader;
 extern GLCREATEPROGRAMFN glCreateProgram;
 extern GLSHADERSOURCEFN glShaderSource;
@@ -74,7 +79,6 @@ extern GLATTACHSHADERFN glAttachShader;
 extern GLLINKPROGRAMFN glLinkProgram;
 extern GLGETPROGRAMINFOLOGFN glGetProgramInfoLog;
 extern GLGETUNIFORMLOCATIONFN glGetUniformLocation;
-extern GLACTIVETEXTUREFN glActiveTexture;
 extern GLUNIFORM1FFN glUniform1f;
 extern GLUNIFORM1IFN glUniform1i;
 extern GLDELETESHADERFN glDeleteShader;
@@ -109,10 +113,12 @@ extern GLGETATTRIBLOCATIONFN glGetAttribLocation;
 extern GLRENDERBUFFERSTORAGEFN glRenderbufferStorage;
 extern GLDRAWBUFFERSFN glDrawBuffers;
 extern GLGENERATEMIPMAPFN glGenerateMipmap;
-extern GLCOMPRESSEDTEXIMAGE2DFN glCompressedTexImage2D;
-extern GLTEXIMAGE3DFN glTexImage3D;
 
 /* Extension Constants - Found these from glew and Google */
+
+#ifndef __linux__
+  #define GL_STATIC_READ 0x88E4
+#endif
 
 #define GL_FRAMEBUFFER 0x8D40
 #define GL_RENDERBUFFER 0x8D41
@@ -155,7 +161,6 @@ extern GLTEXIMAGE3DFN glTexImage3D;
 #define GL_VERTEX_SHADER 0x8B31
 #define GL_FRAGMENT_SHADER 0x8B30
 #define GL_TEXTURE_MAX_LEVEL 0x813D
-#define GL_STATIC_READ 0x88E4
 #define GL_DYNAMIC_COPY 0x88EA
 #define GL_COMPILE_STATUS 0x8B81
 #define GL_LINK_STATUS 0x8B82
@@ -165,5 +170,6 @@ extern GLTEXIMAGE3DFN glTexImage3D;
 #define GL_TEXTURE_WRAP_R 0x8072
 #define GL_MIRRORED_REPEAT 0x8370
 #define GL_TEXTURE_DEPTH 0x8071
+
 
 #endif
