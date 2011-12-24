@@ -1,3 +1,0 @@
-vertex_shader : ./engine/shaders/deferred.vs
-fragment_shader : ./engine/shaders/deferred.fs
-fragment_shader : ./engine/shaders/colors.fs
