@@ -14,6 +14,9 @@
 void SDL_RWsize(SDL_RWops* file, int* size);
 int SDL_RWreadline(SDL_RWops* file, char* buffer, int buffersize);
 
+void SDL_PrintOpenGLInfo();
+void SDL_PrintOpenGLExtensions();
+
 void SDL_LoadOpenGLExtensions();
 void SDL_CheckOpenGLExtension(const char* name, void* function_pointer);
 void SDL_CheckOpenGLError(const char* name);
@@ -114,6 +117,7 @@ extern GLTEXIMAGE3DFN glTexImage3D;
 
 /* Extension Constants - Found these from glew and Google */
 
+#define GL_SHADING_LANGUAGE_VERSION 0x8B8C
 #define GL_FRAMEBUFFER 0x8D40
 #define GL_RENDERBUFFER 0x8D41
 #define GL_MAX_COLOR_ATTACHMENTS 0x8CDF

@@ -24,10 +24,20 @@ void error_bp();
 void warning_bp();
 void info_bp();
 
+#ifndef S_SPLINT_S
+
 #define error(MSG, ...) if(errors_enabled) { printf("Error at %s:%i - ", __FILE__, __LINE__); printf(MSG, ##__VA_ARGS__); printf("\n"); fflush(stdout); error_bp(); exit(EXIT_FAILURE); }
 
 #define warning(MSG, ...) if(warnings_enabled) { printf("Warning at %s:%i - ", __FILE__, __LINE__); printf(MSG, ##__VA_ARGS__); printf("\n"); fflush(stdout); warning_bp(); }
 
 #define info(MSG, ...) if(info_enabled) { printf("Info at %s:%i - ", __FILE__, __LINE__); printf(MSG, ##__VA_ARGS__); printf("\n"); fflush(stdout); info_bp(); }
+
+#else
+
+extern void error(/*@unused@*/char* format, ...) { exit(EXIT_FAILURE); }
+extern void warning(char* format, ...);
+extern void info(char* format, ...);
+
+#endif
 
 #endif

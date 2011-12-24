@@ -58,9 +58,14 @@ void SDL_RWsize(SDL_RWops* file, int* size) {
 
 int SDL_RWreadline(SDL_RWops* file, char* buffer, int buffersize) {
   
-  char c;
+  char c = ' ';
   int i = 0;
   while( SDL_RWread(file, &c, 1, 1) ) {
+    
+    if (i >= buffersize) {
+      error("Buffer not large enough to read line!");
+    }
+    
     buffer[i] = c;
     i++;
     
@@ -81,6 +86,23 @@ int SDL_RWreadline(SDL_RWops* file, char* buffer, int buffersize) {
   
 }
 
+void SDL_PrintOpenGLInfo() {
+  printf("-- OpenGL info --\n");
+  const unsigned char* vendor = glGetString(GL_VENDOR);
+  printf("Vendor: %s\n", vendor);
+  const unsigned char* renderer = glGetString(GL_RENDERER);
+  printf("Renderer: %s\n", renderer);
+  const unsigned char* version = glGetString(GL_VERSION);
+  printf("Version: %s\n", version);
+  const unsigned char* shader_version = glGetString(GL_SHADING_LANGUAGE_VERSION);
+  printf("Shader Version: %s\n", shader_version);
+}
+
+void SDL_PrintOpenGLExtensions() {
+  const unsigned char* extensions = glGetString(GL_EXTENSIONS);
+  printf("OpenGL Extensions: %s\n", extensions);
+}
+
 void SDL_CheckOpenGLError(const char* name) {
   switch (glGetError()) {
     
@@ -94,7 +116,6 @@ void SDL_CheckOpenGLError(const char* name) {
     
     case GL_INVALID_OPERATION:
       error("OpenGL Error on function %s: Invalid Operation", name);
-      exit(EXIT_FAILURE);
     break;
   
     case GL_OUT_OF_MEMORY:
