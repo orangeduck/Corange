@@ -254,7 +254,7 @@ void bucket_delete_recursive(bucket* b) {
 
 void bucket_print(bucket* b) {
   
-  printf("(%s : %i)", b->string, (int)b->item);
+  printf("(%s : %p)", b->string, b->item);
   if (b->next != NULL) {
     printf(" -> "); bucket_print(b->next);
   }

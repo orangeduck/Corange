@@ -438,7 +438,7 @@ matrix_4x4 m33_to_m44(matrix_3x3 m) {
   
   mat.xx = m.xx;
   mat.xy = m.xy;
-  mat.xy = m.xz;
+  mat.xz = m.xz;
   mat.xw = 0.0f;
   
   mat.yx = m.yx;

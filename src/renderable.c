@@ -535,7 +535,7 @@ renderable* smd_load_file(char* filename) {
           } else if (num_links == 1) {
             vw.bone_ids[0] = l1_id; vw.bone_ids[1] = 0; vw.bone_ids[2] = 0;
             vw.bone_weights[0] = 1; vw.bone_weights[1] = 0; vw.bone_weights[2] = 0;
-          } else if (num_links == 0) {
+          } else {
             warning("Loading file %s. Unrigged vertex!", filename);
             vw.bone_ids[0] = 0; vw.bone_ids[1] = 0; vw.bone_ids[2] = 0;
             vw.bone_weights[0] = 1; vw.bone_weights[1] = 0; vw.bone_weights[2] = 0;

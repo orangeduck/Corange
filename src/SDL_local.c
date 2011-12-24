@@ -3,6 +3,11 @@
 #include "SDL/SDL_rwops.h"
 #include "SDL/SDL_local.h"
 
+#ifndef __linux__
+  GLACTIVETEXTUREFN glActiveTexture;
+  GLCOMPRESSEDTEXIMAGE2DFN glCompressedTexImage2D;
+  GLTEXIMAGE3DFN glTexImage3D;
+#endif
 GLCREATESHADERFN glCreateShader;
 GLCREATEPROGRAMFN glCreateProgram;
 GLSHADERSOURCEFN glShaderSource;
@@ -12,7 +17,6 @@ GLATTACHSHADERFN glAttachShader;
 GLLINKPROGRAMFN glLinkProgram;
 GLGETPROGRAMINFOLOGFN glGetProgramInfoLog;
 GLGETUNIFORMLOCATIONFN glGetUniformLocation;
-GLACTIVETEXTUREFN glActiveTexture;
 GLUNIFORM1FFN glUniform1f;
 GLUNIFORM1IFN glUniform1i;
 GLDELETESHADERFN glDeleteShader;
@@ -47,8 +51,6 @@ GLGETATTRIBLOCATIONFN glGetAttribLocation;
 GLRENDERBUFFERSTORAGEFN glRenderbufferStorage;
 GLDRAWBUFFERSFN glDrawBuffers;
 GLGENERATEMIPMAPFN glGenerateMipmap;
-GLCOMPRESSEDTEXIMAGE2DFN glCompressedTexImage2D;
-GLTEXIMAGE3DFN glTexImage3D;
 
 void SDL_RWsize(SDL_RWops* file, int* size) {
   int pos = SDL_RWtell(file);
@@ -180,10 +182,12 @@ void SDL_LoadOpenGLExtensions() {
   
   /* Textures */
   
-  glActiveTexture            = (GLACTIVETEXTUREFN)SDL_GL_GetProcAddress( "glActiveTexture" ); SDL_CheckOpenGLExtension("glActiveTexture", glActiveTexture);
   glGenerateMipmap           = (GLGENERATEMIPMAPFN)SDL_GL_GetProcAddress( "glGenerateMipmap" ); SDL_CheckOpenGLExtension("glGenerateMipmap", glGenerateMipmap);
+  #ifndef __linux__
+  glActiveTexture            = (GLACTIVETEXTUREFN)SDL_GL_GetProcAddress( "glActiveTexture" ); SDL_CheckOpenGLExtension("glActiveTexture", glActiveTexture);
   glCompressedTexImage2D     = (GLCOMPRESSEDTEXIMAGE2DFN)SDL_GL_GetProcAddress( "glCompressedTexImage2D" ); SDL_CheckOpenGLExtension("glCompressedTexImage2D", glCompressedTexImage2D);
   glTexImage3D               = (GLTEXIMAGE3DFN)SDL_GL_GetProcAddress( "glTexImage3D" ); SDL_CheckOpenGLExtension("glTexImage3D", glTexImage3D);
+  #endif
 
   /* Buffers */
   

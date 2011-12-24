@@ -39,12 +39,15 @@ typedef union {
 } vector4;
 
 
-
 /* Floating point maths */
 
 
+#ifndef max
 float max(float x, float y);
-float min(float x, float y);
+#endif
+#ifndef min
+  float min(float x, float y);
+#endif
 float clamp(float x, float bottom, float top);
 float saturate(float x);
 

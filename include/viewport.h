@@ -3,7 +3,6 @@
 
 #include "SDL/SDL.h"
 #include "SDL/SDL_opengl.h"
-#include "SDL/SDL_syswm.h"
 
 #include "vector.h"
 
