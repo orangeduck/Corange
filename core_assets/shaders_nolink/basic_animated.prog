@@ -1,0 +1,2 @@
+vertex_shader : $SHADERS/basic_animated.vs
+fragment_shader : $SHADERS/basic.fs

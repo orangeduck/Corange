@@ -10,17 +10,7 @@ void corange_stop_stdout_redirect() {
 
 void corange_init(char* core_assets_path) {
   
-  printf("Starting Corange...\n");
-  
-  /* Stop Redirect of stdout and stderr */
-  
-  corange_stop_stdout_redirect();
-  
-  /* Load asset path stuff */
-  
-  asset_manager_add_path_variable("$CORANGE", core_assets_path);
-  
-  /* SDL Setup */
+  /* Init viewport and OpenGL */
   
   if (SDL_Init(SDL_INIT_VIDEO) != 0) {
     error("Unable to initialize SDL: %s\n", SDL_GetError());
@@ -29,6 +19,34 @@ void corange_init(char* core_assets_path) {
   viewport_init();
   
   SDL_LoadOpenGLExtensions();
+  
+  /* Start Corange */
+  
+  printf("Starting Corange...\n");
+  
+  /* Stop Redirect of stdout and stderr */
+  
+  corange_stop_stdout_redirect();
+  
+  SDL_PrintOpenGLInfo();
+  
+  /* Load asset path stuff */
+  
+  asset_manager_add_path_variable("$CORANGE", core_assets_path);
+  
+  char* shaders_path = malloc(strlen(core_assets_path) + strlen("/shaders_nolink") + 1);
+  strcpy(shaders_path, core_assets_path);
+  
+  if ( SDL_OpenGLSupportsShaderLinkage() ) {
+    strcat(shaders_path, "/shaders");
+    asset_manager_add_path_variable("$SHADERS", shaders_path);
+  } else {
+    strcat(shaders_path, "/shaders_nolink");
+    asset_manager_add_path_variable("$SHADERS", shaders_path);
+  }
+  
+  printf("Shaders Path: %s\n", shaders_path);
+  free(shaders_path);
   
   /* Load Assets */
   
@@ -52,7 +70,7 @@ void corange_init(char* core_assets_path) {
   asset_manager_handler("mat", mat_load_file, material_delete);
   asset_manager_handler("lua", lua_load_file, script_delete);
   
-  load_folder("$CORANGE/shaders/");
+  load_folder("$SHADERS/");
   load_folder("$CORANGE/fonts/");
   load_folder("$CORANGE/scripts/");
 

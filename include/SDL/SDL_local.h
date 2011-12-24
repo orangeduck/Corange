@@ -17,6 +17,8 @@ int SDL_RWreadline(SDL_RWops* file, char* buffer, int buffersize);
 void SDL_PrintOpenGLInfo();
 void SDL_PrintOpenGLExtensions();
 
+int SDL_OpenGLSupportsShaderLinkage();
+
 void SDL_LoadOpenGLExtensions();
 void SDL_CheckOpenGLExtension(const char* name, void* function_pointer);
 void SDL_CheckOpenGLError(const char* name);

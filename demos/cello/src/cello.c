@@ -209,7 +209,7 @@ void cello_render() {
   animated_object* a_imrod = entity_get("imrod");
   animated_object* a_pirate = entity_get("pirate");
   animated_object* a_boots = entity_get("boots");
-
+  
   shadow_mapper_begin();
   if (object_id == 0) {
     shadow_mapper_render_static(s_cello);
@@ -225,7 +225,7 @@ void cello_render() {
     shadow_mapper_render_static(s_floor);
   }
   shadow_mapper_end();
-
+  
   if (use_deferred) {
   
     deferred_renderer_begin();

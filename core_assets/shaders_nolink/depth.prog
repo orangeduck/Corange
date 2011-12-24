@@ -1,0 +1,2 @@
+vertex_shader : $SHADERS/depth.vs
+fragment_shader : $SHADERS/depth.fs

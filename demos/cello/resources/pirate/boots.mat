@@ -1,5 +1,5 @@
 string name = pirate
-program prog = $CORANGE/shaders/norm_spec_env_animated.prog
+program prog = $SHADERS/norm_spec_env_animated.prog
 texture diffuse_map = ./resources/pirate/boots.dds
 texture bump_map = ./resources/pirate/boots_nm.dds
 texture spec_map = ./resources/pirate/boots_s.dds
