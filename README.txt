@@ -19,9 +19,7 @@
 		To compile on Linux you need to install SDL1.2 and lua5.1. Then you should run "make linux"
 
 		$ sudo apt-get install libsdl1.2-dev
-		$ sudo apt-get install libsdl1.2debian
 		$ sudo apt-get install liblua5.1-dev
-		$ sudo apt-get install lua5.1
 		$ make linux
 		
 	

@@ -1,7 +1,7 @@
 #ifndef type_h
 #define type_h
 
-typedef type_id int;
+typedef int type_id;
 
 #define typeid(type) type_find(#type)
 

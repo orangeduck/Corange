@@ -7,7 +7,7 @@ CFLAGS= $(INCS) -Wall -Wno-unused
 CFLAGS_LINUX= $(INCS) -Wall -Wno-unused -fPIC
 
 LFLAGS= $(LIBS) -lmingw32 -lopengl32 -lSDLmain -lSDL -llua5.1
-LFLAGS_LINUX= $(LIBS) -lGL -lSDLmain -lSDL -llua5.1
+LFLAGS_LINUX= -lGL -lSDLmain -lSDL -llua5.1
 
 C_FILES= $(wildcard src/*.c)
 

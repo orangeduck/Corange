@@ -7,7 +7,7 @@ CFLAGS= $(INCS) -Wall -Wno-unused
 CFLAGS_LINUX= $(INCS) -Wall -Wno-unused -fPIC
 
 LFLAGS= $(LIBS) -lcorange -lmingw32 -lSDLmain -lSDL -lopengl32 -llua5.1
-LFLAGS_LINUX= $(LIBS) -lcorange -lGL -lSDLmain -lSDL -llua5.1
+LFLAGS_LINUX= -L ../../ -lcorange -lGL -lSDLmain -lSDL -llua5.1
 
 C_FILES= $(wildcard src/*.c)
 OBJ_FILES= $(addprefix obj/,$(notdir $(C_FILES:.c=.o)))
