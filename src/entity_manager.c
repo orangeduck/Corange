@@ -44,7 +44,7 @@ void entity_manager_finish() {
   
 }
 
-int entity_exists(char* name) {
+bool entity_exists(char* name) {
   return dictionary_contains(entities, name);
 }
 

@@ -48,17 +48,17 @@ void dictionary_delete(dictionary* dict) {
   free(dict);
 }
 
-int dictionary_contains(dictionary* dict, char* string) {
+bool dictionary_contains(dictionary* dict, char* string) {
 
   int index = dictionary_hash(dict, string);
   bucket* b = dict->buckets[index];
   
-  if(b == NULL) { return 0;}
+  if(b == NULL) { return false;}
   
   while(1) {
     
-    if ( strcmp(b->string, string) == 0 ){ return 1; }
-    if (b->next == NULL) { return 0; }
+    if ( strcmp(b->string, string) == 0 ){ return true; }
+    if (b->next == NULL) { return false; }
     
     else { b = b->next; }
     

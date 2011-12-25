@@ -69,7 +69,7 @@ void int_list_set(int_list* l, int index, int item) {
   l->ints[ index ] = item;
 }
 
-int int_list_is_empty(int_list* l) {
+bool int_list_is_empty(int_list* l) {
   return (l->num_items == 0);
 }
 

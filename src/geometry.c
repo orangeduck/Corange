@@ -12,13 +12,13 @@ vertex vertex_new() {
   return v;
 }
 
-int vertex_equal(vertex v1, vertex v2) {
+bool vertex_equal(vertex v1, vertex v2) {
   
-  if(!v3_equ(v1.position, v2.position)) { return 0; }
-  if(!v3_equ(v1.normal, v2.normal)) { return 0; }
-  if(!v2_equ(v1.uvs, v2.uvs)) { return 0; }
+  if(!v3_equ(v1.position, v2.position)) { return false; }
+  if(!v3_equ(v1.normal, v2.normal)) { return false; }
+  if(!v2_equ(v1.uvs, v2.uvs)) { return false; }
   
-  return 1;  
+  return true;  
 }
 
 void vertex_print(vertex v) {

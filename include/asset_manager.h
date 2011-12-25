@@ -1,6 +1,7 @@
 #ifndef asset_manager_h
 #define asset_manager_h
 
+#include "bool.h"
 #include "dictionary.h"
 #include "list.h"
 
@@ -22,7 +23,7 @@ void unload_file(char* filename);
 void unload_folder(char* folder);
 
 void* asset_get(char* path);
-int asset_loaded(char* path);
+bool asset_loaded(char* path);
 
 void asset_state_print();
 

@@ -1,6 +1,7 @@
 #ifndef entity_manager_h
 #define entity_manager_h
 
+#include "bool.h"
 #include "list.h"
 
 typedef void entity;
@@ -8,7 +9,7 @@ typedef void entity;
 void entity_manager_init();
 void entity_manager_finish();
 
-int entity_exists(char* name);
+bool entity_exists(char* name);
 
 entity* entity_new(char* name, int type);
 void entity_add(char* name, int type, entity* entity);

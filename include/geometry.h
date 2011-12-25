@@ -1,6 +1,7 @@
 #ifndef geometry_h
 #define geometry_h
 
+#include "bool.h"
 #include "vector.h"
 
 typedef struct {
@@ -16,7 +17,7 @@ typedef struct {
 } vertex;
 
 vertex vertex_new();
-int vertex_equal(vertex v1, vertex v2);
+bool vertex_equal(vertex v1, vertex v2);
 void vertex_print(vertex v);
 
 typedef struct {

@@ -1,6 +1,8 @@
 #ifndef dictionary_h
 #define dictionary_h
 
+#include "bool.h"
+
 struct bucket {
   
   void* item;
@@ -27,7 +29,7 @@ void dictionary_delete(dictionary* dict);
 
 int dictionary_hash(dictionary* dict, char* string);
 
-int dictionary_contains(dictionary* dict, char* string);
+bool dictionary_contains(dictionary* dict, char* string);
 void* dictionary_get(dictionary* dict, char* string);
 void dictionary_set(dictionary* dict, char* string, void* item);
 

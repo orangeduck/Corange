@@ -1,6 +1,8 @@
 #ifndef list_h
 #define list_h
 
+#include "bool.h"
+
 typedef struct {
 
   /* Points to the void* array in memory */
@@ -26,7 +28,7 @@ void* list_pop_back(list* l);
 void* list_get(list* l, int index);
 void list_set(list* l, int index, void* item);
 
-int list_is_empty(list* l);
+bool list_is_empty(list* l);
 
 void list_delete(list* l);
 void list_clear(list* l);

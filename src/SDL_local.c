@@ -90,18 +90,18 @@ int SDL_RWreadline(SDL_RWops* file, char* buffer, int buffersize) {
 
 void SDL_PrintOpenGLInfo() {
   printf("-- OpenGL info --\n");
-  const unsigned char* vendor = glGetString(GL_VENDOR);
+  const char* vendor = (const char*)glGetString(GL_VENDOR);
   printf("Vendor: %s\n", vendor);
-  const unsigned char* renderer = glGetString(GL_RENDERER);
+  const char* renderer = (const char*)glGetString(GL_RENDERER);
   printf("Renderer: %s\n", renderer);
-  const unsigned char* version = glGetString(GL_VERSION);
+  const char* version = (const char*)glGetString(GL_VERSION);
   printf("Version: %s\n", version);
-  const unsigned char* shader_version = glGetString(GL_SHADING_LANGUAGE_VERSION);
+  const char* shader_version = (const char*)glGetString(GL_SHADING_LANGUAGE_VERSION);
   printf("Shader Version: %s\n", shader_version);
 }
 
 void SDL_PrintOpenGLExtensions() {
-  const unsigned char* extensions = glGetString(GL_EXTENSIONS);
+  const char* extensions = (const char*)glGetString(GL_EXTENSIONS);
   printf("OpenGL Extensions: %s\n", extensions);
 }
 
@@ -117,39 +117,22 @@ int SDL_OpenGLSupportsShaderLinkage() {
 
 void SDL_CheckOpenGLError(const char* name) {
   switch (glGetError()) {
-    
     case GL_INVALID_ENUM:
       error("OpenGL Error on function %s: Invalid Enum", name);
-    break;
-    
     case GL_INVALID_VALUE:
       error("OpenGL Error on function %s: Invalid Value", name);
-    break;
-    
     case GL_INVALID_OPERATION:
       error("OpenGL Error on function %s: Invalid Operation", name);
-    break;
-  
     case GL_OUT_OF_MEMORY:
       error("OpenGL Error on function %s: Out of Memory", name);
-    break;
-  
     case GL_INVALID_FRAMEBUFFER_OPERATION:
       error("OpenGL Error on function %s: Invalid FrameBuffer Operation", name);
-    break;
-  
     case GL_STACK_OVERFLOW:
       error("OpenGL Error on function %s: Stack Overflow", name);
-    break;
-    
     case GL_STACK_UNDERFLOW:
       error("OpenGL Error on function %s: Stack Underflow", name);
-    break;
-    
     case GL_TABLE_TOO_LARGE:
       error("OpenGL Error on function %s: Table Too Large", name);
-    break;
-
   }
 }
 

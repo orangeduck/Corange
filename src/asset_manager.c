@@ -308,9 +308,9 @@ void* asset_get(char* path) {
   return val;
 }
 
-int asset_loaded(char* path) {
+bool asset_loaded(char* path) {
   char* path_map = asset_map_filename(path);
-  int contains = dictionary_contains(asset_dictionary, path_map);
+  bool contains = dictionary_contains(asset_dictionary, path_map);
   free(path_map);
   return contains;
 }

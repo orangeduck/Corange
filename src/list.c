@@ -63,7 +63,7 @@ void list_set(list* l, int index, void* item) {
   l->ptrs[ index ] = item;
 }
 
-int list_is_empty(list* l) {
+bool list_is_empty(list* l) {
   return (l->num_items == 0);
 }
 
@@ -88,7 +88,7 @@ void list_delete_with(list* l, void func(void*)) {
   
   free(l->ptrs);
   free(l);
-};
+}
 
 void list_clear_with(list* l, void func(void*)) {
   
@@ -98,5 +98,5 @@ void list_clear_with(list* l, void func(void*)) {
     free(item);
   }
   
-};
+}
 
