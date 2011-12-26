@@ -1,6 +1,5 @@
 *~
-*.o
-*.ol
+obj/*
 logs/*
 stdout.txt
 stderr.txt

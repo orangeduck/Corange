@@ -2,9 +2,9 @@
 #define bool_h
 
 #ifndef bool
-  #define bool short
-  #define true 1
-  #define false 0
+  typedef short bool;
+  static bool true = 1;
+  static bool false = 0;
 #endif
 
 #endif

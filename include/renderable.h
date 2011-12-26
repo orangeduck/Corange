@@ -17,7 +17,6 @@ typedef struct {
   int num_verticies;
   int num_triangles;
   
-  material* instance;
   material* base;
   
   int is_rigged;

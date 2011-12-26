@@ -125,12 +125,6 @@ renderable_surface* renderable_surface_new(mesh* m) {
   } else {
     s->base = asset_get("$CORANGE/resources/basic.mat");
   }
-    
-  /* Copy certain base attributes from base material which can't be specified as non-existant */
-  s->instance = material_new();
-  s->instance->use_blending = s->base->use_blending;
-  s->instance->src_blend_func = s->base->src_blend_func;
-  s->instance->dst_blend_func = s->base->dst_blend_func;
   
   return s;
 }
@@ -213,12 +207,6 @@ renderable_surface* renderable_surface_new_rigged(mesh* m, vertex_weight* weight
     s->base = asset_get("$CORANGE/resources/basic.mat");
   }
   
-  /* Copy certain base attributes from base material which can't be specified as non-existant */
-  s->instance = material_new();
-  s->instance->use_blending = s->base->use_blending;
-  s->instance->src_blend_func = s->base->src_blend_func;
-  s->instance->dst_blend_func = s->base->dst_blend_func;
-  
   return s;
 
 }
@@ -227,8 +215,6 @@ void renderable_surface_delete(renderable_surface* s) {
 
   glDeleteBuffers(1 , &s->vertex_vbo);
   glDeleteBuffers(1 , &s->triangle_vbo);
-  
-  material_delete(s->instance);
   
   free(s);
   

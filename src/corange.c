@@ -3,9 +3,11 @@
 #include "corange.h"
 
 void corange_stop_stdout_redirect() {
+  #ifdef _WIN32
   FILE* ctt = fopen("CON", "w" );
   FILE* fout = freopen( "CON", "w", stdout );
   FILE* ferr = freopen( "CON", "w", stderr );
+  #endif
 }
 
 void corange_init(char* core_assets_path) {
