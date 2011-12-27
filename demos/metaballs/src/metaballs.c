@@ -370,4 +370,5 @@ int main(int argc, char **argv) {
   
   corange_finish();
   
+  return 0;
 }

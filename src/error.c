@@ -6,27 +6,54 @@
 void error_bp() {}
 void warning_bp() {}
 void info_bp() {}
+void assert_bp() {}
+void exception_bp() {}
+void check_bp() {}
 
 void disable_errors() {
-  errors_enabled = 0;
+  errors_enabled = false;
 }
 
 void enable_errors() {
-  errors_enabled = 1;
+  errors_enabled = true;
 }
 
 void disable_warnings() {
-  warnings_enabled = 0;
+  warnings_enabled = false;
 }
 
 void enable_warnings() {
-  warnings_enabled = 1;
+  warnings_enabled = true;
 }
 
-void disable_info() {
-  info_enabled = 0;
+void disable_debug() {
+  debug_enabled = false;
 }
 
-void enable_info() {
-  info_enabled = 1;
+void enable_debug() {
+  debug_enabled = true;
+}
+
+void disable_assert() {
+  assert_enabled = false;
+}
+
+void enabled_assert() {
+  assert_enabled = true;
+}
+
+void disable_exceptions() {
+  exceptions_enabled = false;
+}
+
+void enable_exceptions() {
+  exceptions_enabled = true;
+}
+
+void disable_check() {
+  check_enabled = false;
+}
+
+void enable_check() {
+  check_enabled = true;
 }

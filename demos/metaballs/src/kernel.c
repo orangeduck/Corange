@@ -16,6 +16,10 @@
 
 #include "kernel.h"
 
+#ifdef __linux__
+  #include  <GL/glx.h>
+#endif
+
 static cl_int error = 0;
 static cl_platform_id platform;
 static cl_context context;
@@ -58,7 +62,7 @@ void kernels_init_with_opengl() {
 
 #ifdef _WIN32
 
-#define CL_GL_CONTEXT_KHR	0x2008
+#define CL_GL_CONTEXT_KHR 0x2008
 #define CL_WGL_HDC_KHR 0x200B
 
   error = clGetPlatformIDs(1, &platform, NULL);
@@ -80,9 +84,33 @@ void kernels_init_with_opengl() {
   queue = clCreateCommandQueue(context, device, 0, &error);
   kernels_check_error("clCreateCommandQueue");
   
+#elif __linux__
+
+  #define CL_GL_CONTEXT_KHR 0x2008
+  #define CL_WGL_HDC_KHR 0x200B
+
+  error = clGetPlatformIDs(1, &platform, NULL);
+  kernels_check_error("oclGetPlatformID");
+
+  error = clGetDeviceIDs(platform, CL_DEVICE_TYPE_GPU, 1, &device, NULL);
+  kernels_check_error("clGetDeviceIDs");
+
+  cl_context_properties props[] = 
+  {
+    CL_GL_CONTEXT_KHR, (intptr_t)glXGetCurrentContext(), 
+    CL_GLX_DISPLAY_KHR, (intptr_t)glXGetCurrentDisplay(), 
+    CL_CONTEXT_PLATFORM, (cl_context_properties)platform, 
+    0
+  };
+  context = clCreateContext(props, 1, &device, NULL, NULL, &error);
+  kernels_check_error("clCreateContext");
+  
+  queue = clCreateCommandQueue(context, device, 0, &error);
+  kernels_check_error("clCreateCommandQueue");
+
 #else
   
-  error("Can't interlop CL with GL unless on windows!");
+  error("Can't interlop CL with GL, unsupported platform!");
 
 #endif
 

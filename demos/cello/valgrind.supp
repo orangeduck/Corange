@@ -1,0 +1,92 @@
+# Suppress all errors from ATI drivers.
+
+{
+  ATI Drivers Value1
+  Memcheck:Value1
+  fun:*
+  obj:/usr/lib/fglrx/dri/fglrx_dri.so
+}
+{
+  ATI Drivers Value2
+  Memcheck:Value2
+  fun:*
+  obj:/usr/lib/fglrx/dri/fglrx_dri.so
+}
+{
+  ATI Drivers Value4
+  Memcheck:Value4
+  fun:*
+  obj:/usr/lib/fglrx/dri/fglrx_dri.so
+}
+{
+  ATI Drivers Value8
+  Memcheck:Value8
+  fun:*
+  obj:/usr/lib/fglrx/dri/fglrx_dri.so
+}
+{
+  ATI Drivers Value16
+  Memcheck:Value16
+  fun:*
+  obj:/usr/lib/fglrx/dri/fglrx_dri.so
+}
+{
+  ATI Drivers Addr1
+  Memcheck:Addr1
+  fun:*
+  obj:/usr/lib/fglrx/dri/fglrx_dri.so
+}
+{
+  ATI Drivers Addr2
+  Memcheck:Addr2
+  fun:*
+  obj:/usr/lib/fglrx/dri/fglrx_dri.so
+}
+{
+  ATI Drivers Addr4
+  Memcheck:Addr4
+  fun:*
+  obj:/usr/lib/fglrx/dri/fglrx_dri.so
+}
+{
+  ATI Drivers Addr8
+  Memcheck:Addr8
+  fun:*
+  obj:/usr/lib/fglrx/dri/fglrx_dri.so
+}
+{
+  ATI Drivers Addr16
+  Memcheck:Addr16
+  fun:*
+  obj:/usr/lib/fglrx/dri/fglrx_dri.so
+}
+{
+  ATI Drivers Jump
+  Memcheck:Jump
+  fun:*
+  obj:/usr/lib/fglrx/dri/fglrx_dri.so
+}
+{
+  ATI Drivers Cond
+  Memcheck:Cond
+  fun:*
+  obj:/usr/lib/fglrx/dri/fglrx_dri.so
+}
+{
+  ATI Drivers Free
+  Memcheck:Free
+  fun:*
+  obj:/usr/lib/fglrx/dri/fglrx_dri.so
+}
+{
+  ATI Drivers Overlap
+  Memcheck:Overlap
+  fun:*
+  obj:/usr/lib/fglrx/dri/fglrx_dri.so
+}
+{
+  ATI Drivers Leak
+  Memcheck:Leak
+  fun:*
+  obj:/usr/lib/fglrx/dri/fglrx_dri.so
+}

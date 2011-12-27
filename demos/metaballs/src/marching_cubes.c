@@ -30,7 +30,7 @@ static GLuint vertex_index;
 static kernel_memory vertex_positions_buffer;
 static kernel_memory vertex_normals_buffer;
 static kernel_memory vertex_index_buffer;
-static kernel_memory vertex_num_verts
+static kernel_memory vertex_num_verts;
 
 static int num_verts = 0;
 
@@ -111,7 +111,7 @@ void marching_cubes_clear() {
 void marching_cubes_point(int x, int y, int z, float value) {
 
   if ((x >= width) || (y >= height) || (z >= depth) || (x < 0) || (y < 0) || (z < 0)) {
-    error("Point (%i, %i, %i) outside of volume");
+    error("Point (%i, %i, %i) outside of volume", x, y, z);
   }
 
   kernel_set_argument(write_point, 1, sizeof(int), &x);

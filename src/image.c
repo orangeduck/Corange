@@ -2,7 +2,6 @@
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
-#include <assert.h>
 
 #include "asset_manager.h"
 
@@ -136,10 +135,10 @@ image* image_alpha_channel(image* src) {
 
 image* image_subimage(image* src, int left, int top, int width, int height) {
   
-  assert(left >= 0);
-  assert(top >= 0);
-  assert(left + width < src->width);
-  assert(top + height < src->height);
+  assert(left >= 0, "Image Out of Bounds");
+  assert(top >= 0, "Image Out of Bounds");
+  assert(left + width < src->width, "Image Out of Bounds");
+  assert(top + height < src->height, "Image Out of Bounds");
   
   image* i = malloc(sizeof(image));
   i->width = width;
@@ -315,10 +314,10 @@ vector4 image_get_pixel(image* i, int u, int v) {
   
   v = i->height - v - 1;
   
-  assert( u >= 0 );
-  assert( v >= 0 );
-  assert( u < i->width );
-  assert( v < i->height );
+  assert( u >= 0, "Image Out of Bounds" );
+  assert( v >= 0, "Image Out of Bounds" );
+  assert( u < i->width, "Image Out of Bounds" );
+  assert( v < i->height, "Image Out of Bounds" );
   
   float r = (float)i->data[u * 4 + v * i->width * 4 + 0] / 255;
   float g = (float)i->data[u * 4 + v * i->width * 4 + 1] / 255;
@@ -630,8 +629,8 @@ void image_fill_white(image* i) {
 
 void image_copy(image* dst, image* src) {
   
-  assert( dst->width == src->width );
-  assert( dst->height == src->height );
+  assert( dst->width == src->width, "Image Out of Bounds" );
+  assert( dst->height == src->height, "Image Out of Bounds" );
   
   memcpy( dst->data, src->data, dst->width * dst->height * 4 );
 }
@@ -738,8 +737,8 @@ void image_mask_not(image* i) {
 
 void image_mask_or(image* i, image* i2) {
   
-  assert(i2->width >= i->width);
-  assert(i2->height >= i->height);
+  assert(i2->width >= i->width, "Images different size");
+  assert(i2->height >= i->height, "Images different size");
   
   int x, y;
   for( x = 0; x < i->width; x++) 
@@ -760,8 +759,8 @@ void image_mask_or(image* i, image* i2) {
 
 void image_mask_and(image* i, image* i2) {
 
-  assert(i2->width >= i->width);
-  assert(i2->height >= i->height);
+  assert(i2->width >= i->width, "Images different size");
+  assert(i2->height >= i->height, "Images different size");
   
   int x, y;
   for( x = 0; x < i->width; x++) 
@@ -791,8 +790,8 @@ static int xor( float a, float b ) {
 
 void image_mask_xor(image* i, image* i2) {
 
-  assert(i2->width >= i->width);
-  assert(i2->height >= i->height);
+  assert(i2->width >= i->width, "Images different size");
+  assert(i2->height >= i->height, "Images different size");
   
   int x, y;
   for( x = 0; x < i->width; x++) 
@@ -813,8 +812,8 @@ void image_mask_xor(image* i, image* i2) {
 
 void image_mask_nor(image* i, image* i2) {
 
-  assert(i2->width >= i->width);
-  assert(i2->height >= i->height);
+  assert(i2->width >= i->width, "Images different size");
+  assert(i2->height >= i->height, "Images different size");
   
   int x, y;
   for( x = 0; x < i->width; x++) 
@@ -835,8 +834,8 @@ void image_mask_nor(image* i, image* i2) {
 
 void image_mask_nand(image* i, image* i2) {
 
-  assert(i2->width >= i->width);
-  assert(i2->height >= i->height);
+  assert(i2->width >= i->width, "Images different size");
+  assert(i2->height >= i->height, "Images different size");
   
   int x, y;
   for( x = 0; x < i->width; x++) 
@@ -857,8 +856,8 @@ void image_mask_nand(image* i, image* i2) {
 
 void image_mask_xnor(image* i, image* i2) {
 
-  assert(i2->width >= i->width);
-  assert(i2->height >= i->height);
+  assert(i2->width >= i->width, "Images different size");
+  assert(i2->height >= i->height, "Images different size");
   
   int x, y;
   for( x = 0; x < i->width; x++) 

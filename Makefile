@@ -3,8 +3,8 @@ CC=gcc
 INCS= -I ./include
 LIBS= -L ./lib -L ./
 
-CFLAGS= $(INCS) -Wall -Wno-unused
-CFLAGS_LINUX= $(INCS) -Wall -Wno-unused -fPIC
+CFLAGS= $(INCS) -Wall -Werror -Wno-unused -g
+CFLAGS_LINUX= $(INCS) -Wall -Werror -Wno-unused -g -fPIC
 
 LFLAGS= $(LIBS) -lmingw32 -lopengl32 -lSDLmain -lSDL -llua5.1
 LFLAGS_LINUX= -lGL -lSDLmain -lSDL -llua5.1
@@ -25,7 +25,7 @@ corange.dll: $(OBJ_FILES)
 	cp $@ ./demos/lut_gen/$@
 
 obj/%.o: src/%.c
-	$(CC) $< -c  -O3 -g $(CFLAGS) -o $@
+	$(CC) $< -c $(CFLAGS) -o $@
 	
 windows: corange.dll
 	
@@ -38,7 +38,7 @@ linux: $(OBJ_FILES_LINUX)
 	$(CC) -g $(OBJ_FILES_LINUX) $(LFLAGS_LINUX) -shared -o libcorange.a
 	
 obj/%.ol: src/%.c
-	$(CC) $< -c  -O3 -g $(CFLAGS_LINUX) -o $@
+	$(CC) $< -c $(CFLAGS_LINUX) -o $@
 
 cleanlinux:
 	rm $(OBJ_FILES_LINUX)
