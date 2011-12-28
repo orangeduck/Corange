@@ -123,7 +123,8 @@ renderable_surface* renderable_surface_new(mesh* m) {
   if( asset_loaded(m->material) ) {
     s->base = asset_get(m->material);
   } else {
-    s->base = asset_get("$CORANGE/resources/basic.mat");
+    
+    s->base = asset_load_get("$CORANGE/resources/basic.mat");
   }
   
   return s;
@@ -204,7 +205,7 @@ renderable_surface* renderable_surface_new_rigged(mesh* m, vertex_weight* weight
   if( asset_loaded(m->material) ) {
     s->base = asset_get(m->material);
   } else {
-    s->base = asset_get("$CORANGE/resources/basic.mat");
+    s->base = asset_load_get("$CORANGE/resources/basic.mat");
   }
   
   return s;

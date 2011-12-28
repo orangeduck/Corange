@@ -9,9 +9,38 @@
 #include "texture.h"
 #include "matrix.h"
 
+#include "asset_manager.h"
+
 #include "ui_text.h"
 
-ui_text* ui_text_new(char* string, font* text_font) {
+ui_text* ui_text_new() {
+
+  ui_text* text = malloc( sizeof(ui_text) );
+  
+  text->string = malloc(strlen("New Text") + 1);
+  text->buffersize = strlen("New Text") + 1;
+  strcpy(text->string, "New Text");
+  
+  text->font = asset_load_get("$CORANGE/fonts/console_font.fnt");
+  text->position = v2(0.0,0.0);
+  text->scale = v2(1.0,1.0);
+  text->color = v4_black();
+  
+  text->alignment = text_align_left;
+  text->line_spacing = 0.0;
+  text->char_spacing = 0.0;
+  text->rotation = 0.0;
+  
+  glGenBuffers(1, &text->positions_buffer);
+  glGenBuffers(1, &text->texcoords_buffer);
+  
+  ui_text_update_properties(text);
+  
+  return text;
+
+}
+
+ui_text* ui_text_new_string(char* string, font* text_font) {
   
   ui_text* text = malloc( sizeof(ui_text) );
   
@@ -31,15 +60,10 @@ ui_text* ui_text_new(char* string, font* text_font) {
   text->char_spacing = 0.0;
   text->rotation = 0.0;
   
-  text->on_click_up_listener = NULL;
-  text->on_click_down_listener = NULL;
-  text->on_mouse_over_listener = NULL;
-  text->on_mouse_move_listener = NULL;
-  
   glGenBuffers(1, &text->positions_buffer);
   glGenBuffers(1, &text->texcoords_buffer);
   
-  ui_text_update(text);
+  ui_text_update_properties(text);
   
   return text;
 }
@@ -55,23 +79,29 @@ void ui_text_delete(ui_text* text) {
   
 }
 
+void ui_text_event(ui_text* text, SDL_Event e) {
+
+}
+
+void ui_text_update(ui_text* text) {
+
+}
+
 void ui_text_update_string(ui_text* text, char* string) {
   
   int buflen = strlen(string) + 1;
   
   if( buflen > text->buffersize ) {
-    
     text->string = realloc(text->string, buflen);
     text->buffersize = buflen;
-    
   }
   
-  strcpy(text->string,string);
-  ui_text_update(text);
+  strcpy(text->string, string);
+  ui_text_update_properties(text);
   
 }
 
-void ui_text_update(ui_text* text) {
+void ui_text_update_properties(ui_text* text) {
   
   const float base_scale = 250;
   
@@ -385,64 +415,4 @@ int ui_text_contains_position(ui_text* text, vector2 position) {
     return 0;
   }
   
-}
-
-void ui_text_set_on_click_up_listener(ui_text* text, void (*listener)(ui_text*)) {
-  text->on_click_up_listener = listener;
-}
-
-void ui_text_set_on_click_down_listener(ui_text* text, void (*listener)(ui_text*)) {
-  text->on_click_down_listener = listener;
-}
-
-void ui_text_set_on_mouse_over_listener(ui_text* text, void (*listener)(ui_text*)) {
-  text->on_mouse_over_listener = listener;
-}
-
-void ui_text_set_on_mouse_move_listener(ui_text* text, void (*listener)(ui_text*)) {
-  text->on_mouse_move_listener = listener;
-}
-
-int ui_text_on_click_up(ui_text* text, vector2 pos) {
-  
-  if((text->on_click_up_listener != NULL) && ui_text_contains_position(text, pos)) {
-    text->on_click_up_listener(text);
-    return 1;
-  } else {
-    return 0;
-  }
-  
-}
-
-int ui_text_on_click_down(ui_text* text, vector2 pos) {
-
-  if((text->on_click_down_listener != NULL) && ui_text_contains_position(text, pos)) {
-    text->on_click_down_listener(text);
-    return 1;
-  } else {
-    return 0;
-  }
-
-}
-
-int ui_text_on_mouse_over(ui_text* text, vector2 pos) {
-
-  if((text->on_mouse_over_listener != NULL) && ui_text_contains_position(text, pos)) {
-    text->on_mouse_over_listener(text);
-    return 1;
-  } else {
-    return 0;
-  }
-
-}
-
-int ui_text_on_mouse_move(ui_text* text, vector2 pos) {
-
-  if((text->on_mouse_move_listener != NULL) && ui_text_contains_position(text, pos)) {
-    text->on_mouse_move_listener(text);
-    return 1;
-  } else {
-    return 0;
-  }
-
 }

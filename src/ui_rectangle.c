@@ -19,11 +19,6 @@ ui_rectangle* ui_rectangle_new(vector2 top_left, vector2 bottom_right) {
   rect->border_size = 0.0;
   rect->border_color = v4_black();
   
-  rect->on_click_up_listener = NULL;
-  rect->on_click_down_listener = NULL;
-  rect->on_mouse_over_listener = NULL;
-  rect->on_mouse_move_listener = NULL;
-  
   return rect;
   
 }
@@ -34,6 +29,14 @@ void ui_rectangle_delete(ui_rectangle* rect) {
 
 void ui_rectangle_set_texture(ui_rectangle* rect, texture* t) {
   rect->texture = t;
+}
+
+void ui_rectangle_event(ui_rectangle* rect, SDL_Event e) {
+  
+}
+
+void ui_rectangle_update(ui_rectangle* rect) {
+  
 }
 
 void ui_rectangle_render(ui_rectangle* rect) {
@@ -110,63 +113,4 @@ int ui_rectangle_contains_position(ui_rectangle* rect, vector2 position) {
   } else {
     return 0;
   }
-}
-
-void ui_rectangle_set_on_click_down_listener(ui_rectangle* rect, void (*listener)(ui_rectangle*)) {
-  rect->on_click_down_listener = listener;
-}
-
-void ui_rectangle_set_on_click_up_listener(ui_rectangle* rect, void (*listener)(ui_rectangle*)) {
-  rect->on_click_up_listener = listener;
-}
-
-void ui_rectangle_set_on_mouse_over_listener(ui_rectangle* rect, void (*listener)(ui_rectangle*)) {
-  rect->on_mouse_over_listener = listener;
-}
-
-void ui_rectangle_set_on_mouse_move_listener(ui_rectangle* rect, void (*listener)(ui_rectangle*)) {
-  rect->on_mouse_move_listener = listener;
-}
-
-int ui_rectangle_on_click_up(ui_rectangle* rect, vector2 pos) {
-
-  if((rect->on_click_up_listener != NULL) && ui_rectangle_contains_position(rect, pos)) {
-    rect->on_click_up_listener(rect);
-    return 1;
-  } else {
-    return 0;
-  }
-
-}
-
-int ui_rectangle_on_click_down(ui_rectangle* rect, vector2 pos) {
-
-  if((rect->on_click_down_listener != NULL) && ui_rectangle_contains_position(rect, pos)) {
-    rect->on_click_down_listener(rect);
-    return 1;
-  } else {
-    return 0;
-  }
-
-}
-int ui_rectangle_on_mouse_over(ui_rectangle* rect, vector2 pos) {
-
-  if((rect->on_mouse_over_listener != NULL) && ui_rectangle_contains_position(rect, pos)) {
-    rect->on_mouse_over_listener(rect);
-    return 1;
-  } else {
-    return 0;
-  }
-
-}
-
-int ui_rectangle_on_mouse_move(ui_rectangle* rect, vector2 pos) {
-
-  if((rect->on_mouse_move_listener != NULL) && ui_rectangle_contains_position(rect, pos)) {
-    rect->on_mouse_move_listener(rect);
-    return 1;
-  } else {
-    return 0;
-  }
-
 }

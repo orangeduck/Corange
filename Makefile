@@ -1,12 +1,11 @@
 CC=gcc
 
 INCS= -I ./include
-LIBS= -L ./lib -L ./
 
 CFLAGS= $(INCS) -Wall -Werror -Wno-unused -g
 CFLAGS_LINUX= $(INCS) -Wall -Werror -Wno-unused -g -fPIC
 
-LFLAGS= $(LIBS) -lmingw32 -lopengl32 -lSDLmain -lSDL -llua5.1
+LFLAGS= -lmingw32 -lopengl32 -lSDLmain -lSDL -llua5.1 -shared
 LFLAGS_LINUX= -lGL -lSDLmain -lSDL -llua5.1
 
 C_FILES= $(wildcard src/*.c)
@@ -17,12 +16,7 @@ OBJ_FILES_LINUX= $(addprefix obj/,$(notdir $(C_FILES:.c=.ol)))
 # Windows
 
 corange.dll: $(OBJ_FILES)
-	$(CC) -g $(OBJ_FILES) $(LFLAGS) -shared -o $@
-	cp $@ ./demos/cello/$@
-	cp $@ ./demos/metaballs/$@
-	cp $@ ./demos/noise/$@
-	cp $@ ./demos/sea/$@
-	cp $@ ./demos/lut_gen/$@
+	$(CC) -g $(OBJ_FILES) $(LFLAGS) -o $@
 
 obj/%.o: src/%.c
 	$(CC) $< -c $(CFLAGS) -o $@
@@ -35,7 +29,7 @@ clean:
 # Linux
 	
 linux: $(OBJ_FILES_LINUX)
-	$(CC) -g $(OBJ_FILES_LINUX) $(LFLAGS_LINUX) -shared -o libcorange.a
+	$(CC) -g $(OBJ_FILES_LINUX) $(LFLAGS_LINUX) -shared -o libcorange.so
 	
 obj/%.ol: src/%.c
 	$(CC) $< -c $(CFLAGS_LINUX) -o $@

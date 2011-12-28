@@ -12,7 +12,13 @@ void corange_stop_stdout_redirect() {
 
 void corange_init(char* core_assets_path) {
   
-  /* Init viewport and OpenGL */
+  /* Starting Corange */
+  
+  printf("Starting Corange...\n");
+  
+  corange_stop_stdout_redirect();
+  
+  /* Init OpenGL and Viewport */
   
   if (SDL_Init(SDL_INIT_VIDEO) != 0) {
     error("Unable to initialize SDL: %s\n", SDL_GetError());
@@ -21,18 +27,11 @@ void corange_init(char* core_assets_path) {
   viewport_init();
   
   SDL_LoadOpenGLExtensions();
-  
-  /* Start Corange */
-  
-  printf("Starting Corange...\n");
-  
-  /* Stop Redirect of stdout and stderr */
-  
-  corange_stop_stdout_redirect();
-  
   SDL_PrintOpenGLInfo();
   
-  /* Load asset path stuff */
+  /* Asset Manager */
+  
+  asset_manager_init();
   
   asset_manager_add_path_variable("$CORANGE", core_assets_path);
   
@@ -49,10 +48,6 @@ void corange_init(char* core_assets_path) {
   
   printf("Shaders Path: %s\n", shaders_path);
   free(shaders_path);
-  
-  /* Load Assets */
-  
-  asset_manager_init();
   
   asset_manager_handler("obj", obj_load_file, renderable_delete);
   asset_manager_handler("smd", smd_load_file, renderable_delete);
@@ -72,33 +67,37 @@ void corange_init(char* core_assets_path) {
   asset_manager_handler("mat", mat_load_file, material_delete);
   asset_manager_handler("lua", lua_load_file, script_delete);
   
-  load_folder("$SHADERS/");
-  load_folder("$CORANGE/fonts/");
-  load_folder("$CORANGE/scripts/");
-
-  load_folder("$CORANGE/resources/");
-  
-  /* Setup Scripting */
-  
-  scripting_init();
-  
   /* Entity Manager */
   
   entity_manager_init();
+  
+  entity_manager_handler(static_object, static_object_new, static_object_delete);
+  entity_manager_handler(animated_object, animated_object_new, animated_object_delete);
+  entity_manager_handler(camera, camera_new, camera_delete);
+  entity_manager_handler(light, light_new, light_delete);
+  
+  /* UI Manager */
+  
+  ui_manager_init();
+  
+  ui_manager_handler(ui_rectangle, ui_rectangle_new, ui_rectangle_delete, ui_rectangle_event, ui_rectangle_update, ui_rectangle_render);
+  ui_manager_handler(ui_text, ui_text_new, ui_text_delete, ui_text_event, ui_text_update, ui_text_render);
+  
+  /* Scripting */
+  
+  scripting_init();
   
   printf("Done!\n");
   
 }
 
 void corange_finish() {
-
-  /* Unload assets */
-  
-  entity_manager_finish();
-  
-  asset_manager_finish();
   
   scripting_finish();
+  
+  ui_manager_finish();
+  entity_manager_finish();
+  asset_manager_finish();
   
   viewport_finish();
   

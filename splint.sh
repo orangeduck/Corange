@@ -1,1 +1,0 @@
-splint +posixlib +boolint -retvalint -compdef -castfcnptr -varuse -fcnuse -syntax -D_X86_ -D__int32=int32_t -D__int64=int64_t -I ./include src/*.c

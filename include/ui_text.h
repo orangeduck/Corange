@@ -28,11 +28,6 @@ typedef struct ui_text_temp {
   int num_positions;
   int num_texcoords;
   
-  void (*on_click_up_listener)(struct ui_text_temp*);
-  void (*on_click_down_listener)(struct ui_text_temp*);
-  void (*on_mouse_over_listener)(struct ui_text_temp*);
-  void (*on_mouse_move_listener)(struct ui_text_temp*);
-  
   vector2 top_left;
   vector2 bottom_right;
   
@@ -53,24 +48,17 @@ typedef struct ui_text_temp {
   
 } ui_text;
 
-ui_text* ui_text_new(char* string, font* text_font);
+ui_text* ui_text_new();
+ui_text* ui_text_new_string(char* string, font* text_font);
 void ui_text_delete(ui_text* text);
 
 void ui_text_update_string(ui_text* text, char* string);
-void ui_text_update(ui_text* text);
+void ui_text_update_properties(ui_text* text);
 
+void ui_text_event(ui_text* text, SDL_Event e);
+void ui_text_update(ui_text* text);
 void ui_text_render(ui_text* text);
 
 int ui_text_contains_position(ui_text* text, vector2 position);
-
-void ui_text_set_on_click_down_listener(ui_text* text, void (*listener)(ui_text*));
-void ui_text_set_on_click_up_listener(ui_text* text, void (*listener)(ui_text*));
-void ui_text_set_on_mouse_over_listener(ui_text* text, void (*listener)(ui_text*));
-void ui_text_set_on_mouse_move_listener(ui_text* text, void (*listener)(ui_text*));
-
-int ui_text_on_click_up(ui_text* text, vector2 pos);
-int ui_text_on_click_down(ui_text* text, vector2 pos);
-int ui_text_on_mouse_over(ui_text* text, vector2 pos);
-int ui_text_on_mouse_move(ui_text* text, vector2 pos);
 
 #endif

@@ -16,12 +16,14 @@ void corange_stop_stdout_redirect();
 
 /* Info and Utilities */
 
-#include "timing.h"
+#include "bool.h"
 #include "error.h"
+#include "timing.h"
+
 #include "scripting.h"
 #include "viewport.h"
 
-/* Engine Entities */
+/* Entities */
 
 #include "entity_manager.h"
 
@@ -30,7 +32,7 @@ void corange_stop_stdout_redirect();
 #include "camera.h"
 #include "light.h"
 
-/* Engine Assets */
+/* Assets */
 
 #include "asset_manager.h"
 
@@ -43,16 +45,18 @@ void corange_stop_stdout_redirect();
 #include "texture.h"
 #include "image.h"
 
+/* UI */
+
+#include "ui_manager.h"
+
+#include "ui_text.h"
+#include "ui_rectangle.h"
+
 /* Rendering */
 
 #include "forward_renderer.h"
 #include "deferred_renderer.h"
 #include "shadow_mapper.h"
-
-/* UI */
-
-#include "ui_text.h"
-#include "ui_rectangle.h"
 
 /* Data Structures */
 

@@ -43,7 +43,7 @@ static int BONE_WEIGHTS;
 
 void forward_renderer_init() {
   
-  COLOR_CORRECTION = asset_get("$CORANGE/resources/identity.lut");
+  COLOR_CORRECTION = asset_load_get("$CORANGE/resources/identity.lut");
   
   /* Enables */
   glEnable(GL_TEXTURE_2D);

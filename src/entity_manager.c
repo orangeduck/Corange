@@ -5,18 +5,24 @@
 #include "error.h"
 #include "dictionary.h"
 #include "list.h"
-#include "camera.h"
-#include "light.h"
-#include "static_object.h"
-#include "animated_object.h"
-
-#include "asset_manager.h"
 
 #include "entity_manager.h"
 
-list* entity_names;
-dictionary* entities;
-dictionary* entity_types;
+typedef struct {
+
+  int type_id;
+  void* (*new_func)();
+  void (*del_func)();
+
+} entity_handler;
+
+#define MAX_ENTITY_HANDLERS 512
+static entity_handler entity_handlers[MAX_ENTITY_HANDLERS];
+static int num_entity_handlers = 0;
+
+static list* entity_names;
+static dictionary* entities;
+static dictionary* entity_types;
 
 void entity_manager_init() {
   
@@ -31,7 +37,8 @@ void entity_manager_finish() {
   int i;
   for (i = 0; i < entity_names->num_items; i++) {
     char* name = list_get(entity_names, i);
-    printf("Deleting Entity %s\n", name);
+    int* type_id = dictionary_get(entity_types, name);
+    printf("Deleting Entity %s (%s)\n", name, type_id_name(*type_id));
     entity_delete(name);
   }
   
@@ -44,41 +51,50 @@ void entity_manager_finish() {
   
 }
 
+void entity_manager_handler_cast(int type_id, void* entity_new_func() , void entity_del_func(void* entity)) {
+  
+  if (num_entity_handlers >= MAX_ENTITY_HANDLERS) {
+    warning("Max number of entity handlers reached. Handler for type %s not added.", type_id_name(type_id));
+    return;
+  }
+  
+  entity_handler eh;
+  eh.type_id = type_id;
+  eh.new_func = entity_new_func;
+  eh.del_func = entity_del_func;
+  
+  entity_handlers[num_entity_handlers] = eh;
+  num_entity_handlers++;
+}
+
 bool entity_exists(char* name) {
   return dictionary_contains(entities, name);
 }
 
-entity* entity_new(char* name, int type) {
+entity* entity_new_type_id(char* name, int type_id) {
 
   if ( dictionary_contains(entities, name) ) {
-    error("Entity Manager already contains entity called %s! Not added.", name);
+    error("Entity Manager already contains entity called %s!", name);
   }
   
-  entity* e;
+  entity* e = NULL;
   
-  if (type == entity_type_none) {
-    e = NULL;
-    
-  } else if (type == entity_type_camera) {
-    e = camera_new(v3_zero(), v3_one());
-    
-  } else if (type == entity_type_light) {
-    e = light_new(v3_zero());
-    
-  } else if (type == entity_type_static) {
-    e = static_object_new(NULL);
+  int i;
+  for(i = 0; i < num_entity_handlers; i++) {
+    entity_handler eh = entity_handlers[i];
+    if (eh.type_id == type_id) {
+      e = eh.new_func();
+    }
+  }
   
-  } else if (type == entity_type_animated) {
-    e = animated_object_new(NULL, NULL);
-  
-  } else {
-    error("Don't know how to create entity %s. Unknown type id %i!", name, type);
+  if (e == NULL) {
+    error("Don't know how to create entity %s. No handler for type %s!", name, type_id_name(type_id));
   }
   
   dictionary_set(entities, name, e);
-  int* type_ptr = malloc(sizeof(int));
-  *type_ptr = type;
   
+  int* type_ptr = malloc(sizeof(int));
+  *type_ptr = type_id;
   dictionary_set(entity_types, name, type_ptr);
   
   char* name_copy = malloc(strlen(name) + 1);
@@ -88,17 +104,16 @@ entity* entity_new(char* name, int type) {
   return e;
 }
 
-void entity_add(char* name, int type, entity* entity) {
+void entity_add_type_id(char* name, int type_id, entity* entity) {
 
   if ( entity_exists(name) ) {
-    warning("Entity Manager already contains entity called %s! Not added.", name);
-    return;
+    error("Entity Manager already contains entity called %s!", name);
   }
   
   dictionary_set(entities, name, entity);
-  int* type_ptr = malloc(sizeof(int));
-  *type_ptr = type;
   
+  int* type_ptr = malloc(sizeof(int));
+  *type_ptr = type_id;
   dictionary_set(entity_types, name, type_ptr);
   
   char* name_copy = malloc(strlen(name) + 1);
@@ -116,112 +131,37 @@ entity* entity_get(char* name) {
   
 }
 
+entity* entity_get_as_type_id(char* name, int type_id) {
+  
+  if ( !entity_exists(name) ) {
+    error("Entity %s does not exist!", name);
+  }
+  
+  int* entity_type = dictionary_get(entity_types, name);
+  
+  if (*entity_type != type_id) {
+    error("Entity %s was created/added as a %s, but you requested it as a %s!", name, type_id_name(*entity_type), type_id_name(type_id));
+  }
+  
+  return dictionary_get(entities, name);
+}
+
 void entity_delete(char* name) {
   
   int* type_ptr = dictionary_get(entity_types, name);
-  int type = *type_ptr;
+  int type_id = *type_ptr;
 
-  if (type == entity_type_none) {
-    dictionary_remove_with(entities, name, free);
-    
-  } else if (type == entity_type_camera) {
-    dictionary_remove_with(entities, name, (void (*)(void *))camera_delete);
-    
-  } else if (type == entity_type_light) {
-    dictionary_remove_with(entities, name, (void (*)(void *))light_delete);
-    
-  } else if (type == entity_type_static) {
-    dictionary_remove_with(entities, name, (void (*)(void *))static_object_delete);
-    
-  } else if (type == entity_type_animated) {
-    dictionary_remove_with(entities, name, (void (*)(void *))animated_object_delete);
-    
-  } else {
-    error("Don't know how to delete entity %s. Unknown type id %i!", name, type);
-  }
-  
-}
-
-list* entities_get_all() {
-  
-  list* ret = list_new();
   int i;
-  for (i = 0; i < entity_names->num_items; i++) {
-    char* name = list_get(entity_names, i);
-    list_push_back(ret, dictionary_get(entities, name));
-  }
-  return ret;
-  
-}
-
-list* entities_get_cameras() {
-
-  list* ret = list_new();
-  int i;
-  for (i = 0; i < entity_names->num_items; i++) {
-    char* name = list_get(entity_names, i);
-    int* type_ptr = dictionary_get(entity_types, name);
-    int type = *type_ptr;
-    
-    if (type == entity_type_camera) {
-      list_push_back(ret, dictionary_get(entities, name));
+  for(i = 0; i < num_entity_handlers; i++) {
+    entity_handler eh = entity_handlers[i];
+    if (eh.type_id == type_id) {
+      dictionary_remove_with(entities, name, eh.del_func);
+      break;
     }
-    
   }
-  return ret;
   
-}
-
-list* entities_get_lights() {
-
-  list* ret = list_new();
-  int i;
-  for (i = 0; i < entity_names->num_items; i++) {
-    char* name = list_get(entity_names, i);
-    int* type_ptr = dictionary_get(entity_types, name);
-    int type = *type_ptr;
-    
-    if (type == entity_type_light) {
-      list_push_back(ret, dictionary_get(entities, name));
-    }
-    
+  if (entity_exists(name)) {
+    error("Don't know how to delete entity %s. No handler for type %s!", name, type_id_name(type_id));
   }
-  return ret;
-  
-}
-
-list* entities_get_statics() {
-
-  list* ret = list_new();
-  int i;
-  for (i = 0; i < entity_names->num_items; i++) {
-    char* name = list_get(entity_names, i);
-    int* type_ptr = dictionary_get(entity_types, name);
-    int type = *type_ptr;
-    
-    if (type == entity_type_static) {
-      list_push_back(ret, dictionary_get(entities, name));
-    }
-    
-  }
-  return ret;
-
-}
-
-list* entities_get_type(int type) {
-
-  list* ret = list_new();
-  int i;
-  for (i = 0; i < entity_names->num_items; i++) {
-    char* name = list_get(entity_names, i);
-    int* type_ptr = dictionary_get(entity_types, name);
-    int i_type = *type_ptr;
-    
-    if (i_type == type) {
-      list_push_back(ret, dictionary_get(entities, name));
-    }
-    
-  }
-  return ret;
   
 }

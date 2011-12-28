@@ -5,7 +5,7 @@
 
 void error_bp() {}
 void warning_bp() {}
-void info_bp() {}
+void debug_bp() {}
 void assert_bp() {}
 void exception_bp() {}
 void check_bp() {}

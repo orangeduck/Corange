@@ -57,12 +57,12 @@ static light* LIGHT;
 
 void deferred_renderer_init() {
   
-  COLOR_CORRECTION = asset_get("$CORANGE/resources/identity.lut");
-  RANDOM = asset_get("$CORANGE/resources/random.dds");
+  COLOR_CORRECTION = asset_load_get("$CORANGE/resources/identity.lut");
+  RANDOM = asset_load_get("$CORANGE/resources/random.dds");
   
-  PROGRAM = asset_get("$SHADERS/deferred.prog");
-  PROGRAM_ANIMATED = asset_get("$SHADERS/deferred_animated.prog");
-  SCREEN_PROGRAM = asset_get("$SHADERS/deferred_screen.prog");
+  PROGRAM = asset_load_get("$SHADERS/deferred.prog");
+  PROGRAM_ANIMATED = asset_load_get("$SHADERS/deferred_animated.prog");
+  SCREEN_PROGRAM = asset_load_get("$SHADERS/deferred_screen.prog");
   
   NORMAL = glGetAttribLocation(*PROGRAM, "normal");
   TANGENT = glGetAttribLocation(*PROGRAM, "tangent");

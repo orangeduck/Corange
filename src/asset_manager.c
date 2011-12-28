@@ -14,9 +14,9 @@ typedef struct {
 
 } asset_handler;
 
-#define MAX_HANDLERS 512
-asset_handler asset_handlers[MAX_HANDLERS];
-int num_handlers = 0;
+#define MAX_ASSET_HANDLERS 512
+static asset_handler asset_handlers[MAX_ASSET_HANDLERS];
+static int num_asset_handlers = 0;
 
 typedef struct {
   char* variable;
@@ -24,8 +24,8 @@ typedef struct {
 } path_variable;
 
 #define MAX_PATH_VARIABLES 512
-path_variable path_variables[MAX_PATH_VARIABLES];
-int num_path_variables = 0;
+static path_variable path_variables[MAX_PATH_VARIABLES];
+static int num_path_variables = 0;
 
 /*
   This whole string situation here is a bit of a mess.
@@ -123,7 +123,7 @@ static void delete_bucket_list(bucket* b) {
   char* ext = asset_file_extension(b->string);
   
   int i;
-  for(i=0; i < num_handlers; i++) {
+  for(i=0; i < num_asset_handlers; i++) {
   
     asset_handler handler = asset_handlers[i];
     if (strcmp(ext, handler.extension) == 0) {
@@ -147,8 +147,8 @@ void asset_manager_finish() {
     delete_bucket_list(b);
   }
   
-  for(i=0; i < num_handlers; i++) {
-    free(asset_handlers[num_handlers].extension);
+  for(i=0; i < num_asset_handlers; i++) {
+    free(asset_handlers[num_asset_handlers].extension);
   }
   
   for(i = 0; i < num_path_variables; i++) {
@@ -160,8 +160,9 @@ void asset_manager_finish() {
 
 void asset_manager_handler_cast(char* extension, void* asset_loader(char* filename) , void asset_deleter(void* asset) ) {
   
-  if(num_handlers == MAX_HANDLERS) {
+  if(num_asset_handlers == MAX_ASSET_HANDLERS) {
     warning("Max number of asset handlers reached. Handler for extension %s not added.", extension);
+    return;
   }
   
   asset_handler h;
@@ -171,8 +172,8 @@ void asset_manager_handler_cast(char* extension, void* asset_loader(char* filena
   h.load_func = asset_loader;
   h.del_func = asset_deleter;
 
-  asset_handlers[num_handlers] = h;
-  num_handlers++;
+  asset_handlers[num_asset_handlers] = h;
+  num_asset_handlers++;
   
 }
 
@@ -186,7 +187,7 @@ void load_file(char* filename) {
   
   char* ext = asset_file_extension(filename_map);
   int i;
-  for(i=0; i < num_handlers; i++) {
+  for(i=0; i < num_asset_handlers; i++) {
     asset_handler handler = asset_handlers[i];
     if (strcmp(ext, handler.extension) == 0) {
       printf("Loading: %s\n", filename_map);
@@ -252,7 +253,7 @@ void unload_file(char* filename) {
   
   char* ext = asset_file_extension(filename_map);
   int i;
-  for(i=0; i < num_handlers; i++) {
+  for(i=0; i < num_asset_handlers; i++) {
   
     asset_handler handler = asset_handlers[i];
     if (strcmp(ext, handler.extension) == 0) {
@@ -303,6 +304,17 @@ void* asset_get(char* path) {
   void* val = dictionary_get(asset_dictionary, path_map);
   if (val == NULL) {
     error("Could not find asset %s. Perhaps it is not loaded yet?", path_map);
+  }
+  free(path_map);
+  return val;
+}
+
+void* asset_load_get(char* path) {
+  char* path_map = asset_map_filename(path);
+  void* val = dictionary_get(asset_dictionary, path_map);
+  if (val == NULL) {
+    load_file(path_map);
+    val = dictionary_get(asset_dictionary, path_map);
   }
   free(path_map);
   return val;

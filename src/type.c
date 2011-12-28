@@ -34,3 +34,7 @@ int type_find(const char* type) {
   
   return type_index-1;
 }
+
+const char* type_id_name(int id) {
+  return type_table[id];
+}

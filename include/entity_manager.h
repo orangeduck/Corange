@@ -2,31 +2,29 @@
 #define entity_manager_h
 
 #include "bool.h"
-#include "list.h"
+#include "type.h"
 
 typedef void entity;
 
 void entity_manager_init();
 void entity_manager_finish();
 
+#define entity_manager_handler(type, new, del) entity_manager_handler_cast(typeid(type), (void*(*)())new , (void(*)(void*))del)
+void entity_manager_handler_cast(int type_id, void* entity_new() , void entity_del(void* entity));
+
 bool entity_exists(char* name);
 
-entity* entity_new(char* name, int type);
-void entity_add(char* name, int type, entity* entity);
+#define entity_new(name, type) (type*)entity_new_type_id(name, typeid(type))
+entity* entity_new_type_id(char* name, int type_id);
+
+#define entity_add(name, type, entity) entity_add_type_id(name, typeid(type), entity);
+void entity_add_type_id(char* name, int type_id, entity* entity);
 
 entity* entity_get(char* name);
+
+#define entity_get_as(name, type) (type*)entity_get_as_type_id(name, typeid(type));
+entity* entity_get_as_type_id(char* name, int type_id);
+
 void entity_delete(char* name);
-
-list* entities_get_all();
-list* entities_get_cameras();
-list* entities_get_lights();
-list* entities_get_statics();
-list* entities_get_type(int type);
-
-const static int entity_type_none = 0;
-const static int entity_type_camera = 1;
-const static int entity_type_light = 2;
-const static int entity_type_static = 3;
-const static int entity_type_animated = 4;
 
 #endif

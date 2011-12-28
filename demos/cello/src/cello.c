@@ -2,10 +2,6 @@
 
 #include "cello.h"
 
-static ui_text* txt_framerate;
-static ui_text* txt_renderer;
-static ui_text* txt_info;
-
 static int mouse_x;
 static int mouse_y;
 static int mouse_down;
@@ -19,7 +15,7 @@ void cello_init() {
   printf("Cello game init!\n");
   
   /* Get reference to the Cello */
-  
+
   load_folder("./resources/cello/");
   load_folder("./resources/piano/");
   load_folder("./resources/floor/");
@@ -29,19 +25,19 @@ void cello_init() {
   
   renderable* r_cello = asset_get("./resources/cello/cello.obj");
   renderable_set_material(r_cello, asset_get("./resources/cello/cello.mat"));
-  entity_add("cello", entity_type_static, static_object_new(r_cello));
+  entity_add("cello", static_object, static_object_new(r_cello));
   
   renderable* r_piano = asset_get("./resources/piano/piano.obj");
   renderable_set_material(r_piano, asset_get("./resources/piano/piano.mat"));
-  entity_add("piano", entity_type_static, static_object_new(r_piano));
+  entity_add("piano", static_object, static_object_new(r_piano));
   
   renderable* r_floor = asset_get("./resources/floor/floor.obj");
   renderable_set_material(r_floor, asset_get("./resources/floor/floor.mat"));
-  entity_add("floor", entity_type_static, static_object_new(r_floor));
+  entity_add("floor", static_object, static_object_new(r_floor));
   
   renderable* r_skybox = asset_get("./resources/skybox/skybox.obj");
   renderable_set_material(r_skybox, asset_get("./resources/skybox/skybox.mat"));
-  entity_add("skybox", entity_type_static, static_object_new(r_skybox));
+  entity_add("skybox", static_object, static_object_new(r_skybox));
   
   renderable* r_imrod = asset_get("./resources/imrod/imrod.smd");
   material* mat_imrod = asset_get("./resources/imrod/imrod_animated.mat");  
@@ -63,41 +59,41 @@ void cello_init() {
   animated_object* imrod = animated_object_new(r_imrod, skel_imrod);
   imrod->animation = ani_stand;
   imrod->position = v3(0, -6.5, 0);
-  entity_add("imrod", entity_type_animated, imrod);
+  entity_add("imrod", animated_object, imrod);
   
   animated_object* pirate = animated_object_new(r_pirate, skel_pirate);
   pirate->animation = ani_cheer;
   pirate->position = v3(0, -5, 0);
-  entity_add("pirate", entity_type_animated, pirate);
+  entity_add("pirate", animated_object, pirate);
   
   animated_object* boots = animated_object_new(r_boots, skel_pirate);
   boots->animation = ani_cheer;
   boots->position = v3(0, -5, 0);
-  entity_add("boots", entity_type_animated, boots);
+  entity_add("boots", animated_object, boots);
   
   /* Put some text on the screen */
+
+  font* console_font = asset_load_get("$CORANGE/fonts/console_font.fnt");
   
-  font* console_font = asset_get("$CORANGE/fonts/console_font.fnt");
+  ui_text* framerate_text = ui_elem_new("framerate_text", ui_text);
+  framerate_text->position = v2(10, 10);
+  ui_text_update_string(framerate_text, "framerate");
   
-  txt_framerate = ui_text_new("framerate", console_font);
-  txt_framerate->position = v2(10, 10);
-  ui_text_update(txt_framerate);
+  ui_text* renderer_text = ui_elem_new("renderer_text", ui_text);
+  renderer_text->position = v2(10, 80);
+  ui_text_update_string(renderer_text, "Deferred Renderer");
   
-  txt_renderer = ui_text_new("Deferred Renderer", console_font);
-  txt_renderer->position = v2(10, 80);
-  ui_text_update(txt_renderer);
-  
-  txt_info = ui_text_new("Click and drag mouse to move\n'p' to switch object\n'r' to switch renderer", console_font);
-  txt_info->position = v2(10, 30);
-  ui_text_update(txt_info);
+  ui_text* info_text = ui_elem_new("info_text", ui_text);
+  info_text->position = v2(10, 30);
+  ui_text_update_string(info_text, "Click and drag mouse to move\n'p' to switch object\n'r' to switch renderer");
   
   /* New Camera and light */
   
-  camera* cam = entity_new("camera", entity_type_camera);
+  camera* cam = entity_new("camera", camera);
   cam->position = v3(20.0, 0.0, 0.0);
   cam->target = v3_zero();
   
-  light* sun = entity_new("sun", entity_type_light);
+  light* sun = entity_new("sun", light);
   sun->position = v3(30,43,-26);
   sun->ambient_color = v3(0.5, 0.5, 0.5);
   sun->diffuse_color = v3(0.75, 0.75, 0.75);
@@ -119,6 +115,8 @@ void cello_init() {
 }
 
 void cello_event(SDL_Event event) {
+  
+  ui_event(event);
   
   camera* cam = entity_get("camera");
   light* sun = entity_get("sun");
@@ -165,6 +163,8 @@ void cello_event(SDL_Event event) {
 
 void cello_update() {
   
+  ui_update();
+  
   camera* cam = entity_get("camera");
   light* sun = entity_get("sun");
 
@@ -189,7 +189,8 @@ void cello_update() {
   mouse_x = 0;
   mouse_y = 0;
   
-  ui_text_update_string(txt_framerate, frame_rate_string());
+  ui_text* framerate_text = ui_elem_get("framerate_text");
+  ui_text_update_string(framerate_text, frame_rate_string());
   
   animated_object* imrod = entity_get("imrod");
   animated_object* pirate = entity_get("pirate");
@@ -269,22 +270,14 @@ void cello_render() {
     
     forward_renderer_end();
   }
-
-  /* Render text */
-    
-  ui_text_render(txt_framerate);
-  ui_text_render(txt_info);
-  ui_text_render(txt_renderer);
+  
+  ui_render();
   
   SDL_GL_SwapBuffers(); 
   
 }
 
 void cello_finish() {
-
-  ui_text_delete(txt_framerate);
-  ui_text_delete(txt_info);
-  ui_text_delete(txt_renderer);
   
   if (use_deferred) {
     deferred_renderer_finish();
@@ -309,7 +302,8 @@ void swap_renderer() {
     forward_renderer_set_light(sun);
     forward_renderer_set_shadow_texture( shadow_mapper_depth_texture() );
     
-    ui_text_update_string(txt_renderer,"Forward Renderer");
+    ui_text* renderer_text = ui_elem_get("renderer_text");
+    ui_text_update_string(renderer_text,"Forward Renderer");
     
     use_deferred = 0;
     
@@ -321,7 +315,8 @@ void swap_renderer() {
     deferred_renderer_set_light(sun);
     deferred_renderer_set_shadow_texture( shadow_mapper_depth_texture() );
     
-    ui_text_update_string(txt_renderer,"Deferred Renderer");
+    ui_text* renderer_text = ui_elem_get("renderer_text");
+    ui_text_update_string(renderer_text,"Deferred Renderer");
     
     use_deferred = 1;
   }
