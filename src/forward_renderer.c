@@ -127,7 +127,7 @@ void forward_renderer_end() {
 }
 
 static void forward_renderer_use_material(material* mat) {
-
+  
   shader_program* prog = dictionary_get(mat->properties, "program");
   
   glUseProgram(*prog);

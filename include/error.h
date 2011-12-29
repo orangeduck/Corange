@@ -1,6 +1,8 @@
 #ifndef error_h
 #define error_h
 
+#include "SDL/SDL_stack.h"
+
 #include "bool.h"
 
 /* Errors */
@@ -13,7 +15,7 @@ void enable_errors();
 void error_bp();
 
 #ifndef NO_ERROR
-  #define error(MSG, ...) if(errors_enabled) { printf("[ERROR] (%s:%i) ", __FILE__, __LINE__); printf(MSG, ##__VA_ARGS__); printf("\n"); fflush(stdout); error_bp(); exit(EXIT_FAILURE); }
+  #define error(MSG, ...) if(errors_enabled) { printf("[ERROR] (%s:%i) ", __FILE__, __LINE__); printf(MSG, ##__VA_ARGS__); printf("\n"); fflush(stdout); error_bp(); SDL_PrintStackTrace(); exit(EXIT_FAILURE); }
 #else
   #define error(MSG, ...) {}
 #endif
@@ -61,7 +63,7 @@ void enabled_assert();
 void assert_bp();
 
 #ifndef NO_ASSERT
-  #define assert(COND, MSG, ...) if(assert_enabled && (!(COND))) { printf("[ASSERT] (%s:%i) ", __FILE__, __LINE__); printf(MSG, ##__VA_ARGS__); printf("\n"); fflush(stdout); assert_bp(); exit(EXIT_FAILURE); }
+  #define assert(COND, MSG, ...) if(assert_enabled && (!(COND))) { printf("[ASSERT] (%s:%i) ", __FILE__, __LINE__); printf(MSG, ##__VA_ARGS__); printf("\n"); fflush(stdout); assert_bp(); SDL_PrintStackTrace(); exit(EXIT_FAILURE); }
 #else
   #define assert(COND, MSG, ...) {}
 #endif
@@ -87,7 +89,7 @@ void exception_bp();
 
   #define try_catch(TRY, CATCH) if (exc_depth >= MAX_EXC_DEPTH) { error("Max Exception depth of %i exceeded", MAX_EXC_DEPTH); } exc_depth++; if (!setjump(exc_bufs[exc_depth-1])) { PERFORM; } else { CATCH; } exc_depth--;
   
-  #define throw(MSG, ...) if (exc_depth) { longjmp(exc_bufs[exc_depth-1],1); } else { printf("[EXCEPTION] (%s:%i) ", __FILE__, __LINE__); printf(MSG, ##__VA_ARGS__); printf("\n"); fflush(stdout); exception_bp(); exit(EXIT_FAILURE); }
+  #define throw(MSG, ...) if (exc_depth) { longjmp(exc_bufs[exc_depth-1],1); } else { printf("[EXCEPTION] (%s:%i) ", __FILE__, __LINE__); printf(MSG, ##__VA_ARGS__); printf("\n"); fflush(stdout); exception_bp(); SDL_PrintStackTrace();  exit(EXIT_FAILURE); }
 #else
   #define try_catch(TRY, CATCH) error("Exceptions Disabled with NO_EXCEPT macro!")
   #define throw(MSG, ...) error("Exceptions Disabled with NO_EXCEPT macro!")
