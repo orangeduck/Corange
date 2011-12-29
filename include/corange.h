@@ -20,9 +20,6 @@ void corange_stop_stdout_redirect();
 #include "error.h"
 #include "timing.h"
 
-#include "scripting.h"
-#include "viewport.h"
-
 /* Entities */
 
 #include "entity_manager.h"
@@ -54,6 +51,7 @@ void corange_stop_stdout_redirect();
 
 /* Rendering */
 
+#include "viewport.h"
 #include "forward_renderer.h"
 #include "deferred_renderer.h"
 #include "shadow_mapper.h"

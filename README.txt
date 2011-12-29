@@ -32,7 +32,6 @@
 	:: Other Things It does ::
 	
 		* Color correction, LUT generation, splines, photoshop curves
-		* LUA scripting
 		* Perlin noise
 		* OpenCL support
 		* Basic UI stuff

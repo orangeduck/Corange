@@ -5,8 +5,8 @@ INCS= -I ./include
 CFLAGS= $(INCS) -Wall -Werror -Wno-unused -g
 CFLAGS_LINUX= $(INCS) -Wall -Werror -Wno-unused -g -fPIC
 
-LFLAGS= -lmingw32 -lopengl32 -lSDLmain -lSDL -llua5.1 -shared
-LFLAGS_LINUX= -lGL -lSDLmain -lSDL -llua5.1
+LFLAGS= -L ./lib -lmingw32 -lopengl32 -lSDLmain -lSDL -shared
+LFLAGS_LINUX= -lGL -lSDLmain -lSDL
 
 C_FILES= $(wildcard src/*.c)
 

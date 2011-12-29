@@ -62,7 +62,6 @@ void corange_init(char* core_assets_path) {
   
   asset_manager_handler("fnt", font_load_file,font_delete);
   asset_manager_handler("mat", mat_load_file, material_delete);
-  asset_manager_handler("lua", lua_load_file, script_delete);
   
   /* Entity Manager */
   
@@ -80,17 +79,11 @@ void corange_init(char* core_assets_path) {
   ui_manager_handler(ui_rectangle, ui_rectangle_new, ui_rectangle_delete, ui_rectangle_event, ui_rectangle_update, ui_rectangle_render);
   ui_manager_handler(ui_text, ui_text_new, ui_text_delete, ui_text_event, ui_text_update, ui_text_render);
   
-  /* Scripting */
-  
-  scripting_init();
-  
   printf("Done!\n");
   
 }
 
 void corange_finish() {
-  
-  scripting_finish();
   
   ui_manager_finish();
   entity_manager_finish();
