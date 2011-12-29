@@ -2,21 +2,19 @@
 
 #include "corange.h"
 
-void corange_stop_stdout_redirect() {
-  #ifdef _WIN32
-  FILE* ctt = fopen("CON", "w" );
-  FILE* fout = freopen( "CON", "w", stdout );
-  FILE* ferr = freopen( "CON", "w", stderr );
-  #endif
-}
-
 void corange_init(char* core_assets_path) {
   
   /* Starting Corange */
   
   printf("Starting Corange...\n");
   
-  corange_stop_stdout_redirect();
+  /* Stop stdout redirect on windows */
+  
+  #ifdef _WIN32
+    FILE* ctt = fopen("CON", "w" );
+    FILE* fout = freopen( "CON", "w", stdout );
+    FILE* ferr = freopen( "CON", "w", stderr );
+  #endif
   
   /* Init OpenGL and Viewport */
   
@@ -46,7 +44,6 @@ void corange_init(char* core_assets_path) {
     asset_manager_add_path_variable("$SHADERS", shaders_path);
   }
   
-  printf("Shaders Path: %s\n", shaders_path);
   free(shaders_path);
   
   asset_manager_handler("obj", obj_load_file, renderable_delete);

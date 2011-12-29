@@ -72,8 +72,6 @@ void cello_init() {
   entity_add("boots", animated_object, boots);
   
   /* Put some text on the screen */
-
-  font* console_font = asset_load_get("$CORANGE/fonts/console_font.fnt");
   
   ui_text* framerate_text = ui_elem_new("framerate_text", ui_text);
   framerate_text->position = v2(10, 10);
@@ -100,8 +98,6 @@ void cello_init() {
   light_set_type(sun, light_type_spot);
   
   /* Renderer Setup */
-
-  viewport_set_vsync(1);
   
   shadow_mapper_init(sun);
   

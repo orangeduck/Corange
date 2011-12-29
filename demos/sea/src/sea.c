@@ -12,11 +12,11 @@ void sea_init() {
 
   viewport_set_vsync(1);
 
-  camera* cam = entity_new("camera", entity_type_camera);
-  cam->position = v3(20.0, 0.0, 0.0);
+  camera* cam = entity_new("camera", camera);
+  cam->position = v3(20.0, 20.0, 20.0);
   cam->target = v3_zero();
   
-  light* sun = entity_new("sun", entity_type_light);
+  light* sun = entity_new("sun", light);
   sun->position = v3(30,43,-26);
   sun->ambient_color = v3(0.5, 0.5, 0.5);
   sun->diffuse_color = v3(0.75, 0.75, 0.75);
@@ -58,7 +58,7 @@ void sea_init() {
   renderable* r_seaplane = asset_get("./resources/seaplane.obj");
   renderable_set_material(r_seaplane, seaplane_mat);
   
-  entity_add("seaplane", entity_type_static, static_object_new(r_seaplane));
+  entity_add("seaplane", static_object, static_object_new(r_seaplane));
   
 }
 
@@ -181,5 +181,7 @@ int main(int argc, char **argv) {
   sea_finish();
   
   corange_finish();
+  
+  return 0;
   
 }

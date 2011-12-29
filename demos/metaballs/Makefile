@@ -1,13 +1,12 @@
 CC=gcc
 
 INCS= -I ./include -I ../../include
-LIBS= -L ./lib -L ../../lib -L ../../
 
 CFLAGS= $(INCS) -Wall -Werror -Wno-unused -g
-CFLAGS_LINUX= $(INCS) -Wall -Werror -Wno-unused -g -fPIC
+CFLAGS_LINUX= $(INCS) -Wall -Werror -Wno-unused -g
 
-LFLAGS= $(LIBS) -lcorange -lmingw32 -lSDLmain -lSDL -lopengl32 -llua5.1
-LFLAGS_LINUX= -L ../../ -lcorange -lGL -lSDLmain -lSDL -llua5.1 -lOpenCL
+LFLAGS= -L./ -lcorange -lmingw32 -lSDLmain -lSDL -lopengl32 -llua5.1
+LFLAGS_LINUX= -L./ -lcorange -lGL -lSDLmain -lSDL -llua5.1 -lOpenCL
 
 C_FILES= $(wildcard src/*.c)
 OBJ_FILES= $(addprefix obj/,$(notdir $(C_FILES:.c=.o)))
@@ -19,11 +18,10 @@ metaballs.exe: $(OBJ_FILES)
 	$(CC) -g $(OBJ_FILES) $(LFLAGS) -o $@
 
 obj/%.o: src/%.c
-	$(CC) $< -c -g $(CFLAGS) -o $@ 
-
+	$(CC) $< -c $(CFLAGS) -o $@
+	
 clean:
-	rm $(OBJ_FILES)
-
+	rm $(OBJ_FILES)	
 
 # Linux
 
@@ -35,3 +33,5 @@ obj/%.ol: src/%.c
 
 cleanlinux:
 	rm $(OBJ_FILES_LINUX)
+	
+

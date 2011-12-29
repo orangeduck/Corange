@@ -14,12 +14,6 @@ GLuint billboard_positions;
 GLuint billboard_uvs;
 const int max_particles = 1024;
 
-static ui_text* ui_framerate;
-static ui_rectangle* ui_box;
-
-//vector3 pos1;
-//vector3 pos2;
-
 void metaballs_init() {
   
   kernels_init_with_opengl();
@@ -39,16 +33,14 @@ void metaballs_init() {
   renderable* r_floor = asset_get("./resources/floor/floor.obj");
   renderable_set_material(r_floor, floor_mat);
   
-  entity_add("floor", entity_type_static, static_object_new(r_floor));
+  entity_add("floor", static_object, static_object_new(r_floor));
   
-  viewport_set_vsync(1);
-  
-  camera* cam = entity_new("camera", entity_type_camera);
+  camera* cam = entity_new("camera", camera);
   cam->position = v3(20.0, 20.0, 0.0);
   //cam->target = v3(0.0, 5.0, 0.0);
   cam->target = v3(0.0, 0.0, 0.0);
   
-  light* sun = entity_new("sun", entity_type_light);
+  light* sun = entity_new("sun", light);
   sun->position = v3(30,20,-26);
   sun->ambient_color = v3(0.5, 0.5, 0.5);
   sun->diffuse_color = v3(0.75, 0.75, 0.75);
@@ -95,13 +87,15 @@ void metaballs_init() {
   
   font* console_font = asset_get("$CORANGE/fonts/console_font.fnt");
   
-  ui_framerate = ui_text_new("", console_font);
+  ui_text* ui_framerate = ui_elem_new("ui_framerate", ui_text);
   ui_framerate->position = v2( 20, 20 );
   ui_framerate->scale = v2(1,1);
   ui_framerate->color = v4(1,1,1,1);
-  ui_text_update(ui_framerate);
+  ui_text_update_string(ui_framerate, "framerate");
   
-  ui_box = ui_rectangle_new(v2(15, 15), v2(40, 40));
+  ui_rectangle* ui_box = ui_elem_new("ui_box", ui_rectangle);
+  ui_box->top_left = v2(15, 15);
+  ui_box->bottom_right = v2(40, 40);
   ui_box->color = v4_black();
   ui_box->border_size = 2;
   ui_box->border_color = v4_white();
@@ -144,6 +138,7 @@ void metaballs_update() {
 
   particles_update(frame_time() / 10);
   
+  ui_text* ui_framerate = ui_elem_get("ui_framerate");
   ui_text_update_string(ui_framerate, frame_rate_string());
   
   marching_cubes_clear();
@@ -252,8 +247,7 @@ void metaballs_render() {
   volume_renderer_end();
   */
   
-  ui_rectangle_render(ui_box);
-  ui_text_render(ui_framerate);
+  ui_render();
   
   SDL_GL_SwapBuffers();
   
@@ -285,9 +279,6 @@ void metaballs_event(SDL_Event event) {
   
   case SDL_MOUSEBUTTONUP:
     
-    ui_text_on_click_up(ui_framerate, v2(event.button.x, event.button.y));
-    ui_rectangle_on_click_up(ui_box, v2(event.button.x, event.button.y));
-    
   break;
   
   case SDL_MOUSEBUTTONDOWN:
@@ -298,9 +289,6 @@ void metaballs_event(SDL_Event event) {
     if (event.button.button == SDL_BUTTON_WHEELDOWN) {
       cam->position = v3_add(cam->position, v3_normalize(cam->position));
     }
-    
-    ui_text_on_click_down(ui_framerate, v2(event.button.x, event.button.y));
-    ui_rectangle_on_click_down(ui_box, v2(event.button.x, event.button.y));
     
   break;
   
@@ -313,9 +301,6 @@ void metaballs_event(SDL_Event event) {
 }
 
 void metaballs_finish() {
-
-  ui_rectangle_delete(ui_box);
-  ui_text_delete(ui_framerate);
   
   forward_renderer_finish();
   

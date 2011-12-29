@@ -1,13 +1,12 @@
 CC=gcc
 
 INCS= -I ./include -I ../../include
-LIBS= -L ./lib -L ../../lib -L ../../
 
 CFLAGS= $(INCS) -Wall -Werror -Wno-unused -g
 CFLAGS_LINUX= $(INCS) -Wall -Werror -Wno-unused -g -fPIC
 
-LFLAGS= $(LIBS) -lcorange -lmingw32 -lSDLmain -lSDL -lopengl32 -llua5.1
-LFLAGS_LINUX= -L ../../ -lcorange -lGL -lSDLmain -lSDL -llua5.1
+LFLAGS= -L ./ -lcorange -lmingw32 -lSDLmain -lSDL -lopengl32 -llua5.1
+LFLAGS_LINUX= -L ./ -lcorange -lGL -lSDLmain -lSDL -llua5.1
 
 C_FILES= $(wildcard src/*.c)
 OBJ_FILES= $(addprefix obj/,$(notdir $(C_FILES:.c=.o)))

@@ -6,7 +6,11 @@
 
 int main(int argc, char **argv) {
   
-  corange_stop_stdout_redirect();
+  #ifdef _WIN32
+    FILE* ctt = fopen("CON", "w" );
+    FILE* fout = freopen( "CON", "w", stdout );
+    FILE* ferr = freopen( "CON", "w", stderr );
+  #endif
   
   int x = 512;
   int y = 512;
@@ -39,4 +43,5 @@ int main(int argc, char **argv) {
 
   printf("Saved to %s\n", filename);
   
+  return 0;
 }

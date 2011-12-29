@@ -98,7 +98,6 @@ char* asset_map_filename(char* filename) {
 
 void asset_manager_init(char* game_name) {
 
-  printf("Creating new asset manager\n");
   asset_dictionary = dictionary_new(1024);
 
 }

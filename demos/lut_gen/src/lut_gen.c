@@ -4,7 +4,11 @@
 
 int main(int argc, char **argv) {
   
-  corange_stop_stdout_redirect();
+  #ifdef _WIN32
+    FILE* ctt = fopen("CON", "w" );
+    FILE* fout = freopen( "CON", "w", stdout );
+    FILE* ferr = freopen( "CON", "w", stderr );
+  #endif
   
   asset_manager_init();
   asset_manager_handler("acv", acv_load_file, color_curves_delete);
@@ -18,4 +22,6 @@ int main(int argc, char **argv) {
   printf("Done!\n\n");
   
   asset_manager_finish();
+  
+  return 0;
 }

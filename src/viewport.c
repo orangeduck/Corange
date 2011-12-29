@@ -2,6 +2,7 @@
   #include "SDL/SDL_syswm.h"
 #endif
 
+#include "bool.h"
 #include "error.h"
 #include "image.h"
 #include "timing.h"
@@ -27,7 +28,7 @@ void viewport_init() {
   window_height = DEFAULT_HEIGHT;
   window_flags = SDL_HWSURFACE | SDL_GL_DOUBLEBUFFER | SDL_OPENGL;
   window_multisamples = 0;
-  window_vsync = 0;
+  window_vsync = 1;
   
   viewport_set_title("corange", "corange");
   

@@ -1,10 +1,8 @@
 Convert skeleton stuff to quaternions - Not sure about this, if I trust my quaternion code.
-Precalculate and store absolute transforms (and inverse)
 PLY loader
 Skydome
 Time of day lighting
 Fur Shader
 Terrain stuff
-Entity manager takes custom types
-UI slider bar - UI manager with custom types
+UI slider bar, Other UI elements
 LUA wrappers for asset, entity, ui managers

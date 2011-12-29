@@ -21,8 +21,11 @@ void bone_delete(bone* b);
 matrix_4x4 bone_transform(bone* b);
 
 typedef struct {
+
   int num_bones;
   bone** bones;
+  matrix_4x4* transforms;
+  matrix_4x4* inv_transforms;
   
 } skeleton;
 
@@ -32,6 +35,9 @@ void skeleton_delete(skeleton* s);
 
 bone* skeleton_bone_id(skeleton* s, int id);
 void skeleton_add_bone(skeleton* s, char* name, int id, int parent_id);
+
+void skeleton_gen_transforms(skeleton* s);
+void skeleton_gen_inv_transforms(skeleton* s);
 
 void skeleton_print(skeleton* s);
 

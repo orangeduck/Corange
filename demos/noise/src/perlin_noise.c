@@ -1,5 +1,6 @@
 #include <math.h>
 #include <limits.h>
+#include <time.h>
 
 #include "perlin_noise.h"
 
@@ -100,7 +101,7 @@ image* perlin_noise_generate(int x_size, int y_size, int octaves) {
     image_data[x * 4 + y * x_size * 4 + 0] = amount;
     image_data[x * 4 + y * x_size * 4 + 1] = amount;
     image_data[x * 4 + y * x_size * 4 + 2] = amount;
-    image_data[x * 4 + y * x_size * 4 + 3] = amount;
+    image_data[x * 4 + y * x_size * 4 + 3] = 255;
   }
   
   free(data);

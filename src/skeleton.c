@@ -13,6 +13,10 @@ skeleton* skeleton_new() {
   skeleton* s =  malloc(sizeof(skeleton));
   s->num_bones = 0;
   s->bones = malloc(sizeof(bone*) * s->num_bones);
+  
+  s->transforms = malloc(sizeof(matrix_4x4) * s->num_bones);
+  s->inv_transforms = malloc(sizeof(matrix_4x4) * s->num_bones);
+  
   return s;
 }
 
@@ -36,6 +40,14 @@ skeleton* skeleton_copy(skeleton* old) {
     }
   }
   
+  new->transforms = malloc(sizeof(matrix_4x4) * new->num_bones);
+  new->inv_transforms = malloc(sizeof(matrix_4x4) * new->num_bones);
+  
+  for(i = 0; i < new->num_bones; i++) {
+    new->transforms[i] = old->transforms[i];
+    new->inv_transforms[i] = old->inv_transforms[i];
+  }
+  
   return new;
 }
 
@@ -46,6 +58,8 @@ void skeleton_delete(skeleton* s) {
     bone_delete(s->bones[i]);
   }
   free(s->bones);
+  free(s->transforms);
+  free(s->inv_transforms);
   free(s);
 }
 
@@ -57,6 +71,12 @@ void skeleton_add_bone(skeleton* s, char* name, int id, int parent_id) {
   s->num_bones++;
   s->bones = realloc(s->bones, sizeof(bone*) * s->num_bones);
   s->bones[s->num_bones-1] = b;
+  
+  s->transforms = realloc(s->transforms, sizeof(matrix_4x4) * s->num_bones);
+  s->transforms[s->num_bones-1] = m44_id();
+  
+  s->inv_transforms = realloc(s->inv_transforms, sizeof(matrix_4x4) * s->num_bones);
+  s->inv_transforms[s->num_bones-1] = m44_id();
   
 }
 
@@ -131,6 +151,22 @@ matrix_4x4 bone_transform(bone* b) {
     ret = m44_mul_m44(ret, rot);
     
     return ret;
+  }
+}
+
+/* TODO: These functions could be optimised to use previously calculated transforms */
+void skeleton_gen_transforms(skeleton* s) {
+  int i;
+  for(i = 0; i < s->num_bones; i++) {
+    s->transforms[i] = bone_transform(s->bones[i]);
+  }
+}
+
+void skeleton_gen_inv_transforms(skeleton* s) {
+  int i;
+  for(i = 0; i < s->num_bones; i++) {
+    s->transforms[i] = bone_transform(s->bones[i]);
+    s->inv_transforms[i] = m44_inverse(s->transforms[i]);
   }
 }
 
@@ -212,6 +248,8 @@ skeleton* skl_load_file(char* filename) {
   }
   
   SDL_RWclose(file);
+  
+  skeleton_gen_inv_transforms(s);
   
   return s;
 }

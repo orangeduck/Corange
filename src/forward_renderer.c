@@ -357,13 +357,15 @@ void forward_renderer_render_animated(animated_object* ao) {
   matrix_4x4 r_world_matrix = m44_world( ao->position, ao->scale, ao->rotation );
   m44_to_array(r_world_matrix, world_matrix);
   
+  skeleton_gen_transforms(ao->pose);
+  
   int i;
   for(i = 0; i < ao->skeleton->num_bones; i++) {
     matrix_4x4 base, ani;
-    base = bone_transform(ao->skeleton->bones[i]);
-    ani = bone_transform(ao->pose->bones[i]);
+    base = ao->skeleton->inv_transforms[i];
+    ani = ao->pose->transforms[i];
     
-    bone_matrices[i] = m44_mul_m44(ani, m44_inverse(base));
+    bone_matrices[i] = m44_mul_m44(ani, base);
     m44_to_array(bone_matrices[i], bone_matrix_data + (i * 4 * 4));
   }
   
@@ -442,14 +444,16 @@ void forward_renderer_render_animated(animated_object* ao) {
 
 void forward_renderer_render_skeleton(skeleton* s) {
   
+  skeleton_gen_transforms(s);
+  
   int i;
   for(i = 0; i < s->num_bones; i++) {
     bone* main_bone = s->bones[i];
-    vector4 pos = m44_mul_v4(bone_transform(main_bone), v4(0,0,0,1));
-    forward_renderer_render_axis(bone_transform(main_bone));
+    vector4 pos = m44_mul_v4(s->transforms[i], v4(0,0,0,1));
+    forward_renderer_render_axis(s->transforms[i]);
     
     if (main_bone->parent != NULL) {
-      vector4 par_pos = m44_mul_v4(bone_transform(main_bone->parent), v4(0,0,0,1));
+      vector4 par_pos = m44_mul_v4(s->transforms[main_bone->parent->id], v4(0,0,0,1));
       glDisable(GL_DEPTH_TEST);
       glDisable(GL_LIGHTING);
       glColor3f(0.0,0.0,0.0);

@@ -255,7 +255,7 @@ void spline_render(spline* s, vector2 position, vector2 size, int increments) {
 
 color_curves* acv_load_file(char* filename) {
 
-  unsigned char* contents = asset_file_contents(filename);
+  char* contents = asset_file_contents(filename);
   
   int version = contents[0] | contents[1];
   int count = contents[2] | contents[3];

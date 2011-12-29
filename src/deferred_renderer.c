@@ -510,13 +510,15 @@ void deferred_renderer_render_animated(animated_object* ao) {
   matrix_4x4 r_world_matrix = m44_world( ao->position, ao->scale, ao->rotation );
   m44_to_array(r_world_matrix, WORLD_MATRIX);
   
+  skeleton_gen_transforms(ao->pose);
+  
   int i;
   for(i = 0; i < ao->skeleton->num_bones; i++) {
     matrix_4x4 base, ani;
-    base = bone_transform(ao->skeleton->bones[i]);
-    ani = bone_transform(ao->pose->bones[i]);
+    base = ao->skeleton->inv_transforms[i];
+    ani = ao->pose->transforms[i];
     
-    bone_matrices[i] = m44_mul_m44(ani, m44_inverse(base));
+    bone_matrices[i] = m44_mul_m44(ani, base);
     m44_to_array(bone_matrices[i], bone_matrix_data + (i * 4 * 4));
   }
   
