@@ -6,8 +6,6 @@
 void corange_init(char* core_assets_path);
 void corange_finish();
 
-void corange_stop_stdout_redirect();
-
 /* Include SDL, OpenGL */
 
 #include "SDL/SDL.h"
@@ -41,6 +39,7 @@ void corange_stop_stdout_redirect();
 #include "shader.h"
 #include "texture.h"
 #include "image.h"
+#include "sound.h"
 
 /* UI */
 
@@ -55,6 +54,10 @@ void corange_stop_stdout_redirect();
 #include "forward_renderer.h"
 #include "deferred_renderer.h"
 #include "shadow_mapper.h"
+
+/* Audio */
+
+#include "audio_mixer.h"
 
 /* Data Structures */
 

@@ -18,11 +18,13 @@ void corange_init(char* core_assets_path) {
   
   /* Init OpenGL and Viewport */
   
-  if (SDL_Init(SDL_INIT_VIDEO) != 0) {
+  if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0) {
     error("Unable to initialize SDL: %s\n", SDL_GetError());
   }
   
   viewport_init();
+  
+  audio_mixer_init();
   
   SDL_LoadOpenGLExtensions();
   SDL_PrintOpenGLInfo();
@@ -63,6 +65,8 @@ void corange_init(char* core_assets_path) {
   asset_manager_handler("fnt", font_load_file,font_delete);
   asset_manager_handler("mat", mat_load_file, material_delete);
   
+  asset_manager_handler("wav", wav_load_file, sound_delete);
+  
   /* Entity Manager */
   
   entity_manager_init();
@@ -88,6 +92,8 @@ void corange_finish() {
   ui_manager_finish();
   entity_manager_finish();
   asset_manager_finish();
+  
+  audio_mixer_finish();
   
   viewport_finish();
   
