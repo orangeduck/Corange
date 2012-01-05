@@ -1,7 +1,8 @@
+#include <math.h>
+
 #include "error.h"
 #include "bool.h"
 #include "vector.h"
-#include <math.h>
 
 #include "sound.h"
 
@@ -33,30 +34,25 @@ static void audio_mixer_mix(void* unused, char* stream, int stream_size) {
   uint16_stereo_t* samples = (uint16_stereo_t*)stream;
   int samples_num = stream_size / sizeof(uint16_stereo_t);
   
-  int i;
-  for(i = 0; i < MAX_CHANNELS; i++) {
-    
-    if (!channels[i].active) {
-      continue;
-    }
-    
-    uint16_mono_t* snd_samples = (uint16_mono_t*)channels[i].sound->data;
-    int snd_len = channels[i].sound->length / sizeof(uint16_mono_t);
-    
-    int j;
-    for(j = 0; j < samples_num; j++) {
+  int i, j;
+  for(i = 0; i < samples_num; i++) {
+    for(j = 0; j < MAX_CHANNELS; j++) {
       
-      if(channels[i].position >= snd_len) {
-        channels[i].active = false;
+      if (!channels[j].active) continue;
+      
+      uint16_mono_t* snd_samples = (uint16_mono_t*)channels[j].sound->data;
+      int snd_len = channels[j].sound->length / sizeof(uint16_mono_t);
+      
+      if(channels[j].position >= snd_len) {
+        channels[j].active = false;
         break;
       }
       
-      samples[j].left += snd_samples[channels[i].position];
-      samples[j].right += snd_samples[channels[i].position];
+      samples[i].left += snd_samples[channels[j].position];
+      samples[i].right += snd_samples[channels[j].position];
       
-      channels[i].position++;
+      channels[j].position++;
     }
-  
   }
   
 }
@@ -102,10 +98,13 @@ void audio_mixer_finish() {
 
 void audio_mixer_play_sound(sound* s) {
   
+  bool slot_free = false;
+  
   int i;
   for(i = 0; i < MAX_CHANNELS; i++) {
-    
     if (!channels[i].active) {
+      
+      slot_free = true;
       
       channels[i].sound = s;
       channels[i].position = 0;
@@ -117,5 +116,22 @@ void audio_mixer_play_sound(sound* s) {
       break;
     }
   }
+  
+  if (!slot_free) {
+    warning("Did not play sound. Reached maximum number of %i active sounds.", MAX_CHANNELS);
+  }
+  
+}
+
+int audio_mixer_active_sounds() {
+  
+  int count = 0;
+  
+  int i;
+  for(i = 0; i < MAX_CHANNELS; i++) {
+    if(channels[i].active) { count++; }
+  }
+  
+  return count;
   
 }

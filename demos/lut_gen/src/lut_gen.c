@@ -15,11 +15,11 @@ int main(int argc, char **argv) {
   
   load_folder("./input/");
   
-  printf("Generating LUTS...\n");
+  debug("Generating LUTS...");
   color_curves_write_lut(asset_get("./input/test.acv"), "./output/funky.lut");
   color_curves_write_lut(asset_get("./input/test2.acv"), "./output/identity.lut");
   color_curves_write_lut(asset_get("./input/bluey.acv"), "./output/bluey.lut");
-  printf("Done!\n\n");
+  debug("Done!");
   
   asset_manager_finish();
   

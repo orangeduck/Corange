@@ -40,7 +40,7 @@ void ui_manager_finish() {
   for (i = 0; i < ui_elem_names->num_items; i++) {
     char* name = list_get(ui_elem_names, i);
     int* type_id = dictionary_get(ui_elem_types, name);
-    printf("Deleting UI Element %s (%s)\n", name, type_id_name(*type_id));
+    debug("Deleting UI Element %s (%s)", name, type_id_name(*type_id));
     ui_elem_delete(name);
   }
   
@@ -119,6 +119,8 @@ ui_elem* ui_elem_new_type_id(char* name, int type_id) {
   if ( dictionary_contains(ui_elems, name) ) {
     error("UI Manager already contains element called %s!", name);
   }
+  
+  debug("Creating UI Element %s (%s)", name, type_id_name(type_id));
   
   ui_elem* ui_e = NULL;
   

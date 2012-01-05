@@ -89,20 +89,20 @@ int SDL_RWreadline(SDL_RWops* file, char* buffer, int buffersize) {
 }
 
 void SDL_PrintOpenGLInfo() {
-  printf("-- OpenGL info --\n");
+  debug("OpenGL Info");
   const char* vendor = (const char*)glGetString(GL_VENDOR);
-  printf("Vendor: %s\n", vendor);
+  debug("Vendor: %s", vendor);
   const char* renderer = (const char*)glGetString(GL_RENDERER);
-  printf("Renderer: %s\n", renderer);
+  debug("Renderer: %s", renderer);
   const char* version = (const char*)glGetString(GL_VERSION);
-  printf("Version: %s\n", version);
+  debug("Version: %s", version);
   const char* shader_version = (const char*)glGetString(GL_SHADING_LANGUAGE_VERSION);
-  printf("Shader Version: %s\n", shader_version);
+  debug("Shader Version: %s", shader_version);
 }
 
 void SDL_PrintOpenGLExtensions() {
   const char* extensions = (const char*)glGetString(GL_EXTENSIONS);
-  printf("OpenGL Extensions: %s\n", extensions);
+  debug("OpenGL Extensions: %s\n", extensions);
 }
 
 int SDL_OpenGLSupportsShaderLinkage() {
@@ -138,7 +138,7 @@ void SDL_CheckOpenGLError(const char* name) {
 
 void SDL_LoadOpenGLExtensions() {
 
-  printf("Loading openGL extensions...\n");
+  debug("Loading OpenGL Extensions...");
 
   /* Shaders */
   
@@ -201,8 +201,6 @@ void SDL_LoadOpenGLExtensions() {
 	glDeleteFramebuffers       = (GLDELETEFRAMEBUFFERSFN)SDL_GL_GetProcAddress( "glDeleteFramebuffers" ); SDL_CheckOpenGLExtension("glDeleteFramebuffers", glDeleteFramebuffers);
 	glCheckFramebufferStatus   = (GLCHECKFRAMEBUFFERSTATUSFN)SDL_GL_GetProcAddress( "glCheckFramebufferStatus" ); SDL_CheckOpenGLExtension("glCheckFramebufferStatus", glCheckFramebufferStatus);
   glFramebufferRenderbuffer  = (GLFRAMEBUFFERRENDERBUFFERFN)SDL_GL_GetProcAddress( "glFramebufferRenderbuffer" ); SDL_CheckOpenGLExtension("glFramebufferRenderbuffer", glFramebufferRenderbuffer);
-  
-  printf("Done...\n");
   
 }
 

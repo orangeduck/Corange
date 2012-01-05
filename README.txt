@@ -8,7 +8,7 @@
 	
 	:: Running ::
 	
-		Corange is a library, but to take a quick look at some of the things it can do run any of the exe files in the demos folder.
+		Corange is a library, but to take a quick look at some of the things it can do run any of the demos.
 	
 	:: Compiling ::
 	
@@ -16,25 +16,25 @@
 		
 		$ make
 
-		To compile on Linux you need to install SDL1.2 and lua5.1. Then you should run "make linux"
+		To compile on Linux you need to install SDL1.2. Then you should run "make linux"
 
 		$ sudo apt-get install libsdl1.2-dev
-		$ sudo apt-get install liblua5.1-dev
 		$ make linux
 		
 	
-	:: Main Features ::
+	:: Features ::
 		
 		* Small, simple and powerful
-		* Clean and easy Asset and Entity management
+		* Clean and easy Asset, UI, Entity management
+		* Cross platform
 		* Forward and Deferred renderers
 	
 	:: Other Things It does ::
-	
+		
+		* Basic Audio Mixer
 		* Color correction, LUT generation, splines, photoshop curves
 		* Perlin noise
 		* OpenCL support
-		* Basic UI stuff
 		* Loaders for OBJ, SMD, DDS, TGA, BMP and others
 		* Skeletal Animation
 		

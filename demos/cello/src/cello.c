@@ -12,8 +12,6 @@ static int use_deferred = 1;
 
 void cello_init() {
   
-  printf("Cello game init!\n");
-  
   /* Get reference to the Cello */
 
   load_folder("./resources/cello/");

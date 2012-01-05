@@ -2,8 +2,8 @@ CC=gcc
 
 INCS= -I ./include -I ../../include
 
-CFLAGS= $(INCS) -Wall -Werror -Wno-unused -g
-CFLAGS_LINUX= $(INCS) -Wall -Werror -Wno-unused -g
+CFLAGS= $(INCS) -Wall -Werror -Wno-unused -O3 -g
+CFLAGS_LINUX= $(INCS) -Wall -Werror -Wno-unused -O3 -g
 
 LFLAGS= -L./ -L../../lib -lcorange -lmingw32 -lSDLmain -lSDL -lopengl32
 LFLAGS_LINUX= -L./lib -lcorange -lGL -lSDLmain -lSDL

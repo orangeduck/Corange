@@ -34,14 +34,14 @@ int main(int argc, char **argv) {
     strcpy(filename, "./noise.tga");
   }
   
-  printf("Generating noise texture, resolution %i by %i, with %i octaves\n", x, y, octaves);
+  debug("Generating noise texture, resolution %i by %i, with %i octaves", x, y, octaves);
   
   image* perlin_noise = perlin_noise_generate(x, y, octaves);
   tga_save_file(perlin_noise, filename);
   
   image_delete(perlin_noise);
 
-  printf("Saved to %s\n", filename);
+  debug("Saved to %s\n", filename);
   
   return 0;
 }

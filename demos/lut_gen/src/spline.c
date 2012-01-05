@@ -18,7 +18,7 @@ void spline_delete(spline* s) {
 
 void spline_add_point(spline* s, vector2 p) {
   if (s->num_points == 20) {
-    printf("Warning: Spline already contains maximum 20 points");
+    warning("Spline already contains maximum 20 points");
     return;
   }
   
@@ -161,8 +161,7 @@ float spline_get_y(spline* s, float x) {
   
   float h = s->x[khi] - s->x[klo];
   if (h == 0.0) {
-    printf("Error: Can't interpolate spline. Bad slope.\n");
-    exit(EXIT_FAILURE);
+    error("Can't interpolate spline. Bad slope.");
   }
   
   float a = (s->x[khi] - x)/h;
@@ -189,8 +188,7 @@ float spline_get_x(spline* s, float y) {
   
   float h = s->y[khi] - s->y[klo];
   if (h == 0.0) {
-    printf("Error: Can't interpolate spline. Bad slope.\n");
-    exit(EXIT_FAILURE);
+    error("Can't interpolate spline. Bad slope.");
   }
   
   float a = (s->y[khi] - y)/h;
@@ -261,8 +259,7 @@ color_curves* acv_load_file(char* filename) {
   int count = contents[2] | contents[3];
   
   if (count != 5) {
-    printf("Error: acv file %s. Doesn't contain 5 curves.\n", filename);
-    exit(EXIT_FAILURE);
+    error("acv file %s. Doesn't contain 5 curves.", filename);
   }
   
   int i;

@@ -18,11 +18,19 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 ---------------------------------------------
 
-All example assets created by me and licensed under Creative Commons 3.0 unless otherwise stated:
+All demo assets are licensed under Creative Commons 3.0 (http://creativecommons.org/licenses/by/3.0/legalcode)
 
-http://creativecommons.org/licenses/by/3.0/legalcode
+Unless otherwise stated here:
 
 
 	-- Imrod Asset --
 	
-Unsure of license, found from here: http://www.parkparkin.com/gallery/imrod_dw.html - best to ask Dmitry Parkin before use
+Unsure of license, found from here: http://www.parkparkin.com/gallery/imrod_dw.html - best to ask Dmitry Parkin before use.
+
+
+	-- Platformer Assets --
+	
+(Mostly found from OpenGameArt.org)
+
+Sky background. GPL and CC-BY-SA?? Who has a clue what this is licenced under. I've slightly adapted it anyway so perhaps that reduced it from CC to whatever. - http://opengameart.org/content/sky-backdrop
+

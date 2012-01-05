@@ -38,7 +38,7 @@ void entity_manager_finish() {
   for (i = 0; i < entity_names->num_items; i++) {
     char* name = list_get(entity_names, i);
     int* type_id = dictionary_get(entity_types, name);
-    printf("Deleting Entity %s (%s)\n", name, type_id_name(*type_id));
+    debug("Deleting Entity %s (%s)", name, type_id_name(*type_id));
     entity_delete(name);
   }
   
@@ -76,6 +76,8 @@ entity* entity_new_type_id(char* name, int type_id) {
   if ( dictionary_contains(entities, name) ) {
     error("Entity Manager already contains entity called %s!", name);
   }
+  
+  debug("Creating Entity %s (%s)", name, type_id_name(type_id));
   
   entity* e = NULL;
   

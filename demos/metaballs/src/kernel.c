@@ -154,7 +154,7 @@ kernel_program* cl_load_file(char* filename) {
   
   clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG, (const size_t)log_size, build_log, NULL);
   build_log[log_size] = '\0';
-  printf("%s\n", build_log);
+  debug("%s", build_log);
   free(build_log);
   
   free(source);

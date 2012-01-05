@@ -3,6 +3,8 @@
 
 #include "SDL/SDL.h"
 
+#include "error.h"
+
 #include "timing.h"
 
 static unsigned int time_start = 0;
@@ -13,7 +15,7 @@ void timer_start() {
   
   time_start = SDL_GetTicks();
   time_split = SDL_GetTicks();
-  printf("Timer Started\n");
+  debug("Timer Started");
 
 }
 
@@ -22,7 +24,7 @@ void timer_split() {
   unsigned int time = SDL_GetTicks();
   float difference = (float)(time - time_split) / 1000.0;
 
-  printf("Timer Split: %f\n", difference);
+  debug("Timer Split: %f", difference);
   
   time_split = SDL_GetTicks();
   
@@ -33,7 +35,7 @@ void timer_stop() {
   unsigned int time = SDL_GetTicks();
   float difference = (float)(time - time_start) / 1000.0f;
 
-  printf("Timer End: %f\n", difference);
+  debug("Timer End: %f", difference);
   
   time_stop = SDL_GetTicks();
 

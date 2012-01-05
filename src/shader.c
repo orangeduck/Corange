@@ -87,7 +87,7 @@ void shader_program_print_log(shader_program* program) {
   int i;
   glGetProgramInfoLog(*program, 2048, &i, log);
   log[i] = '\0';
-  printf("%s", log);
+  debug("%s", log);
   free(log);
   
 }
@@ -98,7 +98,7 @@ void shader_print_log(shader* shader) {
   int i;
   glGetShaderInfoLog(*shader, 2048, &i, log);
   log[i] = '\0';
-  printf("%s", log);
+  debug("%s", log);
   free(log);
   
 }

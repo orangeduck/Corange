@@ -117,7 +117,7 @@ static void delete_bucket_list(bucket* b) {
   
   delete_bucket_list(b->next);
   
-  printf("Unloading %s...\n", b->string);
+  debug("Unloading: %s", b->string);
   
   char* ext = asset_file_extension(b->string);
   
@@ -189,7 +189,7 @@ void load_file(char* filename) {
   for(i=0; i < num_asset_handlers; i++) {
     asset_handler handler = asset_handlers[i];
     if (strcmp(ext, handler.extension) == 0) {
-      printf("Loading: %s\n", filename_map);
+      debug("Loading: %s", filename_map);
       void* asset = handler.load_func(filename_map);
       dictionary_set(asset_dictionary, filename_map, asset);
       break;
@@ -204,8 +204,8 @@ void load_file(char* filename) {
 void load_folder(char* folder) {
     
   char* folder_map = asset_map_filename(folder);
-    
-  printf("\n\t---- Loading Folder %s ----\n\n", folder_map);
+  
+  debug("Loading Folder: %s", folder_map);
   
   DIR* dir = opendir(folder_map);
   struct dirent* ent;
@@ -230,7 +230,6 @@ void load_folder(char* folder) {
     } 
   }
   closedir(dir);
-  printf("\n\n"); fflush(stdout);
   
   free(folder_map);
   
@@ -256,7 +255,7 @@ void unload_file(char* filename) {
   
     asset_handler handler = asset_handlers[i];
     if (strcmp(ext, handler.extension) == 0) {
-      printf("Unloading: %s\n", filename_map);
+      debug("Unloading: %s", filename_map);
       dictionary_remove_with(asset_dictionary, filename_map, handler.del_func);
       break;
     }
@@ -301,9 +300,11 @@ void unload_folder(char* folder) {
 void* asset_get(char* path) {
   char* path_map = asset_map_filename(path);
   void* val = dictionary_get(asset_dictionary, path_map);
+  
   if (val == NULL) {
     error("Could not find asset %s. Perhaps it is not loaded yet?", path_map);
   }
+  
   free(path_map);
   return val;
 }

@@ -4,10 +4,6 @@
 
 void corange_init(char* core_assets_path) {
   
-  /* Starting Corange */
-  
-  printf("Starting Corange...\n");
-  
   /* Stop stdout redirect on windows */
   
   #ifdef _WIN32
@@ -16,20 +12,29 @@ void corange_init(char* core_assets_path) {
     FILE* ferr = freopen( "CON", "w", stderr );
   #endif
   
+  /* Starting Corange */
+  
+  debug("Starting Corange...");
+  
   /* Init OpenGL and Viewport */
   
   if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0) {
     error("Unable to initialize SDL: %s\n", SDL_GetError());
   }
   
+  debug("Starting Graphics...");
+  
   viewport_init();
-  
-  audio_mixer_init();
-  
   SDL_LoadOpenGLExtensions();
   SDL_PrintOpenGLInfo();
   
+  debug("Starting Audio...");
+  
+  audio_mixer_init();
+  
   /* Asset Manager */
+  
+  debug("Creating Asset Manager...");
   
   asset_manager_init();
   
@@ -69,6 +74,8 @@ void corange_init(char* core_assets_path) {
   
   /* Entity Manager */
   
+  debug("Creating Entity Manager...");
+  
   entity_manager_init();
   
   entity_manager_handler(static_object, static_object_new, static_object_delete);
@@ -78,12 +85,14 @@ void corange_init(char* core_assets_path) {
   
   /* UI Manager */
   
+  debug("Creating UI Manager...");
+  
   ui_manager_init();
   
   ui_manager_handler(ui_rectangle, ui_rectangle_new, ui_rectangle_delete, ui_rectangle_event, ui_rectangle_update, ui_rectangle_render);
   ui_manager_handler(ui_text, ui_text_new, ui_text_delete, ui_text_event, ui_text_update, ui_text_render);
   
-  printf("Done!\n");
+  debug("Finished");
   
 }
 

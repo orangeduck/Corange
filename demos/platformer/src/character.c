@@ -60,7 +60,7 @@ void character_render(character* c, vector2 camera_position) {
   
   glDisable(GL_TEXTURE_2D);
   
-  glEnable(GL_BLEND);
+  glDisable(GL_BLEND);
   
   glMatrixMode(GL_PROJECTION);
   glPopMatrix();

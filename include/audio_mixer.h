@@ -8,4 +8,6 @@ void audio_mixer_finish();
 
 void audio_mixer_play_sound(sound* s);
 
+int audio_mixer_active_sounds();
+
 #endif
