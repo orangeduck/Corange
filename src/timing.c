@@ -3,6 +3,7 @@
 
 #include "SDL/SDL.h"
 
+#include "vector.h"
 #include "error.h"
 
 #include "timing.h"
@@ -64,8 +65,8 @@ static int frame_rate_var = 0;
 static float frame_time_var = 0.0;
 static float frame_update_rate = 0.1;
 
-static unsigned int frame_start_time = 0.0;
-static unsigned int frame_end_time = 0.0;
+static unsigned long frame_start_time = 0.0;
+static unsigned long frame_end_time = 0.0;
 
 static int frame_counter = 0;
 static float frame_acc_time = 0.0;
@@ -89,6 +90,20 @@ void frame_end() {
   }
 
   sprintf(frame_rate_string_var,"%d",frame_rate_var);
+  
+}
+
+void frame_end_at_rate(float fps) {
+  
+  unsigned long end_ticks = SDL_GetTicks();
+  float active_frame_time = ((float)(end_ticks - frame_start_time) / 1000.0f);
+  
+  float wait = (1.0f / fps) - active_frame_time;
+  int milliseconds = max(wait, 0) * 1000;
+  
+  SDL_Delay(milliseconds);
+  
+  frame_end();
   
 }
 

@@ -9,6 +9,7 @@
 #include "audio_mixer.h"
 
 static SDL_AudioSpec system_spec;
+static bool enabled = true;
 
 typedef struct {
   bool active;
@@ -48,8 +49,13 @@ static void audio_mixer_mix(void* unused, char* stream, int stream_size) {
         break;
       }
       
-      samples[i].left += snd_samples[channels[j].position];
-      samples[i].right += snd_samples[channels[j].position];
+      if (enabled) {
+        samples[i].left += snd_samples[channels[j].position];
+        samples[i].right += snd_samples[channels[j].position];
+      } else {
+        samples[i].left = 0;
+        samples[i].right = 0;
+      }
       
       channels[j].position++;
     }
@@ -134,4 +140,16 @@ int audio_mixer_active_sounds() {
   
   return count;
   
+}
+
+void audio_mixer_disable() {
+  enabled = false;
+}
+
+void audio_mixer_enable() {
+  enabled = true;
+}
+
+bool audio_mixer_enabled() {
+  return enabled;
 }

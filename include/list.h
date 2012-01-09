@@ -25,6 +25,10 @@ list* list_new_blocksize(int block_size);
 void list_push_back(list* l, void* item);
 void* list_pop_back(list* l);
 
+void* list_pop_at(list* l, int index);
+
+void list_remove(list* l, void* item);
+
 void* list_get(list* l, int index);
 void list_set(list* l, int index, void* item);
 

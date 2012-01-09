@@ -54,6 +54,20 @@ void* list_pop_back(list* l) {
   return item;
 }
 
+void* list_pop_at(list* l, int index) {
+  
+  void* item = l->ptrs[index];
+  
+  int i;
+  for(i = index; i < l->num_items+1; i++) {
+    l->ptrs[i] = l->ptrs[i+1];
+  }
+  
+  list_pop_back(l);
+  
+  return item;
+}
+
 void* list_get(list* l, int index) {
   return l->ptrs[ index ]; 
 }

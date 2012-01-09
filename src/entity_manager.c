@@ -38,7 +38,6 @@ void entity_manager_finish() {
   for (i = 0; i < entity_names->num_items; i++) {
     char* name = list_get(entity_names, i);
     int* type_id = dictionary_get(entity_types, name);
-    debug("Deleting Entity %s (%s)", name, type_id_name(*type_id));
     entity_delete(name);
   }
   
@@ -148,11 +147,31 @@ entity* entity_get_as_type_id(char* name, int type_id) {
   return dictionary_get(entities, name);
 }
 
+int entity_type_count_type_id(int type_id) {
+  
+  int count = 0;
+  
+  int i;
+  for(i = 0; i < entity_names->num_items; i++) {
+    char* name = list_get(entity_names, i);
+    int* type = dictionary_get(entity_types, name);
+    
+    if (*type == type_id) {
+      count++;
+    }
+  }
+  
+  return count;
+  
+}
+
 void entity_delete(char* name) {
   
   int* type_ptr = dictionary_get(entity_types, name);
   int type_id = *type_ptr;
-
+  
+  debug("Deleting Entity %s (%s)", name, type_id_name(type_id));
+  
   int i;
   for(i = 0; i < num_entity_handlers; i++) {
     entity_handler eh = entity_handlers[i];
@@ -162,8 +181,74 @@ void entity_delete(char* name) {
     }
   }
   
+  for(i = 0; i < entity_names->num_items; i++) {
+    if ( strcmp(list_get(entity_names, i), name) == 0 ) {
+      list_pop_at(entity_names, i);
+    }
+  }
+  
   if (entity_exists(name)) {
     error("Don't know how to delete entity %s. No handler for type %s!", name, type_id_name(type_id));
+  }
+  
+}
+
+char* entity_name(entity* e) {
+  
+  int i;
+  for(i = 0; i < entity_names->num_items; i++) {
+    char* name = list_get(entity_names, i);
+    entity* ent = dictionary_get(entities, name);
+    
+    if (ent == e) {
+      return name;
+    }
+  }
+  
+  warning("Object at %p not loaded into entity manager. Cannot fetch name.", e);
+  
+  return NULL;
+}
+
+void entities_new_type_id(const char* name_format, int count, int type_id) {
+  
+  const int max_length = 1024;
+  char entity_name[max_length];
+  
+  if(strlen(name_format) - 2 + ((count+1)/10) > max_length) {
+    error("Name pattern and count are potentially longer than %i characters. Wont fit in buffer.", max_length);
+  }
+  
+  if(!strstr(name_format, "%i")) {
+    error("Name format must be like a sprintf format string and contain a %%i symbol for the entity index. E.G \"entity_%%i\"");
+  }
+  
+  int i;
+  for( i = 0; i < count; i++) {
+    sprintf(entity_name, name_format, i);
+    entity_new_type_id(entity_name, type_id);
+  }
+  
+}
+
+void entities_get_type_id(entity** out, int* returned, int type_id) {
+  
+  int count = 0;
+  
+  int i;
+  for(i = 0; i < entity_names->num_items; i++) {
+    char* name = list_get(entity_names, i);
+    int* type = dictionary_get(entity_types, name);
+    entity* ent = dictionary_get(entities, name);
+    
+    if (*type == type_id) {
+      out[count] = ent;
+      count++;
+    }
+  }
+  
+  if (returned != NULL) {
+    *returned = count;
   }
   
 }

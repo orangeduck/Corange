@@ -34,3 +34,6 @@ Unsure of license, found from here: http://www.parkparkin.com/gallery/imrod_dw.h
 
 Sky background. GPL and CC-BY-SA?? Who has a clue what this is licenced under. I've slightly adapted it anyway so perhaps that reduced it from CC to whatever. - http://opengameart.org/content/sky-backdrop
 
+Tiles. Creative Commons - http://opengameart.org/content/side-scrolling-fantasy-themed-game-assets
+
+Coin Sound. Creative Commons - http://opengameart.org/content/completion-sound

@@ -26,6 +26,8 @@ void unload_folder(char* folder);
 
 asset* asset_get(char* path);
 asset* asset_load_get(char* path);
+#define asset_get_as(path, type) ((type*)asset_get(path))
+
 bool asset_loaded(char* path);
 
 void asset_state_print();

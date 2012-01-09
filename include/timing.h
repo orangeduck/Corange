@@ -7,6 +7,7 @@ void timer_stop();
 
 void frame_begin();
 void frame_end();
+void frame_end_at_rate(float fps);
 
 float frame_rate();
 float frame_time();

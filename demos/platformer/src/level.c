@@ -8,39 +8,88 @@ const float TILE_HEIGHT = 32;
 const int MAX_WIDTH = 512;
 const int MAX_HEIGHT = 512;
 
-const int tiletype_none = 0;
-const int tiletype_land = 1;
-const int tiletype_air = 2;
+static texture* tile_get_texture(int tiletype) {
+  texture* t;
+  switch(tiletype) {
+    case tiletype_none: t = asset_get("./tiles/tile_sky.dds"); break;
+    case tiletype_air: t = asset_get("./tiles/tile_sky.dds"); break;
+    case tiletype_dirt: t = asset_get("./tiles/tile_dirt.dds"); break;
+    case tiletype_dirt_rock: t = asset_get("./tiles/tile_dirt_rock.dds"); break;
+    case tiletype_dirt_overhang: t = asset_get("./tiles/tile_dirt_overhang.dds"); break;
+    case tiletype_surface: t = asset_get("./tiles/tile_surface.dds"); break;
+    case tiletype_grass: t = asset_get("./tiles/tile_grass.dds"); break;
+    case tiletype_grass_rock1: t = asset_get("./tiles/tile_grass_rock1.dds"); break;
+    case tiletype_grass_rock2: t = asset_get("./tiles/tile_grass_rock2.dds"); break;
+    case tiletype_grass_tree: t = asset_get("./tiles/tile_grass_tree.dds"); break;
+    case tiletype_tree: t = asset_get("./tiles/tile_tree.dds"); break;
+    case tiletype_tree_top: t = asset_get("./tiles/tile_tree_top.dds"); break;
+  }
+  return t;
+}
+
+bool tile_has_collision(int tiletype) {
+  
+  switch(tiletype) {
+    case tiletype_dirt: return true;
+    case tiletype_dirt_rock: return true;
+    case tiletype_dirt_overhang: return true;
+    case tiletype_surface: return true;
+    case tiletype_grass_rock1: return true;
+  }
+  
+  return false;
+}
+
+static int tile_for_char(char c) {
+
+  switch(c) {
+    case '\r': return tiletype_none; 
+    case '\n': return tiletype_none; 
+  
+    case '.': return tiletype_air;
+    case 'D': return tiletype_dirt;
+    case 'R': return tiletype_dirt_rock;
+    case 'O': return tiletype_dirt_overhang;
+    case 'S': return tiletype_surface;
+    case 'g': return tiletype_grass;
+    case 'B': return tiletype_grass_rock1;
+    case 'r': return tiletype_grass_rock2;
+    case 'b': return tiletype_grass_tree;
+    case 't': return tiletype_tree;
+    case 'p': return tiletype_tree_top;
+  }
+
+  warning("Unknown tile type character: '%c'", c);
+  return tiletype_none;
+}
+
+static int tile_counts[num_tile_types];
 
 level* level_load_file(char* filename) {
   
-  int num_air_tiles = 0;
-  int num_land_tiles = 0;
+  int i;
+  for( i = 0; i < num_tile_types; i++) {
+    tile_counts[i] = 0;
+  }
   
   level* l = malloc(sizeof(level));
-  l->num_tile_sets = 2;
-  l->tile_sets = malloc(sizeof(tile_set) * 2);
+  l->num_tile_sets = num_tile_types;
+  l->tile_sets = malloc(sizeof(tile_set) * num_tile_types);
   l->tile_map = calloc(sizeof(int), MAX_WIDTH * MAX_HEIGHT);
   
   SDL_RWops* file = SDL_RWFromFile(filename, "r");
   char line[MAX_WIDTH];
+  
   int y = 0;
   int x = 0;
   while(SDL_RWreadline(file, line, 1024)) {
     
     for(x = 0; x < strlen(line); x++) {
       char c = line[x];
-      if (c == '.') {
-        l->tile_map[x + y * MAX_WIDTH] = tiletype_air;
-        num_air_tiles++;
-      } else if (c == '#') {
-        l->tile_map[x + y * MAX_WIDTH] = tiletype_land;
-        num_land_tiles++;
-      } else if ((c == '\r') || (c == '\n')) {
+      int type = tile_for_char(c);
       
-      } else {
-        error("Unknown tile type for symbol '%c'", c);
-      }
+      l->tile_map[x + y * MAX_WIDTH] = type;
+      tile_counts[type]++;
     }
     
     y++;
@@ -48,18 +97,10 @@ level* level_load_file(char* filename) {
   
   SDL_RWclose(file);
   
-  int i;
-  for(i = 0; i < 2; i++) {
+  /* Start from 1, type 0 is none! */
+  for(i = 1; i < num_tile_types; i++) {
     
-    int char_type = 0;
-    int num_tiles = 0;
-    if (i == 0) {
-      char_type = tiletype_air;
-      num_tiles = num_air_tiles;
-    } else if(i == 1) {
-      char_type = tiletype_land;
-      num_tiles = num_land_tiles;
-    }
+    int num_tiles = tile_counts[i];
     
     float* position_data = malloc(sizeof(float) * 3 * 4 * num_tiles);
     float* uv_data = malloc(sizeof(float) * 2 * 4 * num_tiles);
@@ -70,7 +111,7 @@ level* level_load_file(char* filename) {
     for(x = 0; x < MAX_WIDTH; x++)
     for(y = 0; y < MAX_HEIGHT; y++) {
       int type = l->tile_map[x + y * MAX_WIDTH];
-      if( type == char_type ) {
+      if( type == i ) {
         
         position_data[pos_i] = x * TILE_WIDTH; pos_i++;
         position_data[pos_i] = y * TILE_HEIGHT; pos_i++;
@@ -138,9 +179,7 @@ void level_delete(level* l) {
   
 }
 
-void level_render(level* l, vector2 camera_position) {
-  
-  /* Render Background */
+void level_render_background(level* l) {
   
 	glMatrixMode(GL_PROJECTION);
   glPushMatrix();
@@ -158,13 +197,13 @@ void level_render(level* l, vector2 camera_position) {
   
   glBegin(GL_QUADS);
     
-    glVertex3f(0, viewport_height(), 0);
+    glVertex3f(0, viewport_height(), 0.0);
     glTexCoord2f(1, 0);
-    glVertex3f(viewport_width(), viewport_height(), 0);
+    glVertex3f(viewport_width(), viewport_height(), 0.0);
     glTexCoord2f(1, 1);
-    glVertex3f(viewport_width(), 0, 0);
+    glVertex3f(viewport_width(), 0, 0.0);
     glTexCoord2f(0, 1);
-    glVertex3f(0, 0, 0);
+    glVertex3f(0, 0, 0.0);
     glTexCoord2f(0, 0);
     
   glEnd();
@@ -176,8 +215,10 @@ void level_render(level* l, vector2 camera_position) {
   
 	glMatrixMode(GL_MODELVIEW);
   glPopMatrix();
-  
-  /* Render Tiles */
+
+}
+
+void level_render_tiles(level* l, vector2 camera_position) {
   
 	glMatrixMode(GL_PROJECTION);
   glPushMatrix();
@@ -200,13 +241,10 @@ void level_render(level* l, vector2 camera_position) {
   int i;
   for(i = 0; i < l->num_tile_sets; i++) {
     
-    if (i == 0) {
-      texture* tile_tex = asset_get("./tiles/tile_sky.dds");
-      glBindTexture(GL_TEXTURE_2D, *tile_tex);
-    } else if (i == 1) {
-      texture* tile_tex = asset_get("./tiles/tile_grass.dds");
-      glBindTexture(GL_TEXTURE_2D, *tile_tex);
-    }
+    texture* tile_tex = tile_get_texture(i);
+    glBindTexture(GL_TEXTURE_2D, *tile_tex);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     
     glBindBuffer(GL_ARRAY_BUFFER, l->tile_sets[i].positions_buffer);
     glVertexPointer(3, GL_FLOAT, 0, (void*)0);
@@ -235,10 +273,17 @@ void level_render(level* l, vector2 camera_position) {
 
 }
 
+void level_render(level* l, vector2 camera_position) {
+  
+  level_render_background(l);
+  level_render_tiles(l, camera_position);
+  
+}
+
 int level_tile_at(level* l, vector2 position) {
   
   int x = floor( position.x / 32 );
-  int y = floor( -position.y / 32 );
+  int y = floor( position.y / 32 );
   
   assert(x >= 0, "Invalid Position, (%0.2f,%0.2f)", position.x, position.y);
   assert(y >= 0, "Invalid Position, (%0.2f,%0.2f)", position.x, position.y);

@@ -22,9 +22,22 @@ void entity_add_type_id(char* name, int type_id, entity* entity);
 
 entity* entity_get(char* name);
 
-#define entity_get_as(name, type) (type*)entity_get_as_type_id(name, typeid(type))
+#define entity_get_as(name, type) ((type*)entity_get_as_type_id(name, typeid(type)))
 entity* entity_get_as_type_id(char* name, int type_id);
 
 void entity_delete(char* name);
+
+/* returned string should not be freed */
+char* entity_name(entity* e);
+
+#define entity_type_count(type) entity_type_count_type_id(typeid(type))
+int entity_type_count_type_id(int type_id);
+
+
+#define entities_new(name_format, count, type) entities_new_type_id(name_format, count, typeid(type))
+void entities_new_type_id(const char* name_format, int count, int type_id);
+
+#define entities_get(out, returned, type) entities_get_type_id((entity**)out, returned, typeid(type)) 
+void entities_get_type_id(entity** out, int* returned, int type_id);
 
 #endif

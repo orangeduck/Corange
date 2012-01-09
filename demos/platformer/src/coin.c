@@ -1,22 +1,18 @@
-#include "character.h"
+#include <stdlib.h>
 
-character* character_new() {
-  character* c = malloc(sizeof(character));
+#include "coin.h"
+
+coin* coin_new() {
+  coin* c = malloc(sizeof(coin));
   c->position = v2_zero();
-  c->velocity = v2_zero();
   return c;
 }
 
-void character_delete(character* c) {
+void coin_delete(coin* c) {
   free(c);
 }
 
-void character_update(character* c) {
-  c->velocity.x = clamp(c->velocity.x, -7.0, 7.0);
-  c->position = v2_add(c->position, c->velocity);
-}
-
-void character_render(character* c, vector2 camera_position) {
+void coin_render(coin* c, vector2 camera_position) {
 
 	glMatrixMode(GL_PROJECTION);
   glPushMatrix();
@@ -25,7 +21,7 @@ void character_render(character* c, vector2 camera_position) {
           camera_position.x + viewport_width() / 2,
           -camera_position.y + viewport_height() / 2,
           -camera_position.y - viewport_height() / 2
-          , -1, 1);
+          , 0, 1);
   
 	glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
@@ -36,19 +32,19 @@ void character_render(character* c, vector2 camera_position) {
   
   glEnable(GL_TEXTURE_2D);
   
-  texture* character_tex = asset_get("./tiles/character.dds");
-  glBindTexture(GL_TEXTURE_2D, *character_tex);
+  texture* coin_tex = asset_get("./tiles/coin.dds");
+  glBindTexture(GL_TEXTURE_2D, *coin_tex);
   
   glBegin(GL_QUADS);
     
-    glVertex3f(c->position.x, c->position.y, 0);
-    glTexCoord2f(0, 0);
-    glVertex3f(c->position.x + 32, c->position.y, 0);
-    glTexCoord2f(1, 0);
-    glVertex3f(c->position.x + 32, c->position.y + 32, 0);
-    glTexCoord2f(1, 1);
     glVertex3f(c->position.x, c->position.y + 32, 0);
     glTexCoord2f(0, 1);
+    glVertex3f(c->position.x + 32, c->position.y + 32, 0);
+    glTexCoord2f(1, 1);
+    glVertex3f(c->position.x + 32, c->position.y, 0);
+    glTexCoord2f(1, 0);
+    glVertex3f(c->position.x, c->position.y, 0);
+    glTexCoord2f(0, 0);
     
   glEnd();
   
