@@ -1,4 +1,5 @@
 varying vec3 normal;
+varying vec2 uvs;
 
 void main()
 {

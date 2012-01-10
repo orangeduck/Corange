@@ -51,8 +51,20 @@ static void audio_mixer_mix(void* unused, char* stream, int stream_size) {
       }
       
       if (enabled) {
-        samples[i].left += snd_samples[channels[j].position];
-        samples[i].right += snd_samples[channels[j].position];
+        double left = snd_samples[channels[j].position] / 65535.0;
+        double right = snd_samples[channels[j].position] / 65535.0;
+        
+        left = (left - 0.5) * 2;
+        right = (right - 0.5) * 2;
+        
+        left = clamp(left, -1, 1);
+        right = clamp(right, -1, 1);
+        
+        left = (left + 1) / 2;
+        right = (right + 1) / 2;
+        
+        samples[i].left = left * 65535;
+        samples[i].right = right * 65535;
       } else {
         samples[i].left = 0;
         samples[i].right = 0;

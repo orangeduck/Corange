@@ -32,8 +32,13 @@ typedef struct {
 #define tiletype_grass_tree 9
 #define tiletype_tree 10
 #define tiletype_tree_top 11
+#define tiletype_tree_top_left 12
+#define tiletype_tree_top_right 13
+#define tiletype_tree_topest 14
+#define tiletype_tree_bot_left 15
+#define tiletype_tree_bot_right 16
 
-#define num_tile_types 12
+#define num_tile_types 17
 
 level* level_load_file(char* filename);
 

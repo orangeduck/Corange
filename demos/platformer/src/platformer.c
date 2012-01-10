@@ -17,6 +17,8 @@ static vector2 camera_position;
 static bool left_held = false;
 static bool right_held = false;
 
+static int score = 0;
+
 void platformer_init() {
   
   /* Register some functions for loading/unloading levels */
@@ -56,15 +58,41 @@ void platformer_init() {
   glClearDepth(1.0);
   
   /* Add some UI elements */
+  ui_rectangle* info_rect1 = ui_elem_new("info_rect1", ui_rectangle);
+  info_rect1->top_left = v2(10, 10);
+  info_rect1->bottom_right = v2(40, 35);
+  info_rect1->color = v4_black();
+  info_rect1->border_color = v4_white();
+  info_rect1->border_size = 1;
+  
+  ui_rectangle* info_rect2 = ui_elem_new("info_rect2", ui_rectangle);
+  info_rect2->top_left = v2(50, 10);
+  info_rect2->bottom_right = v2(170, 35);
+  info_rect2->color = v4_black();
+  info_rect2->border_color = v4_white();
+  info_rect2->border_size = 1;
+  
+  ui_rectangle* score_rect = ui_elem_new("score_rect", ui_rectangle);
+  score_rect->top_left = v2(180, 10);
+  score_rect->bottom_right = v2(300, 35);
+  score_rect->color = v4_black();
+  score_rect->border_color = v4_white();
+  score_rect->border_size = 1;
+  
   ui_text* framerate_text = ui_elem_new("framerate_text", ui_text);
-  framerate_text->position = v2(10, 10);
+  framerate_text->position = v2(17, 15);
   framerate_text->color = v4_white();
   ui_text_update_string(framerate_text, "framerate");
   
   ui_text* audio_text = ui_elem_new("audio_text", ui_text);
-  audio_text->position = v2(10, 30);
+  audio_text->position = v2(60, 15);
   audio_text->color = v4_white();
   ui_text_update_string(audio_text, "Audio Enabled");
+  
+  ui_text* score_text = ui_elem_new("score_text", ui_text);
+  score_text->position = v2(190, 15);
+  score_text->color = v4_white();
+  ui_text_update_string(score_text, "Score 000000");
   
   audio_mixer_set_volume(0.5);
   
@@ -81,6 +109,7 @@ void platformer_event(SDL_Event event) {
     
     if (event.key.keysym.sym == SDLK_UP) {
       main_char->velocity.y -= 5.0;
+      main_char->flap_timer = 0.15;
     }
   break;
   
@@ -196,6 +225,12 @@ static void collision_detection_coins() {
           debug("Got Coin %s!", coin_name);
           audio_mixer_play_sound(asset_get_as("./sounds/coin.wav", sound));
           entity_delete(coin_name);
+          
+          ui_text* score_text = ui_elem_get("score_text");
+          
+          score += 10;
+          sprintf(score_text->string, "Score %06i", score);
+          ui_text_update_properties(score_text);
         }
   }
   
@@ -205,12 +240,14 @@ void platformer_update() {
   
   character* main_char = entity_get("main_char");
   
-  const float roll_speed = 0.1;
+  const float speed = 0.1;
   
   if (left_held) {
-    main_char->velocity.x -= roll_speed;
+    main_char->velocity.x -= speed;
+    main_char->facing_left = true;
   } else if (right_held) {
-    main_char->velocity.x += roll_speed;
+    main_char->velocity.x += speed;
+    main_char->facing_left = false;
   } else {
     main_char->velocity.x *= 0.95;
   }

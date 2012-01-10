@@ -6,6 +6,8 @@
 typedef struct {
   vector2 velocity;
   vector2 position;
+  float flap_timer;
+  bool facing_left;
 } character;
 
 character* character_new();

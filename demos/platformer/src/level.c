@@ -23,6 +23,11 @@ static texture* tile_get_texture(int tiletype) {
     case tiletype_grass_tree: t = asset_get("./tiles/tile_grass_tree.dds"); break;
     case tiletype_tree: t = asset_get("./tiles/tile_tree.dds"); break;
     case tiletype_tree_top: t = asset_get("./tiles/tile_tree_top.dds"); break;
+    case tiletype_tree_top_left: t = asset_get("./tiles/tile_tree_top_left.dds"); break;
+    case tiletype_tree_top_right: t = asset_get("./tiles/tile_tree_top_right.dds"); break;
+    case tiletype_tree_topest: t = asset_get("./tiles/tile_tree_topest.dds"); break;
+    case tiletype_tree_bot_left: t = asset_get("./tiles/tile_tree_bot_left.dds"); break;
+    case tiletype_tree_bot_right: t = asset_get("./tiles/tile_tree_bot_right.dds"); break;
   }
   return t;
 }
@@ -57,6 +62,11 @@ static int tile_for_char(char c) {
     case 'b': return tiletype_grass_tree;
     case 't': return tiletype_tree;
     case 'p': return tiletype_tree_top;
+    case '2': return tiletype_tree_top_left;
+    case '4': return tiletype_tree_top_right;
+    case '3': return tiletype_tree_topest;
+    case '1': return tiletype_tree_bot_left;
+    case '5': return tiletype_tree_bot_right;
   }
 
   warning("Unknown tile type character: '%c'", c);

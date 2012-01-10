@@ -10,9 +10,12 @@ uniform mat4 view_matrix;
 uniform mat4 bone_world_matrices[32];
 uniform int bone_count;
 
+varying vec2 uvs;
 varying vec3 normal;
 
 void main() {
+
+  uvs = gl_MultiTexCoord0.xy;
   
   vec4 blendpos = vec4(0,0,0,0);
   for (int i = 0; i < 3; i++) {

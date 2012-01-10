@@ -37,14 +37,10 @@ void coin_render(coin* c, vector2 camera_position) {
   
   glBegin(GL_QUADS);
     
-    glVertex3f(c->position.x, c->position.y + 32, 0);
-    glTexCoord2f(0, 1);
-    glVertex3f(c->position.x + 32, c->position.y + 32, 0);
-    glTexCoord2f(1, 1);
-    glVertex3f(c->position.x + 32, c->position.y, 0);
-    glTexCoord2f(1, 0);
-    glVertex3f(c->position.x, c->position.y, 0);
-    glTexCoord2f(0, 0);
+    glTexCoord2f(0, 1); glVertex3f(c->position.x, c->position.y + 32, 0);
+    glTexCoord2f(1, 1); glVertex3f(c->position.x + 32, c->position.y + 32, 0);
+    glTexCoord2f(1, 0); glVertex3f(c->position.x + 32, c->position.y, 0);
+    glTexCoord2f(0, 0); glVertex3f(c->position.x, c->position.y, 0);
     
   glEnd();
   
