@@ -39,16 +39,21 @@ void character_render(character* c, vector2 camera_position) {
   texture* character_tex = asset_get("./tiles/character.dds");
   glBindTexture(GL_TEXTURE_2D, *character_tex);
   
-  glBegin(GL_QUADS);
+  glBegin(GL_TRIANGLES);
     
+    glVertex3f(c->position.x, c->position.y + 32, 0);
+    glTexCoord2f(0, 1);
     glVertex3f(c->position.x, c->position.y, 0);
     glTexCoord2f(0, 0);
     glVertex3f(c->position.x + 32, c->position.y, 0);
     glTexCoord2f(1, 0);
-    glVertex3f(c->position.x + 32, c->position.y + 32, 0);
-    glTexCoord2f(1, 1);
+    
     glVertex3f(c->position.x, c->position.y + 32, 0);
     glTexCoord2f(0, 1);
+    glVertex3f(c->position.x + 32, c->position.y + 32, 0);
+    glTexCoord2f(1, 1);
+    glVertex3f(c->position.x + 32, c->position.y, 0);
+    glTexCoord2f(1, 0);
     
   glEnd();
   

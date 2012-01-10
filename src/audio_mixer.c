@@ -10,6 +10,7 @@
 
 static SDL_AudioSpec system_spec;
 static bool enabled = true;
+static float volume = 1.0f;
 
 typedef struct {
   bool active;
@@ -152,4 +153,12 @@ void audio_mixer_enable() {
 
 bool audio_mixer_enabled() {
   return enabled;
+}
+
+void audio_mixer_set_volume(float vol) {
+  volume = vol;
+}
+
+float audio_mixer_get_volume() {
+  return volume;
 }

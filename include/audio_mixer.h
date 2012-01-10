@@ -11,6 +11,9 @@ void audio_mixer_enable();
 
 bool audio_mixer_enabled();
 
+void audio_mixer_set_volume(float vol);
+float audio_mixer_get_volume();
+
 void audio_mixer_play_sound(sound* s);
 
 int audio_mixer_active_sounds();

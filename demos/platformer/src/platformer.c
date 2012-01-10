@@ -66,6 +66,8 @@ void platformer_init() {
   audio_text->color = v4_white();
   ui_text_update_string(audio_text, "Audio Enabled");
   
+  audio_mixer_set_volume(0.5);
+  
 }
 
 void platformer_event(SDL_Event event) {
