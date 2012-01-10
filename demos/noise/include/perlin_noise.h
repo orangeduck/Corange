@@ -1,8 +1,7 @@
 #ifndef perlin_noise_h
 #define perlin_noise_h
 
-#include "image.h"
-#include "vector.h"
+#include "corange.h"
 
 float perlin_noise2D(vector2 v);
 

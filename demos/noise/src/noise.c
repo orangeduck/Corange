@@ -4,44 +4,92 @@
 
 #include "noise.h"
 
+static float time = 0.0;
+
+void noise_render() {
+  
+  glClear(GL_COLOR_BUFFER_BIT);
+  
+  glDisable(GL_LIGHTING);
+  
+  glUseProgram(*asset_get_as("./shaders/noise.prog",shader));
+  
+	glMatrixMode(GL_PROJECTION);
+  glPushMatrix();
+	glLoadIdentity();
+	glOrtho(-1.0, 1.0, -1.0, 1.0, -1, 1);
+  
+	glMatrixMode(GL_MODELVIEW);
+  glPushMatrix();
+	glLoadIdentity();
+  
+  glActiveTexture(GL_TEXTURE0 + 0);
+  glEnable(GL_TEXTURE_2D);
+  glBindTexture(GL_TEXTURE_2D, *asset_get_as("$CORANGE/resources/random.dds", texture));
+  glUniform1i(glGetUniformLocation(*asset_get_as("./shaders/noise.prog",shader), "noise_texture"), 0);
+  
+  time += frame_time();
+  glUniform1f(glGetUniformLocation(*asset_get_as("./shaders/noise.prog",shader), "time"), time);
+  
+	glBegin(GL_QUADS);
+		glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0, -1.0,  0.0f);
+		glTexCoord2f(1.0f, 0.0f); glVertex3f(1.0, -1.0,  0.0f);
+		glTexCoord2f(1.0f, 1.0f); glVertex3f(1.0,  1.0,  0.0f);
+		glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0,  1.0,  0.0f);
+	glEnd();
+	
+	glActiveTexture(GL_TEXTURE0 + 0);
+  glDisable(GL_TEXTURE_2D);
+	
+  glMatrixMode(GL_PROJECTION);
+  glPopMatrix();
+
+  glMatrixMode(GL_MODELVIEW);
+  glPopMatrix();
+  
+  glUseProgram(0);
+  
+  glEnable(GL_LIGHTING);
+  
+  SDL_GL_SwapBuffers(); 
+
+}
+
 int main(int argc, char **argv) {
   
-  #ifdef _WIN32
-    FILE* ctt = fopen("CON", "w" );
-    FILE* fout = freopen( "CON", "w", stdout );
-    FILE* ferr = freopen( "CON", "w", stderr );
-  #endif
+  corange_init("../../core_assets");
   
-  int x = 512;
-  int y = 512;
-  int octaves = 8;
-  char* filename;
+  viewport_set_dimensions( v2(512, 512) );
   
-  if(argc >= 2) {
-    x = atoi(argv[1]);
-  }
-  if(argc >= 3) {
-    y = atoi(argv[2]);
-  }
-  if(argc >= 4) {
-    octaves = atoi(argv[3]);
-  }
-  if(argc >= 5) {
-    filename = malloc(strlen(argv[4]) + 1);
-    strcpy(filename, argv[4]);
-  } else {
-    filename = malloc(strlen("./noise.tga") + 1);
-    strcpy(filename, "./noise.tga");
-  }
+  load_folder("./shaders/");
+  load_file("$CORANGE/resources/random.dds");
   
-  debug("Generating noise texture, resolution %i by %i, with %i octaves", x, y, octaves);
+  glClearColor(1.0, 0.0, 0.0, 1.0);
   
-  image* perlin_noise = perlin_noise_generate(x, y, octaves);
-  tga_save_file(perlin_noise, filename);
+  bool running = true;
+  while(running) {
+    frame_begin();
+    
+    SDL_Event event;
+    while(SDL_PollEvent(&event)) {
+      switch(event.type){
+      case SDL_KEYDOWN:
+      case SDL_KEYUP:
+        if (event.key.keysym.sym == SDLK_ESCAPE) { running = 0; }
+        if (event.key.keysym.sym == SDLK_PRINT) { viewport_screenshot(); }
+        break;
+      case SDL_QUIT:
+        running = 0;
+        break;
+      }
+    }
+    
+    noise_render();
+    
+    frame_end();
+  }  
   
-  image_delete(perlin_noise);
-
-  debug("Saved to %s\n", filename);
+  corange_finish();
   
   return 0;
 }
