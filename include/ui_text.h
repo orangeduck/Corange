@@ -3,6 +3,7 @@
 
 #include "font.h"
 #include "vector.h"
+#include "bool.h"
 
 static int text_align_left = 0;
 static int text_align_right = 1;
@@ -55,10 +56,9 @@ void ui_text_delete(ui_text* text);
 void ui_text_update_string(ui_text* text, char* string);
 void ui_text_update_properties(ui_text* text);
 
-void ui_text_event(ui_text* text, SDL_Event e);
 void ui_text_update(ui_text* text);
 void ui_text_render(ui_text* text);
 
-int ui_text_contains_position(ui_text* text, vector2 position);
+bool ui_text_contains_position(ui_text* text, vector2 position);
 
 #endif

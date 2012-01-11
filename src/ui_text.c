@@ -79,10 +79,6 @@ void ui_text_delete(ui_text* text) {
   
 }
 
-void ui_text_event(ui_text* text, SDL_Event e) {
-
-}
-
 void ui_text_update(ui_text* text) {
 
 }
@@ -340,8 +336,6 @@ static int ui_text_charcount(ui_text* text) {
 
 void ui_text_render(ui_text* text) {
   
-  /* Setup 2D camera */
-  
 	glMatrixMode(GL_PROJECTION);
   glPushMatrix();
 	glLoadIdentity();
@@ -351,14 +345,9 @@ void ui_text_render(ui_text* text) {
   glPushMatrix();
 	glLoadIdentity();
   
-  /* Disable lighting, enable blending */
-  
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   
-  /* Bind font texture */
-  
-  glActiveTexture(GL_TEXTURE0 + 0);
   glEnable(GL_TEXTURE_2D);
   glBindTexture(GL_TEXTURE_2D, *(text->font->texture_map) );
   
@@ -378,20 +367,9 @@ void ui_text_render(ui_text* text) {
   glDisableClientState(GL_VERTEX_ARRAY);
   glDisableClientState(GL_TEXTURE_COORD_ARRAY);
   
-  /* Set Back */
-  
   glColor4f(1.0,1.0,1.0,1.0);
   
   glBindBuffer(GL_ARRAY_BUFFER, 0);
-  
-  glBegin(GL_QUADS);
-    
-    glVertex3f(text->top_left.x, text->top_left.y, 0);
-    glVertex3f(text->bottom_right.x, text->top_left.y, 0);
-    glVertex3f(text->bottom_right.x, text->bottom_right.y, 0);
-    glVertex3f(text->top_left.x, text->bottom_right.y, 0);
-    
-  glEnd();
   
   glDisable(GL_BLEND);
   glDisable(GL_TEXTURE_2D);
@@ -404,13 +382,13 @@ void ui_text_render(ui_text* text) {
   
 }
 
-int ui_text_contains_position(ui_text* text, vector2 position) {
+bool ui_text_contains_position(ui_text* text, vector2 position) {
   
   if(( position.x > text->top_left.x ) && ( position.x < text->bottom_right.x ) &&
      ( position.y > text->top_left.y ) && ( position.y < text->bottom_right.y )) {
-    return 1;
+    return true;
   } else {
-    return 0;
+    return false;
   }
   
 }

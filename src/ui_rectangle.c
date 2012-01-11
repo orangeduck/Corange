@@ -31,10 +31,6 @@ void ui_rectangle_set_texture(ui_rectangle* rect, texture* t) {
   rect->texture = t;
 }
 
-void ui_rectangle_event(ui_rectangle* rect, SDL_Event e) {
-  
-}
-
 void ui_rectangle_update(ui_rectangle* rect) {
   
 }
@@ -50,6 +46,9 @@ void ui_rectangle_render(ui_rectangle* rect) {
   glPushMatrix();
 	glLoadIdentity();
   
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  
   if(rect->texture != NULL) {
     glActiveTexture(GL_TEXTURE0 + 0);
     glEnable(GL_TEXTURE_2D);
@@ -62,16 +61,10 @@ void ui_rectangle_render(ui_rectangle* rect) {
   glColor4f(rect->color.r, rect->color.g, rect->color.b, rect->color.a);  
     
   glBegin(GL_QUADS);
-    
-    glVertex3f(rect->top_left.x, rect->top_left.y, 0);
-    glTexCoord2f(0, 1);
-    glVertex3f(rect->bottom_right.x, rect->top_left.y, 0);
-    glTexCoord2f(1, 1);
-    glVertex3f(rect->bottom_right.x, rect->bottom_right.y, 0);
-    glTexCoord2f(1, 0);
-    glVertex3f(rect->top_left.x, rect->bottom_right.y, 0);
-    glTexCoord2f(0, 0);
-    
+    glTexCoord2f(0, 1); glVertex3f(rect->top_left.x, rect->top_left.y, 0);
+    glTexCoord2f(1, 1); glVertex3f(rect->bottom_right.x, rect->top_left.y, 0);
+    glTexCoord2f(1, 0); glVertex3f(rect->bottom_right.x, rect->bottom_right.y, 0);
+    glTexCoord2f(0, 0); glVertex3f(rect->top_left.x, rect->bottom_right.y, 0);
   glEnd();
   
   if(rect->border_size > 0) {
@@ -94,6 +87,8 @@ void ui_rectangle_render(ui_rectangle* rect) {
   
   glColor4f(1, 1, 1, 1);
   
+  glDisable(GL_BLEND);
+  
   glMatrixMode(GL_PROJECTION);
   glPopMatrix();
   
@@ -106,11 +101,11 @@ void ui_rectangle_render(ui_rectangle* rect) {
  
 }
 
-int ui_rectangle_contains_position(ui_rectangle* rect, vector2 position) {
-  if(( position.x > rect->top_left.x ) && ( position.x < rect->bottom_right.x ) &&
-     ( position.y > rect->top_left.y ) && ( position.y < rect->bottom_right.y )) {
-    return 1;
+bool ui_rectangle_contains_position(ui_rectangle* rect, vector2 pos) {
+  if(( pos.x > rect->top_left.x ) && ( pos.x < rect->bottom_right.x ) &&
+     ( pos.y > rect->top_left.y ) && ( pos.y < rect->bottom_right.y )) {
+    return true;
   } else {
-    return 0;
+    return false;
   }
 }

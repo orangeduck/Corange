@@ -57,13 +57,15 @@ image* perlin_noise_generate(int x_size, int y_size, int octaves) {
   
   srand(time(NULL));
   
+  debug("Generating perlin noise.");
+  
   for(i = 0; i < octaves; i++ ) {
   
     float wavelength = pow( 2, i);
     float amplitude = pow( 0.5, octaves-i );
     vector2 seed = v2(rand(),rand());
     
-    debug("Octave: %i Wavelength: %f Amplitude: %f\n", i, wavelength, amplitude);
+    debug("Octave: %i Wavelength: %f Amplitude: %f", i, wavelength, amplitude);
 
     for(x = 0; x < x_size; x++)
     for(y = 0; y < y_size; y++) {

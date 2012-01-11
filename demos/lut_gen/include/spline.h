@@ -3,16 +3,18 @@
 
 #include "corange.h"
 
+#define MAX_SPLINE_POINTS 20
+
 typedef struct {
   int num_points;
   float y0d;
   float ynd;
   float x0d;
   float xnd;
-  float x[20];
-  float y[20];
-  float yd[20];
-  float xd[20];
+  float x[MAX_SPLINE_POINTS];
+  float y[MAX_SPLINE_POINTS];
+  float yd[MAX_SPLINE_POINTS];
+  float xd[MAX_SPLINE_POINTS];
 } spline;
 
 spline* spline_new();
@@ -48,5 +50,7 @@ color_curves* acv_load_file(char* filename);
 void color_curves_delete(color_curves* cc);
 
 void color_curves_write_lut(color_curves* cc, char* filename);
+
+vector3 color_curves_map(color_curves* cc, vector3 in);
 
 #endif

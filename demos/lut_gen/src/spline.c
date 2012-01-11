@@ -17,8 +17,8 @@ void spline_delete(spline* s) {
 }
 
 void spline_add_point(spline* s, vector2 p) {
-  if (s->num_points == 20) {
-    warning("Spline already contains maximum 20 points");
+  if (s->num_points == MAX_SPLINE_POINTS) {
+    warning("Spline already contains maximum of %i points", MAX_SPLINE_POINTS);
     return;
   }
   
@@ -354,6 +354,22 @@ void color_curves_delete(color_curves* cc) {
   spline_delete(cc->a_spline);
   
   free(cc);
+}
+
+vector3 color_curves_map(color_curves* cc, vector3 in) {
+  
+  float r = in.r;
+  float g = in.g;
+  float b = in.b;
+  r = spline_get_x(cc->r_spline, r);
+  g = spline_get_x(cc->g_spline, g);
+  b = spline_get_x(cc->b_spline, b);
+  
+  r = spline_get_x(cc->rgb_spline, r);
+  g = spline_get_x(cc->rgb_spline, g);
+  b = spline_get_x(cc->rgb_spline, b);
+  
+  return v3(r, g, b);
 }
 
 void color_curves_write_lut(color_curves* cc, char* filename) {

@@ -1,6 +1,8 @@
 #ifndef ui_rectangle_h
 #define ui_rectangle_h
 
+#include "bool.h"
+
 #include "texture.h"
 
 typedef struct ui_rectangle_temp {
@@ -19,12 +21,11 @@ typedef struct ui_rectangle_temp {
 ui_rectangle* ui_rectangle_new(vector2 top_left, vector2 bottom_right);
 void ui_rectangle_delete(ui_rectangle* rect);
 
-void ui_rectangle_event(ui_rectangle* rect, SDL_Event e);
 void ui_rectangle_update(ui_rectangle* rect);
 void ui_rectangle_render(ui_rectangle* rect);
 
 void ui_rectangle_set_texture(ui_rectangle* rect, texture* t);
 
-int ui_rectangle_contains_position(ui_rectangle* text, vector2 position);
+bool ui_rectangle_contains_position(ui_rectangle* rect, vector2 pos);
 
 #endif

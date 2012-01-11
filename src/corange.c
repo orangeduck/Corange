@@ -89,8 +89,9 @@ void corange_init(char* core_assets_path) {
   
   ui_manager_init();
   
-  ui_manager_handler(ui_rectangle, ui_rectangle_new, ui_rectangle_delete, ui_rectangle_event, ui_rectangle_update, ui_rectangle_render);
-  ui_manager_handler(ui_text, ui_text_new, ui_text_delete, ui_text_event, ui_text_update, ui_text_render);
+  ui_manager_handler(ui_rectangle, ui_rectangle_new, ui_rectangle_delete, ui_rectangle_update, ui_rectangle_render);
+  ui_manager_handler(ui_text, ui_text_new, ui_text_delete, ui_text_update, ui_text_render);
+  ui_manager_handler(ui_spinner, ui_spinner_new, ui_spinner_delete, ui_spinner_update, ui_spinner_render);
   
   debug("Finished");
   
