@@ -4,6 +4,7 @@
 #include "SDL/SDL.h"
 #include "SDL/SDL_opengl.h"
 
+#include "bool.h"
 #include "vector.h"
 
 void viewport_init();
@@ -14,17 +15,17 @@ void viewport_restart();
 
 void viewport_set_title(char* title, char* icon_title);
 
-void viewport_set_vsync(int vsync);
+void viewport_set_vsync(bool vsync);
 void viewport_set_multisamples(int samples);
-void viewport_set_fullscreen(int fullscreen);
+void viewport_set_fullscreen(bool fullscreen);
 
 void viewport_set_height(int height);
 void viewport_set_width(int width);
 void viewport_set_dimensions(vector2 dim);
 
-int viewport_vsync();
+bool viewport_vsync();
 int viewport_multisamples();
-int viewport_fullscreen();
+bool viewport_fullscreen();
 
 int viewport_height();
 int viewport_width();

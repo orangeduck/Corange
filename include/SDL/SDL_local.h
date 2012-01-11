@@ -4,6 +4,8 @@
 #include "SDL/SDL.h"
 #include "SDL/SDL_opengl.h"
 
+#include "bool.h"
+
 #ifndef GLchar
   #define GLchar char
 #endif
@@ -17,7 +19,8 @@ int SDL_RWreadline(SDL_RWops* file, char* buffer, int buffersize);
 void SDL_PrintOpenGLInfo();
 void SDL_PrintOpenGLExtensions();
 
-int SDL_OpenGLSupportsShaderLinkage();
+bool SDL_OpenGLSupportsShaderLinkage();
+bool SDL_OpenGLSupportsVsync();
 
 void SDL_LoadOpenGLExtensions();
 void SDL_CheckOpenGLExtension(const char* name, void* function_pointer);

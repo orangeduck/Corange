@@ -371,6 +371,8 @@ int main(int argc, char **argv) {
   /* Init Corange, pointing to the core_assets folder */
   corange_init("../../core_assets");
   
+  viewport_set_vsync(true);
+  
   platformer_init();
   
   /* Set the game running, create SDL_Event struct to monitor events */

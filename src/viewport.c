@@ -20,7 +20,7 @@ static int window_height;
 
 static int window_flags;
 static int window_multisamples;
-static int window_vsync;
+static bool window_vsync;
 
 void viewport_init() {
 
@@ -128,7 +128,7 @@ void viewport_set_title(char* title, char* icon_title) {
   SDL_WM_SetCaption(title, icon_title);    
 }
 
-void viewport_set_vsync(int vsync) {
+void viewport_set_vsync(bool vsync) {
   window_vsync = vsync;
   viewport_restart();
 }
@@ -169,7 +169,7 @@ void viewport_set_dimensions(vector2 dim) {
   viewport_restart();
 }
 
-int viewport_vsync() {
+bool viewport_vsync() {
   return window_vsync;
 }
 
@@ -177,11 +177,11 @@ int viewport_multisamples() {
   return window_multisamples;
 }
 
-int viewport_fullscreen() {
+bool viewport_fullscreen() {
   if (window_flags & SDL_FULLSCREEN) {
-    return 1;
+    return true;
   } else {
-    return 0;
+    return false;
   }
 }
 

@@ -105,15 +105,26 @@ void SDL_PrintOpenGLExtensions() {
   debug("OpenGL Extensions: %s\n", extensions);
 }
 
-int SDL_OpenGLSupportsShaderLinkage() {
+bool SDL_OpenGLSupportsShaderLinkage() {
   
   const char* renderer = (const char*)glGetString(GL_RENDERER);
   if (strstr("ATI Mobility Radeon HD 5650", renderer)) {
-    return 0;
+    return false;
   }
   
-  return 1;
+  return true;
 }
+
+bool SDL_OpenGLSupportsVsync() {
+
+  const char* renderer = (const char*)glGetString(GL_RENDERER);
+  if (strstr("ATI Mobility Radeon HD 5650", renderer)) {
+    return false;
+  }
+  
+  return true;
+}
+
 
 void SDL_CheckOpenGLError(const char* name) {
   switch (glGetError()) {
