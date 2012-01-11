@@ -6,3 +6,4 @@ Fur Shader
 Terrain stuff
 UI slider bar, Other UI elements
 LUA wrappers for asset, entity, ui managers
+const char stuff where needed

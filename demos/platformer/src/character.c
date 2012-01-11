@@ -5,7 +5,7 @@ character* character_new() {
   c->position = v2_zero();
   c->velocity = v2_zero();
   c->flap_timer = 0.0;
-  c->facing_left = true;
+  c->facing_left = false;
   return c;
 }
 

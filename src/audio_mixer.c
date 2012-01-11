@@ -25,16 +25,16 @@ typedef struct {
 sound_channel channels[MAX_CHANNELS];
 
 typedef struct {
-  uint16_t left;
-  uint16_t right;
-} uint16_stereo_t;
+  int16_t left;
+  int16_t right;
+} int16_stereo_t;
 
-typedef uint16_t uint16_mono_t;
+typedef int16_t int16_mono_t;
 
 static void audio_mixer_mix(void* unused, char* stream, int stream_size) {
   
-  uint16_stereo_t* samples = (uint16_stereo_t*)stream;
-  int samples_num = stream_size / sizeof(uint16_stereo_t);
+  int16_stereo_t* samples = (int16_stereo_t*)stream;
+  int samples_num = stream_size / sizeof(int16_stereo_t);
   
   int i, j;
   for(i = 0; i < samples_num; i++) {
@@ -42,8 +42,8 @@ static void audio_mixer_mix(void* unused, char* stream, int stream_size) {
       
       if (!channels[j].active) continue;
       
-      uint16_mono_t* snd_samples = (uint16_mono_t*)channels[j].sound->data;
-      int snd_len = channels[j].sound->length / sizeof(uint16_mono_t);
+      int16_mono_t* snd_samples = (int16_mono_t*)channels[j].sound->data;
+      int snd_len = channels[j].sound->length / sizeof(int16_mono_t);
       
       if(channels[j].position >= snd_len) {
         channels[j].active = false;
@@ -51,20 +51,16 @@ static void audio_mixer_mix(void* unused, char* stream, int stream_size) {
       }
       
       if (enabled) {
-        double left = snd_samples[channels[j].position] / 65535.0;
-        double right = snd_samples[channels[j].position] / 65535.0;
+        double left = snd_samples[channels[j].position] / 32768.0;
+        double right = snd_samples[channels[j].position] / 32768.0;
         
-        left = (left - 0.5) * 2;
-        right = (right - 0.5) * 2;
+        float amplitude = (pow(10, 1-volume) / 10) - 1;
         
-        left = clamp(left, -1, 1);
-        right = clamp(right, -1, 1);
+        left = clamp(left * amplitude, -1, 1);
+        right = clamp(right * amplitude, -1, 1);
         
-        left = (left + 1) / 2;
-        right = (right + 1) / 2;
-        
-        samples[i].left = left * 65535;
-        samples[i].right = right * 65535;
+        samples[i].left = left * 32768;
+        samples[i].right = right * 32768;
       } else {
         samples[i].left = 0;
         samples[i].right = 0;
@@ -168,7 +164,7 @@ bool audio_mixer_enabled() {
 }
 
 void audio_mixer_set_volume(float vol) {
-  volume = vol;
+  volume = clamp(vol, 0, 1);
 }
 
 float audio_mixer_get_volume() {

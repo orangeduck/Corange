@@ -28,6 +28,15 @@ static texture* tile_get_texture(int tiletype) {
     case tiletype_tree_topest: t = asset_get("./tiles/tile_tree_topest.dds"); break;
     case tiletype_tree_bot_left: t = asset_get("./tiles/tile_tree_bot_left.dds"); break;
     case tiletype_tree_bot_right: t = asset_get("./tiles/tile_tree_bot_right.dds"); break;
+    case tiletype_tree_junc_left: t = asset_get("./tiles/tile_tree_junc_left.dds"); break;
+    case tiletype_tree_junc_right: t = asset_get("./tiles/tile_tree_junc_right.dds"); break;
+    case tiletype_tree_turn_left: t = asset_get("./tiles/tile_tree_turn_left.dds"); break;
+    case tiletype_tree_turn_right: t = asset_get("./tiles/tile_tree_turn_right.dds"); break;
+    case tiletype_tree_side: t = asset_get("./tiles/tile_tree_side.dds"); break;
+    case tiletype_house_bot_left: t = asset_get("./tiles/tile_house_bot_left.dds"); break;
+    case tiletype_house_bot_right: t = asset_get("./tiles/tile_house_bot_right.dds"); break;
+    case tiletype_house_top_left: t = asset_get("./tiles/tile_house_top_left.dds"); break;
+    case tiletype_house_top_right: t = asset_get("./tiles/tile_house_top_right.dds"); break;
   }
   return t;
 }
@@ -40,6 +49,10 @@ bool tile_has_collision(int tiletype) {
     case tiletype_dirt_overhang: return true;
     case tiletype_surface: return true;
     case tiletype_grass_rock1: return true;
+    case tiletype_house_bot_left: return true;
+    case tiletype_house_bot_right: return true;
+    case tiletype_house_top_left: return true;
+    case tiletype_house_top_right: return true;
   }
   
   return false;
@@ -50,23 +63,32 @@ static int tile_for_char(char c) {
   switch(c) {
     case '\r': return tiletype_none; 
     case '\n': return tiletype_none; 
-  
-    case '.': return tiletype_air;
-    case 'D': return tiletype_dirt;
+    case ' ': return tiletype_none;
+    case '`': return tiletype_air;
+    case '#': return tiletype_dirt;
     case 'R': return tiletype_dirt_rock;
-    case 'O': return tiletype_dirt_overhang;
-    case 'S': return tiletype_surface;
-    case 'g': return tiletype_grass;
-    case 'B': return tiletype_grass_rock1;
-    case 'r': return tiletype_grass_rock2;
-    case 'b': return tiletype_grass_tree;
-    case 't': return tiletype_tree;
-    case 'p': return tiletype_tree_top;
-    case '2': return tiletype_tree_top_left;
-    case '4': return tiletype_tree_top_right;
-    case '3': return tiletype_tree_topest;
-    case '1': return tiletype_tree_bot_left;
-    case '5': return tiletype_tree_bot_right;
+    case '"': return tiletype_dirt_overhang;
+    case '~': return tiletype_surface;
+    case '_': return tiletype_grass;
+    case '@': return tiletype_grass_rock1;
+    case '.': return tiletype_grass_rock2;
+    case '!': return tiletype_grass_tree;
+    case '|': return tiletype_tree;
+    case '\'': return tiletype_tree_top;
+    case '{': return tiletype_tree_top_left;
+    case '}': return tiletype_tree_top_right;
+    case '^': return tiletype_tree_topest;
+    case '(': return tiletype_tree_bot_left;
+    case ')': return tiletype_tree_bot_right;
+    case '+': return tiletype_tree_junc_right;
+    case '*': return tiletype_tree_junc_left;
+    case '/': return tiletype_tree_turn_right;
+    case '\\': return tiletype_tree_turn_left;
+    case '-': return tiletype_tree_side;
+    case 'h': return tiletype_house_bot_left;
+    case 'u': return tiletype_house_bot_right;
+    case 'd': return tiletype_house_top_left;
+    case 'b': return tiletype_house_top_right;
   }
 
   warning("Unknown tile type character: '%c'", c);
