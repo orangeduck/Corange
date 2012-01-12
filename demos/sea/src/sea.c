@@ -6,14 +6,40 @@ static int mouse_y;
 static int mouse_down;
 static int mouse_right_down;
 
-static int wireframe = 0;
+static bool wireframe = false;
+
+static bool wireframe_button_pressed = false;
+static void switch_wireframe(ui_rectangle* rect, SDL_Event event) {
+  
+  if (event.type == SDL_MOUSEBUTTONDOWN) {
+    
+    if (ui_rectangle_contains_position(rect, v2(event.motion.x, event.motion.y))) {
+      wireframe_button_pressed = true;
+      rect->color = v4(0.5, 0.5, 0.5, 1);
+    }
+  
+  } else if (event.type == SDL_MOUSEBUTTONUP) {
+    
+    if (wireframe_button_pressed) {
+      wireframe_button_pressed = false;
+      rect->color = v4_black();
+      
+      if (wireframe == true) {
+        wireframe = false;
+      } else if (wireframe == false) {
+        wireframe = true;
+      }
+      
+    }
+  }
+}
 
 void sea_init() {
 
   viewport_set_vsync(1);
 
   camera* cam = entity_new("camera", camera);
-  cam->position = v3(20.0, 20.0, 20.0);
+  cam->position = v3(30.0, 30.0, 30.0);
   cam->target = v3_zero();
   
   light* sun = entity_new("sun", light);
@@ -28,7 +54,7 @@ void sea_init() {
   forward_renderer_set_camera(cam);
   forward_renderer_set_light(sun);
   forward_renderer_set_shadow_texture( shadow_mapper_depth_texture() );
-    
+  
   load_folder("./resources/");
     
   texture* noise1 = asset_get("./resources/noise1.dds");
@@ -60,6 +86,25 @@ void sea_init() {
   
   entity_add("seaplane", static_object, static_object_new(r_seaplane));
   
+  load_folder("./resources/skybox/");
+  
+  renderable* r_skybox = asset_get("./resources/skybox/skybox.obj");
+  renderable_set_material(r_skybox, asset_get("./resources/skybox/skybox.mat"));
+  entity_add("skybox", static_object, static_object_new(r_skybox));
+  
+  ui_rectangle* wireframe_rect = ui_elem_new("wireframe_rect", ui_rectangle);
+  wireframe_rect->top_left = v2(10,10);
+  wireframe_rect->bottom_right = v2(100, 35);
+  wireframe_rect->color = v4_black();
+  wireframe_rect->border_color = v4_white();
+  wireframe_rect->border_size = 1;
+  
+  ui_elem_add_event("wireframe_rect", switch_wireframe);
+  
+  ui_text* wireframe_text = ui_elem_new("wireframe_text", ui_text);
+  wireframe_text->position = v2(20, 20);
+  wireframe_text->color = v4_white();
+  ui_text_update_string(wireframe_text, "Wireframe");
 }
 
 void sea_update() {
@@ -92,24 +137,22 @@ void sea_update() {
 void sea_render() {
 
   static_object* s_seaplane = entity_get("seaplane");
+  static_object* s_skybox = entity_get("skybox");
 
   forward_renderer_begin();
   
+  forward_renderer_render_static(s_skybox);
+  
   if(wireframe) {
     glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-  }
-  
-  glClearColor(1.0f, 0.769f, 0.0f, 0.0f);
-  glClear(GL_COLOR_BUFFER_BIT);
+  }  
   forward_renderer_render_static(s_seaplane);
-  
   if(wireframe) {
     glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
   }
   
   forward_renderer_end();
   
-  SDL_GL_SwapBuffers(); 
 }
 
 void sea_event(SDL_Event event) {
@@ -133,8 +176,10 @@ void sea_event(SDL_Event event) {
   break;
   
   case SDL_MOUSEMOTION:
-    mouse_x = event.motion.xrel;
-    mouse_y = event.motion.yrel;
+    if (!wireframe_button_pressed) {
+      mouse_x = event.motion.xrel;
+      mouse_y = event.motion.yrel;
+    }
   break;
   }
 
@@ -169,11 +214,16 @@ int main(int argc, char **argv) {
         break;
       }
       sea_event(event);
+      ui_event(event);
     }
     
     sea_update();
+    ui_update();
     
     sea_render();
+    ui_render();
+    
+    SDL_GL_SwapBuffers();
     
     frame_end();
   }

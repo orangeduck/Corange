@@ -1,9 +1,10 @@
+Forward renderer shaders scale effects specularity.
+Remove cello bow from cello model
+Fix LUT generation code. No idea how it broke.
+Endgame code for platformer
+Comment platformer game nicely. Reorganize.
 Convert skeleton stuff to quaternions - Not sure about this, if I trust my quaternion code.
 PLY loader
-Skydome
-Time of day lighting
-Fur Shader
-Terrain stuff
 UI slider bar, Other UI elements
 LUA wrappers for asset, entity, ui managers
 const char stuff where needed

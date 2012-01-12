@@ -159,7 +159,7 @@ void renderers_init() {
   renderable* r_piano = asset_get("./resources/piano/piano.obj");
   renderable_set_material(r_piano, asset_get("./resources/piano/piano.mat"));
   static_object* s_piano = static_object_new(r_piano);
-  s_piano->position = v3(0, 5, 0);
+  s_piano->position = v3(1, 5, 0);
   entity_add("piano", static_object, s_piano);
   
   renderable* r_imrod = asset_get("./resources/imrod/imrod.smd");
@@ -313,33 +313,15 @@ void renderers_event(SDL_Event event) {
 
   switch(event.type){
   case SDL_KEYUP:
-    
-    if (event.key.keysym.sym == SDLK_UP) { s_cello->position.y += 1; }
-    if (event.key.keysym.sym == SDLK_DOWN) { s_cello->position.y -= 1; }
-    if (event.key.keysym.sym == SDLK_p) {
-      if (object_id == 0) {object_id = 1;}
-      else if (object_id == 1) {object_id = 2;}
-      else if (object_id == 2) {object_id = 3;}
-      else if (object_id == 3) {object_id = 0;}
-    }
-    if (event.key.keysym.sym == SDLK_r) { swap_renderer(); }
-    
-    if (event.key.keysym.sym == SDLK_LEFT) { s_cello->rotation = v4_quaternion_mul(
-        v4_quaternion_yaw(0.1) , s_cello->rotation); }
-    if (event.key.keysym.sym == SDLK_RIGHT) { s_cello->rotation = v4_quaternion_mul(
-        v4_quaternion_yaw(-0.1) , s_cello->rotation); }   
-        
   break;
 
   case SDL_MOUSEBUTTONDOWN:
-
     if (event.button.button == SDL_BUTTON_WHEELUP) {
       cam->position = v3_sub(cam->position, v3_normalize(cam->position));
     }
     if (event.button.button == SDL_BUTTON_WHEELDOWN) {
       cam->position = v3_add(cam->position, v3_normalize(cam->position));
     }
-    
   break;
   
   case SDL_MOUSEMOTION:
