@@ -133,7 +133,7 @@ void viewport_set_vsync(bool vsync) {
   viewport_restart();
 }
 
-void viewport_set_fullscreen(int fullscreen) {
+void viewport_set_fullscreen(bool fullscreen) {
 
   if (fullscreen) {
     window_flags |= SDL_FULLSCREEN;

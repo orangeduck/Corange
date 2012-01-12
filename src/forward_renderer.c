@@ -45,12 +45,7 @@ void forward_renderer_init() {
   
   COLOR_CORRECTION = asset_load_get("$CORANGE/resources/identity.lut");
   
-  /* Enables */
-  glEnable(GL_TEXTURE_2D);
-  glEnable(GL_MULTISAMPLE);
-  glEnable(GL_DEPTH_TEST);
-  
-  glClearColor(1.0f, 0.769f, 0.0f, 0.0f);
+  glClearColor(0.2, 0.2, 0.2, 1.0f);
   glClearDepth(1.0f);
   
 }
@@ -89,6 +84,8 @@ void forward_renderer_begin() {
   forward_renderer_setup_camera();
   
   timer += frame_time();
+  
+  glEnable(GL_DEPTH_TEST);
 }
 
 void forward_renderer_setup_camera() {
@@ -123,6 +120,8 @@ void forward_renderer_setup_camera() {
 }
 
 void forward_renderer_end() {
+  
+  glDisable(GL_DEPTH_TEST);
   
 }
 
@@ -191,6 +190,7 @@ static void forward_renderer_use_material(material* mat) {
       glUniform1i(loc, tex_counter);
       glActiveTexture(GL_TEXTURE0 + tex_counter);
       glBindTexture(GL_TEXTURE_2D, *((texture*)property));
+      glEnable(GL_TEXTURE_2D);
       tex_counter++;
     
     } else if (*type == mat_type_int) {
@@ -228,8 +228,10 @@ static void forward_renderer_use_material(material* mat) {
     glUniform1i(shadow_map, tex_counter);
     glActiveTexture(GL_TEXTURE0 + tex_counter);
     glBindTexture(GL_TEXTURE_2D, *SHADOW_TEX);
+    glEnable(GL_TEXTURE_2D);
     tex_counter++;
   }
+
   
   GLuint color_correction = glGetUniformLocation(*prog, "lut");
   glUniform1i(color_correction, tex_counter);
@@ -238,7 +240,8 @@ static void forward_renderer_use_material(material* mat) {
   glEnable(GL_TEXTURE_3D);
   tex_counter++;
   
-
+  
+  
 }
 
 void forward_renderer_render_static(static_object* s) {
@@ -254,8 +257,7 @@ void forward_renderer_render_static(static_object* s) {
     renderable_surface* s = r->surfaces[i];
     if(s->is_rigged) {
 
-      forward_renderer_use_material(s->base);    
-      //forward_renderer_use_material(s->instance);
+      forward_renderer_use_material(s->base);
       
       GLsizei stride = sizeof(float) * 24;
       
@@ -279,8 +281,8 @@ void forward_renderer_render_static(static_object* s) {
       glVertexAttribPointer(COLOR, 4, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 14));
       glEnableVertexAttribArray(COLOR);
       
-      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
-      glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
+        glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
       
       glDisableClientState(GL_VERTEX_ARRAY);
       glDisableClientState(GL_NORMAL_ARRAY);
@@ -292,13 +294,12 @@ void forward_renderer_render_static(static_object* s) {
       
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
       glBindBuffer(GL_ARRAY_BUFFER, 0);
-
+      
       glUseProgram(0);    
     
     } else {
     
-      forward_renderer_use_material(s->base);    
-      //forward_renderer_use_material(s->instance);
+      forward_renderer_use_material(s->base);
       
       GLsizei stride = sizeof(float) * 18;
       
@@ -322,8 +323,8 @@ void forward_renderer_render_static(static_object* s) {
       glVertexAttribPointer(COLOR, 4, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 14));
       glEnableVertexAttribArray(COLOR);
       
-      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
-      glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
+        glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
       
       glDisableClientState(GL_VERTEX_ARRAY);
       glDisableClientState(GL_NORMAL_ARRAY);
@@ -335,7 +336,7 @@ void forward_renderer_render_static(static_object* s) {
       
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
       glBindBuffer(GL_ARRAY_BUFFER, 0);
-
+      
       glUseProgram(0);
     
     }

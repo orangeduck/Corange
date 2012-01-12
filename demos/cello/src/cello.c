@@ -7,35 +7,43 @@ static int mouse_y;
 static int mouse_down;
 static int mouse_right_down;
 
-static int object_id = 0;
+static int object_id = 1;
 static int use_deferred = 1;
 
 void cello_init() {
   
+  viewport_set_dimensions( v2(1280, 720) );
+  
   /* Get reference to the Cello */
 
+  load_folder("./resources/skybox/");
+  load_folder("./resources/podium/");
   load_folder("./resources/cello/");
   load_folder("./resources/piano/");
-  load_folder("./resources/floor/");
-  load_folder("./resources/skybox/");
   load_folder("./resources/imrod/");
   load_folder("./resources/pirate/");
-  
-  renderable* r_cello = asset_get("./resources/cello/cello.obj");
-  renderable_set_material(r_cello, asset_get("./resources/cello/cello.mat"));
-  entity_add("cello", static_object, static_object_new(r_cello));
-  
-  renderable* r_piano = asset_get("./resources/piano/piano.obj");
-  renderable_set_material(r_piano, asset_get("./resources/piano/piano.mat"));
-  entity_add("piano", static_object, static_object_new(r_piano));
-  
-  renderable* r_floor = asset_get("./resources/floor/floor.obj");
-  renderable_set_material(r_floor, asset_get("./resources/floor/floor.mat"));
-  entity_add("floor", static_object, static_object_new(r_floor));
   
   renderable* r_skybox = asset_get("./resources/skybox/skybox.obj");
   renderable_set_material(r_skybox, asset_get("./resources/skybox/skybox.mat"));
   entity_add("skybox", static_object, static_object_new(r_skybox));
+  
+  renderable* r_podium = asset_get("./resources/podium/podium.obj");
+  renderable_set_material(r_podium, asset_get("./resources/podium/podium.mat"));
+  entity_add("podium", static_object, static_object_new(r_podium));
+  
+  renderable* r_cello = asset_get("./resources/cello/cello.obj");
+  renderable_set_material(r_cello, asset_get("./resources/cello/cello.mat"));
+  static_object* s_cello = static_object_new(r_cello);
+  s_cello->position = v3(0, 3, 0);
+  s_cello->rotation = v4_quaternion_mul(s_cello->rotation, v4_quaternion_yaw(-1.7));
+  s_cello->scale = v3(0.6, 0.6, 0.6);
+  entity_add("cello", static_object, s_cello);
+  
+  renderable* r_piano = asset_get("./resources/piano/piano.obj");
+  renderable_set_material(r_piano, asset_get("./resources/piano/piano.mat"));
+  static_object* s_piano = static_object_new(r_piano);
+  s_piano->position = v3(0, 5, 0);
+  entity_add("piano", static_object, s_piano);
   
   renderable* r_imrod = asset_get("./resources/imrod/imrod.smd");
   material* mat_imrod = asset_get("./resources/imrod/imrod_animated.mat");  
@@ -56,17 +64,18 @@ void cello_init() {
   
   animated_object* imrod = animated_object_new(r_imrod, skel_imrod);
   imrod->animation = ani_stand;
-  imrod->position = v3(0, -6.5, 0);
+  imrod->position = v3(0, -1.5, 0);
+  imrod->scale = v3(1.1, 1.1, 1.1);
   entity_add("imrod", animated_object, imrod);
   
   animated_object* pirate = animated_object_new(r_pirate, skel_pirate);
   pirate->animation = ani_cheer;
-  pirate->position = v3(0, -5, 0);
+  pirate->position = v3(0, 0, 0);
   entity_add("pirate", animated_object, pirate);
   
   animated_object* boots = animated_object_new(r_boots, skel_pirate);
   boots->animation = ani_cheer;
-  boots->position = v3(0, -5, 0);
+  boots->position = v3(0, 0, 0);
   entity_add("boots", animated_object, boots);
   
   /* Put some text on the screen */
@@ -86,8 +95,8 @@ void cello_init() {
   /* New Camera and light */
   
   camera* cam = entity_new("camera", camera);
-  cam->position = v3(20.0, 0.0, 0.0);
-  cam->target = v3_zero();
+  cam->position = v3(20.0, 20.0, 20.0);
+  cam->target = v3(0, 6, 0);
   
   light* sun = entity_new("sun", light);
   sun->position = v3(30,43,-26);
@@ -196,9 +205,10 @@ void cello_update() {
 
 void cello_render() {
 
-  static_object* s_piano = entity_get("piano");
-  static_object* s_floor = entity_get("floor");
   static_object* s_skybox = entity_get("skybox");
+  static_object* s_podium = entity_get("podium");
+
+  static_object* s_piano = entity_get("piano");
   static_object* s_cello = entity_get("cello");
   
   animated_object* a_imrod = entity_get("imrod");
@@ -206,40 +216,37 @@ void cello_render() {
   animated_object* a_boots = entity_get("boots");
   
   shadow_mapper_begin();
+  shadow_mapper_render_static(s_podium);
   if (object_id == 0) {
     shadow_mapper_render_static(s_cello);
   } else if (object_id == 1) { 
     shadow_mapper_render_static(s_piano);
-    shadow_mapper_render_static(s_floor);
   } else if (object_id == 2) {
     shadow_mapper_render_animated(a_imrod);
-    shadow_mapper_render_static(s_floor);
   } else if (object_id == 3) {
     shadow_mapper_render_animated(a_pirate);
     shadow_mapper_render_animated(a_boots);
-    shadow_mapper_render_static(s_floor);
   }
   shadow_mapper_end();
   
   if (use_deferred) {
-  
+    
     deferred_renderer_begin();
     
     deferred_renderer_render_static(s_skybox);
+    deferred_renderer_render_static(s_podium);
     
     if (object_id == 0) {
       deferred_renderer_render_static(s_cello);
     } else if (object_id == 1) {
-      deferred_renderer_render_static(s_floor);
       deferred_renderer_render_static(s_piano);
     } else if (object_id == 2) {
-      deferred_renderer_render_static(s_floor);
       deferred_renderer_render_animated(a_imrod);
     } else if (object_id == 3) {
-      deferred_renderer_render_static(s_floor);
       deferred_renderer_render_animated(a_pirate);
       deferred_renderer_render_animated(a_boots);
     }
+    
     deferred_renderer_end();
     
   } else {
@@ -247,17 +254,15 @@ void cello_render() {
     forward_renderer_begin();
     
     forward_renderer_render_static(s_skybox);
-
+    forward_renderer_render_static(s_podium);
+    
     if (object_id == 0) {
       forward_renderer_render_static(s_cello);
     } else if (object_id == 1) {
-      forward_renderer_render_static(s_floor);
       forward_renderer_render_static(s_piano);
     } else if (object_id == 2) {
-      forward_renderer_render_static(s_floor);
       forward_renderer_render_animated(a_imrod);
     } else if (object_id == 3) {
-      forward_renderer_render_static(s_floor);
       forward_renderer_render_animated(a_pirate);
       forward_renderer_render_animated(a_boots);
     }

@@ -2,7 +2,7 @@
 
 #include "spline.h"
 
-#define CUBE_SIZE 64
+#define CUBE_SIZE 10
 
 static int mouse_x;
 static int mouse_y;
@@ -13,6 +13,7 @@ GLuint cube_colors_buffer;
 
 void lut_gen_init() {
 
+
   asset_manager_handler("acv", acv_load_file, color_curves_delete);
   
   load_folder("./input/");
@@ -22,15 +23,17 @@ void lut_gen_init() {
   color_curves_write_lut(asset_get_as("./input/bluey.acv", color_curves), "./output/bluey.lut");
   
   load_folder("./output/");
+  load_folder("./screenshots/");
+  load_folder("./shaders/");
   
   camera* cam = entity_new("camera", camera);
-  cam->position = v3(100.0, 100.0, 100.0);
+  cam->position = v3(CUBE_SIZE * 1.5, CUBE_SIZE * 1.5, CUBE_SIZE * 1.5);
   cam->target = v3(CUBE_SIZE/2, CUBE_SIZE/2, CUBE_SIZE/2);
   
   glClearColor(0.5, 0.5, 0.5, 1.0);
   glClearDepth(1.0);
 
-  color_curves* curves = asset_get("./input/test.acv");
+  color_curves* curves = asset_get("./input/test2.acv");
   
   vector3* positions = malloc(sizeof(vector3) * CUBE_SIZE * CUBE_SIZE * CUBE_SIZE);
   vector3* colors = malloc(sizeof(vector3) * CUBE_SIZE * CUBE_SIZE * CUBE_SIZE);
@@ -74,6 +77,8 @@ static float view_matrix[16];
 
 void lut_gen_render() {
   
+  glViewport(400, 0, 400, 300);
+  
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   
   camera* cam = entity_get("camera");
@@ -99,7 +104,8 @@ void lut_gen_render() {
   glColorPointer(3, GL_FLOAT, 0, (void*)0);
   glEnableClientState(GL_COLOR_ARRAY);
   
-  glPointSize(5.0);
+  glEnable(GL_POINT_SMOOTH);
+  glPointSize(3.0);
   
     glDrawArrays(GL_POINTS, 0, CUBE_SIZE * CUBE_SIZE * CUBE_SIZE);
   
@@ -108,14 +114,69 @@ void lut_gen_render() {
   
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   
+  glDisable(GL_POINT_SMOOTH);
+  glPointSize(1.0);
   glDisable(GL_DEPTH_TEST);
   
-  color_curves* curves = asset_get("./input/test.acv");
+  glEnable(GL_LINE_SMOOTH);
+  glLineWidth(2.0);
   
-  //spline_render(curves->r_spline, v2(0,0), v2(100,100), 25);
-  //spline_render(curves->g_spline, v2(0,100), v2(100,100), 25);
-  //spline_render(curves->b_spline, v2(0,200), v2(100,100), 25);
-  //spline_render(curves->rgb_spline, v2(0,300), v2(100,100), 25);
+  glBegin(GL_LINES);
+    glColor3f(1.0, 0.0, 0.0); glVertex3f(0.0, 0.0, 0.0); glVertex3f(CUBE_SIZE, 0.0, 0.0);
+    glColor3f(0.0, 1.0, 0.0); glVertex3f(0.0, 0.0, 0.0); glVertex3f(0.0, CUBE_SIZE, 0.0);
+    glColor3f(0.0, 0.0, 1.0); glVertex3f(0.0, 0.0, 0.0); glVertex3f(0.0, 0.0, CUBE_SIZE);
+  glEnd();
+  
+  glLineWidth(1.0);
+  glDisable(GL_LINE_SMOOTH);
+  
+  glColor3f(1.0, 1.0, 1.0);
+  
+  glViewport(0, 0, viewport_width(), viewport_height());
+  
+	glMatrixMode(GL_PROJECTION);
+  glPushMatrix();
+	glLoadIdentity();
+	glOrtho(0, viewport_width(), viewport_height(), 0, -1, 1);
+  
+	glMatrixMode(GL_MODELVIEW);
+  glPushMatrix();
+	glLoadIdentity();
+  
+  shader_program* prog = asset_get("./shaders/basic_lut.prog");
+  
+  glUseProgram(*prog);
+  
+  glUniform1i(glGetUniformLocation(*prog, "diffuse"), 0);
+  glActiveTexture(GL_TEXTURE0 + 0 );
+  glEnable(GL_TEXTURE_2D);
+  glBindTexture(GL_TEXTURE_2D, *asset_get_as("./screenshots/shot1.dds", texture) );
+  
+  glUniform1i(glGetUniformLocation(*prog, "lut"), 1);
+  glActiveTexture(GL_TEXTURE0 + 1 );
+  glBindTexture(GL_TEXTURE_3D, *asset_get_as("./output/identity.lut", texture));
+  glEnable(GL_TEXTURE_3D);
+  
+  glBegin(GL_QUADS);
+    glTexCoord2f(0, 0); glVertex3f(viewport_width() - 400, 0, 0);
+    glTexCoord2f(1, 0); glVertex3f(viewport_width(), 0, 0);
+    glTexCoord2f(1, 1); glVertex3f(viewport_width(), 300, 0);
+    glTexCoord2f(0, 1); glVertex3f(viewport_width() - 400, 300, 0);
+  glEnd();
+  
+  glActiveTexture(GL_TEXTURE0 + 0 );
+  glDisable(GL_TEXTURE_2D);
+  
+  glActiveTexture(GL_TEXTURE0 + 1 );
+  glDisable(GL_TEXTURE_3D);
+  
+  glUseProgram(0);
+  
+  glMatrixMode(GL_PROJECTION);
+  glPopMatrix();
+  
+	glMatrixMode(GL_MODELVIEW);
+  glPopMatrix();
 }
 
 void lut_gen_update() {
@@ -172,8 +233,10 @@ int main(int argc, char **argv) {
         }
         break;
       case SDL_MOUSEMOTION:
-        mouse_x = event.motion.xrel;
-        mouse_y = event.motion.yrel;
+        if ((event.motion.x > 400) && (event.motion.y > 300)) {
+          mouse_x = event.motion.xrel;
+          mouse_y = event.motion.yrel;
+        }
         break;
       }
       

@@ -279,7 +279,7 @@ void deferred_renderer_begin() {
   
   glDisable(GL_LIGHTING);
   
-  glClearColor(1.0f, 0.769f, 0.0f, 0.0f);
+  glClearColor(0.2, 0.2, 0.2, 1.0f);
   glClearDepth(1.0f);
   glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
   

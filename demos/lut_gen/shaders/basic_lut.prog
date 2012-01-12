@@ -1,0 +1,2 @@
+vertex_program : $CORANGE/shaders/basic.vs
+fragment_program : ./shaders/basic_lut.fs

@@ -1,6 +1,7 @@
 #include "asset_manager.h"
 #include "vector.h"
 #include "error.h"
+#include "bool.h"
 
 #include "texture.h"
 
@@ -282,6 +283,13 @@ typedef struct {
   
 } DdsLoadInfo;
 
+
+static bool is_power_of_two(unsigned int x) {
+ while (((x % 2) == 0) && x > 1) /* While x is even and > 1 */
+   x /= 2;
+ return (x == 1);
+}
+
 texture* dds_load_file( char* filename ){
   
   DdsLoadInfo loadInfoDXT1 = {
@@ -309,8 +317,6 @@ texture* dds_load_file( char* filename ){
     0, 0, 1, 1, 1, GL_RGB8, GL_BGRA, GL_UNSIGNED_BYTE
   };
   
-  
-  
   texture my_texture;
   glGenTextures(1, &my_texture);
   glBindTexture(GL_TEXTURE_2D, my_texture);
@@ -334,7 +340,15 @@ texture* dds_load_file( char* filename ){
 
   x = hdr.dwWidth;
   y = hdr.dwHeight;
-
+  
+  if (!is_power_of_two(x)) {
+    warning("Texture %s with is %i pixels which is not a power of two!", filename, x);
+  }
+  
+  if (!is_power_of_two(y)) {
+    warning("Texture %s height is %i pixels which is not a power of two!", filename, y);
+  }
+  
   DdsLoadInfo* li = &loadInfoDXT1;
 
   if( PF_IS_DXT1( hdr.sPixelFormat ) ) {
