@@ -80,23 +80,33 @@ void cello_init() {
   
   /* Put some text on the screen */
   
+  ui_rectangle* info_rect = ui_elem_new("info_rect", ui_rectangle);
+  info_rect->top_left = v2(10,10);
+  info_rect->bottom_right = v2(250, 120);
+  info_rect->color = v4_black();
+  info_rect->border_color = v4_white();
+  info_rect->border_size = 1;
+  
   ui_text* framerate_text = ui_elem_new("framerate_text", ui_text);
-  framerate_text->position = v2(10, 10);
+  framerate_text->position = v2(20, 20);
+  framerate_text->color = v4_white();
   ui_text_update_string(framerate_text, "framerate");
   
   ui_text* renderer_text = ui_elem_new("renderer_text", ui_text);
-  renderer_text->position = v2(10, 80);
+  renderer_text->position = v2(20, 90);
+  renderer_text->color = v4_white();
   ui_text_update_string(renderer_text, "Deferred Renderer");
   
   ui_text* info_text = ui_elem_new("info_text", ui_text);
-  info_text->position = v2(10, 30);
+  info_text->position = v2(20, 40);
+  info_text->color = v4_white();
   ui_text_update_string(info_text, "Click and drag mouse to move\n'p' to switch object\n'r' to switch renderer");
   
   /* New Camera and light */
   
   camera* cam = entity_new("camera", camera);
   cam->position = v3(20.0, 20.0, 20.0);
-  cam->target = v3(0, 6, 0);
+  cam->target = v3(0, 5, 0);
   
   light* sun = entity_new("sun", light);
   sun->position = v3(30,43,-26);
@@ -232,7 +242,6 @@ void cello_render() {
   if (use_deferred) {
     
     deferred_renderer_begin();
-    
     deferred_renderer_render_static(s_skybox);
     deferred_renderer_render_static(s_podium);
     

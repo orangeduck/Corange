@@ -133,7 +133,9 @@ void deferred_renderer_init() {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth_texture, 0);
- 
+  
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  
 }
 
 void deferred_renderer_finish() {
@@ -270,14 +272,13 @@ static void deferred_renderer_setup_camera() {
 
 void deferred_renderer_begin() {
 
-  deferred_renderer_setup_camera();
-
   glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-
+  
+  deferred_renderer_setup_camera();
+  glEnable(GL_DEPTH_TEST);
+  
   GLenum buffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
   glDrawBuffers(3, buffers);
-  
-  glDisable(GL_LIGHTING);
   
   glClearColor(0.2, 0.2, 0.2, 1.0f);
   glClearDepth(1.0f);
@@ -286,6 +287,12 @@ void deferred_renderer_begin() {
 }
 
 void deferred_renderer_end() {
+  
+  glUseProgram(0);
+  
+  glDisable(GL_DEPTH_TEST);
+  
+  /* Render full screen quad */
   
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   
@@ -301,7 +308,6 @@ void deferred_renderer_end() {
 	glLoadIdentity();
   
   glDepthMask(GL_FALSE);
-  glDisable(GL_DEPTH_TEST);
   
   glActiveTexture(GL_TEXTURE0 + 0 );
   glBindTexture(GL_TEXTURE_2D, diffuse_texture);
@@ -365,26 +371,26 @@ void deferred_renderer_end() {
 		glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0,  1.0,  0.0f);
 	glEnd();
   
-  glActiveTexture(GL_TEXTURE0 + 0 );
-  glDisable(GL_TEXTURE_2D);
+  glActiveTexture(GL_TEXTURE0 + 6 );
+  glDisable(GL_TEXTURE_3D);
   
-  glActiveTexture(GL_TEXTURE0 + 1 );
-  glDisable(GL_TEXTURE_2D);
-  
-  glActiveTexture(GL_TEXTURE0 + 2 );
-  glDisable(GL_TEXTURE_2D);
-  
-  glActiveTexture(GL_TEXTURE0 + 3 );
+  glActiveTexture(GL_TEXTURE0 + 5 );
   glDisable(GL_TEXTURE_2D);
   
   glActiveTexture(GL_TEXTURE0 + 4 );
   glDisable(GL_TEXTURE_2D);
   
-  glActiveTexture(GL_TEXTURE0 + 5 );
+  glActiveTexture(GL_TEXTURE0 + 3 );
   glDisable(GL_TEXTURE_2D);
   
-  glActiveTexture(GL_TEXTURE0 + 6 );
-  glDisable(GL_TEXTURE_3D);
+  glActiveTexture(GL_TEXTURE0 + 2 );
+  glDisable(GL_TEXTURE_2D);
+  
+  glActiveTexture(GL_TEXTURE0 + 1 );
+  glDisable(GL_TEXTURE_2D);
+  
+  glActiveTexture(GL_TEXTURE0 + 0 );
+  glDisable(GL_TEXTURE_2D);
   
   glMatrixMode(GL_PROJECTION);
   glPopMatrix();
@@ -395,8 +401,6 @@ void deferred_renderer_end() {
   glUseProgram(0);
   
   glDepthMask(GL_TRUE);
-  glEnable(GL_DEPTH_TEST);
-  glEnable(GL_LIGHTING);
 
 }
 

@@ -62,10 +62,10 @@ void shadow_mapper_init(light* l) {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth_texture, 0);
   
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
-  
   texture_ptr = malloc(sizeof(texture));
   *texture_ptr = depth_texture;
+  
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
   
 }
 
@@ -87,7 +87,6 @@ void shadow_mapper_begin() {
   glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
   
   glViewport( 0, 0, LIGHT->shadow_map_width, LIGHT->shadow_map_height);
-  glDisable(GL_LIGHTING);
   
   shadow_mapper_setup_camera();
   
@@ -154,8 +153,8 @@ void shadow_mapper_render_static(static_object* s) {
       glVertexPointer(3, GL_FLOAT, stride, (void*)0);
       glEnableClientState(GL_VERTEX_ARRAY);
       
-      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
-      glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
+        glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
       
       glDisableClientState(GL_VERTEX_ARRAY);
       
@@ -170,8 +169,8 @@ void shadow_mapper_render_static(static_object* s) {
       glVertexPointer(3, GL_FLOAT, stride, (void*)0);
       glEnableClientState(GL_VERTEX_ARRAY);
       
-      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
-      glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
+        glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
       
       glDisableClientState(GL_VERTEX_ARRAY);
       
@@ -245,8 +244,8 @@ void shadow_mapper_render_animated(animated_object* ao) {
       glVertexAttribPointer(BONE_WEIGHTS, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 21));
       glEnableVertexAttribArray(BONE_WEIGHTS);
       
-      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
-      glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
+        glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
       
       glDisableClientState(GL_VERTEX_ARRAY);
       glDisableVertexAttribArray(BONE_INDICIES);  

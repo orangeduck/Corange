@@ -26,6 +26,8 @@ void SDL_LoadOpenGLExtensions();
 void SDL_CheckOpenGLExtension(const char* name, void* function_pointer);
 void SDL_CheckOpenGLError(const char* name);
 
+void SDL_PrintStackTrace();
+
 typedef GLuint (APIENTRY * GLCREATESHADERFN)( GLenum type );
 typedef GLuint (APIENTRY * GLCREATEPROGRAMFN)( void );
 typedef void (APIENTRY * GLSHADERSOURCEFN)( GLuint shader, GLsizei count, const GLchar** string, const GLint* length );

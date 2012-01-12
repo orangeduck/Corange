@@ -45,9 +45,6 @@ void forward_renderer_init() {
   
   COLOR_CORRECTION = asset_load_get("$CORANGE/resources/identity.lut");
   
-  glClearColor(0.2, 0.2, 0.2, 1.0f);
-  glClearDepth(1.0f);
-  
 }
 
 void forward_renderer_finish() {  
@@ -79,6 +76,8 @@ void forward_renderer_set_color_correction(texture* t) {
 
 void forward_renderer_begin() {
   
+  glClearColor(0.2, 0.2, 0.2, 1.0f);
+  glClearDepth(1.0f);
   glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
   
   forward_renderer_setup_camera();
@@ -125,6 +124,7 @@ void forward_renderer_end() {
   
 }
 
+static int tex_counter = 0;
 static void forward_renderer_use_material(material* mat) {
   
   shader_program* prog = dictionary_get(mat->properties, "program");
@@ -174,7 +174,7 @@ static void forward_renderer_use_material(material* mat) {
   
   /* Set material parameters */
   
-  int tex_counter = 0;
+  tex_counter = 0;
   
   int i;
   for(i = 0; i < mat->keys->num_items; i++) {
@@ -240,8 +240,22 @@ static void forward_renderer_use_material(material* mat) {
   glEnable(GL_TEXTURE_3D);
   tex_counter++;
   
+}
+
+static void forward_renderer_disuse_material() {
   
+  tex_counter--;
+  glActiveTexture(GL_TEXTURE0 + tex_counter );
+  glDisable(GL_TEXTURE_3D);
   
+  while(tex_counter > 0) {
+    tex_counter--;
+    glActiveTexture(GL_TEXTURE0 + tex_counter);
+    glDisable(GL_TEXTURE_2D);
+  }
+  
+  glUseProgram(0);
+
 }
 
 void forward_renderer_render_static(static_object* s) {
@@ -295,7 +309,7 @@ void forward_renderer_render_static(static_object* s) {
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
       glBindBuffer(GL_ARRAY_BUFFER, 0);
       
-      glUseProgram(0);    
+      forward_renderer_disuse_material();
     
     } else {
     
@@ -337,7 +351,7 @@ void forward_renderer_render_static(static_object* s) {
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
       glBindBuffer(GL_ARRAY_BUFFER, 0);
       
-      glUseProgram(0);
+      forward_renderer_disuse_material();
     
     }
 
@@ -378,7 +392,6 @@ void forward_renderer_render_animated(animated_object* ao) {
     if(s->is_rigged) {
 
       forward_renderer_use_material(s->base);    
-      //forward_renderer_use_material(s->instance);
       
       shader_program* prog = dictionary_get(s->base->properties, "program");
       
@@ -432,13 +445,12 @@ void forward_renderer_render_animated(animated_object* ao) {
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
       glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-      glUseProgram(0);    
+      forward_renderer_disuse_material();
     
     } else {
       error("animated object is not rigged");
     }
     
-    //forward_renderer_render_skeleton(ao->pose);
   }
   
 }
@@ -456,14 +468,12 @@ void forward_renderer_render_skeleton(skeleton* s) {
     if (main_bone->parent != NULL) {
       vector4 par_pos = m44_mul_v4(s->transforms[main_bone->parent->id], v4(0,0,0,1));
       glDisable(GL_DEPTH_TEST);
-      glDisable(GL_LIGHTING);
       glColor3f(0.0,0.0,0.0);
       glBegin(GL_LINES);
         glVertex3f(pos.x, pos.y, pos.z);
         glVertex3f(par_pos.x, par_pos.y, par_pos.z);
       glEnd();
       glColor3f(1.0,1.0,1.0);
-      glEnable(GL_LIGHTING);
       glEnable(GL_DEPTH_TEST);
     }
     
@@ -484,7 +494,6 @@ void forward_renderer_render_axis(matrix_4x4 world) {
   z_pos = v4_div(z_pos, z_pos.w);
   base_pos = v4_div(base_pos, base_pos.w);
   
-  glDisable(GL_LIGHTING);
   glDisable(GL_DEPTH_TEST);
   
   glLineWidth(2.0);
@@ -515,7 +524,6 @@ void forward_renderer_render_axis(matrix_4x4 world) {
   glPointSize(1.0);
   
   glEnable(GL_DEPTH_TEST);
-  glEnable(GL_LIGHTING);
   
 }
 

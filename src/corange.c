@@ -2,6 +2,9 @@
 
 #include "corange.h"
 
+#define STR(x)   #x
+#define SHOW_DEFINE(x) printf("%s=%s\n", #x, STR(x))
+
 void corange_init(char* core_assets_path) {
   
   /* Stop stdout redirect on windows */

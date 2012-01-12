@@ -311,6 +311,8 @@ void ui_text_update_properties(ui_text* text) {
   glBindBuffer(GL_ARRAY_BUFFER, text->positions_buffer);
   glBufferData(GL_ARRAY_BUFFER, sizeof(float) * text->buffersize * 12, vert_positions, GL_STATIC_READ);
   
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  
   free(vert_texcoords);
   free(vert_positions);
   
@@ -348,21 +350,21 @@ void ui_text_render(ui_text* text) {
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   
-  glEnable(GL_TEXTURE_2D);
   glBindTexture(GL_TEXTURE_2D, *(text->font->texture_map) );
+  glEnable(GL_TEXTURE_2D);
   
   glColor4f(text->color.r, text->color.g, text->color.b, text->color.a);
   
   glEnableClientState(GL_VERTEX_ARRAY);
   glEnableClientState(GL_TEXTURE_COORD_ARRAY);
     
-      glBindBuffer(GL_ARRAY_BUFFER, text->positions_buffer);
-      glVertexPointer(3, GL_FLOAT, 0, (void*)0);
-      
-      glBindBuffer(GL_ARRAY_BUFFER, text->texcoords_buffer);
-      glTexCoordPointer(2, GL_FLOAT, 0, (void*)0);
-      
-      glDrawArrays(GL_QUADS, 0, ui_text_charcount(text) * 4);
+    glBindBuffer(GL_ARRAY_BUFFER, text->positions_buffer);
+    glVertexPointer(3, GL_FLOAT, 0, (void*)0);
+    
+    glBindBuffer(GL_ARRAY_BUFFER, text->texcoords_buffer);
+    glTexCoordPointer(2, GL_FLOAT, 0, (void*)0);
+    
+    glDrawArrays(GL_QUADS, 0, ui_text_charcount(text) * 4);
   
   glDisableClientState(GL_VERTEX_ARRAY);
   glDisableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -371,8 +373,9 @@ void ui_text_render(ui_text* text) {
   
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   
-  glDisable(GL_BLEND);
   glDisable(GL_TEXTURE_2D);
+  
+  glDisable(GL_BLEND);
   
   glMatrixMode(GL_PROJECTION);
   glPopMatrix();

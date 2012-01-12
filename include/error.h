@@ -1,7 +1,7 @@
 #ifndef error_h
 #define error_h
 
-#include "SDL/SDL_stack.h"
+#include "SDL/SDL_local.h"
 
 #include "bool.h"
 
