@@ -276,3 +276,20 @@ void ui_elem_delete(char* name) {
   }
 
 }
+
+char* ui_elem_name(ui_elem* e) {
+  
+  int i;
+  for(i = 0; i < ui_elem_names->num_items; i++) {
+    char* name = list_get(ui_elem_names, i);
+    ui_elem* elem = dictionary_get(ui_elems, name);
+    
+    if (elem == e) {
+      return name;
+    }
+  }
+  
+  warning("UI Object at %p not loaded into ui manager. Cannot fetch name.", e);
+  
+  return NULL;
+}

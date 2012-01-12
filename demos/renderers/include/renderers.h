@@ -1,14 +1,12 @@
-#ifndef cello_h
-#define cello_h
+#ifndef renderers_h
+#define renderers_h
 
 #include "corange.h"
 
-void cello_init();
-void cello_event(SDL_Event e);
-void cello_update();
-void cello_render();
-void cello_finish();
-
-void swap_renderer();
+void renderers_init();
+void renderers_event(SDL_Event e);
+void renderers_update();
+void renderers_render();
+void renderers_finish();
 
 #endif

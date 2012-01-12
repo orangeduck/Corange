@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#include "cello.h"
+#include "renderers.h"
 
 static int mouse_x;
 static int mouse_y;
@@ -10,11 +10,128 @@ static int mouse_right_down;
 static int object_id = 1;
 static int use_deferred = 1;
 
-void cello_init() {
+static void swap_renderer() {
+  
+  camera* cam = entity_get("camera");
+  light* sun = entity_get("sun");
+  
+  if (use_deferred) {
+    
+    deferred_renderer_finish();
+    forward_renderer_init();
+    forward_renderer_set_camera(cam);
+    forward_renderer_set_light(sun);
+    forward_renderer_set_shadow_texture( shadow_mapper_depth_texture() );
+    
+    ui_text* renderer_text = ui_elem_get("renderer_text");
+    ui_text_update_string(renderer_text,"Forward Renderer");
+    
+    use_deferred = 0;
+    
+  } else {
+    
+    forward_renderer_finish();
+    deferred_renderer_init();
+    deferred_renderer_set_camera(cam);
+    deferred_renderer_set_light(sun);
+    deferred_renderer_set_shadow_texture( shadow_mapper_depth_texture() );
+    
+    ui_text* renderer_text = ui_elem_get("renderer_text");
+    ui_text_update_string(renderer_text,"Deferred Renderer");
+    
+    use_deferred = 1;
+  }
+
+}
+
+static bool renderer_button_pressed = false;
+static void switch_renderer_event(ui_rectangle* rect, SDL_Event event) {
+  
+  if (event.type == SDL_MOUSEBUTTONDOWN) {
+    
+    if (ui_rectangle_contains_position(rect, v2(event.motion.x, event.motion.y))) {
+      renderer_button_pressed = true;
+      rect->color = v4(0.5, 0.5, 0.5, 1);
+    }
+  
+  } else if (event.type == SDL_MOUSEBUTTONUP) {
+    
+    if (renderer_button_pressed) {
+      renderer_button_pressed = false;
+      rect->color = v4_black();
+      swap_renderer();
+    }
+  }
+}
+
+static bool piano_button_pressed;
+static void switch_object_piano(ui_rectangle* rect, SDL_Event event) {
+  
+  if (event.type == SDL_MOUSEBUTTONDOWN) {
+    
+    if (ui_rectangle_contains_position(rect, v2(event.motion.x, event.motion.y))) {
+      piano_button_pressed = true;
+      rect->color = v4(0.5, 0.5, 0.5, 1);
+    }
+  
+  } else if (event.type == SDL_MOUSEBUTTONUP) {
+    
+    if (piano_button_pressed) {
+      piano_button_pressed = false;
+      rect->color = v4_black();
+      
+      object_id = 1;
+    }
+  }
+}
+
+static bool cello_button_pressed;
+static void switch_object_cello(ui_rectangle* rect, SDL_Event event) {
+  
+  if (event.type == SDL_MOUSEBUTTONDOWN) {
+    
+    if (ui_rectangle_contains_position(rect, v2(event.motion.x, event.motion.y))) {
+      cello_button_pressed = true;
+      rect->color = v4(0.5, 0.5, 0.5, 1);
+    }
+  
+  } else if (event.type == SDL_MOUSEBUTTONUP) {
+    
+    if (cello_button_pressed) {
+      cello_button_pressed = false;
+      rect->color = v4_black();
+      
+      object_id = 0;
+    }
+  }
+}
+
+static bool imrod_button_pressed;
+static void switch_object_imrod(ui_rectangle* rect, SDL_Event event) {
+  
+  if (event.type == SDL_MOUSEBUTTONDOWN) {
+    
+    if (ui_rectangle_contains_position(rect, v2(event.motion.x, event.motion.y))) {
+      imrod_button_pressed = true;
+      rect->color = v4(0.5, 0.5, 0.5, 1);
+    }
+  
+  } else if (event.type == SDL_MOUSEBUTTONUP) {
+    
+    if (imrod_button_pressed) {
+      imrod_button_pressed = false;
+      rect->color = v4_black();
+      
+      object_id = 2;
+    }
+  }
+}
+
+#define any_button_pressed (imrod_button_pressed || cello_button_pressed || piano_button_pressed || renderer_button_pressed)
+
+void renderers_init() {
   
   viewport_set_dimensions( v2(1280, 720) );
-  
-  /* Get reference to the Cello */
 
   load_folder("./resources/skybox/");
   load_folder("./resources/podium/");
@@ -66,6 +183,7 @@ void cello_init() {
   imrod->animation = ani_stand;
   imrod->position = v3(0, -1.5, 0);
   imrod->scale = v3(1.1, 1.1, 1.1);
+  imrod->rotation = v4_quaternion_mul(imrod->rotation, v4_quaternion_roll(1.57));
   entity_add("imrod", animated_object, imrod);
   
   animated_object* pirate = animated_object_new(r_pirate, skel_pirate);
@@ -80,27 +198,85 @@ void cello_init() {
   
   /* Put some text on the screen */
   
-  ui_rectangle* info_rect = ui_elem_new("info_rect", ui_rectangle);
-  info_rect->top_left = v2(10,10);
-  info_rect->bottom_right = v2(250, 120);
-  info_rect->color = v4_black();
-  info_rect->border_color = v4_white();
-  info_rect->border_size = 1;
+  ui_rectangle* framerate_rect = ui_elem_new("framerate_rect", ui_rectangle);
+  framerate_rect->top_left = v2(10,10);
+  framerate_rect->bottom_right = v2(45, 35);
+  framerate_rect->color = v4_black();
+  framerate_rect->border_color = v4_white();
+  framerate_rect->border_size = 1;
   
   ui_text* framerate_text = ui_elem_new("framerate_text", ui_text);
-  framerate_text->position = v2(20, 20);
+  framerate_text->position = v2(15, 15);
   framerate_text->color = v4_white();
   ui_text_update_string(framerate_text, "framerate");
   
+  ui_rectangle* renderer_rect = ui_elem_new("renderer_rect", ui_rectangle);
+  renderer_rect->top_left = v2(55,10);
+  renderer_rect->bottom_right = v2(210, 35);
+  renderer_rect->color = v4_black();
+  renderer_rect->border_color = v4_white();
+  renderer_rect->border_size = 1;
+  
   ui_text* renderer_text = ui_elem_new("renderer_text", ui_text);
-  renderer_text->position = v2(20, 90);
+  renderer_text->position = v2(65, 15);
   renderer_text->color = v4_white();
   ui_text_update_string(renderer_text, "Deferred Renderer");
   
-  ui_text* info_text = ui_elem_new("info_text", ui_text);
-  info_text->position = v2(20, 40);
-  info_text->color = v4_white();
-  ui_text_update_string(info_text, "Click and drag mouse to move\n'p' to switch object\n'r' to switch renderer");
+  /* Object Buttons */
+  
+  ui_rectangle* switch_rect = ui_elem_new("switch_rect", ui_rectangle);
+  switch_rect->top_left = v2(10,45);
+  switch_rect->bottom_right = v2(150, 70);
+  switch_rect->color = v4_black();
+  switch_rect->border_color = v4_white();
+  switch_rect->border_size = 1;
+  
+  ui_text* switch_text = ui_elem_new("switch_text", ui_text);
+  switch_text->position = v2(15, 50);
+  switch_text->color = v4_white();
+  ui_text_update_string(switch_text, "Switch Renderer");
+  
+  ui_rectangle* piano_rect = ui_elem_new("piano_rect", ui_rectangle);
+  piano_rect->top_left = v2(10,45 + 35);
+  piano_rect->bottom_right = v2(60, 70 + 35);
+  piano_rect->color = v4_black();
+  piano_rect->border_color = v4_white();
+  piano_rect->border_size = 1;
+  
+  ui_text* piano_text = ui_elem_new("piano_text", ui_text);
+  piano_text->position = v2(15, 50 + 35);
+  piano_text->color = v4_white();
+  ui_text_update_string(piano_text, "Piano");
+  
+  ui_rectangle* cello_rect = ui_elem_new("cello_rect", ui_rectangle);
+  cello_rect->top_left = v2(10,80 + 35);
+  cello_rect->bottom_right = v2(60, 105 + 35);
+  cello_rect->color = v4_black();
+  cello_rect->border_color = v4_white();
+  cello_rect->border_size = 1;
+  
+  ui_text* cello_text = ui_elem_new("cello_text", ui_text);
+  cello_text->position = v2(15, 85 + 35);
+  cello_text->color = v4_white();
+  ui_text_update_string(cello_text, "Cello");
+  
+  ui_rectangle* imrod_rect = ui_elem_new("imrod_rect", ui_rectangle);
+  imrod_rect->top_left = v2(10,115 + 35);
+  imrod_rect->bottom_right = v2(60, 140 + 35);
+  imrod_rect->color = v4_black();
+  imrod_rect->border_color = v4_white();
+  imrod_rect->border_size = 1;
+  
+  ui_text* imrod_text = ui_elem_new("imrod_text", ui_text);
+  imrod_text->position = v2(15, 120 + 35);
+  imrod_text->color = v4_white();
+  ui_text_update_string(imrod_text, "Imrod");
+  
+  ui_elem_add_event("switch_rect", switch_renderer_event);
+  
+  ui_elem_add_event("piano_rect", switch_object_piano);
+  ui_elem_add_event("cello_rect", switch_object_cello);
+  ui_elem_add_event("imrod_rect", switch_object_imrod);
   
   /* New Camera and light */
   
@@ -127,7 +303,7 @@ void cello_init() {
 
 }
 
-void cello_event(SDL_Event event) {
+void renderers_event(SDL_Event event) {
   
   ui_event(event);
   
@@ -167,14 +343,16 @@ void cello_event(SDL_Event event) {
   break;
   
   case SDL_MOUSEMOTION:
-    mouse_x = event.motion.xrel;
-    mouse_y = event.motion.yrel;
+    if (!any_button_pressed) {
+      mouse_x = event.motion.xrel;
+      mouse_y = event.motion.yrel;
+    }
   break;
   }
     
 }
 
-void cello_update() {
+void renderers_update() {
   
   ui_update();
   
@@ -213,7 +391,7 @@ void cello_update() {
   animated_object_update(boots, 0.5);
 }
 
-void cello_render() {
+void renderers_render() {
 
   static_object* s_skybox = entity_get("skybox");
   static_object* s_podium = entity_get("podium");
@@ -285,7 +463,7 @@ void cello_render() {
   
 }
 
-void cello_finish() {
+void renderers_finish() {
   
   if (use_deferred) {
     deferred_renderer_finish();
@@ -297,45 +475,11 @@ void cello_finish() {
   
 }
 
-void swap_renderer() {
-  
-  camera* cam = entity_get("camera");
-  light* sun = entity_get("sun");
-  
-  if (use_deferred) {
-    
-    deferred_renderer_finish();
-    forward_renderer_init();
-    forward_renderer_set_camera(cam);
-    forward_renderer_set_light(sun);
-    forward_renderer_set_shadow_texture( shadow_mapper_depth_texture() );
-    
-    ui_text* renderer_text = ui_elem_get("renderer_text");
-    ui_text_update_string(renderer_text,"Forward Renderer");
-    
-    use_deferred = 0;
-    
-  } else {
-    
-    forward_renderer_finish();
-    deferred_renderer_init();
-    deferred_renderer_set_camera(cam);
-    deferred_renderer_set_light(sun);
-    deferred_renderer_set_shadow_texture( shadow_mapper_depth_texture() );
-    
-    ui_text* renderer_text = ui_elem_get("renderer_text");
-    ui_text_update_string(renderer_text,"Deferred Renderer");
-    
-    use_deferred = 1;
-  }
-
-}
-
 int main(int argc, char **argv) {
   
   corange_init("../../core_assets");
   
-  cello_init();
+  renderers_init();
   
   int running = 1;
   SDL_Event event;
@@ -355,17 +499,17 @@ int main(int argc, char **argv) {
         running = 0;
         break;
       }
-      cello_event(event);
+      renderers_event(event);
     }
     
-    cello_update();
+    renderers_update();
     
-    cello_render();
+    renderers_render();
     
     frame_end();
   }
   
-  cello_finish();
+  renderers_finish();
   
   corange_finish();
   
