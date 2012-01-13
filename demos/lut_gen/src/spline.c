@@ -37,7 +37,7 @@ void spline_set_point(spline* s, int i, vector2 p) {
 }
 
 void spline_print(spline* s) {
-  printf("Spline: ");
+  printf("Spline (%i points): ", s->num_points);
   int i;
   for (i=0; i < s->num_points; i++) {
     printf("(%0.2f, %0.2f | %0.2f) ", s->x[i], s->y[i], s->yd[i]);
@@ -252,11 +252,26 @@ void spline_render(spline* s, vector2 position, vector2 size, int increments) {
 }
 
 color_curves* acv_load_file(char* filename) {
-
-  char* contents = asset_file_contents(filename);
+  
+  SDL_RWops* file = SDL_RWFromFile(filename, "r");
+  
+  if(file == NULL) {
+    error("Cannot load curves file %s", filename);
+  }
+  
+  long size = SDL_RWseek(file,0,SEEK_END);
+  unsigned char* contents = malloc(size+1);
+  
+  SDL_RWseek(file, 0, SEEK_SET);
+  SDL_RWread(file, contents, size, 1);
+  
+  SDL_RWclose(file);
   
   int version = contents[0] | contents[1];
   int count = contents[2] | contents[3];
+  
+  debug("Version: %i", version);
+  debug("Count: %i", count);
   
   if (count != 5) {
     error("acv file %s. Doesn't contain 5 curves.", filename);
@@ -275,12 +290,14 @@ color_curves* acv_load_file(char* filename) {
   rgb_curve->y0d = 1; rgb_curve->ynd = 1; rgb_curve->x0d = 1; rgb_curve->xnd = 1;
   pos += 2;
   for(i = 0; i < rgb_curve->num_points; i++) {
-    int x = contents[pos] | contents[pos+1];
-    int y = contents[pos+2] | contents[pos+3];
+    int x = 0; x = contents[pos] | contents[pos+1];
+    int y = 0; y = contents[pos+2] | contents[pos+3];
     rgb_curve->x[i] = (float)x / 255;
     rgb_curve->y[i] = (float)y / 255;
     pos += 4;
   }
+  
+  spline_print(rgb_curve);
   
   r_curve->num_points = contents[pos] | contents[pos+1];
   r_curve->y0d = 1; r_curve->ynd = 1; r_curve->x0d = 1; r_curve->xnd = 1;

@@ -1,10 +1,20 @@
+-- To Finish Demos --
+
 Forward renderer shaders scale effects specularity.
-Remove cello bow from cello model
+Remove cello bow from cello model.
+Add ship to sea demo. Multi Material? Add depth pass and foam effects?
 Fix LUT generation code. No idea how it broke.
-Endgame code for platformer
+Camera doesn't rotate properly around LUT cube. Rotate needs to be translated first.
+Endgame code for platformer.
 Comment platformer game nicely. Reorganize.
+
+-- Tweaks/Cleanup --
+
+const char stuff where needed
 Convert skeleton stuff to quaternions - Not sure about this, if I trust my quaternion code.
+
+-- In the Future --
+
 PLY loader
 UI slider bar, Other UI elements
 LUA wrappers for asset, entity, ui managers
-const char stuff where needed

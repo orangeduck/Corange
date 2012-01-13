@@ -11,30 +11,11 @@ static int mouse_down;
 GLuint cube_positions_buffer;
 GLuint cube_colors_buffer;
 
-void lut_gen_init() {
+static color_curves* current_curves = NULL;
+static texture* current_lut = NULL;
 
+static void lut_gen_rebuild_cube() {
 
-  asset_manager_handler("acv", acv_load_file, color_curves_delete);
-  
-  load_folder("./input/");
-  
-  color_curves_write_lut(asset_get_as("./input/test.acv", color_curves), "./output/test.lut");
-  color_curves_write_lut(asset_get_as("./input/test2.acv", color_curves), "./output/test2.lut");
-  color_curves_write_lut(asset_get_as("./input/bluey.acv", color_curves), "./output/bluey.lut");
-  
-  load_folder("./output/");
-  load_folder("./screenshots/");
-  load_folder("./shaders/");
-  
-  camera* cam = entity_new("camera", camera);
-  cam->position = v3(CUBE_SIZE * 1.5, CUBE_SIZE * 1.5, CUBE_SIZE * 1.5);
-  cam->target = v3(CUBE_SIZE/2, CUBE_SIZE/2, CUBE_SIZE/2);
-  
-  glClearColor(0.5, 0.5, 0.5, 1.0);
-  glClearDepth(1.0);
-
-  color_curves* curves = asset_get("./input/test2.acv");
-  
   vector3* positions = malloc(sizeof(vector3) * CUBE_SIZE * CUBE_SIZE * CUBE_SIZE);
   vector3* colors = malloc(sizeof(vector3) * CUBE_SIZE * CUBE_SIZE * CUBE_SIZE);
   
@@ -47,11 +28,8 @@ void lut_gen_init() {
     
     positions[index] = v3(x, y, z);
     colors[index] = v3_div(v3(x, y, z), CUBE_SIZE);
-    colors[index] = color_curves_map(curves, colors[index]);
+    colors[index] = color_curves_map(current_curves, colors[index]);
   }
-  
-  glGenBuffers(1, &cube_positions_buffer);
-  glGenBuffers(1, &cube_colors_buffer);
   
   glBindBuffer(GL_ARRAY_BUFFER, cube_positions_buffer);
   glBufferData(GL_ARRAY_BUFFER, sizeof(vector3) * CUBE_SIZE * CUBE_SIZE * CUBE_SIZE, positions, GL_STATIC_DRAW);
@@ -61,6 +39,175 @@ void lut_gen_init() {
   
   free(positions);
   free(colors);
+
+}
+
+static bool emerald_button_pressed = false;
+static void switch_curves_emerald(ui_rectangle* rect, SDL_Event event) {
+  
+  if (event.type == SDL_MOUSEBUTTONDOWN) {
+    
+    if (ui_rectangle_contains_position(rect, v2(event.motion.x, event.motion.y))) {
+      emerald_button_pressed = true;
+      rect->color = v4(0.5, 0.5, 0.5, 1);
+    }
+  
+  } else if (event.type == SDL_MOUSEBUTTONUP) {
+    
+    if (emerald_button_pressed) {
+      emerald_button_pressed = false;
+      rect->color = v4_black();
+      
+      current_curves = asset_get("./input/emerald.acv");
+      current_lut = asset_get("./output/emerald.lut");
+      lut_gen_rebuild_cube();
+    }
+  }
+}
+
+static bool blues_button_pressed = false;
+static void switch_curves_blues(ui_rectangle* rect, SDL_Event event) {
+  
+  if (event.type == SDL_MOUSEBUTTONDOWN) {
+    
+    if (ui_rectangle_contains_position(rect, v2(event.motion.x, event.motion.y))) {
+      blues_button_pressed = true;
+      rect->color = v4(0.5, 0.5, 0.5, 1);
+    }
+  
+  } else if (event.type == SDL_MOUSEBUTTONUP) {
+    
+    if (blues_button_pressed) {
+      blues_button_pressed = false;
+      rect->color = v4_black();
+      
+      current_curves = asset_get("./input/blues.acv");
+      current_lut = asset_get("./output/blues.lut");
+      lut_gen_rebuild_cube();
+    }
+  }
+}
+
+static bool identity_button_pressed = false;
+static void switch_curves_identity(ui_rectangle* rect, SDL_Event event) {
+  
+  if (event.type == SDL_MOUSEBUTTONDOWN) {
+    
+    if (ui_rectangle_contains_position(rect, v2(event.motion.x, event.motion.y))) {
+      identity_button_pressed = true;
+      rect->color = v4(0.5, 0.5, 0.5, 1);
+    }
+  
+  } else if (event.type == SDL_MOUSEBUTTONUP) {
+    
+    if (identity_button_pressed) {
+      identity_button_pressed = false;
+      rect->color = v4_black();
+      
+      current_curves = asset_get("./input/identity.acv");
+      current_lut = asset_get("./output/identity.lut");
+      lut_gen_rebuild_cube();
+    }
+  }
+}
+
+void lut_gen_init() {
+
+  asset_manager_handler("acv", acv_load_file, color_curves_delete);
+  
+  load_folder("./input/");
+  
+  color_curves_write_lut(asset_get_as("./input/blues.acv", color_curves), "./output/blues.lut");
+  color_curves_write_lut(asset_get_as("./input/emerald.acv", color_curves), "./output/emerald.lut");
+  color_curves_write_lut(asset_get_as("./input/identity.acv", color_curves), "./output/identity.lut");
+  
+  load_folder("./output/");
+  load_folder("./screenshots/");
+  load_folder("./shaders/");
+  
+  camera* cam = entity_new("camera", camera);
+  cam->position = v3(CUBE_SIZE * 1.5, CUBE_SIZE * 1.5, CUBE_SIZE * 1.5);
+  cam->target = v3(CUBE_SIZE/2, CUBE_SIZE/2, CUBE_SIZE/2);
+  
+  current_curves = asset_get("./input/emerald.acv");
+  current_lut = asset_get("./output/emerald.lut");
+  
+  glGenBuffers(1, &cube_positions_buffer);
+  glGenBuffers(1, &cube_colors_buffer);
+  
+  lut_gen_rebuild_cube();
+  
+  glClearColor(0.0, 0.0, 0.0, 1.0);
+  glClearDepth(1.0);
+  
+  ui_rectangle* top_left_rect = ui_elem_new("top_left_rect", ui_rectangle);
+  top_left_rect->top_left = v2(0,0);
+  top_left_rect->bottom_right = v2(400,300);
+  top_left_rect->color = v4(0,0,0,0);
+  top_left_rect->border_color = v4_white();
+  top_left_rect->border_size = 1;
+  
+  ui_rectangle* top_right_rect = ui_elem_new("top_right_rect", ui_rectangle);
+  top_right_rect->top_left = v2(400,0);
+  top_right_rect->bottom_right = v2(800,300);
+  top_right_rect->color = v4(0,0,0,0);
+  top_right_rect->border_color = v4_white();
+  top_right_rect->border_size = 1;
+  
+  ui_rectangle* bot_left_rect = ui_elem_new("bot_left_rect", ui_rectangle);
+  bot_left_rect->top_left = v2(0,300);
+  bot_left_rect->bottom_right = v2(400,600);
+  bot_left_rect->color = v4(0,0,0,0);
+  bot_left_rect->border_color = v4_white();
+  bot_left_rect->border_size = 1;
+  
+  ui_rectangle* bot_right_rect = ui_elem_new("bot_right_rect", ui_rectangle);
+  bot_right_rect->top_left = v2(400,300);
+  bot_right_rect->bottom_right = v2(800,600);
+  bot_right_rect->color = v4(0,0,0,0);
+  bot_right_rect->border_color = v4_white();
+  bot_right_rect->border_size = 1; 
+  
+  ui_rectangle* emerald_rect = ui_elem_new("emerald_rect", ui_rectangle);
+  emerald_rect->top_left = v2(10, 310);
+  emerald_rect->bottom_right = v2(75, 335);
+  emerald_rect->color = v4_black();
+  emerald_rect->border_color = v4_white();
+  emerald_rect->border_size = 1;
+  
+  ui_text* emerald_text = ui_elem_new("emerald_text", ui_text);
+  emerald_text->position = v2(15, 315);
+  emerald_text->color = v4_white();
+  ui_text_update_string(emerald_text, "Emerald");
+  
+  ui_rectangle* blues_rect = ui_elem_new("blues_rect", ui_rectangle);
+  blues_rect->top_left = v2(10, 345);
+  blues_rect->bottom_right = v2(60, 370);
+  blues_rect->color = v4_black();
+  blues_rect->border_color = v4_white();
+  blues_rect->border_size = 1;
+  
+  ui_text* blues_text = ui_elem_new("blues_text", ui_text);
+  blues_text->position = v2(15, 350);
+  blues_text->color = v4_white();
+  ui_text_update_string(blues_text, "Blues");
+  
+  ui_rectangle* identity_rect = ui_elem_new("identity_rect", ui_rectangle);
+  identity_rect->top_left = v2(10, 380);
+  identity_rect->bottom_right = v2(82, 405);
+  identity_rect->color = v4_black();
+  identity_rect->border_color = v4_white();
+  identity_rect->border_size = 1;
+  
+  ui_text* identity_text = ui_elem_new("identity_text", ui_text);
+  identity_text->position = v2(15, 385);
+  identity_text->color = v4_white();
+  ui_text_update_string(identity_text, "Identity");
+  
+  ui_elem_add_event("emerald_rect", switch_curves_emerald);
+  ui_elem_add_event("blues_rect", switch_curves_blues);
+  ui_elem_add_event("identity_rect", switch_curves_identity);
+
   
 }
 
@@ -75,8 +222,56 @@ void lut_gen_finish() {
 static float proj_matrix[16];
 static float view_matrix[16];
 
-void lut_gen_render() {
+static void lut_gen_render_preview() {
   
+	glMatrixMode(GL_PROJECTION);
+  glPushMatrix();
+	glLoadIdentity();
+	glOrtho(0, viewport_width(), viewport_height(), 0, -1, 1);
+  
+	glMatrixMode(GL_MODELVIEW);
+  glPushMatrix();
+	glLoadIdentity();
+  
+  shader_program* prog = asset_get("./shaders/basic_lut.prog");
+  
+  glUseProgram(*prog);
+  
+  glUniform1i(glGetUniformLocation(*prog, "diffuse"), 0);
+  glActiveTexture(GL_TEXTURE0 + 0 );
+  glEnable(GL_TEXTURE_2D);
+  glBindTexture(GL_TEXTURE_2D, *asset_get_as("./screenshots/shot1.dds", texture) );
+  
+  glUniform1i(glGetUniformLocation(*prog, "lut"), 1);
+  glActiveTexture(GL_TEXTURE0 + 1 );
+  glBindTexture(GL_TEXTURE_3D, *current_lut);
+  glEnable(GL_TEXTURE_3D);
+  
+  glBegin(GL_QUADS);
+    glTexCoord2f(0, 0); glVertex3f(viewport_width() - 400, 0, 0);
+    glTexCoord2f(1, 0); glVertex3f(viewport_width(), 0, 0);
+    glTexCoord2f(1, 1); glVertex3f(viewport_width(), 300, 0);
+    glTexCoord2f(0, 1); glVertex3f(viewport_width() - 400, 300, 0);
+  glEnd();
+  
+  glActiveTexture(GL_TEXTURE0 + 0 );
+  glDisable(GL_TEXTURE_2D);
+  
+  glActiveTexture(GL_TEXTURE0 + 1 );
+  glDisable(GL_TEXTURE_3D);
+  
+  glUseProgram(0);
+  
+  glMatrixMode(GL_PROJECTION);
+  glPopMatrix();
+  
+	glMatrixMode(GL_MODELVIEW);
+  glPopMatrix();
+
+}
+
+static void lut_gen_render_cube() {
+
   glViewport(400, 0, 400, 300);
   
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -131,8 +326,47 @@ void lut_gen_render() {
   glDisable(GL_LINE_SMOOTH);
   
   glColor3f(1.0, 1.0, 1.0);
-  
+
   glViewport(0, 0, viewport_width(), viewport_height());
+  
+}
+
+static void lut_gen_render_spline(spline* s, vector3 color) {
+
+  spline_update(s);
+  glColor3d(color.r, color.g, color.b);
+  
+  glEnable(GL_POINT_SMOOTH);
+  glPointSize(5.0);
+  glBegin(GL_POINTS);
+    int i;
+    for(i = 0; i < s->num_points; i++) {
+      vector2 loc = v2( s->x[i], s->y[i] );
+      glVertex2f((1-loc.x) * 400, loc.y * 300);
+    }
+  glEnd();
+  glPointSize(1.0);
+  glDisable(GL_POINT_SMOOTH);
+  
+  glEnable(GL_LINE_SMOOTH);
+  glBegin(GL_LINE_STRIP);
+    float step = 1.0 / 100;
+    float j;
+    for( j = 0; j <= 1; j += step) {
+      float loc = spline_get_y(s, j);
+      glVertex2f((1-j) * 400, loc * 300);
+    }
+    float y = s->y[s->num_points-1];
+    float x = s->x[s->num_points-1];
+    glVertex2f((1-x) * 400, y * 300);
+  glEnd();
+  glDisable(GL_LINE_SMOOTH);
+  
+  glColor3f(1.0, 1.0, 1.0);
+
+}
+
+static void lut_gen_render_curves() {
   
 	glMatrixMode(GL_PROJECTION);
   glPushMatrix();
@@ -143,40 +377,24 @@ void lut_gen_render() {
   glPushMatrix();
 	glLoadIdentity();
   
-  shader_program* prog = asset_get("./shaders/basic_lut.prog");
-  
-  glUseProgram(*prog);
-  
-  glUniform1i(glGetUniformLocation(*prog, "diffuse"), 0);
-  glActiveTexture(GL_TEXTURE0 + 0 );
-  glEnable(GL_TEXTURE_2D);
-  glBindTexture(GL_TEXTURE_2D, *asset_get_as("./screenshots/shot1.dds", texture) );
-  
-  glUniform1i(glGetUniformLocation(*prog, "lut"), 1);
-  glActiveTexture(GL_TEXTURE0 + 1 );
-  glBindTexture(GL_TEXTURE_3D, *asset_get_as("./output/identity.lut", texture));
-  glEnable(GL_TEXTURE_3D);
-  
-  glBegin(GL_QUADS);
-    glTexCoord2f(0, 0); glVertex3f(viewport_width() - 400, 0, 0);
-    glTexCoord2f(1, 0); glVertex3f(viewport_width(), 0, 0);
-    glTexCoord2f(1, 1); glVertex3f(viewport_width(), 300, 0);
-    glTexCoord2f(0, 1); glVertex3f(viewport_width() - 400, 300, 0);
-  glEnd();
-  
-  glActiveTexture(GL_TEXTURE0 + 0 );
-  glDisable(GL_TEXTURE_2D);
-  
-  glActiveTexture(GL_TEXTURE0 + 1 );
-  glDisable(GL_TEXTURE_3D);
-  
-  glUseProgram(0);
+  lut_gen_render_spline(current_curves->r_spline, v3_red());
+  lut_gen_render_spline(current_curves->g_spline, v3_green());
+  lut_gen_render_spline(current_curves->b_spline, v3_blue());
+  lut_gen_render_spline(current_curves->rgb_spline, v3_white());
   
   glMatrixMode(GL_PROJECTION);
   glPopMatrix();
   
 	glMatrixMode(GL_MODELVIEW);
   glPopMatrix();
+}
+
+void lut_gen_render() {
+  
+  lut_gen_render_cube();
+  lut_gen_render_preview();
+  lut_gen_render_curves();
+  
 }
 
 void lut_gen_update() {
@@ -188,11 +406,14 @@ void lut_gen_update() {
     float a1 = -(float)mouse_x * 0.005;
     float a2 = (float)mouse_y * 0.005;
     
+    cam->position = v3_sub(cam->position, cam->target);
     cam->position = m33_mul_v3(m33_rotation_y( a1 ), cam->position );
+    cam->position = v3_add(cam->position, cam->target);
     
+    cam->position = v3_sub(cam->position, cam->target);
     vector3 rotation_axis = v3_normalize(v3_cross( v3_sub(cam->position, cam->target) , v3(0,1,0) ));
-    
     cam->position = m33_mul_v3(m33_rotation_axis_angle(rotation_axis, a2 ), cam->position );
+    cam->position = v3_add(cam->position, cam->target);
   }
   
   mouse_x = 0;
