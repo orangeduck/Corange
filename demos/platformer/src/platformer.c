@@ -32,6 +32,36 @@ static vector2 coin_positions[COIN_COUNT] = {
   {81, 37}, {77, 38}, {72, 34}, {65, 38}, {71, 37}
 };
 
+static bool disable_audio_pressed = false;
+static void disable_audio(ui_rectangle* rect, SDL_Event event) {
+  
+  if (event.type == SDL_MOUSEBUTTONDOWN) {
+    
+    if (ui_rectangle_contains_position(rect, v2(event.motion.x, event.motion.y))) {
+      disable_audio_pressed = true;
+      rect->color = v4(0.5, 0.5, 0.5, 1);
+    }
+  
+  } else if (event.type == SDL_MOUSEBUTTONUP) {
+    
+    if (disable_audio_pressed) {
+      disable_audio_pressed = false;
+      rect->color = v4_black();
+      
+      if (audio_mixer_enabled()) {
+        audio_mixer_disable();
+        ui_text* audio_text = ui_elem_get("audio_text");
+        ui_text_update_string(audio_text, "Enable Audio");
+      } else {
+        audio_mixer_enable();
+        ui_text* audio_text = ui_elem_get("audio_text");
+        ui_text_update_string(audio_text, "Disable Audio");
+      }
+      
+    }
+  }
+}
+
 void platformer_init() {
   
   /* Register functions for loading/unloading files with the extension .level */
@@ -72,12 +102,18 @@ void platformer_init() {
   glClearDepth(1.0);
   
   /* Add some UI elements */
+  
   ui_rectangle* framerate_rect = ui_elem_new("framerate_rect", ui_rectangle);
   framerate_rect->top_left = v2(10, 10);
   framerate_rect->bottom_right = v2(40, 35);
   framerate_rect->color = v4_black();
   framerate_rect->border_color = v4_white();
   framerate_rect->border_size = 1;
+  
+  ui_text* framerate_text = ui_elem_new("framerate_text", ui_text);
+  framerate_text->position = v2(17, 15);
+  framerate_text->color = v4_white();
+  ui_text_update_string(framerate_text, "framerate");
   
   ui_rectangle* audio_rect = ui_elem_new("audio_rect", ui_rectangle);
   audio_rect->top_left = v2(50, 10);
@@ -86,12 +122,24 @@ void platformer_init() {
   audio_rect->border_color = v4_white();
   audio_rect->border_size = 1;
   
+  ui_elem_add_event("audio_rect", disable_audio);
+  
+  ui_text* audio_text = ui_elem_new("audio_text", ui_text);
+  audio_text->position = v2(60, 15);
+  audio_text->color = v4_white();
+  ui_text_update_string(audio_text, "Disable Audio");
+  
   ui_rectangle* score_rect = ui_elem_new("score_rect", ui_rectangle);
   score_rect->top_left = v2(180, 10);
   score_rect->bottom_right = v2(300, 35);
   score_rect->color = v4_black();
   score_rect->border_color = v4_white();
   score_rect->border_size = 1;
+  
+  ui_text* score_text = ui_elem_new("score_text", ui_text);
+  score_text->position = v2(190, 15);
+  score_text->color = v4_white();
+  ui_text_update_string(score_text, "Score 000000");
   
   ui_rectangle* time_rect = ui_elem_new("time_rect", ui_rectangle);
   time_rect->top_left = v2(310, 10);
@@ -100,21 +148,6 @@ void platformer_init() {
   time_rect->border_color = v4_white();
   time_rect->border_size = 1;
   
-  ui_text* framerate_text = ui_elem_new("framerate_text", ui_text);
-  framerate_text->position = v2(17, 15);
-  framerate_text->color = v4_white();
-  ui_text_update_string(framerate_text, "framerate");
-  
-  ui_text* audio_text = ui_elem_new("audio_text", ui_text);
-  audio_text->position = v2(60, 15);
-  audio_text->color = v4_white();
-  ui_text_update_string(audio_text, "Audio Enabled");
-  
-  ui_text* score_text = ui_elem_new("score_text", ui_text);
-  score_text->position = v2(190, 15);
-  score_text->color = v4_white();
-  ui_text_update_string(score_text, "Score 000000");
-  
   ui_text* time_text = ui_elem_new("time_text", ui_text);
   time_text->position = v2(320, 15);
   time_text->color = v4_white();
@@ -122,6 +155,7 @@ void platformer_init() {
   
   /* Set volume to something more reasonable */
   audio_mixer_set_volume(0.25);
+  
 }
 
 void platformer_event(SDL_Event event) {
@@ -142,24 +176,6 @@ void platformer_event(SDL_Event event) {
   case SDL_KEYUP:
     if (event.key.keysym.sym == SDLK_LEFT) { left_held = false; }
     if (event.key.keysym.sym == SDLK_RIGHT) { right_held = false; }
-    
-    if (event.key.keysym.sym == SDLK_p) {
-      character* main_char = entity_get("main_char");
-      debug("Player Position (%0.2f, %0.2f)", main_char->position.x / 32, main_char->position.y / 32);
-    }
-    
-    /* "a" key used to disable and enable audio */
-    if (event.key.keysym.sym == SDLK_a) {
-      ui_text* audio_text = ui_elem_get("audio_text");
-      if(audio_mixer_enabled()) {
-        audio_mixer_disable(); debug("Audio Disabled");
-        ui_text_update_string(audio_text, "Audio Disabled");
-      } else {
-        audio_mixer_enable(); debug("Audio Enabled");
-        ui_text_update_string(audio_text, "Audio Enabled");
-      }
-    }
-    
   break;
   }
   
@@ -382,6 +398,8 @@ int main(int argc, char **argv) {
   while(running) {
     
     /* Frame functions used to monitor frame times, FPS and other */
+    
+    
     frame_begin();
     
     while(SDL_PollEvent(&event)) {
@@ -391,14 +409,6 @@ int main(int argc, char **argv) {
         /* Exit on ESCAPE and Screenshot on print screen */
         if (event.key.keysym.sym == SDLK_ESCAPE) { running = false; }
         if (event.key.keysym.sym == SDLK_PRINT) { viewport_screenshot(); }
-        if (event.key.keysym.sym == SDLK_KP_PLUS) {
-          audio_mixer_set_volume(audio_mixer_get_volume() + 0.1);
-          debug("Volume: %0.2f", audio_mixer_get_volume());
-        }
-        if (event.key.keysym.sym == SDLK_KP_MINUS) { 
-          audio_mixer_set_volume(audio_mixer_get_volume() - 0.1);
-          debug("Volume: %0.2f", audio_mixer_get_volume());
-        }
         break;
       case SDL_QUIT:
         /* Corrisponds to SDL_QUIT event such as cross in top right corner */
@@ -411,10 +421,12 @@ int main(int argc, char **argv) {
     }
     
     platformer_update();
+    
     platformer_render();
     
     /* This allows us to fix the framerate to 60 fps, even on my laptop with vsync broken */
     frame_end_at_rate(60);
+    
   }
   
   platformer_finish();

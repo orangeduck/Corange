@@ -271,7 +271,8 @@ void level_render_tiles(level* l, vector2 camera_position) {
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   
   int i;
-  for(i = 0; i < l->num_tile_sets; i++) {
+  /* Start from 1, 0 is no tiles! */
+  for(i = 1; i < l->num_tile_sets; i++) {
     
     texture* tile_tex = tile_get_texture(i);
     glBindTexture(GL_TEXTURE_2D, *tile_tex);
@@ -281,11 +282,11 @@ void level_render_tiles(level* l, vector2 camera_position) {
     glBindBuffer(GL_ARRAY_BUFFER, l->tile_sets[i].positions_buffer);
     glVertexPointer(3, GL_FLOAT, 0, (void*)0);
     glEnableClientState(GL_VERTEX_ARRAY);
-  
+    
     glBindBuffer(GL_ARRAY_BUFFER, l->tile_sets[i].texcoords_buffer);
     glTexCoordPointer(2, GL_FLOAT, 0, (void*)0);
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-  
+    
     glDrawArrays(GL_QUADS, 0, l->tile_sets[i].num_tiles * 4);
     
     glDisableClientState(GL_VERTEX_ARRAY);
