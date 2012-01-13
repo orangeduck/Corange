@@ -1,6 +1,7 @@
 #ifndef animated_object_h
 #define animated_object_h
 
+#include "bool.h"
 #include "matrix.h"
 #include "renderable.h"
 #include "skeleton.h"
@@ -12,9 +13,9 @@ typedef struct {
   vector3 scale;
   vector4 rotation;
   
-  int active;
-  int recieve_shadows;
-  int cast_shadows;
+  bool active;
+  bool recieve_shadows;
+  bool cast_shadows;
 
   renderable* renderable;
   skeleton* skeleton;

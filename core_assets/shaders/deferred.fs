@@ -22,8 +22,8 @@ vec3 swap_red_green(vec3 color);
 
 /* End */
 
-void main( void )
-{
+void main( void ) {
+  
 	vec2 uvs = vec2(gl_TexCoord[0].x, -gl_TexCoord[0].y);
 
 	float spec = texture2D(spec_map,uvs).r * specular_level;
@@ -31,7 +31,7 @@ void main( void )
 	vec4 normal = texture2D(bump_map, uvs);
 	normal.rgb = swap_red_green(normal.rgb);
 	normal = mix(normal, vec4( 0.5, 0.5, 1.0, 1.0 ), bumpiness);
-	normal = (normal * 2.0 - vec4(1.0,1.0,1.0,0.0)) * TBN * world_matrix;
+	normal = (normal * 2.0 - vec4(1.0,1.0,1.0,0.0)) * TBN;
 	
 	gl_FragData[0].rgb = from_gamma(texture2D(diffuse_map, uvs).rgb);
 	gl_FragData[0].a = from_gamma(spec);

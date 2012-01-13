@@ -142,7 +142,9 @@ void renderers_init() {
   
   renderable* r_skybox = asset_get("./resources/skybox/skybox.obj");
   renderable_set_material(r_skybox, asset_get("./resources/skybox/skybox.mat"));
-  entity_add("skybox", static_object, static_object_new(r_skybox));
+  static_object* s_skybox = static_object_new(r_skybox);
+  s_skybox->recieve_shadows = false;
+  entity_add("skybox", static_object, s_skybox);
   
   renderable* r_podium = asset_get("./resources/podium/podium.obj");
   renderable_set_material(r_podium, asset_get("./resources/podium/podium.mat"));
@@ -212,7 +214,7 @@ void renderers_init() {
   
   ui_rectangle* renderer_rect = ui_elem_new("renderer_rect", ui_rectangle);
   renderer_rect->top_left = v2(55,10);
-  renderer_rect->bottom_right = v2(210, 35);
+  renderer_rect->bottom_right = v2(210,35);
   renderer_rect->color = v4_black();
   renderer_rect->border_color = v4_white();
   renderer_rect->border_size = 1;
@@ -226,7 +228,7 @@ void renderers_init() {
   
   ui_rectangle* switch_rect = ui_elem_new("switch_rect", ui_rectangle);
   switch_rect->top_left = v2(10,45);
-  switch_rect->bottom_right = v2(150, 70);
+  switch_rect->bottom_right = v2(150,70);
   switch_rect->color = v4_black();
   switch_rect->border_color = v4_white();
   switch_rect->border_size = 1;
@@ -237,38 +239,38 @@ void renderers_init() {
   ui_text_update_string(switch_text, "Switch Renderer");
   
   ui_rectangle* piano_rect = ui_elem_new("piano_rect", ui_rectangle);
-  piano_rect->top_left = v2(10,45 + 35);
-  piano_rect->bottom_right = v2(60, 70 + 35);
+  piano_rect->top_left = v2(10,80);
+  piano_rect->bottom_right = v2(60,105);
   piano_rect->color = v4_black();
   piano_rect->border_color = v4_white();
   piano_rect->border_size = 1;
   
   ui_text* piano_text = ui_elem_new("piano_text", ui_text);
-  piano_text->position = v2(15, 50 + 35);
+  piano_text->position = v2(15,85);
   piano_text->color = v4_white();
   ui_text_update_string(piano_text, "Piano");
   
   ui_rectangle* cello_rect = ui_elem_new("cello_rect", ui_rectangle);
-  cello_rect->top_left = v2(10,80 + 35);
-  cello_rect->bottom_right = v2(60, 105 + 35);
+  cello_rect->top_left = v2(10,115);
+  cello_rect->bottom_right = v2(60,140);
   cello_rect->color = v4_black();
   cello_rect->border_color = v4_white();
   cello_rect->border_size = 1;
   
   ui_text* cello_text = ui_elem_new("cello_text", ui_text);
-  cello_text->position = v2(15, 85 + 35);
+  cello_text->position = v2(15,120);
   cello_text->color = v4_white();
   ui_text_update_string(cello_text, "Cello");
   
   ui_rectangle* imrod_rect = ui_elem_new("imrod_rect", ui_rectangle);
-  imrod_rect->top_left = v2(10,115 + 35);
-  imrod_rect->bottom_right = v2(60, 140 + 35);
+  imrod_rect->top_left = v2(10,150);
+  imrod_rect->bottom_right = v2(60,175);
   imrod_rect->color = v4_black();
   imrod_rect->border_color = v4_white();
   imrod_rect->border_size = 1;
   
   ui_text* imrod_text = ui_elem_new("imrod_text", ui_text);
-  imrod_text->position = v2(15, 120 + 35);
+  imrod_text->position = v2(15,155);
   imrod_text->color = v4_white();
   ui_text_update_string(imrod_text, "Imrod");
   

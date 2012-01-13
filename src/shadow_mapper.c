@@ -90,6 +90,7 @@ void shadow_mapper_begin() {
   
   shadow_mapper_setup_camera();
   
+  glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);
   glCullFace(GL_FRONT);
   
@@ -115,7 +116,8 @@ void shadow_mapper_end() {
   
   glCullFace(GL_BACK);
   glDisable(GL_CULL_FACE);
-
+  glDisable(GL_DEPTH_TEST);
+  
   glViewport( 0, 0, viewport_width(), viewport_height());
   
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -123,6 +125,10 @@ void shadow_mapper_end() {
 }
 
 void shadow_mapper_render_static(static_object* s) {
+  
+  if (!s->cast_shadows) {
+    return;
+  }
   
   matrix_4x4 r_world_matrix = m44_world( s->position, s->scale, s->rotation );
   m44_to_array(r_world_matrix, world_matrix);

@@ -16,6 +16,8 @@ uniform float env_amount;
 
 uniform float specular_level;
 
+uniform int recieve_shadows;
+
 uniform sampler2D diffuse_map;
 uniform sampler2D bump_map;
 uniform sampler2D spec_map;
@@ -43,7 +45,11 @@ vec3 color_correction(vec3 color, sampler3D lut, int lut_size);
 void main() {
   
   vec4 light_pos = light_proj * light_view * world_position;
-  float shadow = shadow_amount_soft_pcf25(light_pos, shadow_map, 0.0005);
+  
+  float shadow = 1.0;
+  if (recieve_shadows) {
+    shadow = shadow_amount_soft_pcf25(light_pos, shadow_map, 0.0005);
+  }
 
   vec4 diffuse_a = texture2D( diffuse_map, uvs );
   vec3 diffuse = from_gamma(diffuse_a.rgb);

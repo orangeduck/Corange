@@ -9,9 +9,9 @@ static_object* static_object_new(renderable* r) {
   s->rotation = v4_quaternion_id();
   s->scale = v3_one();
   
-  s->active = 1;
-  s->recieve_shadows = 1;
-  s->cast_shadows = 1;
+  s->active = true;
+  s->recieve_shadows = true;
+  s->cast_shadows = true;
   
   s->renderable = r;
   

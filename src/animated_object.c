@@ -11,9 +11,9 @@ animated_object* animated_object_new(renderable* r, skeleton* s) {
   ao->scale = v3_one();
   ao->rotation = v4_quaternion_id();
   
-  ao->active = 1;
-  ao->recieve_shadows = 1;
-  ao->cast_shadows = 1;
+  ao->active = true;
+  ao->recieve_shadows = true;
+  ao->cast_shadows = true;
   
   ao->renderable = r;
   ao->skeleton = s;

@@ -1,10 +1,9 @@
 -- To Finish Demos --
 
-Forward renderer shaders scale effects specularity.
+New gradient background for renderers instead of skybox?
+Investigate why text is sliding up the page.
 Remove cello bow from cello model.
 Add ship to sea demo. Multi Material? Add depth pass and foam effects?
-Fix LUT generation code. No idea how it broke.
-Camera doesn't rotate properly around LUT cube. Rotate needs to be translated first.
 Endgame code for platformer.
 Comment platformer game nicely. Reorganize.
 

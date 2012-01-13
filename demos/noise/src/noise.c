@@ -58,7 +58,10 @@ static int save_noise_to_file_thread(void* unused) {
   image_delete(noise);
   
   ui_spinner* save_spinner = ui_elem_get("save_spinner");
+  ui_rectangle* spinner_box = ui_elem_get("spinner_box");
   save_spinner->color = v4(1,1,1,0);
+  spinner_box->color = v4(0,0,0,0);
+  spinner_box->border_color = v4(1,1,1,0);
   
   currently_saving = false;
   
@@ -89,7 +92,10 @@ static void save_noise_to_file(ui_rectangle* rect, SDL_Event event) {
       rect->color = v4_black();
       
       ui_spinner* save_spinner = ui_elem_get("save_spinner");
+      ui_rectangle* spinner_box = ui_elem_get("spinner_box");
       save_spinner->color = v4(1,1,1,1);
+      spinner_box->color = v4_black();
+      spinner_box->border_color = v4_white();
       
       save_thread = SDL_CreateThread(save_noise_to_file_thread, NULL);
       
@@ -138,8 +144,8 @@ int main(int argc, char **argv) {
   ui_rectangle* spinner_box = ui_elem_new("spinner_box", ui_rectangle);
   spinner_box->top_left = v2(870, 7);
   spinner_box->bottom_right = v2(902, 39);
-  spinner_box->color = v4_black();
-  spinner_box->border_color = v4_white();
+  spinner_box->color = v4(0,0,0,0);
+  spinner_box->border_color = v4(1,1,1,0);
   spinner_box->border_size = 1;
   
   ui_spinner* save_spinner = ui_elem_new("save_spinner", ui_spinner);

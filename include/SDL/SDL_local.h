@@ -126,10 +126,6 @@ extern GLGENERATEMIPMAPFN glGenerateMipmap;
 
 /* Extension Constants - Found these from glew and Google */
 
-#ifndef __linux__
-  #define GL_STATIC_READ 0x88E4
-#endif
-
 #define GL_SHADING_LANGUAGE_VERSION 0x8B8C
 #define GL_FRAMEBUFFER 0x8D40
 #define GL_RENDERBUFFER 0x8D41

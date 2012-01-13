@@ -258,12 +258,12 @@ static void forward_renderer_disuse_material() {
 
 }
 
-void forward_renderer_render_static(static_object* s) {
+void forward_renderer_render_static(static_object* so) {
   
-  matrix_4x4 r_world_matrix = m44_world( s->position, s->scale, s->rotation );
+  matrix_4x4 r_world_matrix = m44_world( so->position, so->scale, so->rotation );
   m44_to_array(r_world_matrix, world_matrix);
   
-  renderable* r = s->renderable;
+  renderable* r = so->renderable;
   
   int i;
   for(i=0; i < r->num_surfaces; i++) {
@@ -272,6 +272,10 @@ void forward_renderer_render_static(static_object* s) {
     if(s->is_rigged) {
 
       forward_renderer_use_material(s->base);
+      
+      shader_program* prog = dictionary_get(s->base->properties, "program");
+      GLint recieve_shadows = glGetUniformLocation(*prog, "recieve_shadows");
+      glUniform1i(recieve_shadows, so->recieve_shadows);
       
       GLsizei stride = sizeof(float) * 24;
       
@@ -314,6 +318,10 @@ void forward_renderer_render_static(static_object* s) {
     } else {
     
       forward_renderer_use_material(s->base);
+      
+      shader_program* prog = dictionary_get(s->base->properties, "program");
+      GLint recieve_shadows = glGetUniformLocation(*prog, "recieve_shadows");
+      glUniform1i(recieve_shadows, so->recieve_shadows);
       
       GLsizei stride = sizeof(float) * 18;
       
@@ -400,6 +408,9 @@ void forward_renderer_render_animated(animated_object* ao) {
       
       GLint bone_count_u = glGetUniformLocation(*prog, "bone_count");
       glUniform1i(bone_count_u, ao->skeleton->num_bones);
+      
+      GLint recieve_shadows = glGetUniformLocation(*prog, "recieve_shadows");
+      glUniform1i(recieve_shadows, ao->recieve_shadows);
       
       GLsizei stride = sizeof(float) * 24;
       

@@ -26,8 +26,8 @@ void viewport_init() {
 
   window_width = DEFAULT_WIDTH;
   window_height = DEFAULT_HEIGHT;
-  window_flags = SDL_HWSURFACE | SDL_GL_DOUBLEBUFFER | SDL_OPENGL;
-  window_multisamples = 0;
+  window_flags = SDL_OPENGL;
+  window_multisamples = 16;
   window_vsync = 1;
   
   viewport_set_title("corange", "corange");
@@ -45,8 +45,9 @@ void viewport_finish() {
 
 void viewport_start() {
 
+  SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
   SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, window_vsync);
-
+  
   if (window_multisamples > 1) {
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, window_multisamples);
@@ -64,59 +65,46 @@ void viewport_restart() {
 
 #ifdef _WIN32
   /* Built temp context and share resources */
+  
   SDL_SysWMinfo info;
-
-  // get window handle from SDL
   SDL_VERSION(&info.version);
   if (SDL_GetWMInfo(&info) == -1) {
     error("Could not get SDL version info.");
   }
 
-  // get device context handle
+  /* get device context handle */
   HDC tempDC = GetDC( info.window );
 
-  // create temporary context
+  /* create temporary context */
   HGLRC tempRC = wglCreateContext( tempDC );
   if (tempRC == NULL) {
     error("Could not create OpenGL context");
   }
 
-  // share resources to temporary context
+  /* share resources to temporary context */
   SetLastError(0);
   if (!wglShareLists(info.hglrc, tempRC)) {
     error("Could not get OpenGL share lists.");
   }
 #endif
   
-  /* Init new video mode */
-  
-  SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, window_vsync);
-
-  if (window_multisamples > 1) {
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, window_multisamples);
-  } else {
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 0);
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 0);
-  }
-  
-  screen = SDL_SetVideoMode(window_width, window_height, 0, window_flags);
-  glViewport(0, 0, window_width, window_height);
-  
-  /* Get rid of temp context */
+  viewport_start();
   
 #ifdef _WIN32
+
+  /* Get rid of temp context */
+
   SDL_VERSION(&info.version);
   if (SDL_GetWMInfo(&info) == -1) {
     error("Could not get SDL version info.");
   }
 
-  // share resources to new SDL-created context
+  /* share resources to new SDL-created context */
   if (!wglShareLists(tempRC, info.hglrc)) {
     error("Could not create OpenGL context");
   }
 
-  // we no longer need our temporary context
+  /* we no longer need our temporary context */
   if (!wglDeleteContext(tempRC)) {
     error("Could not get OpenGL share lists.");
   }

@@ -20,9 +20,3 @@
     slouken@libsdl.org
 */
 
-/** @file SDL_getenv.h
- *  @deprecated Use SDL_stdinc.h instead
- */
-
-/* DEPRECATED */
-#include "SDL_stdinc.h"

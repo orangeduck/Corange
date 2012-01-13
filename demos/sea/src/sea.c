@@ -90,7 +90,9 @@ void sea_init() {
   
   renderable* r_skybox = asset_get("./resources/skybox/skybox.obj");
   renderable_set_material(r_skybox, asset_get("./resources/skybox/skybox.mat"));
-  entity_add("skybox", static_object, static_object_new(r_skybox));
+  static_object* s_skybox = static_object_new(r_skybox);
+  s_skybox->recieve_shadows = false;
+  entity_add("skybox", static_object, s_skybox);
   
   ui_rectangle* wireframe_rect = ui_elem_new("wireframe_rect", ui_rectangle);
   wireframe_rect->top_left = v2(10,10);
@@ -102,7 +104,7 @@ void sea_init() {
   ui_elem_add_event("wireframe_rect", switch_wireframe);
   
   ui_text* wireframe_text = ui_elem_new("wireframe_text", ui_text);
-  wireframe_text->position = v2(20, 20);
+  wireframe_text->position = v2(20, 15);
   wireframe_text->color = v4_white();
   ui_text_update_string(wireframe_text, "Wireframe");
 }

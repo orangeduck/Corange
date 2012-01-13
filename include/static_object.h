@@ -1,6 +1,7 @@
 #ifndef static_object_h
 #define static_object_h
 
+#include "bool.h"
 #include "renderable.h"
 
 typedef struct {
@@ -9,9 +10,9 @@ typedef struct {
   vector3 scale;
   vector4 rotation;
   
-  int active;
-  int recieve_shadows;
-  int cast_shadows;
+  bool active;
+  bool recieve_shadows;
+  bool cast_shadows;
 
   renderable* renderable;
 

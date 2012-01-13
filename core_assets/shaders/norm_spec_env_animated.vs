@@ -43,19 +43,20 @@ void main() {
     blendbinorm += (mat3(bone_world_matrices[int(bone_indicies[i])]) * binormal) * bone_weights[i];
   }
   
-  vec4 w_position = world_matrix * blendpos;
-  vec4 w_tangent = world_matrix * vec4(blendtang, 0.0);
-  vec4 w_binormal = world_matrix * vec4(blendbinorm, 0.0);
-  vec4 w_normal = world_matrix * vec4(blendnorm, 0.0);
+  mat3 world_rot = mat3(world_matrix);
   
-  TBN = mat4( vec4(w_tangent),
-			  vec4(w_binormal),
-			  vec4(w_normal),
-			  vec4(0.0,0.0,0.0,1.0)
+  vec3 w_tangent = world_rot * tangent;
+  vec3 w_binormal = world_rot * binormal;
+  vec3 w_normal = world_rot * gl_Normal;
+  
+  TBN = mat4(vec4(w_tangent,  0.0),
+             vec4(w_binormal, 0.0),
+             vec4(w_normal,   0.0),
+             vec4(0.0,0.0,0.0,1.0)
 			 );
   
-  world_position = w_position;
+  world_position = world_matrix * blendpos;
   
-  gl_Position = proj_matrix * view_matrix * w_position;
+  gl_Position = proj_matrix * view_matrix * world_position;
   
 }
