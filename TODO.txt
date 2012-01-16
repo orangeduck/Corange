@@ -3,8 +3,7 @@
 New gradient background for renderers instead of skybox?
 Investigate why text is sliding up the page.
 Remove cello bow from cello model.
-Add ship to sea demo. Multi Material? Add depth pass and foam effects?
-Endgame code for platformer.
+Add ship to sea demo. Multi Material? Add depth pass and foam effects? Walk around on moving deck?
 Comment platformer game nicely. Reorganize.
 
 -- Tweaks/Cleanup --

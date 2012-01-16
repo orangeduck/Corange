@@ -21,18 +21,10 @@ void corange_init(char* core_assets_path) {
   
   /* Init OpenGL and Viewport */
   
-  if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0) {
-    error("Unable to initialize SDL: %s\n", SDL_GetError());
-  }
-  
   debug("Starting Graphics...");
-  
   viewport_init();
-  SDL_LoadOpenGLExtensions();
-  SDL_PrintOpenGLInfo();
   
   debug("Starting Audio...");
-  
   audio_mixer_init();
   
   /* Asset Manager */

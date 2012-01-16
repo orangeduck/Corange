@@ -17,21 +17,31 @@ shader* vs_load_file(char* filename) {
 
   shader* new_shader = malloc(sizeof(shader));
   
-  char* vs_source = asset_file_contents(filename);
-  const char* vs = vs_source;
+  SDL_RWops* file = SDL_RWFromFile(filename, "r");
+  if(file == NULL) {
+    error("Cannot load file %s", filename);
+  }
+  
+  long size = SDL_RWseek(file,0,SEEK_END);
+  char* contents = malloc(size+1);
+  contents[size] = '\0';
+  SDL_RWseek(file, 0, SEEK_SET);
+  SDL_RWread(file, contents, size, 1);
+  
+  SDL_RWclose(file);
   
   *new_shader = glCreateShader(GL_VERTEX_SHADER);
   
-  glShaderSource(*new_shader, 1, &vs, NULL);
+  glShaderSource(*new_shader, 1, (const char**)&contents, NULL);
   glCompileShader(*new_shader);
   
-  free(vs_source);
+  free(contents);
   
   shader_print_log(new_shader);
   
-  int error = 0;
-  glGetShaderiv(*new_shader, GL_COMPILE_STATUS, &error);
-  if (error == GL_FALSE) {
+  int compile_error = 0;
+  glGetShaderiv(*new_shader, GL_COMPILE_STATUS, &compile_error);
+  if (compile_error == GL_FALSE) {
     error("Compiler Error on Shader %s.", filename);
   }
   
@@ -43,20 +53,30 @@ shader* fs_load_file(char* filename) {
 
   shader* new_shader = malloc(sizeof(shader));
 
-  char* fs_source = asset_file_contents(filename);
-  const char* fs = fs_source;
+  SDL_RWops* file = SDL_RWFromFile(filename, "r");
+  if(file == NULL) {
+    error("Cannot load file %s", filename);
+  }
+  
+  long size = SDL_RWseek(file,0,SEEK_END);
+  char* contents = malloc(size+1);
+  contents[size] = '\0';
+  SDL_RWseek(file, 0, SEEK_SET);
+  SDL_RWread(file, contents, size, 1);
+  
+  SDL_RWclose(file);
   
   *new_shader = glCreateShader(GL_FRAGMENT_SHADER);
-  glShaderSource(*new_shader, 1, &fs, NULL);
+  glShaderSource(*new_shader, 1, (const char**)&contents, NULL);
   glCompileShader(*new_shader);
   
-  free(fs_source);
+  free(contents);
   
   shader_print_log(new_shader);
   
-  int error = 0;
-  glGetShaderiv(*new_shader, GL_COMPILE_STATUS, &error);
-  if (error == GL_FALSE) {
+  int compile_error = 0;
+  glGetShaderiv(*new_shader, GL_COMPILE_STATUS, &compile_error);
+  if (compile_error == GL_FALSE) {
     error("Compiler Error on Shader %s.", filename);
   }
   

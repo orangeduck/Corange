@@ -31,6 +31,8 @@ ui_text* ui_text_new() {
   text->char_spacing = 0.0;
   text->rotation = 0.0;
   
+  text->active = true;
+  
   glGenBuffers(1, &text->positions_buffer);
   glGenBuffers(1, &text->texcoords_buffer);
   
@@ -338,6 +340,10 @@ static int ui_text_charcount(ui_text* text) {
 
 void ui_text_render(ui_text* text) {
   
+  if(!text->active) {
+    return;
+  }
+  
 	glMatrixMode(GL_PROJECTION);
   glPushMatrix();
 	glLoadIdentity();
@@ -386,6 +392,10 @@ void ui_text_render(ui_text* text) {
 }
 
 bool ui_text_contains_position(ui_text* text, vector2 position) {
+  
+  if(!text->active) {
+    return false;
+  }
   
   if(( position.x > text->top_left.x ) && ( position.x < text->bottom_right.x ) &&
      ( position.y > text->top_left.y ) && ( position.y < text->bottom_right.y )) {

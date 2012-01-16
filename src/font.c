@@ -32,7 +32,7 @@ font* font_load_file(char* filename) {
     char texture_filename[1024];
     if (sscanf(line, "page id=%i file=\%s", &tex_id, texture_filename) > 0) {
       
-      char* root = asset_file_location(filename);
+      char* root = asset_name_location(filename);
       
       char* full = malloc(strlen(root) + strlen(texture_filename) + 1 );
       strcpy(full, root);

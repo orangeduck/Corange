@@ -31,6 +31,10 @@ typedef struct {
 
 typedef int16_t int16_mono_t;
 
+static float volume_to_amplitude(float vol) {
+  return pow(10, vol) / 10;
+}
+
 static void audio_mixer_mix(void* unused, char* stream, int stream_size) {
   
   int16_stereo_t* samples = (int16_stereo_t*)stream;
@@ -54,13 +58,11 @@ static void audio_mixer_mix(void* unused, char* stream, int stream_size) {
         double left = snd_samples[channels[j].position] / 32768.0;
         double right = snd_samples[channels[j].position] / 32768.0;
         
-        float amplitude = (pow(10, 1-volume) / 10) - 1;
+        left = clamp(left * volume_to_amplitude(volume), -1, 1);
+        right = clamp(right * volume_to_amplitude(volume), -1, 1);
         
-        left = clamp(left * amplitude, -1, 1);
-        right = clamp(right * amplitude, -1, 1);
-        
-        samples[i].left = left * 32768;
-        samples[i].right = right * 32768;
+        samples[i].left += left * 32768;
+        samples[i].right += right * 32768;
       } else {
         samples[i].left = 0;
         samples[i].right = 0;
@@ -73,6 +75,8 @@ static void audio_mixer_mix(void* unused, char* stream, int stream_size) {
 }
 
 void audio_mixer_init() {
+  
+  SDL_Init(SDL_INIT_AUDIO);
   
 	SDL_AudioSpec as;
 	as.freq = 44100;

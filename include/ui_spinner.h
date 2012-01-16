@@ -13,6 +13,7 @@ typedef struct {
   texture* texture;
   float speed;
   float rotation;
+  
   bool active;
   
 } ui_spinner;

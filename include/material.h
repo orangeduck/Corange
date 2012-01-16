@@ -4,6 +4,26 @@
 #include "dictionary.h"
 #include "list.h"
 
+#define mat_type_program 0
+#define mat_type_texture 1
+#define mat_type_string 2
+#define mat_type_int 3
+#define mat_type_float 4
+#define mat_type_vector2 5
+#define mat_type_vector3 6
+#define mat_type_vector4 7
+
+#define blend_one 0
+#define blend_zero 1
+#define blend_src_alpha 2
+#define blend_dst_alpha 3
+#define blend_one_minus_src_alpha 4
+#define blend_one_minus_dst_alpha 5
+#define blend_src_color 6
+#define blend_dst_color 7
+#define blend_one_minus_src_color 8
+#define blend_one_minus_dst_color 9
+
 typedef struct {
 
   char* name;
@@ -11,31 +31,11 @@ typedef struct {
   dictionary* properties;
   dictionary* types;
   
-  int use_blending;
+  bool use_blending;
   int src_blend_func;
   int dst_blend_func;
   
 } material;
-
-static int mat_type_program	= 0;
-static int mat_type_texture = 3;
-static int mat_type_string 	= 4;
-static int mat_type_int     = 5;
-static int mat_type_float   = 6;
-static int mat_type_vector2 = 7;
-static int mat_type_vector3	= 8;
-static int mat_type_vector4 = 9;
-
-static int blend_one                 = 0;
-static int blend_zero                = 1;
-static int blend_src_alpha           = 2;
-static int blend_dst_alpha 			 = 3;
-static int blend_one_minus_src_alpha = 4;
-static int blend_one_minus_dst_alpha = 5;
-static int blend_src_color           = 6;
-static int blend_dst_color           = 7;
-static int blend_one_minus_src_color = 8;
-static int blend_one_minus_dst_color = 9;
 
 material* material_new();
 void material_delete(material* mat);
@@ -49,5 +49,14 @@ void material_parse_line(material* mat, char* line);
 void* material_get_property(material* mat, char* name);
 int material_get_type(material* mat, char* name);
 void material_set_property(material* mat, char* name, void* value, int type);
+
+typedef struct {
+
+  int num_materials;
+  material* materials;
+  
+} multi_material;
+
+multi_material* mmat_load_file(char* filename);
 
 #endif

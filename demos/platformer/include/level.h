@@ -53,6 +53,8 @@ typedef struct {
 
 #define num_tile_types 26
 
+#define TILE_SIZE 32
+
 level* level_load_file(char* filename);
 
 void level_delete(level* l);

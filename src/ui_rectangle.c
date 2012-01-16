@@ -19,6 +19,8 @@ ui_rectangle* ui_rectangle_new(vector2 top_left, vector2 bottom_right) {
   rect->border_size = 0.0;
   rect->border_color = v4_black();
   
+  rect->active = true;
+  
   return rect;
   
 }
@@ -36,6 +38,10 @@ void ui_rectangle_update(ui_rectangle* rect) {
 }
 
 void ui_rectangle_render(ui_rectangle* rect) {
+  
+  if(!rect->active) {
+    return;
+  }
   
 	glMatrixMode(GL_PROJECTION);
   glPushMatrix();
@@ -102,6 +108,9 @@ void ui_rectangle_render(ui_rectangle* rect) {
 }
 
 bool ui_rectangle_contains_position(ui_rectangle* rect, vector2 pos) {
+
+  if (!rect->active) { return false; }
+
   if(( pos.x > rect->top_left.x ) && ( pos.x < rect->bottom_right.x ) &&
      ( pos.y > rect->top_left.y ) && ( pos.y < rect->bottom_right.y )) {
     return true;

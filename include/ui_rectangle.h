@@ -16,6 +16,8 @@ typedef struct ui_rectangle_temp {
   float border_size;
   vector4 border_color;
   
+  bool active;
+  
 } ui_rectangle;
 
 ui_rectangle* ui_rectangle_new(vector2 top_left, vector2 bottom_right);

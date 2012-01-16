@@ -35,8 +35,7 @@ void asset_state_print();
 /* User is responsible for freeing strings returned by these */
 char* asset_map_filename(char* filename);
 
-char* asset_file_contents(char* filename);
-char* asset_file_extension(char* filename);
-char* asset_file_location(char* filename);
+char* asset_name_extension(char* filename);
+char* asset_name_location(char* filename);
 
 #endif

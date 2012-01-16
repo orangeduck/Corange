@@ -56,12 +56,12 @@ material* mat_load_file(char* filename) {
       char* property = malloc(strlen(name)+1);
       strcpy(property, name);
     
-      int* mat_type;
+      int* mat_type = malloc(sizeof(int));
       void* result = NULL;
     
       if (strcmp(type, "program") == 0) {
         
-        mat_type = &mat_type_program;
+        *mat_type = mat_type_program;
         
         property = realloc(property, strlen("program")+1);
         strcpy(property, "program");
@@ -75,7 +75,7 @@ material* mat_load_file(char* filename) {
         
       } else if (strcmp(type, "texture") == 0) {
         
-        mat_type = &mat_type_texture;
+        *mat_type = mat_type_texture;
         
         if(asset_loaded(value)) {
           result = asset_get(value);
@@ -86,7 +86,7 @@ material* mat_load_file(char* filename) {
       
       } else if (strcmp(type, "string") == 0) {
         
-        mat_type = &mat_type_string;
+        *mat_type = mat_type_string;
         
         char* typed_result = malloc(strlen(value)+1);
         strcpy(typed_result, value);
@@ -94,7 +94,7 @@ material* mat_load_file(char* filename) {
       
       } else if (strcmp(type, "int") == 0) {
         
-        mat_type = &mat_type_int;
+        *mat_type = mat_type_int;
         
         int* typed_result = malloc(sizeof(int));
         *typed_result = atoi(value);
@@ -102,7 +102,7 @@ material* mat_load_file(char* filename) {
         
       } else if (strcmp(type, "float") == 0) {
         
-        mat_type = &mat_type_float;
+        *mat_type = mat_type_float;
         
         float* typed_result = malloc(sizeof(float));
         *typed_result = atof(value);
@@ -110,7 +110,7 @@ material* mat_load_file(char* filename) {
       
       } else if (strcmp(type, "vector2") == 0) {
         
-        mat_type = &mat_type_vector2;
+        *mat_type = mat_type_vector2;
         
         char* end;
         float f1, f2;
@@ -123,7 +123,7 @@ material* mat_load_file(char* filename) {
         
       } else if (strcmp(type, "vector3") == 0) {
         
-        mat_type = &mat_type_vector3;
+        *mat_type = mat_type_vector3;
         
         char* end;
         float f1, f2, f3;
@@ -137,7 +137,7 @@ material* mat_load_file(char* filename) {
       
       } else if (strcmp(type, "vector4") == 0) {
         
-        mat_type = &mat_type_vector4;
+        *mat_type = mat_type_vector4;
         
         char* end;
         float f1, f2, f3, f4;
@@ -198,6 +198,8 @@ void material_delete(material* mat) {
     } else {
       error("Unknown material property type id %i for material %s", *type, mat->name);
     }
+    
+    free(type);
      
   }
   

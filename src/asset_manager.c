@@ -119,7 +119,7 @@ static void delete_bucket_list(bucket* b) {
   
   debug("Unloading: %s", b->string);
   
-  char* ext = asset_file_extension(b->string);
+  char* ext = asset_name_extension(b->string);
   
   int i;
   for(i=0; i < num_asset_handlers; i++) {
@@ -184,7 +184,7 @@ void load_file(char* filename) {
     error("Asset %s already loaded", filename_map);
   }
   
-  char* ext = asset_file_extension(filename_map);
+  char* ext = asset_name_extension(filename_map);
   int i;
   for(i=0; i < num_asset_handlers; i++) {
     asset_handler handler = asset_handlers[i];
@@ -249,7 +249,7 @@ void unload_file(char* filename) {
   
   char* filename_map = asset_map_filename(filename);
   
-  char* ext = asset_file_extension(filename_map);
+  char* ext = asset_name_extension(filename_map);
   int i;
   for(i=0; i < num_asset_handlers; i++) {
   
@@ -333,30 +333,7 @@ void asset_state_print() {
 
 /* Asset Loader helper commands */
 
-char* asset_file_contents(char* filename) {
-  
-  char* filename_map = asset_map_filename(filename);
-  
-  SDL_RWops* file = SDL_RWFromFile(filename_map, "r");
-  
-  if(file == NULL) {
-    error("Cannot load file %s", filename_map);
-  }
-  
-  long size = SDL_RWseek(file,0,SEEK_END);
-  char* contents = malloc(size+1);
-  contents[size] = '\0';
-  SDL_RWseek(file, 0, SEEK_SET);
-  SDL_RWread(file, contents, size, 1);
-  
-  SDL_RWclose(file);
-  free(filename_map);
-  
-  return contents;
-  
-}
-
-char* asset_file_extension(char* filename) {
+char* asset_name_extension(char* filename) {
   
   char* filename_map = asset_map_filename(filename);
   
@@ -381,7 +358,7 @@ char* asset_file_extension(char* filename) {
   return ext;
 }
 
-char* asset_file_location(char* filename) {
+char* asset_name_location(char* filename) {
 
   char* filename_map = asset_map_filename(filename);
   

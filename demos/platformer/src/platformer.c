@@ -1,28 +1,29 @@
 #include <stdio.h>
 #include <math.h>
 
+#include "corange.h"
+
 #include "level.h"
 #include "character.h"
 #include "coin.h"
 
 #include "platformer.h"
 
-static level* current_level = NULL;
-
-static vector2 camera_position;
-
 /* Some booleans to monitor key inputs */
 static bool left_held = false;
 static bool right_held = false;
 
+/* Some game state variables */
+static level* current_level = NULL;
+static vector2 camera_position;
 static int level_score = 0;
 static float level_time = 0.0;
 
 /* We store all the coin positions here */
 #define COIN_COUNT 45
 static vector2 coin_positions[COIN_COUNT] = {
-  {18, 18}, {33, 28}, {41, 22}, {20, 17}, {18, 28},
-  {36, 20}, {20, 10}, {31, 16}, {45, 23}, {49, 26},
+  {16, 23}, {33, 28}, {41, 22}, {20, 19}, {18, 28},
+  {36, 20}, {20, 30}, {31, 18}, {45, 23}, {49, 26},
   {25, 18}, {20, 37}, {44, 32}, {66, 20}, {52, 20},
   {63, 11}, {52, 12}, {39, 13}, {27, 11}, {73, 20},
   {65, 29}, {72, 29}, {78, 30}, {78, 20}, {83, 22},
@@ -32,9 +33,47 @@ static vector2 coin_positions[COIN_COUNT] = {
   {81, 37}, {77, 38}, {72, 34}, {65, 38}, {71, 37}
 };
 
+static void reset_game() {
+
+  /* Set the starting level to demo.level */
+  current_level = asset_get("./levels/demo.level");
+  level_score = 0;
+  level_time = 0.0;
+  
+  /* New main character entity */
+  character* main_char = entity_get("main_char");
+  main_char->position = v2_mul( v2(20, 20), TILE_SIZE);
+  main_char->velocity = v2_zero();
+  
+  /* We can create multiple entities using a name format string like printf */
+  entities_new("coin_id_%i", COIN_COUNT, coin);
+  
+  /* Get an array of pointers to all coin entities */
+  coin* coins[COIN_COUNT];
+  entities_get(coins, NULL, coin);
+  
+  /* Set all the coin initial positions */
+  int i;
+  for(i = 0; i < COIN_COUNT; i++) {
+    coins[i]->position = v2_mul(coin_positions[i], TILE_SIZE);
+  }
+  
+  ui_rectangle* victory_rect = ui_elem_get("victory_rect");
+  victory_rect->active = false;
+  ui_text* victory_text = ui_elem_get("victory_text");
+  victory_text->active = false;
+  ui_rectangle* new_game_rect = ui_elem_get("new_game_rect");
+  new_game_rect->active = false;
+  ui_text* new_game_text = ui_elem_get("new_game_text");
+  new_game_text->active = false;
+  
+}
+
+/* This is an event we attach to the audio button */
 static bool disable_audio_pressed = false;
 static void disable_audio(ui_rectangle* rect, SDL_Event event) {
   
+  /* On click down the button changes color */
   if (event.type == SDL_MOUSEBUTTONDOWN) {
     
     if (ui_rectangle_contains_position(rect, v2(event.motion.x, event.motion.y))) {
@@ -42,6 +81,7 @@ static void disable_audio(ui_rectangle* rect, SDL_Event event) {
       rect->color = v4(0.5, 0.5, 0.5, 1);
     }
   
+  /* On click up it disables/enabled the audio and changes back */
   } else if (event.type == SDL_MOUSEBUTTONUP) {
     
     if (disable_audio_pressed) {
@@ -62,6 +102,29 @@ static void disable_audio(ui_rectangle* rect, SDL_Event event) {
   }
 }
 
+/* This is an event we attach to the audio button */
+static bool new_game_pressed = false;
+static void new_game(ui_rectangle* rect, SDL_Event event) {
+  
+  /* On click down the button changes color */
+  if (event.type == SDL_MOUSEBUTTONDOWN) {
+    
+    if (ui_rectangle_contains_position(rect, v2(event.motion.x, event.motion.y))) {
+      new_game_pressed = true;
+      rect->color = v4(0.5, 0.5, 0.5, 1);
+    }
+  
+  /* On click up it disables/enabled the audio and changes back */
+  } else if (event.type == SDL_MOUSEBUTTONUP) {
+    
+    if (new_game_pressed) {
+      new_game_pressed = false;
+      rect->color = v4_black();
+      reset_game();
+    }
+  }
+}
+
 void platformer_init() {
   
   /* Register functions for loading/unloading files with the extension .level */
@@ -73,36 +136,14 @@ void platformer_init() {
   load_folder("./sounds/");
   load_folder("./levels/");
   
-  current_level = asset_get("./levels/demo.level");
-  
   /* Register some handlers for creating and destroying entity types */
   entity_manager_handler(character, character_new, character_delete);
   entity_manager_handler(coin, coin_new, coin_delete);
   
-  /* New main character entity */
+  /* Create out main character */
   character* main_char = entity_new("main_char", character);
-  main_char->position = v2_mul( v2(20, 20), 32);
-  
-  /* We can create multiple entities using a name format string like printf */
-  entities_new("coin_id_%i", COIN_COUNT, coin);
-  
-  
-  /* Get an array of pointers to all coin entities */
-  coin* coins[COIN_COUNT];
-  entities_get(coins, NULL, coin);
-  
-  /* Set all the coin initial positions */
-  int i;
-  for(i = 0; i < COIN_COUNT; i++) {
-    coins[i]->position = v2_mul(coin_positions[i], 32);
-  }
-  
-  /* Set the screen clear color and depth value */
-  glClearColor(1.0, 1.0, 1.0, 1.0);
-  glClearDepth(1.0);
   
   /* Add some UI elements */
-  
   ui_rectangle* framerate_rect = ui_elem_new("framerate_rect", ui_rectangle);
   framerate_rect->top_left = v2(10, 10);
   framerate_rect->bottom_right = v2(40, 35);
@@ -153,8 +194,40 @@ void platformer_init() {
   time_text->color = v4_white();
   ui_text_update_string(time_text, "Time 000000");
   
+  ui_rectangle* victory_rect = ui_elem_new("victory_rect", ui_rectangle);
+  victory_rect->top_left = v2(365, 200);
+  victory_rect->bottom_right = v2(435, 225);
+  victory_rect->color = v4_black();
+  victory_rect->border_color = v4_white();
+  victory_rect->border_size = 1;
+  victory_rect->active = false;
+  
+  ui_text* victory_text = ui_elem_new("victory_text", ui_text);
+  victory_text->position = v2(370, 205);
+  victory_text->color = v4_white();
+  victory_text->active = false;
+  ui_text_update_string(victory_text, "Victory!");
+  
+  ui_rectangle* new_game_rect = ui_elem_new("new_game_rect", ui_rectangle);
+  new_game_rect->top_left = v2(365, 230);
+  new_game_rect->bottom_right = v2(435, 255);
+  new_game_rect->color = v4_black();
+  new_game_rect->border_color = v4_white();
+  new_game_rect->border_size = 1;
+  new_game_rect->active = false;
+  
+  ui_text* new_game_text = ui_elem_new("new_game_text", ui_text);
+  new_game_text->position = v2(370, 235);
+  new_game_text->color = v4_white();
+  new_game_text->active = false;
+  ui_text_update_string(new_game_text, "New Game");
+  
+  ui_elem_add_event("new_game_rect", new_game);
+  
   /* Set volume to something more reasonable */
-  audio_mixer_set_volume(0.25);
+  audio_mixer_set_volume(0.1);
+  
+  reset_game();
   
 }
 
@@ -171,6 +244,14 @@ void platformer_event(SDL_Event event) {
       main_char->velocity.y -= 5.0;
       main_char->flap_timer = 0.15;
     }
+    
+    if (event.key.keysym.sym == SDLK_p) {
+      character* main_char = entity_get("main_char");
+      vector2 pos = v2_div(main_char->position, 32);
+      debug("Player Position: (%0.2f, %0.2f)", pos.x, pos.y);
+      debug("Coins Left: %i", entity_type_count(coin));
+    }
+    
   break;
   
   case SDL_KEYUP:
@@ -178,9 +259,6 @@ void platformer_event(SDL_Event event) {
     if (event.key.keysym.sym == SDLK_RIGHT) { right_held = false; }
   break;
   }
-  
-  /* Also pass through to the UI for events */
-  ui_event(event);
     
 }
 
@@ -194,7 +272,6 @@ static void collision_detection() {
     |       |   then we shift the player so that they are no longer
     @       @   colliding with it. Also invert their velocity.
      @-----@ 
-  
   */
   
   character* main_char = entity_get("main_char");
@@ -206,10 +283,10 @@ static void collision_detection() {
   
   /* Bottom Collision */
   
-  diff = v2_fmod(main_char->position, 32);
+  diff = v2_fmod(main_char->position, TILE_SIZE);
   
-  vector2 bottom1 = v2_add(main_char->position, v2(buffer, 32));
-  vector2 bottom2 = v2_add(main_char->position, v2(32 - buffer, 32));
+  vector2 bottom1 = v2_add(main_char->position, v2(buffer, TILE_SIZE));
+  vector2 bottom2 = v2_add(main_char->position, v2(TILE_SIZE - buffer, TILE_SIZE));
   
   bool bottom1_col = tile_has_collision(level_tile_at(current_level, bottom1));
   bool bottom2_col = tile_has_collision(level_tile_at(current_level, bottom2));
@@ -221,40 +298,40 @@ static void collision_detection() {
   
   /* Top Collision */
   
-  diff = v2_fmod(main_char->position, 32);
+  diff = v2_fmod(main_char->position, TILE_SIZE);
   
   vector2 top1 = v2_add(main_char->position, v2(buffer, 0));
-  vector2 top2 = v2_add(main_char->position, v2(32 - buffer, 0));
+  vector2 top2 = v2_add(main_char->position, v2(TILE_SIZE - buffer, 0));
   
   bool top1_col = tile_has_collision(level_tile_at(current_level, top1));
   bool top2_col = tile_has_collision(level_tile_at(current_level, top2));
   
   if (top1_col || top2_col) {
-    main_char->position = v2_add(main_char->position, v2(0, 32 - diff.y));
+    main_char->position = v2_add(main_char->position, v2(0, TILE_SIZE - diff.y));
     main_char->velocity.y *= -bounce;
   }
   
   /* Left Collision */
   
-  diff = v2_fmod(main_char->position, 32);
+  diff = v2_fmod(main_char->position, TILE_SIZE);
   
   vector2 left1 = v2_add(main_char->position, v2(0, buffer));
-  vector2 left2 = v2_add(main_char->position, v2(0, 32 - buffer));
+  vector2 left2 = v2_add(main_char->position, v2(0, TILE_SIZE - buffer));
   
   bool left1_col = tile_has_collision(level_tile_at(current_level, left1));
   bool left2_col = tile_has_collision(level_tile_at(current_level, left2));
   
   if (left1_col || left2_col) {
-    main_char->position = v2_add(main_char->position, v2(32 - diff.x,0));
+    main_char->position = v2_add(main_char->position, v2(TILE_SIZE - diff.x,0));
     main_char->velocity.x *= -bounce;
   }
   
   /* Right Collision */
   
-  diff = v2_fmod(main_char->position, 32);
+  diff = v2_fmod(main_char->position, TILE_SIZE);
   
-  vector2 right1 = v2_add(main_char->position, v2(32, buffer));
-  vector2 right2 = v2_add(main_char->position, v2(32, 32 - buffer));
+  vector2 right1 = v2_add(main_char->position, v2(TILE_SIZE, buffer));
+  vector2 right2 = v2_add(main_char->position, v2(TILE_SIZE, TILE_SIZE - buffer));
   
   bool right1_col = tile_has_collision(level_tile_at(current_level, right1));
   bool right2_col = tile_has_collision(level_tile_at(current_level, right2));
@@ -271,31 +348,48 @@ static void collision_detection_coins() {
   /* We simply check if the player intersects with the coins */
   
   character* main_char = entity_get("main_char");
-  vector2 top_left = v2_add(main_char->position, v2(-32, -32));
-  vector2 bottom_right = v2_add(main_char->position, v2(32, 32));
+  vector2 top_left = v2_add(main_char->position, v2(-TILE_SIZE, -TILE_SIZE));
+  vector2 bottom_right = v2_add(main_char->position, v2(TILE_SIZE, TILE_SIZE));
   
+  /* Again we collect points to all the coin type entities */
   int num_coins = 0;
   coin* coins[COIN_COUNT];
   entities_get(coins, &num_coins, coin); 
   
   int i;
   for(i = 0; i < num_coins; i++) {
+    /* Check if they are within the main char bounding box */
     if ((coins[i]->position.x > top_left.x) &&
         (coins[i]->position.x < bottom_right.x) &&
         (coins[i]->position.y > top_left.y) && 
         (coins[i]->position.y < bottom_right.y)) {
       
+      /* Remove them from the entity manager and delete */
       char* coin_name = entity_name(coins[i]);
-      debug("Got Coin %s!", coin_name);
-      audio_mixer_play_sound(asset_get_as("./sounds/coin.wav", sound));
       entity_delete(coin_name);
       
-      ui_text* score_text = ui_elem_get("score_text");
+      /* Play a nice twinkle sound */
+      audio_mixer_play_sound(asset_get_as("./sounds/coin.wav", sound));
       
       level_score += 10;
+      
+      ui_text* score_text = ui_elem_get("score_text");
       sprintf(score_text->string, "Score %06i", level_score);
       ui_text_update_properties(score_text);
     }
+  }
+  
+  ui_rectangle* victory_rect = ui_elem_get("victory_rect");
+  
+  if ((entity_type_count(coin) == 0) && (!victory_rect->active)) {
+    ui_rectangle* victory_rect = ui_elem_get("victory_rect");
+    victory_rect->active = true;
+    ui_text* victory_text = ui_elem_get("victory_text");
+    victory_text->active = true;
+    ui_rectangle* new_game_rect = ui_elem_get("new_game_rect");
+    new_game_rect->active = true;
+    ui_text* new_game_text = ui_elem_get("new_game_text");
+    new_game_text->active = true;
   }
   
 }
@@ -304,14 +398,11 @@ void platformer_update() {
   
   character* main_char = entity_get("main_char");
   
-  /* If player has a key held accelerate in that direction */
-  const float speed = 0.1;
-  
   if (left_held) {
-    main_char->velocity.x -= speed;
+    main_char->velocity.x -= 0.1;
     main_char->facing_left = true;
   } else if (right_held) {
-    main_char->velocity.x += speed;
+    main_char->velocity.x += 0.1;
     main_char->facing_left = false;
   } else {
     main_char->velocity.x *= 0.95;
@@ -341,9 +432,6 @@ void platformer_update() {
   sprintf(time_text->string, "Time %06i", (int)level_time);
   ui_text_update_properties(time_text);
   
-  /* Update rest of UI */
-  ui_update();
-  
 }
 
 void platformer_render() {
@@ -368,12 +456,6 @@ void platformer_render() {
   /* Render level */
   level_render_tiles(current_level, camera_position);
   
-  /* Render UI */
-  ui_render();
-  
-  /* Flip the Screen Buffer */
-  SDL_GL_SwapBuffers(); 
-  
 }
 
 void platformer_finish() {
@@ -387,8 +469,6 @@ int main(int argc, char **argv) {
   /* Init Corange, pointing to the core_assets folder */
   corange_init("../../core_assets");
   
-  viewport_set_vsync(true);
-  
   platformer_init();
   
   /* Set the game running, create SDL_Event struct to monitor events */
@@ -398,12 +478,10 @@ int main(int argc, char **argv) {
   while(running) {
     
     /* Frame functions used to monitor frame times, FPS and other */
-    
-    
     frame_begin();
     
     while(SDL_PollEvent(&event)) {
-    
+
       switch(event.type){
       case SDL_KEYUP:
         /* Exit on ESCAPE and Screenshot on print screen */
@@ -411,18 +489,24 @@ int main(int argc, char **argv) {
         if (event.key.keysym.sym == SDLK_PRINT) { viewport_screenshot(); }
         break;
       case SDL_QUIT:
-        /* Corrisponds to SDL_QUIT event such as cross in top right corner */
+        /* A quitting event such as pressing cross in top right corner */
         running = false;
         break;
       }
       
-      /* Also send the event off for platformer specific events */
+      /* Also send this event off to the game and ui */
       platformer_event(event);
+      ui_event(event);
     }
     
     platformer_update();
+    ui_update();
     
     platformer_render();
+    ui_render();
+    
+    /* Flip the Screen Buffer. We've finished with this frame. */
+    SDL_GL_SwapBuffers(); 
     
     /* This allows us to fix the framerate to 60 fps, even on my laptop with vsync broken */
     frame_end_at_rate(60);
@@ -431,7 +515,7 @@ int main(int argc, char **argv) {
   
   platformer_finish();
   
-  /* Finish Corange. This will unload and assets and delete any remaining entities */
+  /* Corange will unload remaining assets and delete any remaining entities */
   corange_finish();
   
   return 0;

@@ -47,6 +47,8 @@ typedef struct ui_text_temp {
   float char_spacing;
   float rotation;
   
+  bool active;
+  
 } ui_text;
 
 ui_text* ui_text_new();

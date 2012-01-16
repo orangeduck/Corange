@@ -898,7 +898,7 @@ void tga_save_file(image* i, char* filename) {
 
 void image_write_to_file(image* i, char* filename) {
   
-  char* ext = asset_file_extension(filename);
+  char* ext = asset_name_extension(filename);
   
   if ( strcmp(ext, "tga") == 0 ) {
     tga_save_file(i, filename);

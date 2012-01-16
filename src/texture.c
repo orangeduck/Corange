@@ -78,7 +78,18 @@ void texture_write_to_file(texture* t, char* filename){
 
 texture* lut_load_file( char* filename ) {
   
-  char* contents = asset_file_contents(filename);
+  SDL_RWops* file = SDL_RWFromFile(filename, "r");
+  if(file == NULL) {
+    error("Cannot load file %s", filename);
+  }
+  
+  long size = SDL_RWseek(file,0,SEEK_END);
+  unsigned char* contents = malloc(size+1);
+  contents[size] = '\0';
+  SDL_RWseek(file, 0, SEEK_SET);
+  SDL_RWread(file, contents, size, 1);
+  
+  SDL_RWclose(file);
   
   int head = sizeof("CORANGE-LUT")-1;
   int lut_size = (unsigned char)contents[head] | (unsigned char)contents[head + 1];

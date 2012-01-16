@@ -24,6 +24,8 @@ static bool window_vsync;
 
 void viewport_init() {
 
+  SDL_Init(SDL_INIT_VIDEO);
+
   window_width = DEFAULT_WIDTH;
   window_height = DEFAULT_HEIGHT;
   window_flags = SDL_OPENGL;
@@ -31,8 +33,10 @@ void viewport_init() {
   window_vsync = 1;
   
   viewport_set_title("corange", "corange");
-  
   viewport_start();
+  
+  SDL_LoadOpenGLExtensions();
+  SDL_PrintOpenGLInfo();
   
 }
 

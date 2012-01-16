@@ -2,9 +2,6 @@
 
 #include "level.h"
 
-const float TILE_WIDTH = 32;
-const float TILE_HEIGHT = 32;
-
 const int MAX_WIDTH = 512;
 const int MAX_HEIGHT = 512;
 
@@ -145,20 +142,20 @@ level* level_load_file(char* filename) {
       int type = l->tile_map[x + y * MAX_WIDTH];
       if( type == i ) {
         
-        position_data[pos_i] = x * TILE_WIDTH; pos_i++;
-        position_data[pos_i] = y * TILE_HEIGHT; pos_i++;
+        position_data[pos_i] = x * TILE_SIZE; pos_i++;
+        position_data[pos_i] = y * TILE_SIZE; pos_i++;
         position_data[pos_i] = 0; pos_i++;
         
-        position_data[pos_i] = (x+1) * TILE_WIDTH; pos_i++;
-        position_data[pos_i] = y * TILE_HEIGHT; pos_i++;
+        position_data[pos_i] = (x+1) * TILE_SIZE; pos_i++;
+        position_data[pos_i] = y * TILE_SIZE; pos_i++;
         position_data[pos_i] = 0; pos_i++;
         
-        position_data[pos_i] = (x+1) * TILE_WIDTH; pos_i++;
-        position_data[pos_i] = (y+1) * TILE_HEIGHT; pos_i++;
+        position_data[pos_i] = (x+1) * TILE_SIZE; pos_i++;
+        position_data[pos_i] = (y+1) * TILE_SIZE; pos_i++;
         position_data[pos_i] = 0; pos_i++;
         
-        position_data[pos_i] = x * TILE_WIDTH; pos_i++;
-        position_data[pos_i] = (y+1) * TILE_HEIGHT; pos_i++;
+        position_data[pos_i] = x * TILE_SIZE; pos_i++;
+        position_data[pos_i] = (y+1) * TILE_SIZE; pos_i++;
         position_data[pos_i] = 0; pos_i++;
         
         uv_data[uv_i] = 0; uv_i++;
@@ -200,7 +197,8 @@ level* level_load_file(char* filename) {
 void level_delete(level* l) {
   
   int i;
-  for(i = 0; i < l->num_tile_sets; i++) {
+  /* Start from 1 as 0 is none tile set */
+  for(i = 1; i < l->num_tile_sets; i++) {
     glDeleteBuffers(1 , &l->tile_sets[i].positions_buffer);
     glDeleteBuffers(1 , &l->tile_sets[i].texcoords_buffer);
   }
