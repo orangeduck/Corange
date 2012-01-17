@@ -137,70 +137,63 @@ void lut_gen_init() {
   
   lut_gen_rebuild_cube();
   
-  glClearColor(0.0, 0.0, 0.0, 1.0);
+  glClearColor(0.25, 0.25, 0.25, 1.0);
   glClearDepth(1.0);
   
   ui_rectangle* top_left_rect = ui_elem_new("top_left_rect", ui_rectangle);
-  top_left_rect->top_left = v2(0,0);
-  top_left_rect->bottom_right = v2(400,300);
-  top_left_rect->color = v4(0,0,0,0);
+  top_left_rect->top_left = v2(120,10);
+  top_left_rect->bottom_right = v2(390,290);
+  top_left_rect->color = v4(0,0,0,1);
   top_left_rect->border_color = v4_white();
   top_left_rect->border_size = 1;
   
   ui_rectangle* top_right_rect = ui_elem_new("top_right_rect", ui_rectangle);
-  top_right_rect->top_left = v2(400,0);
-  top_right_rect->bottom_right = v2(800,300);
-  top_right_rect->color = v4(0,0,0,0);
+  top_right_rect->top_left = v2(410,10);
+  top_right_rect->bottom_right = v2(790,290);
+  top_right_rect->color = v4(0,0,0,1);
   top_right_rect->border_color = v4_white();
   top_right_rect->border_size = 1;
   
-  ui_rectangle* bot_left_rect = ui_elem_new("bot_left_rect", ui_rectangle);
-  bot_left_rect->top_left = v2(0,300);
-  bot_left_rect->bottom_right = v2(400,600);
-  bot_left_rect->color = v4(0,0,0,0);
-  bot_left_rect->border_color = v4_white();
-  bot_left_rect->border_size = 1;
-  
   ui_rectangle* bot_right_rect = ui_elem_new("bot_right_rect", ui_rectangle);
-  bot_right_rect->top_left = v2(400,300);
-  bot_right_rect->bottom_right = v2(800,600);
-  bot_right_rect->color = v4(0,0,0,0);
+  bot_right_rect->top_left = v2(410,310);
+  bot_right_rect->bottom_right = v2(790,590);
+  bot_right_rect->color = v4(0,0,0,1);
   bot_right_rect->border_color = v4_white();
   bot_right_rect->border_size = 1; 
   
   ui_rectangle* emerald_rect = ui_elem_new("emerald_rect", ui_rectangle);
-  emerald_rect->top_left = v2(10, 310);
-  emerald_rect->bottom_right = v2(75, 335);
+  emerald_rect->top_left = v2(10, 10);
+  emerald_rect->bottom_right = v2(75, 35);
   emerald_rect->color = v4_black();
   emerald_rect->border_color = v4_white();
   emerald_rect->border_size = 1;
   
   ui_text* emerald_text = ui_elem_new("emerald_text", ui_text);
-  emerald_text->position = v2(15, 315);
+  emerald_text->position = v2(15, 15);
   emerald_text->color = v4_white();
   ui_text_update_string(emerald_text, "Emerald");
   
   ui_rectangle* blues_rect = ui_elem_new("blues_rect", ui_rectangle);
-  blues_rect->top_left = v2(10, 345);
-  blues_rect->bottom_right = v2(60, 370);
+  blues_rect->top_left = v2(10, 45);
+  blues_rect->bottom_right = v2(60, 70);
   blues_rect->color = v4_black();
   blues_rect->border_color = v4_white();
   blues_rect->border_size = 1;
   
   ui_text* blues_text = ui_elem_new("blues_text", ui_text);
-  blues_text->position = v2(15, 350);
+  blues_text->position = v2(15, 50);
   blues_text->color = v4_white();
   ui_text_update_string(blues_text, "Blues");
   
   ui_rectangle* identity_rect = ui_elem_new("identity_rect", ui_rectangle);
-  identity_rect->top_left = v2(10, 380);
-  identity_rect->bottom_right = v2(82, 405);
+  identity_rect->top_left = v2(10, 80);
+  identity_rect->bottom_right = v2(82, 105);
   identity_rect->color = v4_black();
   identity_rect->border_color = v4_white();
   identity_rect->border_size = 1;
   
   ui_text* identity_text = ui_elem_new("identity_text", ui_text);
-  identity_text->position = v2(15, 385);
+  identity_text->position = v2(15, 85);
   identity_text->color = v4_white();
   ui_text_update_string(identity_text, "Identity");
   
@@ -248,10 +241,10 @@ static void lut_gen_render_preview() {
   glEnable(GL_TEXTURE_3D);
   
   glBegin(GL_QUADS);
-    glTexCoord2f(0, 0); glVertex3f(viewport_width() - 400, 0, 0);
-    glTexCoord2f(1, 0); glVertex3f(viewport_width(), 0, 0);
-    glTexCoord2f(1, 1); glVertex3f(viewport_width(), 300, 0);
-    glTexCoord2f(0, 1); glVertex3f(viewport_width() - 400, 300, 0);
+    glTexCoord2f(0, 0); glVertex3f(viewport_width() - 390, 11, 0);
+    glTexCoord2f(1, 0); glVertex3f(viewport_width() - 11, 11, 0);
+    glTexCoord2f(1, 1); glVertex3f(viewport_width() - 11, 290, 0);
+    glTexCoord2f(0, 1); glVertex3f(viewport_width() - 390, 290, 0);
   glEnd();
   
   glActiveTexture(GL_TEXTURE0 + 0 );
@@ -272,9 +265,7 @@ static void lut_gen_render_preview() {
 
 static void lut_gen_render_cube() {
 
-  glViewport(400, 0, 400, 300);
-  
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glViewport(410, 10, 380, 280);
   
   camera* cam = entity_get("camera");
   matrix_4x4 viewm = camera_view_matrix(cam);
@@ -342,7 +333,7 @@ static void lut_gen_render_spline(spline* s, vector3 color) {
     int i;
     for(i = 0; i < s->num_points; i++) {
       vector2 loc = v2( s->x[i], s->y[i] );
-      glVertex2f((1-loc.x) * 400, loc.y * 300);
+      glVertex2f(130 + (1-loc.x) * 250, 25 + loc.y * 250);
     }
   glEnd();
   glPointSize(1.0);
@@ -354,11 +345,11 @@ static void lut_gen_render_spline(spline* s, vector3 color) {
     float j;
     for( j = 0; j <= 1; j += step) {
       float loc = spline_get_y(s, j);
-      glVertex2f((1-j) * 400, loc * 300);
+      glVertex2f(130 + (1-j) * 250, 25 + loc * 250);
     }
     float y = s->y[s->num_points-1];
     float x = s->x[s->num_points-1];
-    glVertex2f((1-x) * 400, y * 300);
+    glVertex2f(130 + (1-x) * 250, 25 + y * 250);
   glEnd();
   glDisable(GL_LINE_SMOOTH);
   
@@ -422,7 +413,7 @@ void lut_gen_update() {
 
 int main(int argc, char **argv) {
   
-  corange_init("../../core_assets/");
+  corange_init("../../core_assets");
   
   lut_gen_init();
   
@@ -454,7 +445,8 @@ int main(int argc, char **argv) {
         }
         break;
       case SDL_MOUSEMOTION:
-        if ((event.motion.x > 400) && (event.motion.y > 300)) {
+        if ((event.motion.x > 410) && (event.motion.y > 310) &&
+            (event.motion.x < 790) && (event.motion.y < 590)) {
           mouse_x = event.motion.xrel;
           mouse_y = event.motion.yrel;
         }
@@ -468,8 +460,9 @@ int main(int argc, char **argv) {
     lut_gen_update();
     ui_update();
     
-    lut_gen_render();
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     ui_render();
+    lut_gen_render();
     
     SDL_GL_SwapBuffers(); 
     
