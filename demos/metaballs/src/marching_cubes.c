@@ -7,7 +7,7 @@
 static kernel_memory volume;
 static kernel_memory point_color_buffer;
 
-static kernel marching_cubes;
+static kernel construct_surface;
 static kernel write_clear;
 static kernel write_point;
 static kernel write_metaball;
@@ -24,13 +24,10 @@ const int depth = 16;
 #define MAX_VERTS 10000
 
 static GLuint vertex_positions;
-static GLuint vertex_normals;
-static GLuint vertex_index;
 
 static kernel_memory vertex_positions_buffer;
-static kernel_memory vertex_normals_buffer;
-static kernel_memory vertex_index_buffer;
-static kernel_memory vertex_num_verts;
+static kernel_memory vertex_index;
+static kernel_memory vertex_lock;
 
 static int num_verts = 0;
 
@@ -73,6 +70,20 @@ void marching_cubes_init() {
   
   volume = kernel_memory_allocate(sizeof(float) * full_size);
   
+  /* Vertex stuff */
+  
+  vector4* vertex_data = malloc(sizeof(vector4) * MAX_VERTS);
+  memset(vertex_data, 0, sizeof(vector4) * MAX_VERTS);
+  glGenBuffers(1, &vertex_positions);
+  glBindBuffer(GL_ARRAY_BUFFER, vertex_positions);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(vector4) * MAX_VERTS, vertex_data, GL_DYNAMIC_COPY);
+  free(vertex_data);
+  
+  vertex_positions_buffer = kernel_memory_from_glbuffer(vertex_positions);
+  
+  vertex_index = kernel_memory_allocate(sizeof(int));
+  vertex_lock = kernel_memory_allocate(sizeof(int));
+  
   /* Kernels */
   
   kernel_program* marching_cubes = asset_get("./kernels/marching_cubes.cl");
@@ -92,6 +103,9 @@ void marching_cubes_init() {
   write_point_color_back = kernel_program_get_kernel(marching_cubes, "write_point_color_back");
   kernel_set_argument(write_point_color_back, 0, sizeof(kernel_memory), &volume);
   kernel_set_argument(write_point_color_back, 1, sizeof(kernel_memory), &point_color_buffer);
+  
+  construct_surface = kernel_program_get_kernel(marching_cubes, "construct_surface");
+  kernel_set_argument(construct_surface, 0, sizeof(kernel_memory), &volume);
 }
 
 void marching_cubes_finish() {
@@ -152,6 +166,25 @@ void marching_cubes_metaball(float x, float y, float z, float size) {
 
 void marching_cubes_update() {
 
+  int zero = 0;
+  kernel_memory_write(vertex_index, sizeof(int), &zero);
+  kernel_memory_write(vertex_lock, sizeof(int), &zero);
+  
+  kernel_memory_gl_aquire(vertex_positions_buffer);
+  
+  int size[3] = {width, height, depth};
+  
+  const int full_size = width * height * depth;
+  
+  kernel_set_argument(construct_surface, 0, sizeof(kernel_memory), &volume);
+  kernel_set_argument(construct_surface, 1, sizeof(cl_int3), &size);
+  kernel_set_argument(construct_surface, 2, sizeof(kernel_memory), &vertex_positions_buffer);
+  kernel_set_argument(construct_surface, 3, sizeof(kernel_memory), &vertex_index);
+  kernel_set_argument(construct_surface, 4, sizeof(kernel_memory), &vertex_lock);
+  kernel_run(construct_surface, full_size);
+  
+  kernel_memory_gl_release(vertex_positions_buffer);
+  
 }
 
 void marching_cubes_render() {

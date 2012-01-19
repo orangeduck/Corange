@@ -13,6 +13,14 @@
   #define GLsizeiptr int
 #endif
 
+void SDL_PathFullName(char* dst, char* path);
+void SDL_PathFileName(char* dst, char* path);
+void SDL_PathFileExtension(char* dst, char* path);
+void SDL_PathFileLocation(char* dst, char* path);
+
+char* SDL_GetWorkingDir();
+void SDL_SetWorkingDir(char* dir);
+
 void SDL_RWsize(SDL_RWops* file, int* size);
 int SDL_RWreadline(SDL_RWops* file, char* buffer, int buffersize);
 
@@ -27,6 +35,8 @@ void SDL_CheckOpenGLExtension(const char* name, void* function_pointer);
 void SDL_CheckOpenGLError(const char* name);
 
 void SDL_PrintStackTrace();
+
+char* SDL_OpenFileDialog(char* format_string, int default_format);
 
 typedef GLuint (APIENTRY * GLCREATESHADERFN)( GLenum type );
 typedef GLuint (APIENTRY * GLCREATEPROGRAMFN)( void );

@@ -62,6 +62,16 @@ void asset_manager_add_path_variable(char* variable, char* mapping) {
   
 }
 
+static char* asset_map_realpath(char* filename) {
+
+  char* actualpath = malloc(MAX_PATH);
+  
+  SDL_PathFullName(actualpath, filename);
+  free(filename);
+  
+  return actualpath;
+}
+
 char* asset_map_filename(char* filename) {
   
   int i;
@@ -84,7 +94,7 @@ char* asset_map_filename(char* filename) {
       strcat(new_filename, mapping);
       strcat(new_filename, sub + strlen(variable));
       
-      return new_filename;
+      return asset_map_realpath(new_filename);
     }
   
   }
@@ -92,7 +102,7 @@ char* asset_map_filename(char* filename) {
   char* new_filename = malloc(strlen(filename) + 1);
   strcpy(new_filename, filename);
 
-  return new_filename;
+  return asset_map_realpath(new_filename);
   
 }
 
@@ -335,50 +345,41 @@ void asset_state_print() {
 
 char* asset_name_extension(char* filename) {
   
-  char* filename_map = asset_map_filename(filename);
-  
   int ext_len = 0;
-  int i = strlen(filename_map);
+  int i = strlen(filename);
   while( i >= 0) {
     
-    if (filename_map[i] != '.') { ext_len++; }
-    if (filename_map[i] == '.') { break; }
+    if (filename[i] != '.') { ext_len++; }
+    if (filename[i] == '.') { break; }
   
     i--;
   }
   
   char* ext = malloc(ext_len);
   
-  int prev = strlen(filename_map) - ext_len + 1;
-  char* f_ext = filename_map + prev;
+  int prev = strlen(filename) - ext_len + 1;
+  char* f_ext = filename + prev;
   strcpy(ext, f_ext);
-  
-  free(filename_map);
   
   return ext;
 }
 
 char* asset_name_location(char* filename) {
-
-  char* filename_map = asset_map_filename(filename);
   
-  int len = strlen(filename_map);
-  int i = len;
+  int i = strlen(filename);
   while( i > 0) {
     
-    if (filename_map[i] != '/') { len--; }
-    if (filename_map[i] == '/') { break; }
+    if (filename[i] != '/') { i--; }
+    if (filename[i] == '/') { break; }
+    if (filename[i] == '\\') { break; }
   
     i--;
   }
   i++;
-  len++;
   
-  char* loc = malloc(len+1);
-  memcpy(loc, filename_map, len);
-  loc[len] = '\0';
-  
-  free(filename_map);
+  char* loc = malloc(i+1);
+  memcpy(loc, filename, i);
+  loc[i] = '\0';
   
   return loc;
   

@@ -30,25 +30,19 @@ font* font_load_file(char* filename) {
     
     int tex_id;
     char texture_filename[1024];
-    if (sscanf(line, "page id=%i file=\%s", &tex_id, texture_filename) > 0) {
+    if (sscanf(line, "page id=%i file=\%1024s", &tex_id, texture_filename) > 0) {
       
-      char* root = asset_name_location(filename);
+      char location[MAX_PATH];
+      SDL_PathFileLocation(location, filename);
       
-      char* full = malloc(strlen(root) + strlen(texture_filename) + 1 );
-      strcpy(full, root);
+      char full[MAX_PATH];
+      strcpy(full, location);
       
       strcat(full, texture_filename+1); /* +1 to remove beginning quotation */
       full[strlen(full)-1] = '\0'; /* remove ending quotation */
       
-      if(asset_loaded(full)) {
-        f->texture_map = asset_get(full);
-      } else {
-        load_file(full);
-        f->texture_map = asset_get(full);
-      }
+      f->texture_map = asset_load_get(full);
       
-      free(root);
-      free(full);
     }
     
     int lineheight, base, scalew, scaleh, pages, packed, a_chan, r_chan, g_chan, b_chan;

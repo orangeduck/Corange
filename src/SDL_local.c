@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include "error.h"
 
 #include "SDL/SDL_rwops.h"
@@ -60,6 +62,97 @@ GLGETATTRIBLOCATIONFN glGetAttribLocation;
 GLRENDERBUFFERSTORAGEFN glRenderbufferStorage;
 GLDRAWBUFFERSFN glDrawBuffers;
 GLGENERATEMIPMAPFN glGenerateMipmap;
+
+#ifdef _WIN32
+
+void SDL_PathFullName(char* dst, char* path) {
+  GetFullPathName(path, MAX_PATH, dst, NULL);
+}
+
+#elif __linux__
+
+#include <stdlib.h>
+
+void SDL_PathFullName(char* dst, char* path) {
+  realpath(path, dst);
+}
+
+#endif
+
+void SDL_PathFileName(char* dst, char* path) {
+  
+  int i = strlen(path);
+  int ext_loc = 0;
+  while( i > 0) {
+    if (path[i] == '/') { break; }
+    if (path[i] == '\\') { break; }
+    if (path[i] == '.') { ext_loc = i; }
+    i--;
+  }
+  
+  char* file = path + i + 1;
+  int len = ext_loc - i - 1;
+  
+  strncpy(dst, file, len);
+  dst[len] = '\0';
+}
+
+void SDL_PathFileExtension(char* dst, char* path) {
+
+  int ext_len = 0;
+  int i = strlen(path);
+  while( i >= 0) {
+    if (path[i] != '.') { ext_len++; }
+    if (path[i] == '.') { break; }
+    i--;
+  }
+  
+  int prev = strlen(path) - ext_len + 1;
+  char* f_ext = path + prev;
+  strcpy(dst, f_ext);
+}
+
+void SDL_PathFileLocation(char* dst, char* path) {
+  
+  int i = strlen(path);
+  while( i > 0) {
+    if (path[i] == '/') { break; }
+    if (path[i] == '\\') { break; }
+    i--;
+  }
+  i++;
+  
+  strncpy(dst, path, i);
+  dst[i] = '\0';
+}
+
+
+#ifdef _WIN32
+  #include <direct.h>
+  #define getcwd _getcwd
+  #define chdir _chdir
+#else
+  #include <unistd.h>
+#endif
+
+ 
+static char curr_dir[FILENAME_MAX];
+char* SDL_GetWorkingDir() {
+
+  if (!getcwd(curr_dir, sizeof(curr_dir))) {
+    error("Could not get working directory!");
+  }
+  
+  return curr_dir;
+}
+
+void SDL_SetWorkingDir(char* dir) {
+  
+  if (chdir(dir)) {
+    error("Could not change working directory!");
+  }
+  
+}
 
 void SDL_RWsize(SDL_RWops* file, int* size) {
   int pos = SDL_RWtell(file);
@@ -259,5 +352,61 @@ void SDL_PrintStackTrace() {
 #else
 
 void SDL_PrintStackTrace() {}
+
+#endif
+
+#ifdef _WIN32
+
+#include <Commdlg.h>
+
+static char returned_filename[FILENAME_MAX];
+char* SDL_OpenFileDialog(char* format_string, int default_format) {
+  
+  /* This dialogue has a habit of changing the working directory and messing stuff up. */
+  char* working_dir = SDL_GetWorkingDir();
+  
+  if (format_string == NULL) {
+    format_string = "All Files\0*.*\0\0";
+  }
+  
+  returned_filename[0] = '\0';
+  
+  OPENFILENAME opf;
+  opf.hwndOwner = 0;
+  
+  opf.lpstrFilter = format_string;
+  opf.lpstrCustomFilter = NULL;
+  opf.nMaxCustFilter = 0;
+  
+  /* For some reason microsoft count from 1 here */
+  opf.nFilterIndex = default_format + 1;
+  
+  opf.lpstrFile = returned_filename;
+  opf.nMaxFile = FILENAME_MAX;
+  
+  opf.lpstrFileTitle = NULL;
+  opf.nMaxFileTitle = 0;
+  
+  opf.lpstrInitialDir = working_dir;
+  opf.lpstrTitle = NULL;
+  opf.nFileOffset = 0;
+  opf.nFileExtension = 0;
+  opf.lpstrDefExt = NULL;
+  opf.lpfnHook = NULL;
+  opf.lCustData = 0;
+  opf.Flags = OFN_PATHMUSTEXIST;
+  opf.lStructSize = sizeof(OPENFILENAME);
+  GetOpenFileName(&opf);
+  
+  SDL_SetWorkingDir(working_dir);
+  
+  return returned_filename;
+}
+
+#else 
+
+char* SDL_OpenFileDialog(char* format_string, int default_format) {
+  error("Cannot open file dialog on platform that is not windows.");
+}
 
 #endif

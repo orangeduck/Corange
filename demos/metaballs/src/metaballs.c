@@ -85,8 +85,6 @@ void metaballs_init() {
   
   free(temp_uvs);
   
-  font* console_font = asset_get("$CORANGE/fonts/console_font.fnt");
-  
   ui_text* ui_framerate = ui_elem_new("ui_framerate", ui_text);
   ui_framerate->position = v2( 20, 20 );
   ui_framerate->scale = v2(1,1);

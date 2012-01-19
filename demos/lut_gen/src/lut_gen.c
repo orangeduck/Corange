@@ -2,7 +2,7 @@
 
 #include "spline.h"
 
-#define CUBE_SIZE 10
+#define CUBE_SIZE 8
 
 static int mouse_x;
 static int mouse_y;
@@ -15,7 +15,7 @@ static color_curves* current_curves = NULL;
 static texture* current_lut = NULL;
 
 static void lut_gen_rebuild_cube() {
-
+  
   vector3* positions = malloc(sizeof(vector3) * CUBE_SIZE * CUBE_SIZE * CUBE_SIZE);
   vector3* colors = malloc(sizeof(vector3) * CUBE_SIZE * CUBE_SIZE * CUBE_SIZE);
   
@@ -42,70 +42,41 @@ static void lut_gen_rebuild_cube() {
 
 }
 
-static bool emerald_button_pressed = false;
-static void switch_curves_emerald(ui_rectangle* rect, SDL_Event event) {
+static void load_new_curves_file() {
+
+  char* filename = SDL_OpenFileDialog("Photoshop Curves (.acv)\0*.acv\0\0", 0);
   
-  if (event.type == SDL_MOUSEBUTTONDOWN) {
-    
-    if (ui_rectangle_contains_position(rect, v2(event.motion.x, event.motion.y))) {
-      emerald_button_pressed = true;
-      rect->color = v4(0.5, 0.5, 0.5, 1);
-    }
+  char file[MAX_PATH]; SDL_PathFileName(file, filename);
+  char location[MAX_PATH]; SDL_PathFileLocation(location, filename);
+  char lut_name[MAX_PATH]; strcpy(lut_name, location); strcat(lut_name, file); strcat(lut_name, ".lut");
   
-  } else if (event.type == SDL_MOUSEBUTTONUP) {
-    
-    if (emerald_button_pressed) {
-      emerald_button_pressed = false;
-      rect->color = v4_black();
-      
-      current_curves = asset_get("./input/emerald.acv");
-      current_lut = asset_get("./output/emerald.lut");
-      lut_gen_rebuild_cube();
-    }
-  }
+  ui_text* curves_text = ui_elem_get("curves_text");
+  ui_text_update_string(curves_text, file);
+  
+  current_curves = asset_load_get(filename);
+  color_curves_write_lut(asset_get_as(filename, color_curves), lut_name);
+  current_lut = asset_load_get(lut_name);
+
 }
 
-static bool blues_button_pressed = false;
-static void switch_curves_blues(ui_rectangle* rect, SDL_Event event) {
+static bool load_button_pressed = false;
+static void load_new_curves(ui_rectangle* rect, SDL_Event event) {
   
   if (event.type == SDL_MOUSEBUTTONDOWN) {
     
     if (ui_rectangle_contains_position(rect, v2(event.motion.x, event.motion.y))) {
-      blues_button_pressed = true;
+      load_button_pressed = true;
       rect->color = v4(0.5, 0.5, 0.5, 1);
     }
   
   } else if (event.type == SDL_MOUSEBUTTONUP) {
     
-    if (blues_button_pressed) {
-      blues_button_pressed = false;
+    if (load_button_pressed) {
+      load_button_pressed = false;
       rect->color = v4_black();
       
-      current_curves = asset_get("./input/blues.acv");
-      current_lut = asset_get("./output/blues.lut");
-      lut_gen_rebuild_cube();
-    }
-  }
-}
-
-static bool identity_button_pressed = false;
-static void switch_curves_identity(ui_rectangle* rect, SDL_Event event) {
-  
-  if (event.type == SDL_MOUSEBUTTONDOWN) {
-    
-    if (ui_rectangle_contains_position(rect, v2(event.motion.x, event.motion.y))) {
-      identity_button_pressed = true;
-      rect->color = v4(0.5, 0.5, 0.5, 1);
-    }
-  
-  } else if (event.type == SDL_MOUSEBUTTONUP) {
-    
-    if (identity_button_pressed) {
-      identity_button_pressed = false;
-      rect->color = v4_black();
+      load_new_curves_file();
       
-      current_curves = asset_get("./input/identity.acv");
-      current_lut = asset_get("./output/identity.lut");
       lut_gen_rebuild_cube();
     }
   }
@@ -115,13 +86,6 @@ void lut_gen_init() {
 
   asset_manager_handler("acv", acv_load_file, color_curves_delete);
   
-  load_folder("./input/");
-  
-  color_curves_write_lut(asset_get_as("./input/blues.acv", color_curves), "./output/blues.lut");
-  color_curves_write_lut(asset_get_as("./input/emerald.acv", color_curves), "./output/emerald.lut");
-  color_curves_write_lut(asset_get_as("./input/identity.acv", color_curves), "./output/identity.lut");
-  
-  load_folder("./output/");
   load_folder("./screenshots/");
   load_folder("./shaders/");
   
@@ -129,13 +93,8 @@ void lut_gen_init() {
   cam->position = v3(CUBE_SIZE * 1.5, CUBE_SIZE * 1.5, CUBE_SIZE * 1.5);
   cam->target = v3(CUBE_SIZE/2, CUBE_SIZE/2, CUBE_SIZE/2);
   
-  current_curves = asset_get("./input/emerald.acv");
-  current_lut = asset_get("./output/emerald.lut");
-  
   glGenBuffers(1, &cube_positions_buffer);
   glGenBuffers(1, &cube_colors_buffer);
-  
-  lut_gen_rebuild_cube();
   
   glClearColor(0.25, 0.25, 0.25, 1.0);
   glClearDepth(1.0);
@@ -161,46 +120,38 @@ void lut_gen_init() {
   bot_right_rect->border_color = v4_white();
   bot_right_rect->border_size = 1; 
   
-  ui_rectangle* emerald_rect = ui_elem_new("emerald_rect", ui_rectangle);
-  emerald_rect->top_left = v2(10, 10);
-  emerald_rect->bottom_right = v2(75, 35);
-  emerald_rect->color = v4_black();
-  emerald_rect->border_color = v4_white();
-  emerald_rect->border_size = 1;
+  ui_rectangle* curves_rect = ui_elem_new("curves_rect", ui_rectangle);
+  curves_rect->top_left = v2(10, 10);
+  curves_rect->bottom_right = v2(100, 35);
+  curves_rect->color = v4_black();
+  curves_rect->border_color = v4_white();
+  curves_rect->border_size = 1;
   
-  ui_text* emerald_text = ui_elem_new("emerald_text", ui_text);
-  emerald_text->position = v2(15, 15);
-  emerald_text->color = v4_white();
-  ui_text_update_string(emerald_text, "Emerald");
+  ui_text* curves_text = ui_elem_new("curves_text", ui_text);
+  curves_text->position = v2(15, 15);
+  curves_text->color = v4_white();
+  ui_text_update_string(curves_text, "emerald");
   
-  ui_rectangle* blues_rect = ui_elem_new("blues_rect", ui_rectangle);
-  blues_rect->top_left = v2(10, 45);
-  blues_rect->bottom_right = v2(60, 70);
-  blues_rect->color = v4_black();
-  blues_rect->border_color = v4_white();
-  blues_rect->border_size = 1;
+  ui_rectangle* load_rect = ui_elem_new("load_rect", ui_rectangle);
+  load_rect->top_left = v2(10, 45);
+  load_rect->bottom_right = v2(60, 70);
+  load_rect->color = v4_black();
+  load_rect->border_color = v4_white();
+  load_rect->border_size = 1;
   
-  ui_text* blues_text = ui_elem_new("blues_text", ui_text);
-  blues_text->position = v2(15, 50);
-  blues_text->color = v4_white();
-  ui_text_update_string(blues_text, "Blues");
+  ui_text* load_text = ui_elem_new("load_text", ui_text);
+  load_text->position = v2(15, 50);
+  load_text->color = v4_white();
+  ui_text_update_string(load_text, "Load");
   
-  ui_rectangle* identity_rect = ui_elem_new("identity_rect", ui_rectangle);
-  identity_rect->top_left = v2(10, 80);
-  identity_rect->bottom_right = v2(82, 105);
-  identity_rect->color = v4_black();
-  identity_rect->border_color = v4_white();
-  identity_rect->border_size = 1;
-  
-  ui_text* identity_text = ui_elem_new("identity_text", ui_text);
-  identity_text->position = v2(15, 85);
-  identity_text->color = v4_white();
-  ui_text_update_string(identity_text, "Identity");
-  
-  ui_elem_add_event("emerald_rect", switch_curves_emerald);
-  ui_elem_add_event("blues_rect", switch_curves_blues);
-  ui_elem_add_event("identity_rect", switch_curves_identity);
+  ui_elem_add_event("load_rect", load_new_curves);
 
+
+  current_curves = asset_load_get("./data/emerald.acv");
+  color_curves_write_lut(current_curves, "./data/emerald.lut");
+  current_lut = asset_load_get("./data/emerald.lut");
+  
+  lut_gen_rebuild_cube();
   
 }
 
