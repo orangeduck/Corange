@@ -36,9 +36,8 @@ void metaballs_init() {
   entity_add("floor", static_object, static_object_new(r_floor));
   
   camera* cam = entity_new("camera", camera);
-  cam->position = v3(20.0, 20.0, 0.0);
-  //cam->target = v3(0.0, 5.0, 0.0);
-  cam->target = v3(0.0, 0.0, 0.0);
+  cam->position = v3(100, 100, 100);
+  cam->target = v3(32, 32, 32);
   
   light* sun = entity_new("sun", light);
   sun->position = v3(30,20,-26);
@@ -85,18 +84,18 @@ void metaballs_init() {
   
   free(temp_uvs);
   
-  ui_text* ui_framerate = ui_elem_new("ui_framerate", ui_text);
-  ui_framerate->position = v2( 20, 20 );
-  ui_framerate->scale = v2(1,1);
-  ui_framerate->color = v4(1,1,1,1);
-  ui_text_update_string(ui_framerate, "framerate");
-  
   ui_rectangle* ui_box = ui_elem_new("ui_box", ui_rectangle);
   ui_box->top_left = v2(15, 15);
   ui_box->bottom_right = v2(40, 40);
   ui_box->color = v4_black();
   ui_box->border_size = 2;
   ui_box->border_color = v4_white();
+  
+  ui_text* ui_framerate = ui_elem_new("ui_framerate", ui_text);
+  ui_framerate->position = v2( 20, 20 );
+  ui_framerate->scale = v2(1,1);
+  ui_framerate->color = v4(1,1,1,1);
+  ui_text_update_string(ui_framerate, "framerate");
   
   //volume_renderer_init();
   //volume_renderer_set_camera(cam);
@@ -109,6 +108,12 @@ void metaballs_init() {
   
 }
 
+static float metaball1_y = 20;
+static float metaball2_y = 40;
+
+static bool move_up = false;
+static bool move_down = false;
+
 void metaballs_update() {
 
   camera* cam = entity_get("camera");
@@ -119,11 +124,14 @@ void metaballs_update() {
     float a1 = -(float)mouse_x * frame_time() * 0.25;
     float a2 = (float)mouse_y * frame_time() * 0.25;
     
+    cam->position = v3_sub(cam->position, cam->target);
     cam->position = m33_mul_v3(m33_rotation_y( a1 ), cam->position );
+    cam->position = v3_add(cam->position, cam->target);
     
+    cam->position = v3_sub(cam->position, cam->target);
     vector3 rotation_axis = v3_normalize(v3_cross( v3_sub(cam->position, cam->target) , v3(0,1,0) ));
-    
     cam->position = m33_mul_v3(m33_rotation_axis_angle(rotation_axis, a2 ), cam->position );
+    cam->position = v3_add(cam->position, cam->target);
   }
   
   if(keystate & SDL_BUTTON(3)){
@@ -139,9 +147,17 @@ void metaballs_update() {
   ui_text* ui_framerate = ui_elem_get("ui_framerate");
   ui_text_update_string(ui_framerate, frame_rate_string());
   
+  if (move_up) {
+    metaball2_y += 0.1;
+  }
+  if (move_down) {
+    metaball2_y -= 0.1;
+  }
+  
   marching_cubes_clear();
   //marching_cubes_point(1, 1, 1, 1.0);
-  marching_cubes_metaball(5, 5, 5, 3);
+  marching_cubes_metaball(32, metaball1_y, 32);
+  marching_cubes_metaball(32, metaball2_y, 32);
   marching_cubes_update();
   
 }
@@ -257,21 +273,22 @@ void metaballs_event(SDL_Event event) {
   light* sun = entity_get("sun");
 
   switch(event.type){
-
+  
+  case SDL_KEYDOWN:
+    
+    if (event.key.keysym.sym == SDLK_u) move_up = true;
+    if (event.key.keysym.sym == SDLK_j) move_down = true;
+    
+  break;
+  
   case SDL_KEYUP:
     
     if (event.key.keysym.sym == SDLK_SPACE) { 
       particles_reset();
     }
     
-    /*
-    if(event.key.keysym.sym == SDLK_UP) {
-      pos1 = v3_add(pos1, v3(0, 0.1, 0));
-    }
-    if(event.key.keysym.sym == SDLK_DOWN) {
-      pos1 = v3_sub(pos1, v3(0, 0.1, 0));
-    }
-    */
+    if (event.key.keysym.sym == SDLK_u) move_up = false;
+    if (event.key.keysym.sym == SDLK_j) move_down = false;
     
   break;
   

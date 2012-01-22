@@ -249,3 +249,8 @@ void kernel_memory_read(kernel_memory km, int size, void* dst) {
   error = clEnqueueReadBuffer(queue, km, CL_TRUE, 0, size, dst, 0, NULL, NULL);
   kernels_check_error("clEnqueueReadBuffer");
 }
+
+void kernel_run_finish() {
+  error = clFinish(queue);
+  kernels_check_error("clFinish");
+}

@@ -1,0 +1,2 @@
+vertex_shader : ./shaders/metaballs.vs
+fragment_shader : ./shaders/metaballs.fs

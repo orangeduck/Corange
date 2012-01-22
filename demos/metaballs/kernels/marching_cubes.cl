@@ -15,23 +15,28 @@ kernel void write_point(global float* volume, int x, int y, int z, int size_x, i
   volume[pos] = value;
 }
 
+
+float smoothstepmap(float val) {
+  return val*val*(3 - 2*val);
+}
+
 kernel void write_metaball(global float* volume,
-                           int bot_x, int bot_y, int bot_z,
-                           int top_x, int top_y, int top_z,
-                           int size_x, int size_y, int size_z,
-                           float x, float y, float z, float size) {
+                           int3 bottom, int3 top, int3 size,
+                           float x, float y, float z) {
+  
+  const int METABALL_SIZE = 10;
   
   int id = get_global_id(0);
   
-  int3 box_size = (int3)(top_x - bot_x, top_y - bot_y, top_z - bot_z);
-  int3 box_offset = (int3)(bot_x, bot_y, bot_z);
-  
-  int3 pos = box_offset + (int3)( id % box_size.x, (id / (box_size.x)) % box_size.y, id / (box_size.x * box_size.y) );
+  int3 box_size = top - bottom;
+  int3 pos = bottom + volume_position(id, box_size);
   
   /* So this distance function needs to be changed to a deterministic dropoff */
-  float amount = 1 / distance((float3)(pos.x, pos.y, pos.z), (float3)(x, y, z));
+  float dist = distance((float3)(pos.x, pos.y, pos.z), (float3)(x, y, z)) / METABALL_SIZE;
+  float amount = 1-smoothstepmap( clamp(dist, 0.0f, 1.0f) );
   
-  int index = volume_coords(pos, (int3)(size_x, size_y, size_z));
+  int index = volume_coords(pos, size);
+  
   volume[index] += amount;
 }
 
@@ -42,25 +47,11 @@ kernel void write_point_color_back(global float* volume, global float4* point_co
   point_color[get_global_id(0)] = (float4)(color, 0, 0, 1);
 }
 
-void lock_release(global int* semaphor) {
-  atom_xchg(semaphor, 0);
-}
-
-void lock_aquire(global int* semaphor) {
-  while(atom_cmpxchg(semaphor, 0, 1));
-}
-
 float4 vertex_lerp(float threashold, float4 pos1, float4 pos2, float val1, float val2) {
-   
   float mu = (threashold - val1) / (val2 - val1);
-  
-  float4 pos;
-  pos.x = pos1.x + mu * (pos2.x - pos1.x);
-  pos.y = pos1.y + mu * (pos2.y - pos1.y);
-  pos.z = pos1.z + mu * (pos2.z - pos1.z);
-  pos.w = 1.0;
-
-  return pos;
+  float4 ret = pos1 + mu * (pos2 - pos1);
+  ret.w = 1;
+  return ret;
 }
 
 #include "./kernels/lookup_table.cl"
@@ -68,8 +59,7 @@ float4 vertex_lerp(float threashold, float4 pos1, float4 pos2, float val1, float
 kernel void construct_surface(global float* volume,
                               int3 volume_size,
                               global float4* vertex_buffer,
-                              global int* vertex_index,
-                              global int* vertex_lock) {
+                              global int* vertex_index) {
   
   int id = get_global_id(0);
   int3 pos = volume_position(id, volume_size);
@@ -83,7 +73,7 @@ kernel void construct_surface(global float* volume,
   float v6 = volume[volume_coords(pos + (int3)(1,1,1), volume_size)];
   float v7 = volume[volume_coords(pos + (int3)(0,1,1), volume_size)];
   
-  const float threashold = 0.1;
+  const float threashold = 0.5;
   
   unsigned char c0 = v0 > threashold;
   unsigned char c1 = v1 > threashold;
@@ -111,30 +101,86 @@ kernel void construct_surface(global float* volume,
   
   float4 vert_list[12];
   
-  int edge_mask = edge_table[hash];
-  
   /* Find the vertices where the surface intersects the cube */
   
-  if (edge_mask & 1) vert_list[0] = vertex_lerp(threashold, p0, p1, c0, c1);
-  if (edge_mask & 2) vert_list[1] = vertex_lerp(threashold, p1, p2, c1, c2);
-  if (edge_mask & 4) vert_list[2] = vertex_lerp(threashold, p2, p3, c2, c3);
-  if (edge_mask & 8) vert_list[3] = vertex_lerp(threashold, p3, p0, c3, c0);
-  if (edge_mask & 16) vert_list[4] = vertex_lerp(threashold, p4, p5, c4, c5);
-  if (edge_mask & 32) vert_list[5] = vertex_lerp(threashold, p5, p6, c5, c6);
-  if (edge_mask & 64) vert_list[6] = vertex_lerp(threashold, p6, p7, c6, c7);
-  if (edge_mask & 128) vert_list[7] = vertex_lerp(threashold, p7, p4, c7, c4);
-  if (edge_mask & 256) vert_list[8] = vertex_lerp(threashold, p0, p4, c0, c4);
-  if (edge_mask & 512) vert_list[9] = vertex_lerp(threashold, p1, p5, c1, c5);
-  if (edge_mask & 1024) vert_list[10] = vertex_lerp(threashold, p2, p6, c2, c6);
-  if (edge_mask & 2048) vert_list[11] = vertex_lerp(threashold, p3, p7, c3, c7);
+  /*
+  int edge_mask = edge_table[hash];
+  if (edge_mask & 1) vert_list[0] = vertex_lerp(threashold, p0, p1, v0, v1);
+  if (edge_mask & 2) vert_list[1] = vertex_lerp(threashold, p1, p2, v1, v2);
+  if (edge_mask & 4) vert_list[2] = vertex_lerp(threashold, p2, p3, v2, v3);
+  if (edge_mask & 8) vert_list[3] = vertex_lerp(threashold, p3, p0, v3, v0);
+  if (edge_mask & 16) vert_list[4] = vertex_lerp(threashold, p4, p5, v4, v5);
+  if (edge_mask & 32) vert_list[5] = vertex_lerp(threashold, p5, p6, v5, v6);
+  if (edge_mask & 64) vert_list[6] = vertex_lerp(threashold, p6, p7, v6, v7);
+  if (edge_mask & 128) vert_list[7] = vertex_lerp(threashold, p7, p4, v7, v4);
+  if (edge_mask & 256) vert_list[8] = vertex_lerp(threashold, p0, p4, v0, v4);
+  if (edge_mask & 512) vert_list[9] = vertex_lerp(threashold, p1, p5, v1, v5);
+  if (edge_mask & 1024) vert_list[10] = vertex_lerp(threashold, p2, p6, v2, v6);
+  if (edge_mask & 2048) vert_list[11] = vertex_lerp(threashold, p3, p7, v3, v7);
+  */
+  
+  vert_list[0] = vertex_lerp(threashold, p0, p1, v0, v1);
+  vert_list[1] = vertex_lerp(threashold, p1, p2, v1, v2);
+  vert_list[2] = vertex_lerp(threashold, p2, p3, v2, v3);
+  vert_list[3] = vertex_lerp(threashold, p3, p0, v3, v0);
+  vert_list[4] = vertex_lerp(threashold, p4, p5, v4, v5);
+  vert_list[5] = vertex_lerp(threashold, p5, p6, v5, v6);
+  vert_list[6] = vertex_lerp(threashold, p6, p7, v6, v7);
+  vert_list[7] = vertex_lerp(threashold, p7, p4, v7, v4);
+  vert_list[8] = vertex_lerp(threashold, p0, p4, v0, v4);
+  vert_list[9] = vertex_lerp(threashold, p1, p5, v1, v5);
+  vert_list[10] = vertex_lerp(threashold, p2, p6, v2, v6);
+  vert_list[11] = vertex_lerp(threashold, p3, p7, v3, v7);
   
   /* Push appropriate verts to the back of the vertex buffer */
   
-  lock_aquire(vertex_lock);
-  for(int i = 0; triangle_table[hash][i] != -1; i+=3) {
-    vertex_buffer[*vertex_index] = vert_list[triangle_table[hash][i  ]]; *vertex_index++;
-    vertex_buffer[*vertex_index] = vert_list[triangle_table[hash][i+1]]; *vertex_index++;
-    vertex_buffer[*vertex_index] = vert_list[triangle_table[hash][i+2]]; *vertex_index++;
+  int num_verts = 0;
+  while(triangle_table[hash][num_verts] != -1) {
+    num_verts += 3;
   }
-  lock_release(vertex_lock);
+  
+  int index = atomic_add(vertex_index, num_verts);
+  
+  for(int i = 0; i < num_verts; i++) {
+    vertex_buffer[index + i] = vert_list[triangle_table[hash][i]];
+  }
+  
+}
+
+kernel void generate_flat_normals(global float4* vertex_positions, global float4* vertex_normals) {
+  
+  int id = get_global_id(0);
+  
+  float4 pos1 = vertex_positions[id * 3 + 0];
+  float4 pos2 = vertex_positions[id * 3 + 1];
+  float4 pos3 = vertex_positions[id * 3 + 2];
+  
+  float3 pos12 = pos2.xyz - pos1.xyz;
+  float3 pos13 = pos3.xyz - pos1.xyz;
+
+  float3 normal = cross(pos12, pos13);
+  normal = normalize(normal);
+  
+  vertex_normals[id * 3 + 0] = (float4)(normal, 0);
+  vertex_normals[id * 3 + 1] = (float4)(normal, 0);
+  vertex_normals[id * 3 + 2] = (float4)(normal, 0);
+}
+
+kernel void generate_smooth_normals(global float4* vertex_positions, global float4* vertex_normals, global float4* metaball_positions, int num_metaballs) {
+  
+  const float METABALL_SIZE = 10;
+  
+  int id = get_global_id(0);
+  
+  float3 normal = (float3)(0,0,0);
+  for(int i = 0; i < num_metaballs; i++) {
+  
+  float dist = distance(vertex_positions[id].xyz, metaball_positions[i].xyz) / METABALL_SIZE;
+  float amount = 1-smoothstepmap( clamp(dist, 0.0f, 1.0f) );
+  
+    normal += (vertex_positions[id].xyz - metaball_positions[i].xyz) * amount;
+  }
+  
+  normal = normalize(normal);
+  vertex_normals[id] = (float4)(normal, 0);
 }

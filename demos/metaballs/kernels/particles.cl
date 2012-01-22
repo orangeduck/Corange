@@ -1,15 +1,13 @@
-#include "./games/metaballs/kernels/structs.cl"
-
-__kernel void particle_update(__global float4* positions, 
-                              __global float4* velocities, 
-                              __global float* lifetimes,  
-                              __global float4* randoms,
-                              
-                              const float max_life,
-                              const float min_velocity,
-                              
-                              const float time_difference,
-                              const int reset
+kernel void particle_update(global float4* positions, 
+                            global float4* velocities, 
+                            global float* lifetimes,  
+                            global float4* randoms,
+                            
+                            const float max_life,
+                            const float min_velocity,
+                            
+                            const float time_difference,
+                            const int reset
                               ) {
   
   /* 4 times due to the 4 values required for billboards */

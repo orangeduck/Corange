@@ -37,4 +37,6 @@ void kernel_memory_delete(kernel_memory km);
 void kernel_memory_write(kernel_memory km, int size, void* src);
 void kernel_memory_read(kernel_memory km, int size, void* dst);
 
+void kernel_run_finish();
+
 #endif
