@@ -20,68 +20,45 @@ kernel_memory k_particle_velocities;
 kernel_memory k_particle_lifetimes;
 kernel_memory k_particle_randoms;
 
-int reset = 0;
+bool reset = 0;
 
 void particles_init() {
 
-  vector4* particle_positions = malloc(sizeof(vector4) * 4 * particle_count);
-  vector4* particle_velocities = malloc(sizeof(vector4) * 4 * particle_count);
-  float* particle_lifetimes = malloc(sizeof(float) * 4 * particle_count);
-  vector4* particle_randoms = malloc(sizeof(vector4) * 4 * particle_count);
+  vector4* particle_positions = malloc(sizeof(vector4) * particle_count);
+  vector4* particle_velocities = malloc(sizeof(vector4) * particle_count);
+  float* particle_lifetimes = malloc(sizeof(float) * particle_count);
+  vector4* particle_randoms = malloc(sizeof(vector4) * particle_count);
   
   srand(time(NULL));
   
   int i = 0;
-  while(i < 4 *particle_count) {
-  
-    particle_positions[i  ] = v4(0,0,0,1);
-    particle_positions[i+1] = v4(0,0,0,1);
-    particle_positions[i+2] = v4(0,0,0,1);
-    particle_positions[i+3] = v4(0,0,0,1);
+  for(i = 0; i < particle_count; i++) {
+    particle_lifetimes[i] = 999;
+    particle_positions[i] = v4(0,0,0,0);
+    particle_velocities[i] = v4(0,0,0,0);
     
-    float rx = ((float)rand() / RAND_MAX);
-    float ry = ((float)rand() / RAND_MAX);
-    float rz = ((float)rand() / RAND_MAX);
+    float rx = ((float)rand() / RAND_MAX) * 2 - 1;
+    float ry = ((float)rand() / RAND_MAX) * 2 + 0.5;
+    float rz = ((float)rand() / RAND_MAX) * 2 - 1;
     
-    vector3 normed = v3_normalize( v3(rx - 0.5, ry, rz - 0.5) );
-    normed = v3_mul(normed, 0.75);
-    rx = normed.x;
-    ry = normed.y;
-    rz = normed.z;
-    
-    particle_velocities[i  ] = v4(rx, ry, rz, 0);
-    particle_velocities[i+1] = v4(rx, ry, rz, 0);
-    particle_velocities[i+2] = v4(rx, ry, rz, 0);
-    particle_velocities[i+3] = v4(rx, ry, rz, 0);
-    
-    particle_randoms[i  ] = v4(rx, ry, rz, 0);
-    particle_randoms[i+1] = v4(rx, ry, rz, 0);
-    particle_randoms[i+2] = v4(rx, ry, rz, 0);
-    particle_randoms[i+3] = v4(rx, ry, rz, 0);
-    
-    particle_lifetimes[i  ] = 0.0;
-    particle_lifetimes[i+1] = 0.0;
-    particle_lifetimes[i+2] = 0.0;
-    particle_lifetimes[i+3] = 0.0;
-    
-    i += 4;
+    particle_randoms[i] = v4(rx, ry, rz, 0);
   }
     
   glGenBuffers(1, &positions_buffer);
   glBindBuffer(GL_ARRAY_BUFFER, positions_buffer);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vector4) * 4 * particle_count, particle_positions, GL_DYNAMIC_COPY);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(vector4) * particle_count, particle_positions, GL_DYNAMIC_COPY);
   
   glGenBuffers(1, &velocities_buffer);
   glBindBuffer(GL_ARRAY_BUFFER, velocities_buffer);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vector4) * 4 * particle_count, particle_velocities, GL_DYNAMIC_COPY);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(vector4) * particle_count, particle_velocities, GL_DYNAMIC_COPY);
   
   glGenBuffers(1, &lifetimes_buffer);
   glBindBuffer(GL_ARRAY_BUFFER, lifetimes_buffer);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 4 * particle_count, particle_lifetimes, GL_DYNAMIC_COPY);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(float) * particle_count, particle_lifetimes, GL_DYNAMIC_COPY);
   
   glGenBuffers(1, &randoms_buffer);
   glBindBuffer(GL_ARRAY_BUFFER, randoms_buffer);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vector4) * 4 * particle_count, particle_randoms, GL_DYNAMIC_COPY);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(vector4) * particle_count, particle_randoms, GL_DYNAMIC_COPY);
   
   k_particle_positions = kernel_memory_from_glbuffer(positions_buffer);
   k_particle_velocities = kernel_memory_from_glbuffer(velocities_buffer);
@@ -90,18 +67,16 @@ void particles_init() {
   
   kernel_program* program = asset_get("./kernels/particles.cl");
   
-  float max_life = 1.0;
-  float min_velocity = 0.1;
-  
-  int reset = 0;
+  float max_life = 60.0;
+  float min_velocity = 0.5;
   
   k_update = kernel_program_get_kernel(program, "particle_update");
   kernel_set_argument(k_update, 0, sizeof(kernel_memory), &k_particle_positions);
   kernel_set_argument(k_update, 1, sizeof(kernel_memory), &k_particle_velocities);
   kernel_set_argument(k_update, 2, sizeof(kernel_memory), &k_particle_lifetimes);
   kernel_set_argument(k_update, 3, sizeof(kernel_memory), &k_particle_randoms);
-  kernel_set_argument(k_update, 4, sizeof(float), &max_life);
-  kernel_set_argument(k_update, 5, sizeof(float), &min_velocity);
+  kernel_set_argument(k_update, 4, sizeof(cl_float), &max_life);
+  kernel_set_argument(k_update, 5, sizeof(cl_float), &min_velocity);
   
   free(particle_positions);
   free(particle_velocities);
@@ -126,13 +101,16 @@ void particles_finish() {
 
 void particles_update(float timestep) {
   
+  int random = rand();
+  
   kernel_memory_gl_aquire(k_particle_positions);
   kernel_memory_gl_aquire(k_particle_velocities);
   kernel_memory_gl_aquire(k_particle_lifetimes);
   kernel_memory_gl_aquire(k_particle_randoms);
   
-    kernel_set_argument(k_update, 6, sizeof(float), &timestep);
-    kernel_set_argument(k_update, 7, sizeof(int), &reset);
+    kernel_set_argument(k_update, 6, sizeof(cl_float), &timestep);
+    kernel_set_argument(k_update, 7, sizeof(cl_int), &reset);
+    kernel_set_argument(k_update, 8, sizeof(cl_int), &random);
     kernel_run(k_update, particle_count);
     
     reset = 0;
@@ -141,6 +119,8 @@ void particles_update(float timestep) {
   kernel_memory_gl_release(k_particle_velocities);
   kernel_memory_gl_release(k_particle_lifetimes);
   kernel_memory_gl_release(k_particle_randoms);
+  
+  kernel_run_finish();
 }
 
 void particles_reset() {
@@ -151,27 +131,14 @@ int particles_count() {
   return particle_count;
 }
 
+kernel_memory particle_positions_memory() {
+  return k_particle_positions;
+}
+
 GLuint particle_positions_buffer() {
   return positions_buffer;
 }
 
 GLuint particle_velocities_buffer() {
   return velocities_buffer;
-}
-
-vector4 positions_ret[particle_count];
-vector4 positions_large[particle_count * 4];
-
-vector4* particle_positions() {
-  
-  kernel_memory_gl_aquire(k_particle_positions);
-  kernel_memory_read(k_particle_positions, sizeof(vector4) * 4 * particle_count, positions_large);
-  kernel_memory_gl_release(k_particle_positions);
-  
-  int i=0;
-  for(i = 0; i < particle_count; i ++) {
-    positions_ret[i] = positions_large[i*4];
-  }
-  
-  return positions_ret;
 }

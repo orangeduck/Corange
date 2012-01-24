@@ -40,6 +40,25 @@ kernel void write_metaball(global float* volume,
   volume[index] += amount;
 }
 
+kernel void write_metaballs(global float* volume, int3 size, global float4* metaball_positions, int num_metaballs) {
+  
+  const int METABALL_SIZE = 5;
+  
+  int id = get_global_id(0);
+  
+  int3 pos = volume_position(id, size);
+  int index = volume_coords(pos, size);
+  
+  for(int i = 0; i < num_metaballs; i++) {
+    float3 metaball_pos = metaball_positions[i].xyz;
+    float dist = distance((float3)(pos.x, pos.y, pos.z), metaball_pos) / METABALL_SIZE;
+    float amount = 1-smoothstepmap( clamp(dist, 0.0f, 1.0f) );
+    
+    volume[index] += amount;
+  }
+
+}
+
 
 
 kernel void write_point_color_back(global float* volume, global float4* point_color) {
@@ -168,7 +187,7 @@ kernel void generate_flat_normals(global float4* vertex_positions, global float4
 
 kernel void generate_smooth_normals(global float4* vertex_positions, global float4* vertex_normals, global float4* metaball_positions, int num_metaballs) {
   
-  const float METABALL_SIZE = 10;
+  const float METABALL_SIZE = 5;
   
   int id = get_global_id(0);
   

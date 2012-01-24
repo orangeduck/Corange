@@ -61,6 +61,7 @@ void corange_init(char* core_assets_path) {
   
   asset_manager_handler("fnt", font_load_file,font_delete);
   asset_manager_handler("mat", mat_load_file, material_delete);
+  asset_manager_handler("mmat", mmat_load_file, multi_material_delete);
   
   asset_manager_handler("wav", wav_load_file, sound_delete);
   

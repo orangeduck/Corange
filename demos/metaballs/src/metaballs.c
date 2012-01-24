@@ -24,23 +24,21 @@ void metaballs_init() {
   
   particles_init();
   
-  load_folder("./resources/floor/");
+  load_folder("./resources/podium/");
   load_folder("./resources/particles/");
-  load_folder("./resources/shaders/");
-   
-  material* floor_mat = asset_get("./resources/floor/floor.mat");
   
-  renderable* r_floor = asset_get("./resources/floor/floor.obj");
-  renderable_set_material(r_floor, floor_mat);
-  
-  entity_add("floor", static_object, static_object_new(r_floor));
+  renderable* r_podium = asset_get("./resources/podium/podium.obj");
+  renderable_set_material(r_podium, asset_get("./resources/podium/podium.mat"));
+  static_object* s_podium = static_object_new(r_podium);
+  s_podium->position = v3(32, 10, 32);
+  entity_add("podium", static_object, s_podium);
   
   camera* cam = entity_new("camera", camera);
-  cam->position = v3(100, 100, 100);
-  cam->target = v3(32, 32, 32);
+  cam->position = v3(50, 50, 50);
+  cam->target = v3(32, 20, 32);
   
   light* sun = entity_new("sun", light);
-  sun->position = v3(30,20,-26);
+  sun->position = v3(50,40,50);
   sun->ambient_color = v3(0.5, 0.5, 0.5);
   sun->diffuse_color = v3(0.75, 0.75, 0.75);
   light_set_type(sun, light_type_spot);  
@@ -108,12 +106,6 @@ void metaballs_init() {
   
 }
 
-static float metaball1_y = 20;
-static float metaball2_y = 40;
-
-static bool move_up = false;
-static bool move_down = false;
-
 void metaballs_update() {
 
   camera* cam = entity_get("camera");
@@ -129,7 +121,7 @@ void metaballs_update() {
     cam->position = v3_add(cam->position, cam->target);
     
     cam->position = v3_sub(cam->position, cam->target);
-    vector3 rotation_axis = v3_normalize(v3_cross( v3_sub(cam->position, cam->target) , v3(0,1,0) ));
+    vector3 rotation_axis = v3_normalize(v3_cross( v3_sub(cam->position, v3_zero()) , v3(0,1,0) ));
     cam->position = m33_mul_v3(m33_rotation_axis_angle(rotation_axis, a2 ), cam->position );
     cam->position = v3_add(cam->position, cam->target);
   }
@@ -142,22 +134,13 @@ void metaballs_update() {
   mouse_x = 0;
   mouse_y = 0;
 
-  particles_update(frame_time() / 10);
+  particles_update(frame_time());
   
   ui_text* ui_framerate = ui_elem_get("ui_framerate");
   ui_text_update_string(ui_framerate, frame_rate_string());
   
-  if (move_up) {
-    metaball2_y += 0.1;
-  }
-  if (move_down) {
-    metaball2_y -= 0.1;
-  }
-  
+  marching_cubes_metaball_data( particle_positions_memory(), particles_count() );
   marching_cubes_clear();
-  //marching_cubes_point(1, 1, 1, 1.0);
-  marching_cubes_metaball(32, metaball1_y, 32);
-  marching_cubes_metaball(32, metaball2_y, 32);
   marching_cubes_update();
   
 }
@@ -165,101 +148,30 @@ void metaballs_update() {
 static float proj_matrix[16];
 static float view_matrix[16];
 
+static bool wireframe = false;
+
 void metaballs_render() {
 
-  static_object* s_floor = entity_get("floor");
+  static_object* s_podium = entity_get("podium");
   camera* cam = entity_get("camera");
   light* sun = entity_get("sun");
-  
-  shader_program* particle_program = asset_get("./resources/shaders/particles.prog");
-  texture* particle_texture = asset_get("./resources/particles/white.dds");
 
   shadow_mapper_begin();
-  shadow_mapper_render_static(s_floor);
+  shadow_mapper_render_static(s_podium);
   shadow_mapper_end();
 
   
   forward_renderer_begin();
   
-    glClearColor(0.75f, 0.75f, 0.75f, 0.75f);
+    glClearColor(0.5f, 0.5f, 0.5f, 0.5f);
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
     
-    //forward_renderer_render_static(s_floor);
-
-    /*
-    
-    glUseProgram(*particle_program);
-    
-    glDisable(GL_DEPTH_TEST);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_ONE, GL_ONE);
-    
-    glUniform1i(glGetUniformLocation(*particle_program, "particle_texture"), 0);
-    glActiveTexture(GL_TEXTURE0 + 0);
-    glBindTexture(GL_TEXTURE_2D, *particle_texture);
-    
-    m44_to_array(camera_proj_matrix(cam, viewport_ratio()), proj_matrix);
-    GLint proj_matrix_u = glGetUniformLocation(*particle_program, "proj_matrix");
-    glUniformMatrix4fv(proj_matrix_u, 1, 0, proj_matrix);
-    
-    m44_to_array(camera_view_matrix(cam), view_matrix);
-    GLint view_matrix_u = glGetUniformLocation(*particle_program, "view_matrix");
-    glUniformMatrix4fv(view_matrix_u, 1, 0, view_matrix);
-    
-    GLuint particle_position = glGetAttribLocation(*particle_program, "particle_position");
-    glEnableVertexAttribArray(particle_position);
-    GLuint particle_velocity = glGetAttribLocation(*particle_program, "particle_velocity");
-    glEnableVertexAttribArray(particle_velocity);
-    
-    glBindBuffer(GL_ARRAY_BUFFER, particle_positions_buffer());
-    glVertexAttribPointer(particle_position, 4, GL_FLOAT, GL_TRUE, 0, (void*)0);
-    
-    glBindBuffer(GL_ARRAY_BUFFER, particle_velocities_buffer());
-    glVertexAttribPointer(particle_velocity, 4, GL_FLOAT, GL_TRUE, 0, (void*)0);
-    
-    glBindBuffer(GL_ARRAY_BUFFER, billboard_positions);
-    glVertexPointer(3, GL_FLOAT, 0, (void*)0);
-    glEnableClientState(GL_VERTEX_ARRAY);
-    
-    glBindBuffer(GL_ARRAY_BUFFER, billboard_uvs);
-    glTexCoordPointer(2, GL_FLOAT, 0, (void*)0);
-    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-    
-    glDrawArrays(GL_QUADS, 0, particles_count() * 4);
+    forward_renderer_render_static(s_podium);
+    forward_renderer_render_light(sun);
   
-    glDisableVertexAttribArray(particle_position);
-    glDisableVertexAttribArray(particle_velocity);
-  
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    
-    glEnable(GL_DEPTH_TEST);
-    glDisable(GL_BLEND);
-    
-    glUseProgram(0);
-  
-    */
-  
-    marching_cubes_render();
+    marching_cubes_render(wireframe, cam->position, sun->position);
   
   forward_renderer_end();
-  
-  /*
-  volume_renderer_begin();
-  volume_renderer_render_point(sun->position, v3_blue());
-  
-  srand(time(NULL));
-  
-  vector4* positions = particle_positions();
-  int i;
-  for(i = 0; i < 25; i++) {
-    vector3 pos = v3(positions[i].x, positions[i].y, positions[i].z);
-    pos = v3_mul(pos, 50);
-    //vector3 col = v3((float)rand() / RAND_MAX, (float)rand() / RAND_MAX, (float)rand() / RAND_MAX);
-    vector3 col = v3(1, 0, 0);
-    volume_renderer_render_metaball(pos, col);
-  }
-  volume_renderer_end();
-  */
   
   ui_render();
   
@@ -276,9 +188,6 @@ void metaballs_event(SDL_Event event) {
   
   case SDL_KEYDOWN:
     
-    if (event.key.keysym.sym == SDLK_u) move_up = true;
-    if (event.key.keysym.sym == SDLK_j) move_down = true;
-    
   break;
   
   case SDL_KEYUP:
@@ -287,8 +196,9 @@ void metaballs_event(SDL_Event event) {
       particles_reset();
     }
     
-    if (event.key.keysym.sym == SDLK_u) move_up = false;
-    if (event.key.keysym.sym == SDLK_j) move_down = false;
+    if (event.key.keysym.sym == SDLK_w) {
+      wireframe = !wireframe;
+    }
     
   break;
   
@@ -299,10 +209,10 @@ void metaballs_event(SDL_Event event) {
   case SDL_MOUSEBUTTONDOWN:
 
     if (event.button.button == SDL_BUTTON_WHEELUP) {
-      cam->position = v3_sub(cam->position, v3_normalize(cam->position));
+      cam->position = v3_sub(cam->position, v3_normalize(v3_sub(cam->position, cam->target)));
     }
     if (event.button.button == SDL_BUTTON_WHEELDOWN) {
-      cam->position = v3_add(cam->position, v3_normalize(cam->position));
+      cam->position = v3_add(cam->position, v3_normalize(v3_sub(cam->position, cam->target)));
     }
     
   break;

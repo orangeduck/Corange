@@ -3,6 +3,8 @@
 
 #include "corange.h"
 
+#include "kernel.h"
+
 void particles_init();
 void particles_finish();
 
@@ -12,7 +14,7 @@ int particles_count();
 
 void particles_reset();
 
-vector4* particle_positions();
+kernel_memory particle_positions_memory();
 
 GLuint particle_positions_buffer();
 GLuint particle_velocities_buffer();

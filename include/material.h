@@ -44,8 +44,6 @@ material* mat_load_file(char* filename);
 
 void material_print(material* mat);
 
-void material_parse_line(material* mat, char* line);
-
 void* material_get_property(material* mat, char* name);
 int material_get_type(material* mat, char* name);
 void material_set_property(material* mat, char* name, void* value, int type);
@@ -53,10 +51,11 @@ void material_set_property(material* mat, char* name, void* value, int type);
 typedef struct {
 
   int num_materials;
-  material* materials;
+  material** materials;
   
 } multi_material;
 
 multi_material* mmat_load_file(char* filename);
+void multi_material_delete(multi_material* mmat);
 
 #endif

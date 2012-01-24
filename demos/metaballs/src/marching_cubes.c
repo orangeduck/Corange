@@ -7,8 +7,6 @@
 static kernel_memory volume;
 static kernel_memory point_color_buffer;
 
-static kernel_memory metaball_positions;
-
 static kernel construct_surface;
 static kernel generate_normals;
 static kernel generate_normals_smooth;
@@ -16,6 +14,7 @@ static kernel generate_normals_smooth;
 static kernel write_clear;
 static kernel write_point;
 static kernel write_metaball;
+static kernel write_metaballs;
 static kernel write_point_color_back;
 
 static GLuint point_positions;
@@ -25,7 +24,7 @@ const int width = 64;
 const int height = 64;
 const int depth = 64;
 
-#define MAX_VERTS 10000
+#define MAX_VERTS 100000
 
 static GLuint vertex_positions;
 static GLuint vertex_normals;
@@ -110,6 +109,9 @@ void marching_cubes_init() {
   write_metaball = kernel_program_get_kernel(marching_cubes, "write_metaball");
   kernel_set_argument(write_metaball, 0, sizeof(kernel_memory), &volume);
   
+  write_metaballs = kernel_program_get_kernel(marching_cubes, "write_metaballs");
+  kernel_set_argument(write_metaballs, 0, sizeof(kernel_memory), &volume);
+  
   write_clear = kernel_program_get_kernel(marching_cubes, "write_clear");
   kernel_set_argument(write_clear, 0, sizeof(kernel_memory), &volume);
   
@@ -124,7 +126,6 @@ void marching_cubes_init() {
   
   generate_normals_smooth = kernel_program_get_kernel(marching_cubes, "generate_smooth_normals");
   
-  metaball_positions = kernel_memory_allocate(sizeof(vector4) * 10);
 }
 
 void marching_cubes_finish() {
@@ -141,8 +142,6 @@ void marching_cubes_finish() {
   kernel_memory_delete(vertex_positions_buffer);
   kernel_memory_delete(vertex_normals_buffer);
   kernel_memory_delete(vertex_index);
-  
-  kernel_memory_delete(metaball_positions);
   
 }
 
@@ -163,6 +162,7 @@ void marching_cubes_point(int x, int y, int z, float value) {
   kernel_run(write_point, 1);
 }
 
+/*
 void marching_cubes_metaball(float x, float y, float z) {
   
   const int METABALL_SIZE = 10;
@@ -190,16 +190,35 @@ void marching_cubes_metaball(float x, float y, float z) {
   kernel_run(write_metaball, count);
   
 }
+*/
+
+static kernel_memory metaball_positions;
+static int num_metaballs;
+
+void marching_cubes_metaball_data(kernel_memory positions, int num_balls) {
+  metaball_positions = positions;
+  num_metaballs = num_balls;
+}
 
 void marching_cubes_update() {
 
-  int zero = 0;
-  kernel_memory_write(vertex_index, sizeof(int), &zero);
+  int size[3] = {width, height, depth};
   
+  /* Update volumes */
+  
+  kernel_memory_gl_aquire(metaball_positions);
   kernel_memory_gl_aquire(vertex_positions_buffer);
   kernel_memory_gl_aquire(vertex_normals_buffer);
   
-  int size[3] = {width, height, depth};
+  kernel_set_argument(write_metaballs, 1, sizeof(cl_int3), &size);
+  kernel_set_argument(write_metaballs, 2, sizeof(kernel_memory), &metaball_positions);
+  kernel_set_argument(write_metaballs, 3, sizeof(cl_int), &num_metaballs);
+  kernel_run(write_metaballs, width * height * depth);
+  
+  /* End */
+  
+  int zero = 0;
+  kernel_memory_write(vertex_index, sizeof(int), &zero);
   
   const int num_workers = (width-1) * (height-1) * (depth-1);
   
@@ -209,23 +228,17 @@ void marching_cubes_update() {
   kernel_set_argument(construct_surface, 3, sizeof(kernel_memory), &vertex_index);
   kernel_run(construct_surface, num_workers);
   
-  kernel_memory_read(vertex_index, sizeof(int), &num_verts);
+  kernel_memory_read(vertex_index, sizeof(cl_int), &num_verts);
   
   /* Generate Normals */
   
-  int num_metaballs = 2;
-  vector4 metaball_positions_val[2] = {
-    v4(32, 20, 32, 0),
-    v4(32, 40, 32, 0)
-  };
-  
-  kernel_memory_write(metaball_positions, sizeof(vector4) * 2, metaball_positions_val);
-  
-  kernel_set_argument(generate_normals_smooth, 0, sizeof(kernel_memory), &vertex_positions_buffer);
-  kernel_set_argument(generate_normals_smooth, 1, sizeof(kernel_memory), &vertex_normals_buffer);
-  kernel_set_argument(generate_normals_smooth, 2, sizeof(kernel_memory), &metaball_positions);
-  kernel_set_argument(generate_normals_smooth, 3, sizeof(int), &num_metaballs);
-  kernel_run(generate_normals_smooth, num_verts);
+  if (num_verts > 0) {
+    kernel_set_argument(generate_normals_smooth, 0, sizeof(kernel_memory), &vertex_positions_buffer);
+    kernel_set_argument(generate_normals_smooth, 1, sizeof(kernel_memory), &vertex_normals_buffer);
+    kernel_set_argument(generate_normals_smooth, 2, sizeof(kernel_memory), &metaball_positions);
+    kernel_set_argument(generate_normals_smooth, 3, sizeof(cl_int), &num_metaballs);
+    kernel_run(generate_normals_smooth, num_verts);
+  }
   
   /*
   kernel_set_argument(generate_normals, 0, sizeof(kernel_memory), &vertex_positions_buffer);
@@ -235,10 +248,13 @@ void marching_cubes_update() {
   
   kernel_memory_gl_release(vertex_positions_buffer);
   kernel_memory_gl_release(vertex_normals_buffer);
+  kernel_memory_gl_release(metaball_positions);
+  
+  kernel_run_finish();
   
 }
 
-void marching_cubes_render() {
+void marching_cubes_render(bool wireframe, vector3 camera_position, vector3 light_position) {
   
   const int full_size = width * height * depth;
   
@@ -250,7 +266,7 @@ void marching_cubes_render() {
   
   /*
   
-  glPointSize(2.0f);
+  glPointSize(1.0f);
   
   glBindBuffer(GL_ARRAY_BUFFER, point_positions);
   glVertexPointer(4, GL_FLOAT, 0, (void*)0);
@@ -270,13 +286,26 @@ void marching_cubes_render() {
   */
   
   /* Then Draw Triangles */
-  
-  //glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+  if (wireframe) {
+    glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+  }
   
   shader_program* metaballs = asset_load_get("./shaders/metaballs.prog");
   GLuint NORMALS = glGetAttribLocation(*metaballs, "normals");
   
   glUseProgram(*metaballs);
+  
+  GLint light_position_u = glGetUniformLocation(*metaballs, "light_position");
+  glUniform3f(light_position_u, light_position.x, light_position.y, light_position.z);
+  
+  GLint camera_position_u = glGetUniformLocation(*metaballs, "camera_position");
+  glUniform3f(camera_position_u, camera_position.x, camera_position.y, camera_position.z);
+  
+  texture* env_map = asset_load_get("./resources/metaballs_env.dds");
+  glActiveTexture(GL_TEXTURE0 + 0 );
+  glBindTexture(GL_TEXTURE_2D, *env_map);
+  glEnable(GL_TEXTURE_2D);
+  glUniform1i(glGetUniformLocation(*metaballs, "env_map"), 0);
   
   glBindBuffer(GL_ARRAY_BUFFER, vertex_positions);
   glVertexPointer(4, GL_FLOAT, 0, (void*)0);
@@ -291,8 +320,13 @@ void marching_cubes_render() {
   glDisableClientState(GL_VERTEX_ARRAY);
   glDisableVertexAttribArray(NORMALS);
   
+  glActiveTexture(GL_TEXTURE0 + 0 );
+  glDisable(GL_TEXTURE_2D);
+  
   glUseProgram(0);
   
-  //glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+  if (wireframe) {
+    glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+  }
   
 }

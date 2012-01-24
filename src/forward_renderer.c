@@ -538,4 +538,61 @@ void forward_renderer_render_axis(matrix_4x4 world) {
   
 }
 
+void forward_renderer_render_light(light* l) {
+  
+  matrix_4x4 viewm = camera_view_matrix(CAMERA);
+  matrix_4x4 projm = camera_proj_matrix(CAMERA, viewport_ratio() );
+  
+  vector4 light_pos = v4(l->position.x, l->position.y, l->position.z, 1);
+  light_pos = m44_mul_v4(viewm, light_pos);
+  light_pos = m44_mul_v4(projm, light_pos);
+  
+  light_pos = v4_div(light_pos, light_pos.w);
+  
+	glMatrixMode(GL_PROJECTION);
+  glPushMatrix();
+	glLoadIdentity();
+	glOrtho(0, viewport_width(), viewport_height(), 0, -1, 1);
+  
+	glMatrixMode(GL_MODELVIEW);
+  glPushMatrix();
+	glLoadIdentity();
+  
+  float top = ((-light_pos.y + 1) / 2) * viewport_height() - 8;
+  float bot = ((-light_pos.y + 1) / 2) * viewport_height() + 8;
+  float left = ((light_pos.x + 1) / 2) * viewport_width() - 8;
+  float right = ((light_pos.x + 1) / 2) * viewport_width() + 8;
+  
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  
+  glEnable(GL_ALPHA_TEST);
+  glAlphaFunc(GL_GREATER, 0.25);
+  
+  texture* lightbulb = asset_load_get("$CORANGE/ui/lightbulb.dds");
+  glActiveTexture(GL_TEXTURE0 + 0 );
+  glBindTexture(GL_TEXTURE_2D, *lightbulb);
+  glEnable(GL_TEXTURE_2D);
+  
+	glBegin(GL_QUADS);
+		glTexCoord2f(0.0f, 0.0f); glVertex3f(left, top, -light_pos.z);
+		glTexCoord2f(1.0f, 0.0f); glVertex3f(right, top, -light_pos.z);
+		glTexCoord2f(1.0f, 1.0f); glVertex3f(right,  bot, -light_pos.z);
+		glTexCoord2f(0.0f, 1.0f); glVertex3f(left,  bot, -light_pos.z);
+	glEnd();
+  
+  glActiveTexture(GL_TEXTURE0 + 0 );
+  glDisable(GL_TEXTURE_2D);
+  
+  glDisable(GL_ALPHA_TEST);
+  glDisable(GL_BLEND);
+  
+  glMatrixMode(GL_PROJECTION);
+  glPopMatrix();
+
+  glMatrixMode(GL_MODELVIEW);
+  glPopMatrix();
+  
+}
+
 

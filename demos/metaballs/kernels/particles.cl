@@ -7,11 +7,12 @@ kernel void particle_update(global float4* positions,
                             const float min_velocity,
                             
                             const float time_difference,
-                            const int reset
+                            const int reset,
+                            
+                            const int random
                               ) {
   
-  /* 4 times due to the 4 values required for billboards */
-  const int i = 4 * get_global_id(0);
+  const int i = get_global_id(0);
   
   lifetimes[i] = lifetimes[i] + time_difference;
   
@@ -19,11 +20,14 @@ kernel void particle_update(global float4* positions,
     
     lifetimes[i] = 0.0;
     
-    positions[i] = (float4)(0,0,0,1);
-    float rx = randoms[i].x;
-    float ry = randoms[i].y;
-    float rz = randoms[i].z;
-    velocities[i] = (float4)(rx, ry, rz, 0);
+    //positions[i] = (float4)(0,0,0,1);
+    positions[i] = (float4)(32,15,32,1);
+    
+    int random_index = (random + i) % 25;
+    float rx = randoms[random_index].x;
+    float ry = randoms[random_index].y;
+    float rz = randoms[random_index].z;
+    velocities[i] = (float4)(rx, ry, rz, 0) * 5;
   
   } else {
   
@@ -32,25 +36,11 @@ kernel void particle_update(global float4* positions,
     velocities[i].y = velocities[i].y - (9.81 * time_difference);
     
     /* Bounce on floors */
-    if (positions[i].y < 0.0) {
+    if (positions[i].y < 15.0) {
       velocities[i].xyz = velocities[i].xyz * 0.75;
       velocities[i].y = -velocities[i].y;
     }
 
   }
-  
-  /* Update other positions in buffer (for billboards */
-  
-  positions[i+1] = positions[i];
-  positions[i+2] = positions[i];
-  positions[i+3] = positions[i];
-  
-  velocities[i+1] = velocities[i];
-  velocities[i+2] = velocities[i];
-  velocities[i+3] = velocities[i];
-  
-  lifetimes[i+1] = lifetimes[i];
-  lifetimes[i+2] = lifetimes[i];
-  lifetimes[i+3] = lifetimes[i];
   
 }

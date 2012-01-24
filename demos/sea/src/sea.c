@@ -94,6 +94,8 @@ void sea_init() {
   s_skybox->recieve_shadows = false;
   entity_add("skybox", static_object, s_skybox);
   
+  load_folder("./resources/corvette/");
+  
   ui_rectangle* wireframe_rect = ui_elem_new("wireframe_rect", ui_rectangle);
   wireframe_rect->top_left = v2(10,10);
   wireframe_rect->bottom_right = v2(100, 35);
