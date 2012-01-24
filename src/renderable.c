@@ -52,8 +52,21 @@ void renderable_delete(renderable* r) {
 void renderable_set_material(renderable* r, material* m) {
   int i;
   for(i = 0; i < r->num_surfaces; i++) {
-    renderable_surface_set_material(r->surfaces[0], m);
+    renderable_surface_set_material(r->surfaces[i], m);
   }
+}
+
+void renderable_set_multi_material(renderable* r, multi_material* mmat) {
+  
+  int min_range = min(r->num_surfaces, mmat->num_materials);
+  
+  debug("Surfaces %i Materials %i", r->num_surfaces, mmat->num_materials);
+  
+  int i;
+  for(i = 0; i < min_range; i++) {
+    renderable_surface_set_material(r->surfaces[i], mmat->materials[i]);
+  }
+  
 }
 
 renderable_surface* renderable_surface_new(mesh* m) {
@@ -232,23 +245,16 @@ renderable* obj_load_file(char* filename) {
   obj_model->name = malloc( strlen(filename) +1 );
   strcpy(obj_model->name, filename);
   
-  obj_model->num_meshes = 1;
-  obj_model->meshes = malloc(sizeof(mesh*) * 1);
+  obj_model->num_meshes = 0;
+  obj_model->meshes = malloc(sizeof(mesh*) * 0);
+  obj_model->meshes[obj_model->num_meshes] = NULL;
   
-  mesh* obj_mesh = malloc(sizeof(mesh));
-  obj_mesh->material = malloc(strlen("$CORANGE/resources/basic.mat") + 1);
-  strcpy(obj_mesh->material, "$CORANGE/resources/basic.mat");
+  mesh* active_mesh = NULL;
   
-  obj_mesh->name = malloc(strlen("mesh1") + 1);
-  strcpy(obj_mesh->name, "mesh1");
-  
-  obj_model->meshes[0] = obj_mesh;
-  
-  vertex_list* vert_data = vertex_list_new();
-  vertex_list* vert_list = vertex_list_new();
-  int_list* tri_list = int_list_new();
-  
-  vertex_hashtable* vert_hashes = vertex_hashtable_new(1024);
+  vertex_list* vert_data = vertex_list_new_blocksize(1024);
+  vertex_list* vert_list = vertex_list_new_blocksize(1024);
+  int_list* tri_list = int_list_new_blocksize(1024);
+  vertex_hashtable* vert_hashes = vertex_hashtable_new(4096);
   
   int num_pos, num_norm, num_tex;
   num_pos = num_norm = num_tex = 0;
@@ -285,8 +291,10 @@ renderable* obj_load_file(char* filename) {
     }
     
     else if (sscanf(line, "o %512s", object) == 1) {
-      obj_mesh->name = realloc(obj_mesh->name, strlen(object) + 1);
-      strcpy(obj_mesh->name, object);
+      if (active_mesh != NULL) {
+        active_mesh->name = realloc(active_mesh->name, strlen(object) + 1);
+        strcpy(active_mesh->name, object);
+      }
     }
     
     else if (sscanf(line, "v %f %f %f", &px, &py, &pz) == 3) {
@@ -318,12 +326,66 @@ renderable* obj_load_file(char* filename) {
     }
     
     else if (sscanf(line, "g %512s", group) == 1) {
-      /* Group, do nothing */
+      
+      /* TODO */
+      
+      /* Copy appropriate vertex data into buffer */
+      /* Copy appropriate triangle data into buffer */
+      
+      /* Clear Triangle list */
+      /* Clear Triange-Vertex Mapping */
+      
+      /* Allocate space for new mesh etc */
+        
+      if (active_mesh != NULL) {
+      
+        active_mesh->num_verts = vert_index; /* This is probably incorrect */
+        active_mesh->num_triangles = tri_list->num_items / 3;
+        active_mesh->num_triangles_3 = tri_list->num_items;
+        
+        int i;
+        
+        active_mesh->verticies = malloc(sizeof(vertex) * active_mesh->num_verts);
+        for(i = 0; i < active_mesh->num_verts; i++) {
+          active_mesh->verticies[i] = vertex_list_get(vert_list, i);
+        }
+        
+        active_mesh->triangles = malloc(sizeof(int) * active_mesh->num_triangles_3);
+        for(i = 0; i < active_mesh->num_triangles_3; i++) {
+          active_mesh->triangles[i] = int_list_get(tri_list, i);
+        }
+      
+        obj_model->num_meshes++;
+        obj_model->meshes = realloc(obj_model->meshes, sizeof(mesh*) * obj_model->num_meshes);
+        obj_model->meshes[obj_model->num_meshes-1] = active_mesh;
+        
+      }
+      
+      vert_index = 0;
+      
+      vertex_hashtable_delete(vert_hashes);
+      vertex_list_delete(vert_list);
+      int_list_delete(tri_list);
+      
+      vert_list = vertex_list_new_blocksize(1024);
+      tri_list = int_list_new_blocksize(1024);
+      vert_hashes = vertex_hashtable_new(4096);
+      
+      active_mesh = malloc(sizeof(mesh));
+      
+      active_mesh->material = malloc(strlen("$CORANGE/resources/basic.mat") + 1);
+      strcpy(active_mesh->material, "$CORANGE/resources/basic.mat");
+      
+      active_mesh->name = malloc(strlen("mesh1") + 1);
+      strcpy(active_mesh->name, "mesh1");
+      
     }
     
     else if (sscanf(line, "usemtl %512s", material) == 1) {
-      obj_mesh->material = realloc(obj_mesh->material, strlen(material) + 1);
-      strcpy(obj_mesh->material, material);
+      if (active_mesh != NULL) {
+        active_mesh->material = realloc(active_mesh->material, strlen(material) + 1);
+        strcpy(active_mesh->material, material);
+      }
     }
     
     else if (sscanf(line, "s %i", &smoothing_group) == 1) {
@@ -386,22 +448,25 @@ renderable* obj_load_file(char* filename) {
   
   SDL_RWclose(file);
 
-  obj_mesh->num_verts = vert_index;
-  obj_mesh->num_triangles = tri_list->num_items / 3;
-  obj_mesh->num_triangles_3 = tri_list->num_items;
+  active_mesh->num_verts = vert_index;
+  active_mesh->num_triangles = tri_list->num_items / 3;
+  active_mesh->num_triangles_3 = tri_list->num_items;
   
   int i;
   
-  obj_mesh->verticies = malloc(sizeof(vertex) * obj_mesh->num_verts);
-  for(i = 0; i < obj_mesh->num_verts; i++) {
-    obj_mesh->verticies[i] = vertex_list_get(vert_list, i);
+  active_mesh->verticies = malloc(sizeof(vertex) * active_mesh->num_verts);
+  for(i = 0; i < active_mesh->num_verts; i++) {
+    active_mesh->verticies[i] = vertex_list_get(vert_list, i);
   }
   
-  obj_mesh->triangles = malloc(sizeof(int) * obj_mesh->num_triangles_3);
-  for(i = 0; i < obj_mesh->num_triangles_3; i++) {
-    int index = int_list_get(tri_list, i);
-    obj_mesh->triangles[i] = index;
+  active_mesh->triangles = malloc(sizeof(int) * active_mesh->num_triangles_3);
+  for(i = 0; i < active_mesh->num_triangles_3; i++) {
+    active_mesh->triangles[i] = int_list_get(tri_list, i);
   }
+  
+  obj_model->num_meshes++;
+  obj_model->meshes = realloc(obj_model->meshes, sizeof(mesh*) * obj_model->num_meshes);
+  obj_model->meshes[obj_model->num_meshes-1] = active_mesh;
   
   vertex_hashtable_delete(vert_hashes);
   vertex_list_delete(vert_data);

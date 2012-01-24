@@ -36,6 +36,7 @@ renderable* renderable_new();
 void renderable_delete(renderable* r);
 
 void renderable_set_material(renderable* r, material* m);
+void renderable_set_multi_material(renderable* r, multi_material* mmat);
 
 /* Renderable Surface */
 
@@ -49,7 +50,6 @@ renderable_surface* renderable_surface_new_rigged(mesh* m, vertex_weight* weight
 void renderable_surface_delete(renderable_surface* surface);
 
 void renderable_surface_set_material(renderable_surface* s, material* m);
-
 
 renderable* obj_load_file(char* filename);
 renderable* smd_load_file(char* filename);

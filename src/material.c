@@ -56,23 +56,13 @@ static void material_parse_line(material* mat, char* line) {
       property = realloc(property, strlen("program")+1);
       strcpy(property, "program");
       
-      if(asset_loaded(value)) {
-        result = asset_get(value);
-      } else {
-        load_file(value);
-        result = asset_get(value);
-      }
+      result = asset_load_get(value);
       
     } else if (strcmp(type, "texture") == 0) {
       
       *mat_type = mat_type_texture;
       
-      if(asset_loaded(value)) {
-        result = asset_get(value);
-      } else {
-        load_file(value);
-        result = asset_get(value);
-      }
+      result = asset_load_get(value);
     
     } else if (strcmp(type, "string") == 0) {
       
@@ -188,6 +178,7 @@ multi_material* mmat_load_file(char* filename) {
   multi_material* mmat = malloc(sizeof(multi_material));
   mmat->num_materials = 0;
   mmat->materials = malloc(sizeof(material*) * 0);
+  alloc_check(mmat->materials);
   
   material* mat = NULL;
   
@@ -198,14 +189,14 @@ multi_material* mmat_load_file(char* filename) {
     if ( sscanf(line, "submaterial %512s", submatname) == 1) {
       
       mat = material_new();
-      mat->name = malloc(strlen(submatname+1));
+      mat->name = malloc(strlen(submatname)+1);
       strcpy(mat->name, submatname);
       
       mmat->num_materials++;
       mmat->materials = realloc(mmat->materials, sizeof(material*) * mmat->num_materials);
       mmat->materials[mmat->num_materials-1] = mat;
       
-    } else if (mat != NULL) { 
+    } else if (mat != NULL) {
       material_parse_line(mat, line);
     }
     

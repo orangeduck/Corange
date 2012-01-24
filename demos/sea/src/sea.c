@@ -36,14 +36,15 @@ static void switch_wireframe(ui_rectangle* rect, SDL_Event event) {
 
 void sea_init() {
 
-  viewport_set_vsync(1);
+  viewport_set_dimensions( v2(1280, 720) );
 
   camera* cam = entity_new("camera", camera);
   cam->position = v3(30.0, 30.0, 30.0);
-  cam->target = v3_zero();
+  cam->target = v3(0, 1, 0);
+  cam->near_clip = 0.1;
   
   light* sun = entity_new("sun", light);
-  sun->position = v3(30,43,-26);
+  sun->position = v3(20,30,-20);
   sun->ambient_color = v3(0.5, 0.5, 0.5);
   sun->diffuse_color = v3(0.75, 0.75, 0.75);
   light_set_type(sun, light_type_spot);
@@ -86,15 +87,15 @@ void sea_init() {
   
   entity_add("seaplane", static_object, static_object_new(r_seaplane));
   
-  load_folder("./resources/skybox/");
-  
-  renderable* r_skybox = asset_get("./resources/skybox/skybox.obj");
-  renderable_set_material(r_skybox, asset_get("./resources/skybox/skybox.mat"));
-  static_object* s_skybox = static_object_new(r_skybox);
-  s_skybox->recieve_shadows = false;
-  entity_add("skybox", static_object, s_skybox);
-  
   load_folder("./resources/corvette/");
+  
+  renderable* r_corvette = asset_get("./resources/corvette/corvette.obj");
+  multi_material* m_corvette = asset_get("./resources/corvette/corvette.mmat");
+  renderable_set_multi_material(r_corvette, m_corvette);
+  static_object* s_corvette = static_object_new(r_corvette);
+  s_corvette->scale = v3(1.5, 1.5, 1.5);
+  s_corvette->position = v3(0, 0.5, 0);
+  entity_add("corvette", static_object, s_corvette);
   
   ui_rectangle* wireframe_rect = ui_elem_new("wireframe_rect", ui_rectangle);
   wireframe_rect->top_left = v2(10,10);
@@ -121,11 +122,14 @@ void sea_update() {
     float a1 = -(float)mouse_x * 0.025;
     float a2 = (float)mouse_y * 0.025;
     
+    cam->position = v3_sub(cam->position, cam->target);
     cam->position = m33_mul_v3(m33_rotation_y( a1 ), cam->position );
+    cam->position = v3_add(cam->position, cam->target);
     
-    vector3 rotation_axis = v3_normalize(v3_cross( v3_sub(cam->position, cam->target) , v3(0,1,0) ));
-    
+    cam->position = v3_sub(cam->position, cam->target);
+    vector3 rotation_axis = v3_normalize(v3_cross( v3_sub(cam->position, v3_zero()) , v3(0,1,0) ));
     cam->position = m33_mul_v3(m33_rotation_axis_angle(rotation_axis, a2 ), cam->position );
+    cam->position = v3_add(cam->position, cam->target);
   }
   
   if(keystate & SDL_BUTTON(3)){
@@ -141,11 +145,16 @@ void sea_update() {
 void sea_render() {
 
   static_object* s_seaplane = entity_get("seaplane");
-  static_object* s_skybox = entity_get("skybox");
-
+  static_object* s_corvette = entity_get("corvette");
+  light* sun = entity_get("sun");
+  
+  shadow_mapper_begin();
+  shadow_mapper_render_static(s_corvette);
+  shadow_mapper_end();
+  
   forward_renderer_begin();
   
-  forward_renderer_render_static(s_skybox);
+  forward_renderer_render_static(s_corvette);
   
   if(wireframe) {
     glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
@@ -154,6 +163,8 @@ void sea_render() {
   if(wireframe) {
     glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
   }
+  
+  forward_renderer_render_light(sun);
   
   forward_renderer_end();
   
