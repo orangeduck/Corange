@@ -176,8 +176,7 @@ static void deferred_renderer_use_material(material* mat) {
   
   int tex_counter = 0;
   
-  int i;
-  for(i = 0; i < mat->keys->num_items; i++) {
+  for(int i = 0; i < mat->keys->num_items; i++) {
     char* key = list_get(mat->keys, i);
     
     int* type = dictionary_get(mat->types, key);
@@ -411,8 +410,7 @@ void deferred_renderer_render_static(static_object* s) {
   
   renderable* r = s->renderable;
   
-  int i;
-  for(i=0; i < r->num_surfaces; i++) {
+  for(int i=0; i < r->num_surfaces; i++) {
     
     renderable_surface* s = r->surfaces[i];
     if(s->is_rigged) {
@@ -516,8 +514,7 @@ void deferred_renderer_render_animated(animated_object* ao) {
   
   skeleton_gen_transforms(ao->pose);
   
-  int i;
-  for(i = 0; i < ao->skeleton->num_bones; i++) {
+  for(int i = 0; i < ao->skeleton->num_bones; i++) {
     matrix_4x4 base, ani;
     base = ao->skeleton->inv_transforms[i];
     ani = ao->pose->transforms[i];
@@ -528,7 +525,7 @@ void deferred_renderer_render_animated(animated_object* ao) {
   
   renderable* r = ao->renderable;
   
-  for(i=0; i < r->num_surfaces; i++) {
+  for(int i = 0; i < r->num_surfaces; i++) {
     
     renderable_surface* s = r->surfaces[i];
     if(s->is_rigged) {

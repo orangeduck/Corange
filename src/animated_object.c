@@ -48,8 +48,7 @@ void animated_object_update(animated_object* ao, float timestep) {
   float frame0_time = 0;
   float frame1_time = 999999;
   
-  int i;
-  for(i = 0; i < animation->num_frames; i++) {
+  for(int i = 0; i < animation->num_frames; i++) {
     if ((timepoint > animation->frame_times[i]) && (frame0_time < animation->frame_times[i])) {
       frame0 = animation->frames[i];
       frame0_time = animation->frame_times[i];
@@ -67,7 +66,7 @@ void animated_object_update(animated_object* ao, float timestep) {
   if (ao->skeleton->num_bones != frame0->num_bones) { error("Animation has a different number of bones to skeleton"); }
   if (ao->skeleton->num_bones != frame1->num_bones) { error("Animation has a different number of bones to skeleton"); }
   
-  for(i = 0; i < ao->skeleton->num_bones; i++) {
+  for(int i = 0; i < ao->skeleton->num_bones; i++) {
     vector3 position = v3_smoothstep(frame0->bones[i]->position, frame1->bones[i]->position, amount);
     matrix_4x4 rotation = m44_smoothstep(frame0->bones[i]->rotation, frame1->bones[i]->rotation, amount);
     

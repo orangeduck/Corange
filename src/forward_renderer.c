@@ -176,8 +176,7 @@ static void forward_renderer_use_material(material* mat) {
   
   tex_counter = 0;
   
-  int i;
-  for(i = 0; i < mat->keys->num_items; i++) {
+  for(int i = 0; i < mat->keys->num_items; i++) {
     char* key = list_get(mat->keys, i);
     
     int* type = dictionary_get(mat->types, key);
@@ -308,8 +307,7 @@ void forward_renderer_render_static(static_object* so) {
   
   renderable* r = so->renderable;
   
-  int i;
-  for(i=0; i < r->num_surfaces; i++) {
+  for(int i=0; i < r->num_surfaces; i++) {
     
     renderable_surface* s = r->surfaces[i];
     if(s->is_rigged) {
@@ -429,8 +427,7 @@ void forward_renderer_render_animated(animated_object* ao) {
   
   skeleton_gen_transforms(ao->pose);
   
-  int i;
-  for(i = 0; i < ao->skeleton->num_bones; i++) {
+  for(int i = 0; i < ao->skeleton->num_bones; i++) {
     matrix_4x4 base, ani;
     base = ao->skeleton->inv_transforms[i];
     ani = ao->pose->transforms[i];
@@ -441,7 +438,7 @@ void forward_renderer_render_animated(animated_object* ao) {
   
   renderable* r = ao->renderable;
   
-  for(i=0; i < r->num_surfaces; i++) {
+  for(int i = 0; i < r->num_surfaces; i++) {
     
     renderable_surface* s = r->surfaces[i];
     if(s->is_rigged) {
@@ -517,8 +514,7 @@ void forward_renderer_render_skeleton(skeleton* s) {
   
   skeleton_gen_transforms(s);
   
-  int i;
-  for(i = 0; i < s->num_bones; i++) {
+  for(int i = 0; i < s->num_bones; i++) {
     bone* main_bone = s->bones[i];
     vector4 pos = m44_mul_v4(s->transforms[i], v4(0,0,0,1));
     forward_renderer_render_axis(s->transforms[i]);

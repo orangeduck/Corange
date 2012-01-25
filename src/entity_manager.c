@@ -34,8 +34,7 @@ void entity_manager_init() {
 
 void entity_manager_finish() {
     
-  int i;
-  for (i = 0; i < entity_names->num_items; i++) {
+  for (int i = 0; i < entity_names->num_items; i++) {
     char* name = list_get(entity_names, i);
     int* type_id = dictionary_get(entity_types, name);
     entity_delete(name);
@@ -80,8 +79,7 @@ entity* entity_new_type_id(char* name, int type_id) {
   
   entity* e = NULL;
   
-  int i;
-  for(i = 0; i < num_entity_handlers; i++) {
+  for(int i = 0; i < num_entity_handlers; i++) {
     entity_handler eh = entity_handlers[i];
     if (eh.type_id == type_id) {
       e = eh.new_func();
@@ -151,8 +149,7 @@ int entity_type_count_type_id(int type_id) {
   
   int count = 0;
   
-  int i;
-  for(i = 0; i < entity_names->num_items; i++) {
+  for(int i = 0; i < entity_names->num_items; i++) {
     char* name = list_get(entity_names, i);
     int* type = dictionary_get(entity_types, name);
     
@@ -172,8 +169,7 @@ void entity_delete(char* name) {
   
   debug("Deleting Entity %s (%s)", name, type_id_name(type_id));
   
-  int i;
-  for(i = 0; i < num_entity_handlers; i++) {
+  for(int i = 0; i < num_entity_handlers; i++) {
     entity_handler eh = entity_handlers[i];
     if (eh.type_id == type_id) {
       dictionary_remove_with(entities, name, eh.del_func);
@@ -181,7 +177,7 @@ void entity_delete(char* name) {
     }
   }
   
-  for(i = 0; i < entity_names->num_items; i++) {
+  for(int i = 0; i < entity_names->num_items; i++) {
     if ( strcmp(list_get(entity_names, i), name) == 0 ) {
       list_pop_at(entity_names, i);
     }
@@ -195,8 +191,7 @@ void entity_delete(char* name) {
 
 char* entity_name(entity* e) {
   
-  int i;
-  for(i = 0; i < entity_names->num_items; i++) {
+  for(int i = 0; i < entity_names->num_items; i++) {
     char* name = list_get(entity_names, i);
     entity* ent = dictionary_get(entities, name);
     
@@ -212,7 +207,7 @@ char* entity_name(entity* e) {
 
 void entities_new_type_id(const char* name_format, int count, int type_id) {
   
-  const int max_length = 1024;
+  const unsigned int max_length = 1024;
   char entity_name[max_length];
   
   if(strlen(name_format) - 2 + ((count+1)/10) > max_length) {
@@ -223,8 +218,7 @@ void entities_new_type_id(const char* name_format, int count, int type_id) {
     error("Name format must be like a sprintf format string and contain a %%i symbol for the entity index. E.G \"entity_%%i\"");
   }
   
-  int i;
-  for( i = 0; i < count; i++) {
+  for(int i = 0; i < count; i++) {
     sprintf(entity_name, name_format, i);
     entity_new_type_id(entity_name, type_id);
   }
@@ -235,8 +229,7 @@ void entities_get_type_id(entity** out, int* returned, int type_id) {
   
   int count = 0;
   
-  int i;
-  for(i = 0; i < entity_names->num_items; i++) {
+  for(int i = 0; i < entity_names->num_items; i++) {
     char* name = list_get(entity_names, i);
     int* type = dictionary_get(entity_types, name);
     entity* ent = dictionary_get(entities, name);

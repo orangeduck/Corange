@@ -22,15 +22,15 @@ static float level_time = 0.0;
 /* We store all the coin positions here */
 #define COIN_COUNT 45
 static vector2 coin_positions[COIN_COUNT] = {
-  {16, 23}, {33, 28}, {41, 22}, {20, 19}, {18, 28},
-  {36, 20}, {20, 30}, {31, 18}, {45, 23}, {49, 26},
-  {25, 18}, {20, 37}, {44, 32}, {66, 20}, {52, 20},
-  {63, 11}, {52, 12}, {39, 13}, {27, 11}, {73, 20},
-  {65, 29}, {72, 29}, {78, 30}, {78, 20}, {83, 22},
-  {87, 22}, {90, 24}, {94, 19}, {99, 18}, {82, 13},
-  {79, 14}, {106, 22}, {102, 30}, {100, 35}, {93, 27},
-  {88, 34}, {98, 40}, {96, 40}, {94, 40}, {86, 40},
-  {81, 37}, {77, 38}, {72, 34}, {65, 38}, {71, 37}
+  {{16, 23}}, {{33, 28}}, {{41, 22}}, {{20, 19}}, {{18, 28}},
+  {{36, 20}}, {{20, 30}}, {{31, 18}}, {{45, 23}}, {{49, 26}},
+  {{25, 18}}, {{20, 37}}, {{44, 32}}, {{66, 20}}, {{52, 20}},
+  {{63, 11}}, {{52, 12}}, {{39, 13}}, {{27, 11}}, {{73, 20}},
+  {{65, 29}}, {{72, 29}}, {{78, 30}}, {{78, 20}}, {{83, 22}},
+  {{87, 22}}, {{90, 24}}, {{94, 19}}, {{99, 18}}, {{82, 13}},
+  {{79, 14}}, {{106, 22}}, {{102, 30}}, {{100, 35}}, {{93, 27}},
+  {{88, 34}}, {{98, 40}}, {{96, 40}}, {{94, 40}}, {{86, 40}},
+  {{81, 37}}, {{77, 38}}, {{72, 34}}, {{65, 38}}, {{71, 37}}
 };
 
 static void reset_game() {
@@ -53,8 +53,7 @@ static void reset_game() {
   entities_get(coins, NULL, coin);
   
   /* Set all the coin initial positions */
-  int i;
-  for(i = 0; i < COIN_COUNT; i++) {
+  for(int i = 0; i < COIN_COUNT; i++) {
     coins[i]->position = v2_mul(coin_positions[i], TILE_SIZE);
   }
   
@@ -356,8 +355,7 @@ static void collision_detection_coins() {
   coin* coins[COIN_COUNT];
   entities_get(coins, &num_coins, coin); 
   
-  int i;
-  for(i = 0; i < num_coins; i++) {
+  for(int i = 0; i < num_coins; i++) {
     /* Check if they are within the main char bounding box */
     if ((coins[i]->position.x > top_left.x) &&
         (coins[i]->position.x < bottom_right.x) &&
@@ -427,10 +425,14 @@ void platformer_update() {
   ui_text_update_string(framerate_text, frame_rate_string());
   
   /* Update the time text */
-  level_time += frame_time();
-  ui_text* time_text = ui_elem_get("time_text");
-  sprintf(time_text->string, "Time %06i", (int)level_time);
-  ui_text_update_properties(time_text);
+  
+  ui_rectangle* victory_rect = ui_elem_get("victory_rect");
+  if (!victory_rect->active) {
+    level_time += frame_time();
+    ui_text* time_text = ui_elem_get("time_text");
+    sprintf(time_text->string, "Time %06i", (int)level_time);
+    ui_text_update_properties(time_text);
+  }
   
 }
 
@@ -448,8 +450,7 @@ void platformer_render() {
   int num_coins = 0;
   entities_get(coins, &num_coins, coin); 
   
-  int i;
-  for(i = 0; i < num_coins; i++) {
+  for(int i = 0; i < num_coins; i++) {
     coin_render(coins[i], camera_position);
   }
   

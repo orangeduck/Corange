@@ -28,8 +28,7 @@ dictionary* dictionary_new(int table_size) {
   dict->table_size = table_size;
   dict->buckets = malloc( sizeof(bucket*) * dict->table_size );
   
-  int i;
-  for(i = 0; i < table_size; i++) {
+  for(int i = 0; i < table_size; i++) {
     dict->buckets[i] = NULL;
   }
   
@@ -38,8 +37,8 @@ dictionary* dictionary_new(int table_size) {
 }
 
 void dictionary_delete(dictionary* dict) {
-  int i;
-  for(i=0; i< dict->table_size; i++) {
+
+  for(int i=0; i< dict->table_size; i++) {
     if (dict->buckets[i] != NULL) {
       bucket_delete_recursive(dict->buckets[i]);
     }
@@ -172,8 +171,7 @@ void dictionary_remove_with(dictionary* dict, char* string, void func(void*)) {
 
 void dictionary_map(dictionary* dict, void func(void*)) {
   
-  int i;
-  for(i = 0; i < dict->table_size; i++) {
+  for(int i = 0; i < dict->table_size; i++) {
     bucket* b = dict->buckets[i];
     bucket_map(b, func);
   }
@@ -182,8 +180,7 @@ void dictionary_map(dictionary* dict, void func(void*)) {
 
 void dictionary_filter_map(dictionary* dict, int filter(void*) , void func(void*) ) {
   
-  int i;
-  for(i = 0; i < dict->table_size; i++) {
+  for(int i = 0; i < dict->table_size; i++) {
     bucket* b = dict->buckets[i];
     bucket_filter_map(b, filter, func);
   }
@@ -193,8 +190,7 @@ void dictionary_filter_map(dictionary* dict, int filter(void*) , void func(void*
 void dictionary_print(dictionary* dict) {
   int num_bucket_lists = 0;
   
-  int i;
-  for(i = 0; i < dict->table_size; i++) {
+  for(int i = 0; i < dict->table_size; i++) {
     bucket* b = dict->buckets[i];
     if(b != NULL) {
       printf("%i - ", i); bucket_print(b); printf("\n");

@@ -38,8 +38,7 @@ void spline_set_point(spline* s, int i, vector2 p) {
 
 void spline_print(spline* s) {
   printf("Spline (%i points): ", s->num_points);
-  int i;
-  for (i=0; i < s->num_points; i++) {
+  for (int i = 0; i < s->num_points; i++) {
     printf("(%0.2f, %0.2f | %0.2f) ", s->x[i], s->y[i], s->yd[i]);
   }
   printf("\n");
@@ -63,8 +62,7 @@ static void spline_update_y(spline* s) {
             (s->x[1] - s->x[0]) - yp0);
   }
   
-  int i;
-  for(i = 1; i < n-1; i++) {
+  for(int i = 1; i < n-1; i++) {
     float sig = (s->x[i] - s->x[i-1]) / (s->x[i+1] - s->x[i-1]);
     float p = sig * s->yd[i-1] + 2.0;
     s->yd[i] = (sig - 1.0) / p;
@@ -111,8 +109,7 @@ static void spline_update_x(spline* s) {
             (s->y[1] - s->y[0]) - xp0);
   }
   
-  int i;
-  for(i = 1; i < n-1; i++) {
+  for(int i = 1; i < n-1; i++) {
     float sig = (s->y[i] - s->y[i-1]) / (s->y[i+1] - s->y[i-1]);
     float p = sig * s->xd[i-1] + 2.0;
     s->xd[i] = (sig - 1.0) / p;
@@ -217,8 +214,7 @@ void spline_render(spline* s, vector2 position, vector2 size, int increments) {
   
   glBegin(GL_POINTS);
     
-    int i;
-    for(i = 0; i < s->num_points; i++) {
+    for(int i = 0; i < s->num_points; i++) {
       vector2 loc = v2( s->x[i], s->y[i] );
       glVertex2f(position.x + loc.x * size.x, position.y + loc.y * size.y );
     }
@@ -277,7 +273,6 @@ color_curves* acv_load_file(char* filename) {
     error("acv file %s. Doesn't contain 5 curves.", filename);
   }
   
-  int i;
   int pos = 4;
   
   spline* rgb_curve = spline_new();
@@ -289,7 +284,7 @@ color_curves* acv_load_file(char* filename) {
   rgb_curve->num_points = contents[pos] | contents[pos+1];
   rgb_curve->y0d = 1; rgb_curve->ynd = 1; rgb_curve->x0d = 1; rgb_curve->xnd = 1;
   pos += 2;
-  for(i = 0; i < rgb_curve->num_points; i++) {
+  for(int i = 0; i < rgb_curve->num_points; i++) {
     int x = 0; x = contents[pos] | contents[pos+1];
     int y = 0; y = contents[pos+2] | contents[pos+3];
     rgb_curve->x[i] = (float)x / 255;
@@ -297,12 +292,10 @@ color_curves* acv_load_file(char* filename) {
     pos += 4;
   }
   
-  spline_print(rgb_curve);
-  
   r_curve->num_points = contents[pos] | contents[pos+1];
   r_curve->y0d = 1; r_curve->ynd = 1; r_curve->x0d = 1; r_curve->xnd = 1;
   pos += 2;
-  for(i = 0; i < r_curve->num_points; i++) {
+  for(int i = 0; i < r_curve->num_points; i++) {
     int x = contents[pos] | contents[pos+1];
     int y = contents[pos+2] | contents[pos+3];
     r_curve->x[i] = (float)x / 255;
@@ -313,7 +306,7 @@ color_curves* acv_load_file(char* filename) {
   g_curve->num_points = contents[pos] | contents[pos+1];
   g_curve->y0d = 1; g_curve->ynd = 1; g_curve->x0d = 1; g_curve->xnd = 1;
   pos += 2;
-  for(i = 0; i < g_curve->num_points; i++) {
+  for(int i = 0; i < g_curve->num_points; i++) {
     int x = contents[pos] | contents[pos+1];
     int y = contents[pos+2] | contents[pos+3];
     g_curve->x[i] = (float)x / 255;
@@ -324,7 +317,7 @@ color_curves* acv_load_file(char* filename) {
   b_curve->num_points = contents[pos] | contents[pos+1];
   b_curve->y0d = 1; b_curve->ynd = 1; b_curve->x0d = 1; b_curve->xnd = 1;
   pos += 2;
-  for(i = 0; i < b_curve->num_points; i++) {
+  for(int i = 0; i < b_curve->num_points; i++) {
     int x = contents[pos] | contents[pos+1];
     int y = contents[pos+2] | contents[pos+3];
     b_curve->x[i] = (float)x / 255;
@@ -335,7 +328,7 @@ color_curves* acv_load_file(char* filename) {
   a_curve->num_points = contents[pos] | contents[pos+1];
   a_curve->y0d = 1; a_curve->ynd = 1; a_curve->x0d = 1; a_curve->xnd = 1;
   pos += 2;
-  for(i = 0; i < a_curve->num_points; i++) {
+  for(int i = 0; i < a_curve->num_points; i++) {
     int x = contents[pos] | contents[pos+1];
     int y = contents[pos+2] | contents[pos+3];
     a_curve->x[i] = (float)x / 255;

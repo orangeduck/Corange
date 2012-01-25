@@ -227,8 +227,7 @@ void ui_text_update_properties(ui_text* text) {
     int pos_i = 0;
     while( pos_i < text->num_positions ) {
       
-      int j;
-      for( j = 0; j < 4; j++) {
+      for(int j = 0; j < 4; j++) {
         
         vert_positions[pos_i] -= offset_x; pos_i++;
         vert_positions[pos_i] -= offset_y; pos_i++;
@@ -291,8 +290,7 @@ void ui_text_update_properties(ui_text* text) {
   pos_i = 0;
   while( pos_i < text->num_positions ) {
     
-    int j;
-    for( j = 0; j < 4; j++) {
+    for(int j = 0; j < 4; j++) {
     
       text->top_left.x = min(text->top_left.x, vert_positions[pos_i]); 
       text->bottom_right.x = max(text->bottom_right.x, vert_positions[pos_i]); pos_i++;

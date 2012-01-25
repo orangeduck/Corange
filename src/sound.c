@@ -3,8 +3,7 @@
 #include "sound.h"
 
 static void flip_endian(char* data, int length) {
-	int i;
-	for(i = 0; i < length; i += 2) {
+	for(int i = 0; i < length; i += 2) {
 		int x = data[i];
 		data[i] = data[i + 1];
 		data[i + 1] = x;

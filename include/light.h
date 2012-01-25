@@ -32,10 +32,10 @@ typedef struct {
   
 } light;
 
-const static int light_type_point = 0;
-const static int light_type_directional = 1;
-const static int light_type_sun = 2;
-const static int light_type_spot = 3;
+static const int light_type_point = 0;
+static const int light_type_directional = 1;
+static const int light_type_sun = 2;
+static const int light_type_spot = 3;
 
 light* light_new(vector3 position);
 light* light_new_type(vector3 position, int type);

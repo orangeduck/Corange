@@ -94,8 +94,8 @@ float bsp_mesh_bounding_distance(bsp_mesh* bm) {
   if (bm->is_leaf) {
     
     float dist = 0;
-    int i;
-    for(i = 0; i < bm->num_verticies; i++) {
+    
+    for(int i = 0; i < bm->num_verticies; i++) {
       dist = max(dist, v3_length(bm->verticies[i]));
     }
     
@@ -114,8 +114,8 @@ bounding_box bsp_mesh_bounding_box(bsp_mesh* bm) {
   if (bm->is_leaf) {
     
     bounding_box bb = {10000, -10000, 10000, -10000, 10000, -10000};
-    int i;
-    for(i = 0; i < bm->num_verticies; i++) {
+    
+    for(int i = 0; i < bm->num_verticies; i++) {
       bb.x_min = min(bb.x_min, bm->verticies[i].x);
       bb.x_max = max(bb.x_max, bm->verticies[i].x);
       bb.y_min = min(bb.y_min, bm->verticies[i].y);
@@ -155,8 +155,7 @@ vector3 bsp_mesh_ground_point(bsp_mesh* bm, vector3 point) {
     
     float highest_y = 0;
     
-    int i;
-    for(i = 0; i < bm->num_triangles; i++) {
+    for(int i = 0; i < bm->num_triangles; i++) {
       
       int i1 = bm->triangles[i*3+0];
       int i2 = bm->triangles[i*3+1];
@@ -528,15 +527,13 @@ collision_body* col_load_file(char* filename) {
   mesh->num_verticies = vert_index;
   mesh->num_triangles = tri_list->num_items / 3;
   
-  int i;
-  
   mesh->verticies = malloc(sizeof(vector3) * mesh->num_verticies);
-  for(i = 0; i < mesh->num_verticies; i++) {
+  for(int i = 0; i < mesh->num_verticies; i++) {
     mesh->verticies[i] = vertex_list_get(vert_list, i).position;
   }
   
   mesh->triangles = malloc(sizeof(int) * mesh->num_triangles * 3);
-  for(i = 0; i < mesh->num_triangles * 3; i++) {
+  for(int i = 0; i < mesh->num_triangles * 3; i++) {
     mesh->triangles[i] = int_list_get(tri_list, i);
   }
   

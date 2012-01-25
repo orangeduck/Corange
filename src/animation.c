@@ -26,8 +26,8 @@ animation* animation_new() {
 animation* animation_identity(skeleton* s);
 
 void animation_delete(animation* a) {
-  int i;
-  for(i = 0; i < a->num_frames; i++) {
+  
+  for(int i = 0; i < a->num_frames; i++) {
     skeleton_delete(a->frames[i]);
   }
   

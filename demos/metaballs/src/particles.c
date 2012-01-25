@@ -31,8 +31,7 @@ void particles_init() {
   
   srand(time(NULL));
   
-  int i = 0;
-  for(i = 0; i < particle_count; i++) {
+  for(int i = 0; i < particle_count; i++) {
     particle_lifetimes[i] = 999;
     particle_positions[i] = v4(0,0,0,0);
     particle_velocities[i] = v4(0,0,0,0);

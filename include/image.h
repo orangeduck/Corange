@@ -12,12 +12,12 @@ typedef struct {
   int sample_type;
 } image;
 
-const static int image_repeat_tile = 0;
-const static int image_repeat_clamp = 1;
-const static int image_repeat_mirror = 2;
+static const int image_repeat_tile = 0;
+static const int image_repeat_clamp = 1;
+static const int image_repeat_mirror = 2;
 
-const static int image_sample_linear = 0;
-const static int image_sample_nearest = 1;
+static const  int image_sample_linear = 0;
+static const int image_sample_nearest = 1;
 
 image* image_new(int width, int height, unsigned char* data);
 image* image_empty(int width, int height);

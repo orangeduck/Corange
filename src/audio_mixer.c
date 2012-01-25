@@ -93,8 +93,7 @@ void audio_mixer_init() {
     error("System audio spec must be AUDIO_S16SYS");
   }
   
-  int i;
-  for(i = 0; i < MAX_CHANNELS; i++) {
+  for(int i = 0; i < MAX_CHANNELS; i++) {
     channels[i].active = false;
   }
   
@@ -106,8 +105,7 @@ void audio_mixer_finish() {
   
 	SDL_PauseAudio(1);
   
-  int i;
-  for(i = 0; i < MAX_CHANNELS; i++) {
+  for(int i = 0; i < MAX_CHANNELS; i++) {
     channels[i].active = false;
   }
     
@@ -119,8 +117,7 @@ void audio_mixer_play_sound(sound* s) {
   
   bool slot_free = false;
   
-  int i;
-  for(i = 0; i < MAX_CHANNELS; i++) {
+  for(int i = 0; i < MAX_CHANNELS; i++) {
     if (!channels[i].active) {
       
       slot_free = true;
@@ -146,8 +143,7 @@ int audio_mixer_active_sounds() {
   
   int count = 0;
   
-  int i;
-  for(i = 0; i < MAX_CHANNELS; i++) {
+  for(int i = 0; i < MAX_CHANNELS; i++) {
     if(channels[i].active) { count++; }
   }
   

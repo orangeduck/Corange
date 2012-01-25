@@ -146,8 +146,7 @@ void shadow_mapper_render_static(static_object* s) {
   
   renderable* r = s->renderable;
   
-  int i;
-  for(i=0; i < r->num_surfaces; i++) {
+  for(int i=0; i < r->num_surfaces; i++) {
     
     renderable_surface* s = r->surfaces[i];
     if(s->is_rigged) {
@@ -203,8 +202,7 @@ void shadow_mapper_render_animated(animated_object* ao) {
   matrix_4x4 r_world_matrix = m44_world( ao->position, ao->scale, ao->rotation );
   m44_to_array(r_world_matrix, world_matrix);
   
-  int i;
-  for(i = 0; i < ao->skeleton->num_bones; i++) {
+  for(int i = 0; i < ao->skeleton->num_bones; i++) {
     matrix_4x4 base, ani;
     base = bone_transform(ao->skeleton->bones[i]);
     ani = bone_transform(ao->pose->bones[i]);
@@ -232,7 +230,7 @@ void shadow_mapper_render_animated(animated_object* ao) {
   
   renderable* r = ao->renderable;
   
-  for(i = 0; i < r->num_surfaces; i++) {
+  for(int i = 0; i < r->num_surfaces; i++) {
     
     renderable_surface* s = r->surfaces[i];
     if(s->is_rigged) {

@@ -96,8 +96,7 @@ static int tile_counts[num_tile_types];
 
 level* level_load_file(char* filename) {
   
-  int i;
-  for( i = 0; i < num_tile_types; i++) {
+  for(int i = 0; i < num_tile_types; i++) {
     tile_counts[i] = 0;
   }
   
@@ -127,7 +126,7 @@ level* level_load_file(char* filename) {
   SDL_RWclose(file);
   
   /* Start from 1, type 0 is none! */
-  for(i = 1; i < num_tile_types; i++) {
+  for(int i = 1; i < num_tile_types; i++) {
     
     int num_tiles = tile_counts[i];
     
@@ -196,9 +195,8 @@ level* level_load_file(char* filename) {
 
 void level_delete(level* l) {
   
-  int i;
   /* Start from 1 as 0 is none tile set */
-  for(i = 1; i < l->num_tile_sets; i++) {
+  for(int i = 1; i < l->num_tile_sets; i++) {
     glDeleteBuffers(1 , &l->tile_sets[i].positions_buffer);
     glDeleteBuffers(1 , &l->tile_sets[i].texcoords_buffer);
   }
@@ -268,9 +266,8 @@ void level_render_tiles(level* l, vector2 camera_position) {
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   
-  int i;
   /* Start from 1, 0 is no tiles! */
-  for(i = 1; i < l->num_tile_sets; i++) {
+  for(int i = 1; i < l->num_tile_sets; i++) {
     
     texture* tile_tex = tile_get_texture(i);
     glBindTexture(GL_TEXTURE_2D, *tile_tex);

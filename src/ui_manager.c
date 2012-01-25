@@ -46,12 +46,11 @@ void ui_manager_init() {
 
 void ui_manager_finish() {
 
-  int i;
-  for(i = 0; i < num_ui_events; i++) {
+  for(int i = 0; i < num_ui_events; i++) {
     free(ui_events[i].name);
   }
 
-  for (i = 0; i < ui_elem_names->num_items; i++) {
+  for(int i = 0; i < ui_elem_names->num_items; i++) {
     char* name = list_get(ui_elem_names, i);
     int* type_id = dictionary_get(ui_elem_types, name);
     debug("Deleting UI Element %s (%s)", name, type_id_name(*type_id));
@@ -69,8 +68,7 @@ void ui_manager_finish() {
 
 void ui_event(SDL_Event e) {
   
-  int i;
-  for(i = 0; i < num_ui_events; i++) {
+  for(int i = 0; i < num_ui_events; i++) {
     char* elem_name = ui_events[i].name;
     ui_events[i].event_func( ui_elem_get(elem_name) , e);
   }  
@@ -79,8 +77,7 @@ void ui_event(SDL_Event e) {
 
 void ui_update() {
 
-  int i;
-  for (i = 0; i < ui_elem_names->num_items; i++) {
+  for (int i = 0; i < ui_elem_names->num_items; i++) {
     char* name = list_get(ui_elem_names, i);
     int* type_id = dictionary_get(ui_elem_types, name);
     ui_elem_update(name);
@@ -90,8 +87,7 @@ void ui_update() {
 
 void ui_render() {
 
-  int i;
-  for (i = 0; i < ui_elem_names->num_items; i++) {
+  for(int i = 0; i < ui_elem_names->num_items; i++) {
     char* name = list_get(ui_elem_names, i);
     int* type_id = dictionary_get(ui_elem_types, name);
     ui_elem_render(name);
@@ -136,8 +132,7 @@ ui_elem* ui_elem_new_type_id(char* name, int type_id) {
   
   ui_elem* ui_e = NULL;
   
-  int i;
-  for(i = 0; i < num_ui_elem_handlers; i++) {
+  for(int i = 0; i < num_ui_elem_handlers; i++) {
     ui_elem_handler ui_hand = ui_elem_handlers[i];
     if (ui_hand.type_id == type_id) {
       ui_e = ui_hand.new_func();
@@ -229,8 +224,7 @@ void ui_elem_update(char* name) {
   int* type_ptr = dictionary_get(ui_elem_types, name);
   int type_id = *type_ptr;
 
-  int i;
-  for(i = 0; i < num_ui_elem_handlers; i++) {
+  for(int i = 0; i < num_ui_elem_handlers; i++) {
     ui_elem_handler ui_hand = ui_elem_handlers[i];
     if (ui_hand.type_id == type_id) {
       ui_hand.update_func(elem);
@@ -246,8 +240,7 @@ void ui_elem_render(char* name) {
   int* type_ptr = dictionary_get(ui_elem_types, name);
   int type_id = *type_ptr;
 
-  int i;
-  for(i = 0; i < num_ui_elem_handlers; i++) {
+  for(int i = 0; i < num_ui_elem_handlers; i++) {
     ui_elem_handler ui_hand = ui_elem_handlers[i];
     if (ui_hand.type_id == type_id) {
       ui_hand.render_func(elem);
@@ -262,8 +255,7 @@ void ui_elem_delete(char* name) {
   int* type_ptr = dictionary_get(ui_elem_types, name);
   int type_id = *type_ptr;
 
-  int i;
-  for(i = 0; i < num_ui_elem_handlers; i++) {
+  for(int i = 0; i < num_ui_elem_handlers; i++) {
     ui_elem_handler ui_hand = ui_elem_handlers[i];
     if (ui_hand.type_id == type_id) {
       dictionary_remove_with(ui_elems, name, ui_hand.del_func);
@@ -279,8 +271,7 @@ void ui_elem_delete(char* name) {
 
 char* ui_elem_name(ui_elem* e) {
   
-  int i;
-  for(i = 0; i < ui_elem_names->num_items; i++) {
+  for(int i = 0; i < ui_elem_names->num_items; i++) {
     char* name = list_get(ui_elem_names, i);
     ui_elem* elem = dictionary_get(ui_elems, name);
     

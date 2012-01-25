@@ -210,8 +210,7 @@ multi_material* mmat_load_file(char* filename) {
 
 void multi_material_delete(multi_material* mmat) {
   
-  int i;
-  for(i = 0; i < mmat->num_materials; i++) {
+  for(int i = 0; i < mmat->num_materials; i++) {
     material_delete(mmat->materials[i]);
   }
   
@@ -221,8 +220,7 @@ void multi_material_delete(multi_material* mmat) {
 
 void material_delete(material* mat) {
   
-  int i;
-  for(i = 0; i < mat->keys->num_items; i++) {
+  for(int i = 0; i < mat->keys->num_items; i++) {
     char* key = list_get(mat->keys, i);
     int* type = dictionary_get(mat->types, key);
     void* property = dictionary_get(mat->properties, key);
@@ -264,8 +262,7 @@ void material_print(material* mat) {
   
   printf("-- Material %s --\n", mat->name);
   
-  int i;
-  for(i = 0; i < mat->keys->num_items; i++) {
+  for(int i = 0; i < mat->keys->num_items; i++) {
     char* key = list_get(mat->keys, i);
     int* type = dictionary_get(mat->types, key);
     void* property = dictionary_get(mat->properties, key);

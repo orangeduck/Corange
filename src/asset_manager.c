@@ -74,8 +74,7 @@ static char* asset_map_realpath(char* filename) {
 
 char* asset_map_filename(char* filename) {
   
-  int i;
-  for(i = 0; i < num_path_variables; i++) {
+  for(int i = 0; i < num_path_variables; i++) {
   
     char* variable = path_variables[i].variable;
     char* mapping = path_variables[i].mapping;
@@ -131,8 +130,7 @@ static void delete_bucket_list(bucket* b) {
   
   char* ext = asset_name_extension(b->string);
   
-  int i;
-  for(i=0; i < num_asset_handlers; i++) {
+  for(int i = 0; i < num_asset_handlers; i++) {
   
     asset_handler handler = asset_handlers[i];
     if (strcmp(ext, handler.extension) == 0) {
@@ -150,17 +148,16 @@ static void delete_bucket_list(bucket* b) {
 
 void asset_manager_finish() {
 
-  int i;
-  for(i=0; i <asset_dictionary->table_size; i++) {
+  for(int i=0; i <asset_dictionary->table_size; i++) {
     bucket* b = asset_dictionary->buckets[i];
     delete_bucket_list(b);
   }
   
-  for(i=0; i < num_asset_handlers; i++) {
+  for(int i=0; i < num_asset_handlers; i++) {
     free(asset_handlers[num_asset_handlers].extension);
   }
   
-  for(i = 0; i < num_path_variables; i++) {
+  for(int i = 0; i < num_path_variables; i++) {
     free(path_variables[i].variable);
     free(path_variables[i].mapping);
   }
@@ -195,8 +192,8 @@ void load_file(char* filename) {
   }
   
   char* ext = asset_name_extension(filename_map);
-  int i;
-  for(i=0; i < num_asset_handlers; i++) {
+  
+  for(int i=0; i < num_asset_handlers; i++) {
     asset_handler handler = asset_handlers[i];
     if (strcmp(ext, handler.extension) == 0) {
       debug("Loading: %s", filename_map);
@@ -260,8 +257,8 @@ void unload_file(char* filename) {
   char* filename_map = asset_map_filename(filename);
   
   char* ext = asset_name_extension(filename_map);
-  int i;
-  for(i=0; i < num_asset_handlers; i++) {
+  
+  for(int i=0; i < num_asset_handlers; i++) {
   
     asset_handler handler = asset_handlers[i];
     if (strcmp(ext, handler.extension) == 0) {

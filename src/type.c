@@ -22,8 +22,7 @@ int type_find(const char* type) {
     error("Too many types in type table already. Cannot add %s.", type);
   }
   
-  int i;
-  for (i = 0; i < type_index; i++) {
+  for (int i = 0; i < type_index; i++) {
     if (strcmp(type, type_table[i]) == 0) {
       return i;
     }

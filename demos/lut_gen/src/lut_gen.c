@@ -46,16 +46,21 @@ static void load_new_curves_file() {
 
   char* filename = SDL_OpenFileDialog("Photoshop Curves (.acv)\0*.acv\0\0", 0);
   
-  char file[MAX_PATH]; SDL_PathFileName(file, filename);
-  char location[MAX_PATH]; SDL_PathFileLocation(location, filename);
-  char lut_name[MAX_PATH]; strcpy(lut_name, location); strcat(lut_name, file); strcat(lut_name, ".lut");
+  if (filename[0] != '\0') {
   
-  ui_text* curves_text = ui_elem_get("curves_text");
-  ui_text_update_string(curves_text, file);
-  
-  current_curves = asset_load_get(filename);
-  color_curves_write_lut(asset_get_as(filename, color_curves), lut_name);
-  current_lut = asset_load_get(lut_name);
+    char file[MAX_PATH]; SDL_PathFileName(file, filename);
+    char location[MAX_PATH]; SDL_PathFileLocation(location, filename);
+    char lut_name[MAX_PATH]; strcpy(lut_name, location); strcat(lut_name, file); strcat(lut_name, ".lut");
+    
+    ui_text* curves_text = ui_elem_get("curves_text");
+    ui_text_update_string(curves_text, file);
+    
+    current_curves = asset_load_get(filename);
+    color_curves_write_lut(asset_get_as(filename, color_curves), lut_name);
+    current_lut = asset_load_get(lut_name);
+    
+    lut_gen_rebuild_cube();
+  }
 
 }
 
@@ -77,7 +82,6 @@ static void load_new_curves(ui_rectangle* rect, SDL_Event event) {
       
       load_new_curves_file();
       
-      lut_gen_rebuild_cube();
     }
   }
 }
@@ -281,8 +285,7 @@ static void lut_gen_render_spline(spline* s, vector3 color) {
   glEnable(GL_POINT_SMOOTH);
   glPointSize(5.0);
   glBegin(GL_POINTS);
-    int i;
-    for(i = 0; i < s->num_points; i++) {
+    for(int i = 0; i < s->num_points; i++) {
       vector2 loc = v2( s->x[i], s->y[i] );
       glVertex2f(130 + (1-loc.x) * 250, 25 + loc.y * 250);
     }
@@ -293,8 +296,7 @@ static void lut_gen_render_spline(spline* s, vector3 color) {
   glEnable(GL_LINE_SMOOTH);
   glBegin(GL_LINE_STRIP);
     float step = 1.0 / 100;
-    float j;
-    for( j = 0; j <= 1; j += step) {
+    for(float j = 0; j <= 1; j += step) {
       float loc = spline_get_y(s, j);
       glVertex2f(130 + (1-j) * 250, 25 + loc * 250);
     }

@@ -335,8 +335,7 @@ void SDL_PrintStackTrace() {
 
   printf ("[STACK] (%i frames)\n", size);
   
-  int i;
-  for (i = 0; i < size; i++) {
+  for (int i = 0; i < size; i++) {
     printf ("  %s\n", strings[i]);
   }
 

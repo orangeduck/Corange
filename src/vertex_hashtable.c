@@ -15,8 +15,7 @@ vertex_hashtable* vertex_hashtable_new(int table_size) {
   ht->items =  malloc( sizeof(vertex_bucket) * table_size );
   ht->table_size = table_size;
   
-  int i;
-  for(i = 0; i < ht->table_size; i++) {
+  for(int i = 0; i < ht->table_size; i++) {
     ht->items[i].keys = vertex_list_new_blocksize(256);
     ht->items[i].values = int_list_new();
   }
@@ -27,8 +26,7 @@ vertex_hashtable* vertex_hashtable_new(int table_size) {
 
 void vertex_hashtable_delete(vertex_hashtable* ht) {
 
-  int i;
-  for(i = 0; i < ht->table_size; i++) {
+  for(int i = 0; i < ht->table_size; i++) {
     vertex_list_delete( ht->items[i].keys );
     int_list_delete( ht->items[i].values );
   }
@@ -45,8 +43,7 @@ void vertex_hashtable_set(vertex_hashtable* ht, vertex key, int value) {
   vertex_bucket bucket = ht->items[index];
     
   /* Check existing items for replacement */
-  int i;
-  for(i = 0; i < bucket.keys->num_items; i++) {
+  for(int i = 0; i < bucket.keys->num_items; i++) {
     
     vertex t_key = vertex_list_get(bucket.keys, i);
     if( vertex_equal(t_key, key) ) {
@@ -70,8 +67,7 @@ int vertex_hashtable_get(vertex_hashtable* ht, vertex key) {
   
   vertex_bucket bucket = ht->items[index];
   
-  int i;
-  for(i = 0; i < bucket.keys->num_items; i++) {
+  for(int i = 0; i < bucket.keys->num_items; i++) {
     
     vertex t_key = vertex_list_get(bucket.keys, i);
     if( vertex_equal(t_key, key) ) {

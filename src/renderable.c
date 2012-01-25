@@ -20,8 +20,7 @@ static void renderable_add_mesh(renderable* r, mesh* m) {
 
 static void renderable_add_model(renderable* r, model* m) {
 
-  int i;
-  for(i = 0; i < m->num_meshes; i++) {
+  for(int i = 0; i < m->num_meshes; i++) {
     renderable_add_mesh(r, m->meshes[i]);
   }
   
@@ -40,8 +39,7 @@ renderable* renderable_new() {
 
 void renderable_delete(renderable* r) {
   
-  int i;
-  for(i = 0; i < r->num_surfaces; i++) {
+  for(int i = 0; i < r->num_surfaces; i++) {
     renderable_surface_delete( r->surfaces[i] );
   }
   
@@ -50,8 +48,7 @@ void renderable_delete(renderable* r) {
 }
 
 void renderable_set_material(renderable* r, material* m) {
-  int i;
-  for(i = 0; i < r->num_surfaces; i++) {
+  for(int i = 0; i < r->num_surfaces; i++) {
     renderable_surface_set_material(r->surfaces[i], m);
   }
 }
@@ -60,8 +57,7 @@ void renderable_set_multi_material(renderable* r, multi_material* mmat) {
   
   int min_range = min(r->num_surfaces, mmat->num_materials);
   
-  int i;
-  for(i = 0; i < min_range; i++) {
+  for(int i = 0; i < min_range; i++) {
     renderable_surface_set_material(r->surfaces[i], mmat->materials[i]);
   }
   
@@ -82,8 +78,7 @@ renderable_surface* renderable_surface_new(mesh* m) {
   /* 3        3      3       3        2   4     = 18 */
   float* vb_data = malloc(sizeof(float) * m->num_verts * 18);
   
-  int i;
-  for(i = 0; i < m->num_verts; i++) {
+  for(int i = 0; i < m->num_verts; i++) {
   
     vector3 pos = m->verticies[i].position;
     vector3 norm = m->verticies[i].normal;
@@ -156,8 +151,7 @@ renderable_surface* renderable_surface_new_rigged(mesh* m, vertex_weight* weight
   /* 3        3      3       3        2   4     3         3             = 24 */
   float* vb_data = malloc(sizeof(float) * m->num_verts * 24);
   
-  int i;
-  for(i = 0; i < m->num_verts; i++) {
+  for(int i = 0; i < m->num_verts; i++) {
   
     vector3 pos = m->verticies[i].position;
     vector3 norm = m->verticies[i].normal;
@@ -330,15 +324,13 @@ renderable* obj_load_file(char* filename) {
         active_mesh->num_triangles = tri_list->num_items / 3;
         active_mesh->num_triangles_3 = tri_list->num_items;
         
-        int i;
-        
         active_mesh->verticies = malloc(sizeof(vertex) * active_mesh->num_verts);
-        for(i = 0; i < active_mesh->num_verts; i++) {
+        for(int i = 0; i < active_mesh->num_verts; i++) {
           active_mesh->verticies[i] = vertex_list_get(vert_list, i);
         }
         
         active_mesh->triangles = malloc(sizeof(int) * active_mesh->num_triangles_3);
-        for(i = 0; i < active_mesh->num_triangles_3; i++) {
+        for(int i = 0; i < active_mesh->num_triangles_3; i++) {
           active_mesh->triangles[i] = int_list_get(tri_list, i);
         }
       
@@ -595,15 +587,13 @@ renderable* obj_load_file(char* filename) {
   active_mesh->num_triangles = tri_list->num_items / 3;
   active_mesh->num_triangles_3 = tri_list->num_items;
   
-  int i;
-  
   active_mesh->verticies = malloc(sizeof(vertex) * active_mesh->num_verts);
-  for(i = 0; i < active_mesh->num_verts; i++) {
+  for(int i = 0; i < active_mesh->num_verts; i++) {
     active_mesh->verticies[i] = vertex_list_get(vert_list, i);
   }
   
   active_mesh->triangles = malloc(sizeof(int) * active_mesh->num_triangles_3);
-  for(i = 0; i < active_mesh->num_triangles_3; i++) {
+  for(int i = 0; i < active_mesh->num_triangles_3; i++) {
     active_mesh->triangles[i] = int_list_get(tri_list, i);
   }
   
@@ -767,12 +757,11 @@ renderable* smd_load_file(char* filename) {
   smd_mesh->verticies = malloc(sizeof(vertex) * smd_mesh->num_verts);
   smd_mesh->triangles = malloc(sizeof(int) * smd_mesh->num_triangles_3);
   
-  int i;
-  for(i = 0; i < smd_mesh->num_verts; i++) {
+  for(int i = 0; i < smd_mesh->num_verts; i++) {
     smd_mesh->verticies[i] = vertex_list_get(vert_list, i);
   }
   
-  for(i = 0; i < smd_mesh->num_triangles_3; i++) {
+  for(int i = 0; i < smd_mesh->num_triangles_3; i++) {
     smd_mesh->triangles[i] = int_list_get(tri_list, i);
   }
   

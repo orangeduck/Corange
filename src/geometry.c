@@ -35,17 +35,15 @@ void vertex_print(vertex v) {
 
 void mesh_print(mesh* m) {
   
-  int i;
-  
   printf("Mesh Name: %s\n", m->name);
   printf("Material Name: %s\n", m->material);
   printf("Num Verts: %i\n", m->num_verts);
   printf("Num Tris: %i\n", m->num_triangles);
-  for(i=0; i < m->num_verts; i++) {
+  for(int i=0; i < m->num_verts; i++) {
     vertex_print(m->verticies[i]); printf("\n");
   }
   printf("Triangle Indicies:");
-  for(i=0; i < m->num_triangles_3; i++) {
+  for(int i=0; i < m->num_triangles_3; i++) {
     printf("%i ", m->triangles[i]);
   }
   printf("\n");
@@ -65,18 +63,16 @@ void mesh_delete(mesh* m) {
 
 void mesh_generate_tangents(mesh* m) {
   
-  int i;
-  
   /* Clear all tangents to 0,0,0 */
   
-  for(i = 0; i < m->num_verts; i++) {
+  for(int i = 0; i < m->num_verts; i++) {
     m->verticies[i].tangent = v3_zero();
     m->verticies[i].binormal = v3_zero();
   }
   
   /* Loop over faces, calculate tangent and append to verticies of that face */
   
-  i = 0;
+  int i = 0;
   while( i < m->num_triangles_3) {
     
     int t_i1 = m->triangles[i];
@@ -105,10 +101,9 @@ void mesh_generate_tangents(mesh* m) {
     i = i + 3;
   }
   
-  
   /* normalize all tangents */
   
-  for(i = 0; i < m->num_verts; i++) {
+  for(int i = 0; i < m->num_verts; i++) {
     m->verticies[i].tangent = v3_normalize( m->verticies[i].tangent );
     m->verticies[i].binormal = v3_normalize( m->verticies[i].binormal );
   }
@@ -117,17 +112,15 @@ void mesh_generate_tangents(mesh* m) {
 
 void mesh_generate_normals(mesh* m) {
   
-  int i;
-  
   /* Clear all normals to 0,0,0 */
   
-  for(i = 0; i < m->num_verts; i++) {
+  for(int i = 0; i < m->num_verts; i++) {
     m->verticies[i].normal = v3_zero();
   }
   
   /* Loop over faces, calculate normals and append to verticies of that face */
   
-  i = 0;
+  int i = 0;
   while( i < m->num_triangles_3) {
     
     int t_i1 = m->triangles[i];
@@ -153,7 +146,7 @@ void mesh_generate_normals(mesh* m) {
   
   /* normalize all normals */
   
-  for(i = 0; i < m->num_verts; i++) {
+  for(int i = 0; i < m->num_verts; i++) {
     m->verticies[i].normal = v3_normalize( m->verticies[i].normal );
   }
   
@@ -161,18 +154,16 @@ void mesh_generate_normals(mesh* m) {
 
 void mesh_generate_orthagonal_tangents(mesh* m) {
   
-  int i;
-  
   /* Clear all tangents to 0,0,0 */
   
-  for(i = 0; i < m->num_verts; i++) {
+  for(int i = 0; i < m->num_verts; i++) {
     m->verticies[i].tangent = v3_zero();
     m->verticies[i].binormal = v3_zero();
   }
   
   /* Loop over faces, calculate tangent and append to verticies of that face */
   
-  i = 0;
+  int i = 0;
   while( i < m->num_triangles_3) {
     
     int t_i1 = m->triangles[i];
@@ -207,7 +198,7 @@ void mesh_generate_orthagonal_tangents(mesh* m) {
   
   /* normalize all tangents */
   
-  for(i = 0; i < m->num_verts; i++) {
+  for(int i = 0; i < m->num_verts; i++) {
     m->verticies[i].tangent = v3_normalize( m->verticies[i].tangent );
     m->verticies[i].binormal = v3_normalize( m->verticies[i].binormal );
   }
@@ -221,8 +212,7 @@ void mesh_generate_texcoords_cylinder(mesh* m) {
 	float max_height = -99999999;
 	float min_height = 99999999;
 	
-  int i;
-	for(i = 0; i < m->num_verts; i++) {
+	for(int i = 0; i < m->num_verts; i++) {
 		float v = m->verticies[i].position.y;
 		max_height = max(max_height, v);
 		min_height = min(min_height, v);
@@ -236,7 +226,7 @@ void mesh_generate_texcoords_cylinder(mesh* m) {
 	
 	float scale = (max_height - min_height);
 	
-	for(i = 0; i < m->num_verts; i++) {
+	for(int i = 0; i < m->num_verts; i++) {
 		m->verticies[i].uvs = v2(m->verticies[i].uvs.x, m->verticies[i].uvs.y / scale);
 	}
   
@@ -289,8 +279,7 @@ void model_merge_model(model* m1, model* m2) {
   m1->meshes = realloc(m1->meshes, sizeof(mesh*) * total_num_meshes);
   
   /* Copy pointers from m2 into the m1 mesh list */
-  int i;
-  for(i = m1->num_meshes; i < total_num_meshes;i++) {
+  for(int i = m1->num_meshes; i < total_num_meshes;i++) {
     m1->meshes[i] = m2->meshes[i - m1->num_meshes];
   }
   
@@ -301,16 +290,14 @@ void model_merge_model(model* m1, model* m2) {
 }
 
 void model_print(model* m) {
-  int i;
-  for(i=0; i<m->num_meshes; i++) {
+  for(int i=0; i<m->num_meshes; i++) {
     mesh_print( m->meshes[i] );
   }
 }
 
 void model_delete(model* m) {
   
-  int i;
-  for(i=0; i<m->num_meshes; i++) {
+  for(int i=0; i<m->num_meshes; i++) {
     mesh_delete( m->meshes[i] );
   }
   
@@ -321,8 +308,7 @@ void model_delete(model* m) {
 
 void model_generate_normals(model* m) {
 
-  int i;
-  for(i=0; i<m->num_meshes; i++) {
+  for(int i = 0; i < m->num_meshes; i++) {
     mesh_generate_normals( m->meshes[i] );
   }
   
@@ -330,8 +316,7 @@ void model_generate_normals(model* m) {
 
 void model_generate_tangents(model* m) {
 
-  int i;
-  for(i=0; i<m->num_meshes; i++) {
+  for(int i = 0; i < m->num_meshes; i++) {
     mesh_generate_tangents( m->meshes[i] );
   }
   
@@ -339,8 +324,7 @@ void model_generate_tangents(model* m) {
 
 void model_generate_orthagonal_tangents(model* m) {
 
-  int i;
-  for(i=0; i<m->num_meshes; i++) {
+  for(int i = 0; i < m->num_meshes; i++) {
     mesh_generate_orthagonal_tangents( m->meshes[i] );
   }
 
@@ -348,8 +332,7 @@ void model_generate_orthagonal_tangents(model* m) {
 
 void model_generate_texcoords_cylinder(model* m) {
 
-  int i;
-  for(i=0; i<m->num_meshes; i++) {
+  for(int i = 0; i < m->num_meshes; i++) {
     mesh_generate_texcoords_cylinder( m->meshes[i] );
   }
 
@@ -357,8 +340,8 @@ void model_generate_texcoords_cylinder(model* m) {
 
 float model_surface_area(model* m) {
   float total = 0.0f;
-  int i;
-  for(i=0; i<m->num_meshes; i++) {
+  
+  for(int i = 0; i < m->num_meshes; i++) {
     total += mesh_surface_area( m->meshes[i] );
   }
   

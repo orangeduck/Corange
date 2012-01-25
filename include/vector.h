@@ -1,9 +1,14 @@
 #ifndef vector_h
 #define vector_h
 
-typedef struct {
-  float x;
-  float y;
+typedef union {
+  struct {
+    float x;
+    float y;
+  };
+  
+  float xy[2];
+  
 } vector2;
 
 
@@ -19,6 +24,9 @@ typedef union {
     float g;
     float b;
   };
+  
+  float xyz[3];
+  
 } vector3;
 
 
@@ -36,6 +44,9 @@ typedef union {
 	float b;
 	float a;
   };
+  
+  float xyzw[4];
+  
 } vector4;
 
 

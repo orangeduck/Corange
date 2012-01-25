@@ -58,8 +58,7 @@ void* list_pop_at(list* l, int index) {
   
   void* item = l->ptrs[index];
   
-  int i;
-  for(i = index; i < l->num_items+1; i++) {
+  for(int i = index; i < l->num_items+1; i++) {
     l->ptrs[i] = l->ptrs[i+1];
   }
   

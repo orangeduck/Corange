@@ -25,14 +25,13 @@ skeleton* skeleton_copy(skeleton* old) {
   new->num_bones = old->num_bones;
   new->bones = malloc(sizeof(bone*) * new->num_bones);
   
-  int i;
-  for(i = 0; i < new->num_bones; i++) {
+  for(int i = 0; i < new->num_bones; i++) {
     new->bones[i] = bone_new(old->bones[i]->id, old->bones[i]->name);
     new->bones[i]->position = old->bones[i]->position;
     new->bones[i]->rotation = old->bones[i]->rotation;
   }
   
-  for(i = 0; i < new->num_bones; i++) {
+  for(int i = 0; i < new->num_bones; i++) {
     if (old->bones[i]->parent == NULL) {
       new->bones[i]->parent = NULL;
     } else {
@@ -43,7 +42,7 @@ skeleton* skeleton_copy(skeleton* old) {
   new->transforms = malloc(sizeof(matrix_4x4) * new->num_bones);
   new->inv_transforms = malloc(sizeof(matrix_4x4) * new->num_bones);
   
-  for(i = 0; i < new->num_bones; i++) {
+  for(int i = 0; i < new->num_bones; i++) {
     new->transforms[i] = old->transforms[i];
     new->inv_transforms[i] = old->inv_transforms[i];
   }
@@ -53,8 +52,8 @@ skeleton* skeleton_copy(skeleton* old) {
 
 
 void skeleton_delete(skeleton* s) {
-  int i;
-  for(i = 0; i < s->num_bones; i++) {
+
+  for(int i = 0; i < s->num_bones; i++) {
     bone_delete(s->bones[i]);
   }
   free(s->bones);
@@ -81,8 +80,7 @@ void skeleton_add_bone(skeleton* s, char* name, int id, int parent_id) {
 }
 
 void skeleton_print(skeleton* s) {
-  int i;
-  for(i = 0; i < s->num_bones; i++) {
+  for(int i = 0; i < s->num_bones; i++) {
     bone* b = s->bones[i];
     printf("Bone %i: %i %s ", i, b->id, b->name);
     v3_print(b->position);printf(" ");
@@ -101,8 +99,7 @@ bone* skeleton_bone_id(skeleton* s, int id) {
     return NULL;
   }
   
-  int i;
-  for(i = 0; i < s->num_bones; i++) {
+  for(int i = 0; i < s->num_bones; i++) {
     if (s->bones[i]->id == id) {
       return s->bones[i];
     }
@@ -156,15 +153,13 @@ matrix_4x4 bone_transform(bone* b) {
 
 /* TODO: These functions could be optimised to use previously calculated transforms */
 void skeleton_gen_transforms(skeleton* s) {
-  int i;
-  for(i = 0; i < s->num_bones; i++) {
+  for(int i = 0; i < s->num_bones; i++) {
     s->transforms[i] = bone_transform(s->bones[i]);
   }
 }
 
 void skeleton_gen_inv_transforms(skeleton* s) {
-  int i;
-  for(i = 0; i < s->num_bones; i++) {
+  for(int i = 0; i < s->num_bones; i++) {
     s->transforms[i] = bone_transform(s->bones[i]);
     s->inv_transforms[i] = m44_inverse(s->transforms[i]);
   }

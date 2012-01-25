@@ -305,8 +305,8 @@ void volume_renderer_render_metaball(vector3 position, vector3 color) {
                               v4(b_size,-b_size,b_size,1), v4(b_size,b_size,-b_size,1), 
                               v4(-b_size,-b_size,b_size,1), v4(b_size,-b_size,-b_size,1),
                               v4(-b_size,b_size,-b_size,1), v4(-b_size,-b_size,-b_size,1) };
-  int i;
-  for(i = 0; i < 8; i++) {
+                              
+  for(int i = 0; i < 8; i++) {
     bounding_box[i] = v4_add(bounding_box[i], v4(position.x, position.y, position.z, 0));
     bounding_box[i] = m44_mul_v4(view_m, bounding_box[i]);
     bounding_box[i] = m44_mul_v4(proj_m, bounding_box[i]);
@@ -318,7 +318,7 @@ void volume_renderer_render_metaball(vector3 position, vector3 color) {
   float x_max, y_max, z_max = -1;
   float x_min, y_min, z_min = 1;
   
-  for(i = 0; i < 8; i++) {
+  for(int i = 0; i < 8; i++) {
     x_max = clamp(max(x_max, bounding_box[i].x), -1, 1);
     x_min = clamp(min(x_min, bounding_box[i].x), -1, 1);
     y_max = clamp(max(y_max, bounding_box[i].y), -1, 1);
