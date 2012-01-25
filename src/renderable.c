@@ -60,8 +60,6 @@ void renderable_set_multi_material(renderable* r, multi_material* mmat) {
   
   int min_range = min(r->num_surfaces, mmat->num_materials);
   
-  debug("Surfaces %i Materials %i", r->num_surfaces, mmat->num_materials);
-  
   int i;
   for(i = 0; i < min_range; i++) {
     renderable_surface_set_material(r->surfaces[i], mmat->materials[i]);
@@ -261,8 +259,8 @@ renderable* obj_load_file(char* filename) {
   
   int vert_index = 0;
   
-  int has_normal_data = 0;
-  int has_texcoord_data = 0;
+  bool has_normal_data = false;
+  bool has_texcoord_data = false;
   
   SDL_RWops* file = SDL_RWFromFile(filename, "r");
   
@@ -322,24 +320,13 @@ renderable* obj_load_file(char* filename) {
       vert.normal = v3(nx, ny, nz);
       vertex_list_set(vert_data, num_norm, vert);
       num_norm++;
-      
     }
     
     else if (sscanf(line, "g %512s", group) == 1) {
-      
-      /* TODO */
-      
-      /* Copy appropriate vertex data into buffer */
-      /* Copy appropriate triangle data into buffer */
-      
-      /* Clear Triangle list */
-      /* Clear Triange-Vertex Mapping */
-      
-      /* Allocate space for new mesh etc */
         
       if (active_mesh != NULL) {
       
-        active_mesh->num_verts = vert_index; /* This is probably incorrect */
+        active_mesh->num_verts = vert_index;
         active_mesh->num_triangles = tri_list->num_items / 3;
         active_mesh->num_triangles_3 = tri_list->num_items;
         
@@ -393,8 +380,8 @@ renderable* obj_load_file(char* filename) {
     }
     
     else if (sscanf(line, "f %i/%i/%i %i/%i/%i %i/%i/%i", &pi1, &ti1, &ni1, &pi2, &ti2, &ni2, &pi3, &ti3, &ni3) == 9) {
-      has_normal_data = 1;
-      has_texcoord_data = 1;
+      has_normal_data = true;
+      has_texcoord_data = true;
       
       /* OBJ file indicies start from one, have to subtract one */
       pi1--; ti1--; ni1--; pi2--; ti2--; ni2--; pi3--; ti3--; ni3--;
@@ -411,6 +398,162 @@ renderable* obj_load_file(char* filename) {
       v3.position = vertex_list_get(vert_data, pi3).position;
       v3.uvs = vertex_list_get(vert_data, ti3).uvs;
       v3.normal = vertex_list_get(vert_data, ni3).normal;
+      
+      int v1_id = vertex_hashtable_get(vert_hashes, v1);
+      if ( v1_id == -1 ) {
+        vertex_hashtable_set(vert_hashes, v1, vert_index);
+        vertex_list_push_back(vert_list, v1);
+        int_list_push_back(tri_list, vert_index);
+        vert_index++;
+      } else {
+        int_list_push_back(tri_list, v1_id);
+      }
+      
+      int v2_id = vertex_hashtable_get(vert_hashes, v2);
+      if ( v2_id == -1 ) {
+        vertex_hashtable_set(vert_hashes, v2, vert_index);
+        vertex_list_push_back(vert_list, v2);
+        int_list_push_back(tri_list, vert_index);
+        vert_index++;
+      } else {
+        int_list_push_back(tri_list, v2_id);
+      }
+      
+      int v3_id = vertex_hashtable_get(vert_hashes, v3);
+      if ( v3_id == -1 ) {
+        vertex_hashtable_set(vert_hashes, v3, vert_index);
+        vertex_list_push_back(vert_list, v3);
+        int_list_push_back(tri_list, vert_index);
+        vert_index++;
+      } else {
+        int_list_push_back(tri_list, v3_id);
+      }
+      
+    }
+    
+    else if (sscanf(line, "f %i//%i %i//%i %i//%i", &pi1, &ni1, &pi2, &ni2, &pi3, &ni3) == 6) {
+      has_normal_data = true;
+      has_texcoord_data = false;
+      
+      /* OBJ file indicies start from one, have to subtract one */
+      pi1--; ni1--; pi2--; ni2--; pi3--; ni3--;
+      
+      vertex v1, v2, v3;
+      v1.position = vertex_list_get(vert_data, pi1).position;
+      v1.uvs = v2_zero();
+      v1.normal = vertex_list_get(vert_data, ni1).normal;
+      
+      v2.position = vertex_list_get(vert_data, pi2).position;
+      v2.uvs = v2_zero();
+      v2.normal = vertex_list_get(vert_data, ni2).normal;
+      
+      v3.position = vertex_list_get(vert_data, pi3).position;
+      v3.uvs = v2_zero();
+      v3.normal = vertex_list_get(vert_data, ni3).normal;
+      
+      int v1_id = vertex_hashtable_get(vert_hashes, v1);
+      if ( v1_id == -1 ) {
+        vertex_hashtable_set(vert_hashes, v1, vert_index);
+        vertex_list_push_back(vert_list, v1);
+        int_list_push_back(tri_list, vert_index);
+        vert_index++;
+      } else {
+        int_list_push_back(tri_list, v1_id);
+      }
+      
+      int v2_id = vertex_hashtable_get(vert_hashes, v2);
+      if ( v2_id == -1 ) {
+        vertex_hashtable_set(vert_hashes, v2, vert_index);
+        vertex_list_push_back(vert_list, v2);
+        int_list_push_back(tri_list, vert_index);
+        vert_index++;
+      } else {
+        int_list_push_back(tri_list, v2_id);
+      }
+      
+      int v3_id = vertex_hashtable_get(vert_hashes, v3);
+      if ( v3_id == -1 ) {
+        vertex_hashtable_set(vert_hashes, v3, vert_index);
+        vertex_list_push_back(vert_list, v3);
+        int_list_push_back(tri_list, vert_index);
+        vert_index++;
+      } else {
+        int_list_push_back(tri_list, v3_id);
+      }
+      
+    }
+    
+    else if (sscanf(line, "f %i/%i %i/%i %i/%i", &pi1, &ti1, &pi2, &ti2, &pi3, &ti3) == 6) {
+      has_normal_data = false;
+      has_texcoord_data = true;
+      
+      /* OBJ file indicies start from one, have to subtract one */
+      pi1--; ti1--; pi2--; ti2--; pi3--; ti3--;
+      
+      vertex v1, v2, v3;
+      v1.position = vertex_list_get(vert_data, pi1).position;
+      v1.uvs = vertex_list_get(vert_data, ti1).uvs;
+      v1.normal = v3_zero();
+      
+      v2.position = vertex_list_get(vert_data, pi2).position;
+      v2.uvs = vertex_list_get(vert_data, ti2).uvs;
+      v2.normal = v3_zero();
+      
+      v3.position = vertex_list_get(vert_data, pi3).position;
+      v3.uvs = vertex_list_get(vert_data, ti3).uvs;
+      v3.normal = v3_zero();
+      
+      int v1_id = vertex_hashtable_get(vert_hashes, v1);
+      if ( v1_id == -1 ) {
+        vertex_hashtable_set(vert_hashes, v1, vert_index);
+        vertex_list_push_back(vert_list, v1);
+        int_list_push_back(tri_list, vert_index);
+        vert_index++;
+      } else {
+        int_list_push_back(tri_list, v1_id);
+      }
+      
+      int v2_id = vertex_hashtable_get(vert_hashes, v2);
+      if ( v2_id == -1 ) {
+        vertex_hashtable_set(vert_hashes, v2, vert_index);
+        vertex_list_push_back(vert_list, v2);
+        int_list_push_back(tri_list, vert_index);
+        vert_index++;
+      } else {
+        int_list_push_back(tri_list, v2_id);
+      }
+      
+      int v3_id = vertex_hashtable_get(vert_hashes, v3);
+      if ( v3_id == -1 ) {
+        vertex_hashtable_set(vert_hashes, v3, vert_index);
+        vertex_list_push_back(vert_list, v3);
+        int_list_push_back(tri_list, vert_index);
+        vert_index++;
+      } else {
+        int_list_push_back(tri_list, v3_id);
+      }
+      
+    }
+    
+    else if (sscanf(line, "f %i %i %i", &pi1, &pi2, &pi3) == 3) {
+      has_normal_data = false;
+      has_texcoord_data = false;
+      
+      /* OBJ file indicies start from one, have to subtract one */
+      pi1--; pi2--; pi3--;
+      
+      vertex v1, v2, v3;
+      v1.position = vertex_list_get(vert_data, pi1).position;
+      v1.uvs = v2_zero();
+      v1.normal = v3_zero();
+      
+      v2.position = vertex_list_get(vert_data, pi2).position;
+      v2.uvs = v2_zero();
+      v2.normal = v3_zero();
+      
+      v3.position = vertex_list_get(vert_data, pi3).position;
+      v3.uvs = v2_zero();
+      v3.normal = v3_zero();
       
       int v1_id = vertex_hashtable_get(vert_hashes, v1);
       if ( v1_id == -1 ) {

@@ -17,7 +17,7 @@ vertex_hashtable* vertex_hashtable_new(int table_size) {
   
   int i;
   for(i = 0; i < ht->table_size; i++) {
-    ht->items[i].keys = vertex_list_new();
+    ht->items[i].keys = vertex_list_new_blocksize(256);
     ht->items[i].values = int_list_new();
   }
   

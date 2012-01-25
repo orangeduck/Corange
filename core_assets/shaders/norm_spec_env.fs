@@ -75,7 +75,7 @@ void main() {
   float n_dot_h = max( dot( normal, half_vector ) , 0.0);
   
   vec3 reflected = normalize(reflect(eye_vector, normal));
-  vec3 env = from_gamma(texture2D(env_map, reflected.xy).rgb * 0.5);
+  vec3 env = from_gamma(texture2D(env_map, reflected.xy).rgb) * 0.25;
   float env_amount = (1.0 - dot(eye_vector, normal)) * spec.r * env_amount;
   
   vec3 final_diffuse = (diffuse * diffuse_light * shadow * n_dot_l);

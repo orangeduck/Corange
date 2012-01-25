@@ -34,6 +34,7 @@ void corange_finish();
 #include "animation.h"
 #include "skeleton.h"
 #include "renderable.h"
+#include "collision_body.h"
 #include "font.h"
 #include "material.h"
 #include "shader.h"

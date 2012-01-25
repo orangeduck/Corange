@@ -75,6 +75,7 @@ vector2 v2_one();
 vector2 v2_add(vector2 v1, vector2 v2);
 vector2 v2_sub(vector2 v1, vector2 v2);
 vector2 v2_mul(vector2 v, float fac);
+vector2 v2_mul_v2(vector2 v1, vector2 v2);
 vector2 v2_div(vector2 v, float fac);
 vector2 v2_pow(vector2 v, float exp);
 vector2 v2_neg(vector2 v);
@@ -105,6 +106,7 @@ vector2 v2_lerp(vector2 v1, vector2 v2, float amount);
 vector2 v2_smoothstep(vector2 v1, vector2 v2, float amount);
 vector2 v2_smootherstep(vector2 v1, vector2 v2, float amount);
 
+
 /* Vector3 */
 
 
@@ -122,6 +124,7 @@ vector3 v3_black();
 vector3 v3_add(vector3 v1, vector3 v2);
 vector3 v3_sub(vector3 v1, vector3 v2);
 vector3 v3_mul(vector3 v, float fac);
+vector3 v3_mul_v3(vector3 v1, vector3 v2);
 vector3 v3_div(vector3 v, float fac);
 vector3 v3_pow(vector3 v, float fac);
 vector3 v3_neg(vector3 v);
@@ -167,6 +170,7 @@ vector4 v4_black();
 vector4 v4_add(vector4 v1, vector4 v2);
 vector4 v4_sub(vector4 v1, vector4 v2);
 vector4 v4_mul(vector4 v, float fac);
+vector4 v4_mul_v4(vector4 v1, vector4 v2);
 vector4 v4_div(vector4 v, float fac);
 vector4 v4_pow(vector4 v, float fac);
 vector4 v4_neg(vector4 v);

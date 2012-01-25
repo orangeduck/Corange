@@ -81,6 +81,7 @@ matrix_4x4 m44_transpose(matrix_4x4 m);
 matrix_4x4 m44_mul_m44(matrix_4x4 m1, matrix_4x4 m2);
 
 vector4 m44_mul_v4(matrix_4x4 m, vector4 v);
+vector3 m44_mul_v3(matrix_4x4 m, vector3 v);
 
 float m44_det(matrix_4x4 m);
 matrix_4x4 m44_inverse(matrix_4x4 m);

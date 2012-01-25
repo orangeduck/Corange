@@ -258,6 +258,49 @@ static void forward_renderer_disuse_material() {
 
 }
 
+static void render_bsp_mesh(bsp_mesh* bm) {
+  
+  if (bm->is_leaf) {
+    
+    shader_program* collision_prog = asset_load_get("$SHADERS/collision_mesh.prog");
+    glUseProgram(*collision_prog);
+    
+    GLint world_matrix_u = glGetUniformLocation(*collision_prog, "world_matrix");
+    glUniformMatrix4fv(world_matrix_u, 1, 0, world_matrix);
+    
+    GLint proj_matrix_u = glGetUniformLocation(*collision_prog, "proj_matrix");
+    glUniformMatrix4fv(proj_matrix_u, 1, 0, proj_matrix);
+    
+    GLint view_matrix_u = glGetUniformLocation(*collision_prog, "view_matrix");
+    glUniformMatrix4fv(view_matrix_u, 1, 0, view_matrix);
+    
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+   
+    glEnable(GL_POLYGON_OFFSET_FILL);
+    glPolygonOffset(-1, 1.0);
+    
+    glVertexPointer(3, GL_FLOAT, 0, bm->verticies);
+    glEnableClientState(GL_VERTEX_ARRAY);
+    
+      glDrawElements(GL_TRIANGLES, bm->num_triangles * 3, GL_UNSIGNED_INT, bm->triangles);
+    
+    glDisableClientState(GL_VERTEX_ARRAY);
+    
+    glDisable(GL_BLEND);
+    
+    glDisable(GL_POLYGON_OFFSET_FILL);
+    glPolygonOffset(0, 0);
+    
+    glUseProgram(0);
+    
+  } else {
+    render_bsp_mesh(bm->front);
+    render_bsp_mesh(bm->back);
+  }
+
+}
+
 void forward_renderer_render_static(static_object* so) {
   
   matrix_4x4 r_world_matrix = m44_world( so->position, so->scale, so->rotation );
@@ -363,6 +406,10 @@ void forward_renderer_render_static(static_object* so) {
     
     }
 
+  }
+  
+  if (so->collision_body != NULL) {
+    render_bsp_mesh(so->collision_body->collision_mesh);
   }
   
 }
@@ -493,7 +540,6 @@ void forward_renderer_render_skeleton(skeleton* s) {
 }
 
 void forward_renderer_render_axis(matrix_4x4 world) {
-  
   
   vector4 x_pos = m44_mul_v4(world, v4(1,0,0,1));
   vector4 y_pos = m44_mul_v4(world, v4(0,1,0,1));

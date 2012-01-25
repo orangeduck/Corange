@@ -3,6 +3,7 @@
 
 #include "bool.h"
 #include "renderable.h"
+#include "collision_body.h"
 
 typedef struct {
   
@@ -15,6 +16,7 @@ typedef struct {
   bool cast_shadows;
 
   renderable* renderable;
+  collision_body* collision_body;
 
 } static_object;
 

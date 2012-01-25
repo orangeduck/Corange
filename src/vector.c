@@ -173,6 +173,13 @@ vector2 v2_mul(vector2 v, float fac) {
   return v;
 }
 
+vector2 v2_mul_v2(vector2 v1, vector2 v2) {
+  vector2 v;
+  v.x = v1.x * v2.x;
+  v.y = v1.y * v2.y;
+  return v;
+}
+
 vector2 v2_pow(vector2 v, float exp) {
   v.x = pow(v.x, exp);
   v.y = pow(v.y, exp);
@@ -398,6 +405,14 @@ vector3 v3_mul(vector3 v, float fac) {
   return v;
 }
 
+vector3 v3_mul_v3(vector3 v1, vector3 v2) {
+  vector3 v;
+  v.x = v1.x * v2.x;
+  v.y = v1.y * v2.y;
+  v.z = v1.z * v2.z;
+  return v;
+}
+
 vector3 v3_pow(vector3 v, float exp) {
   v.x = pow(v.x, exp);
   v.y = pow(v.y, exp);
@@ -610,6 +625,15 @@ vector4 v4_mul(vector4 v, float fac) {
   v.y = v.y * fac;
   v.z = v.z * fac;
   v.w = v.w * fac;
+  return v;
+}
+
+vector4 v4_mul_v4(vector4 v1, vector4 v2) {
+  vector4 v;
+  v.x = v1.x * v2.x;
+  v.y = v1.y * v2.x;
+  v.z = v1.z * v2.x;
+  v.w = v1.w * v2.x;
   return v;
 }
 

@@ -49,6 +49,7 @@ void corange_init(char* core_assets_path) {
   asset_manager_handler("smd", smd_load_file, renderable_delete);
   asset_manager_handler("skl", skl_load_file, skeleton_delete);
   asset_manager_handler("ani", ani_load_file, animation_delete);
+  asset_manager_handler("col", col_load_file, collision_body_delete);
   
   asset_manager_handler("bmp", bmp_load_file, image_delete);
   asset_manager_handler("tga", tga_load_file, image_delete);

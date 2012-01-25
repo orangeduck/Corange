@@ -14,6 +14,7 @@ static_object* static_object_new(renderable* r) {
   s->cast_shadows = true;
   
   s->renderable = r;
+  s->collision_body = NULL;
   
   return s;
 }

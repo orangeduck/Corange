@@ -499,6 +499,16 @@ vector4 m44_mul_v4(matrix_4x4 m, vector4 v) {
   return vec;
 }
 
+vector3 m44_mul_v3(matrix_4x4 m, vector3 v) {
+  
+  vector4 v_homo = v4(v.x, v.y, v.z, 1);
+  v_homo = m44_mul_v4(m, v_homo);
+  
+  v_homo = v4_div(v_homo, v_homo.w);
+  
+  return v3(v_homo.x, v_homo.y, v_homo.z);
+}
+
 matrix_3x3 m44_to_m33(matrix_4x4 m) {
 
   matrix_3x3 mat;

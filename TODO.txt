@@ -1,9 +1,8 @@
 -- To Finish Demos --
 
-New gradient background for renderers instead of skybox?
-Investigate why text is sliding up the page.
+New gradient background for renderers instead of skybox
 Remove cello bow from cello model.
-Add ship to sea demo. Multi Material? Add depth pass and foam effects? Walk around on moving deck?
+Sea Game - Add depth pass and foam effects? Walk around on moving deck? Proper Skybox. Bigger waterplane.
 Comment platformer game nicely. Reorganize.
 
 -- Tweaks/Cleanup --
@@ -13,6 +12,7 @@ Convert skeleton stuff to quaternions - Not sure about this, if I trust my quate
 
 -- In the Future --
 
+Make multi material behaviour default.
 PLY loader
 UI slider bar, Other UI elements
 LUA wrappers for asset, entity, ui managers

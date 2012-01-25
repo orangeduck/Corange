@@ -17,7 +17,7 @@ vec3 spike_wave( vec2 direction, vec2 position, float wavelength, float spikines
 
 void main()
 {
-
+	
   vec3 difference = vec3(0,0,0);
 
   float time_v = time * 3.5;
