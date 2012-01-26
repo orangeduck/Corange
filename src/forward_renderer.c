@@ -257,12 +257,63 @@ static void forward_renderer_disuse_material() {
 
 }
 
+static int bsp_counter = 0;
 static void render_bsp_mesh(bsp_mesh* bm) {
   
   if (bm->is_leaf) {
     
     shader_program* collision_prog = asset_load_get("$SHADERS/collision_mesh.prog");
     glUseProgram(*collision_prog);
+    
+    GLint color = glGetUniformLocation(*collision_prog, "color");
+    if (bsp_counter == 0) {
+      glUniform3f(color, 1, 0, 0);
+    } else if (bsp_counter == 1) {
+      glUniform3f(color, 0, 1, 0);
+    } else if (bsp_counter == 2) {
+      glUniform3f(color, 0, 0, 1);
+    } else if (bsp_counter == 3) {
+      glUniform3f(color, 1, 1, 0);
+    } else if (bsp_counter == 4) {
+      glUniform3f(color, 1, 0, 1);
+    } else if (bsp_counter == 5) {
+      glUniform3f(color, 0, 1, 1);
+    } else if (bsp_counter == 6) {
+      glUniform3f(color, 0.25, 0, 0);
+    } else if (bsp_counter == 7) {
+      glUniform3f(color, 0, 0.25, 0);
+    } else if (bsp_counter == 8) {
+      glUniform3f(color, 0, 0, 0.25);
+    } else if (bsp_counter == 9) {
+      glUniform3f(color, 0.25, 0.25, 0);
+    } else if (bsp_counter == 10) {
+      glUniform3f(color, 0.25, 0, 0.25);
+    } else if (bsp_counter == 11) {
+      glUniform3f(color, 0, 0.25, 0.25);
+    } else if (bsp_counter == 12) {
+      glUniform3f(color, 0.75, 0, 0);
+    } else if (bsp_counter == 13) {
+      glUniform3f(color, 0, 0.75, 0);
+    } else if (bsp_counter == 14) {
+      glUniform3f(color, 0, 0, 0.75);
+    } else if (bsp_counter == 15) {
+      glUniform3f(color, 0.75, 0, 0.75);
+    } else if (bsp_counter == 16) {
+      glUniform3f(color, 0, 0.75, 0.75);
+    } else if (bsp_counter == 17) {
+      glUniform3f(color, 0.75, 0.75, 0);
+    } else if (bsp_counter == 18) {
+      glUniform3f(color, 0, 0, 0);
+    } else if (bsp_counter == 19) {
+      glUniform3f(color, 0.25, 0.25, 0.25);
+    } else if (bsp_counter == 20) {
+      glUniform3f(color, 0.5, 0.5, 0.5);
+    } else if (bsp_counter == 21) {
+      glUniform3f(color, 0.75, 0.75, 0.75);
+    } else {
+      glUniform3f(color, 1, 1, 1);
+    }
+    bsp_counter++;
     
     GLint world_matrix_u = glGetUniformLocation(*collision_prog, "world_matrix");
     glUniformMatrix4fv(world_matrix_u, 1, 0, world_matrix);
@@ -282,7 +333,7 @@ static void render_bsp_mesh(bsp_mesh* bm) {
     glVertexPointer(3, GL_FLOAT, 0, bm->verticies);
     glEnableClientState(GL_VERTEX_ARRAY);
     
-      glDrawElements(GL_TRIANGLES, bm->num_triangles * 3, GL_UNSIGNED_INT, bm->triangles);
+      glDrawArrays(GL_TRIANGLES, 0, bm->num_verticies);
     
     glDisableClientState(GL_VERTEX_ARRAY);
     
@@ -407,6 +458,7 @@ void forward_renderer_render_static(static_object* so) {
   }
   
   if (so->collision_body != NULL) {
+    bsp_counter = 0;
     render_bsp_mesh(so->collision_body->collision_mesh);
   }
   

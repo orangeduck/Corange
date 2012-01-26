@@ -5,16 +5,6 @@
 #include "matrix.h"
 #include "bool.h"
 
-/*
-  General idea
-
-  Copy all data into a bsp_mesh then subdivide into two parts.
-  To subdivide find bounding box and then split optimally.
-  
-  Filter in triangles which are one side of the plane.
-  
-*/
-
 typedef struct {
   vector3 direction;
   vector3 position;
@@ -35,7 +25,15 @@ bounding_box bounding_box_merge(bounding_box b1, bounding_box b2);
 bool bounding_box_intersects(bounding_box b1, bounding_box b2);
 bool bounding_box_contains(bounding_box b1, vector3 point);
 
-plane bounding_box_division(bounding_box bb);
+typedef struct {
+  vector3 center;
+  float radius;
+  float radius_sqrd;
+} bounding_sphere;
+
+bounding_sphere bounding_sphere_merge(bounding_sphere bs1, bounding_sphere bs2);
+bool bounding_sphere_intersects(bounding_sphere bs1, bounding_sphere bs2);
+bool bounding_sphere_contains(bounding_sphere bs1, vector3 point);
 
 struct bsp_mesh {
   
@@ -48,33 +46,38 @@ struct bsp_mesh {
   vector3* verticies;
   int num_verticies;
   
-  int* triangles;
-  int num_triangles;
-  
+  vector3* triangle_normals;
 };
 
 struct bsp_mesh;
 typedef struct bsp_mesh bsp_mesh;
 
+
 void bsp_mesh_delete(bsp_mesh* bm);
-float bsp_mesh_bounding_distance(bsp_mesh* bm);
-bounding_box bsp_mesh_bounding_box(bsp_mesh* bm);
 void bsp_mesh_subdivide(bsp_mesh* bm, int iterations);
 
-vector3 bsp_mesh_ground_point(bsp_mesh* bm, vector3 point);
+bounding_sphere bsp_mesh_bounding_sphere(bsp_mesh* bm);
+bounding_box bsp_mesh_bounding_box(bsp_mesh* bm);
+
+
+static const int collision_type_sphere = 0;
+static const int collision_type_box = 1;
+static const int collision_type_mesh = 2;
 
 typedef struct {
   
-  float bounding_distance;
-  bounding_box bounding_box;
+  int collision_type;
   
+  bounding_sphere collision_sphere;
+  bounding_box collision_box;
   bsp_mesh* collision_mesh;
 
 } collision_body;
 
+collision_body* collision_body_new_sphere(bounding_sphere bs);
+collision_body* collision_body_new_box(bounding_box bb);
+
 collision_body* col_load_file(char* filename);
 void collision_body_delete(collision_body* cb);
-
-vector3 collision_body_ground_point(collision_body* cb, matrix_4x4 world_matrix, vector3 point);
 
 #endif

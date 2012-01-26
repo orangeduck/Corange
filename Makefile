@@ -5,7 +5,7 @@ INCS= -I ./include
 CFLAGS= $(INCS) -std=gnu99 -Wall -Werror -Wno-unused -O3 -g
 CFLAGS_LINUX= $(INCS) -std=gnu99 -Wall -Werror -Wno-unused -O3 -g -fPIC
 
-LFLAGS= -L ./lib -lmingw32 -lopengl32 -lSDLmain -lSDL -lcomdlg32 -shared
+LFLAGS= -g -L ./lib -lmingw32 -lopengl32 -lSDLmain -lSDL -lcomdlg32 -shared
 LFLAGS_LINUX= -lGL -lSDLmain -lSDL
 
 C_FILES= $(wildcard src/*.c)
@@ -16,7 +16,7 @@ OBJ_FILES_LINUX= $(addprefix obj/,$(notdir $(C_FILES:.c=.ol)))
 # Windows
 
 corange.dll: $(OBJ_FILES)
-	$(CC) -g $(OBJ_FILES) $(LFLAGS) -o $@
+	$(CC) $(OBJ_FILES) $(LFLAGS) -o $@
 
 obj/%.o: src/%.c
 	$(CC) $< -c $(CFLAGS) -o $@

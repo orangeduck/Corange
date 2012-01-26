@@ -23,6 +23,11 @@ bool point_behind_plane(vector3 point, plane plane) {
   
 }
 
+bool bounding_box_intersects(bounding_box b1, bounding_box b2) {
+  error("bounding_box_intersects Not implemented yet!");
+  return false;
+}
+
 bool bounding_box_contains(bounding_box bb, vector3 point) {
   
   if (point.x > bb.x_max) { return false; }
@@ -43,21 +48,74 @@ bounding_box bounding_box_merge(bounding_box b1, bounding_box b2) {
   bb.y_min = min(b1.y_min, b2.y_min);
   bb.y_max = max(b1.y_max, b2.y_max);
   bb.z_min = min(b1.z_min, b2.z_min);
-  bb.z_max = max(b1.y_max, b2.z_max);
+  bb.z_max = max(b1.z_max, b2.z_max);
   
   return bb;
 }
 
-plane bounding_box_division(bounding_box bb) {
+bounding_sphere bounding_sphere_merge(bounding_sphere bs1, bounding_sphere bs2) {
+  
+  vector3 center = v3_div(v3_add(bs1.center, bs2.center), 2);
+  
+  vector3 dir = v3_normalize(v3_sub(bs2.center, bs1.center));
+  vector3 edge = v3_add(v3_mul(dir, bs2.radius), bs2.center);
+  
+  float dist = v3_dist(edge, center);
+  
+  bounding_sphere bs;
+  bs.center = center;
+  bs.radius = dist;
+  bs.radius_sqrd = dist * dist;
+  
+  return bs;
+}
+
+bool bounding_sphere_intersects(bounding_sphere bs1, bounding_sphere bs2) {
+  error("bounding_sphere_intersects not implemented yet!");
+  return false;
+}
+
+bool bounding_sphere_contains(bounding_sphere bs1, vector3 point) {
+  float dist_sqrt = v3_dist_sqrd(bs1.center, point);
+  return dist_sqrt <= bs1.radius_sqrd;
+}
+
+void bsp_mesh_delete(bsp_mesh* bm) {
+  
+  if (bm->is_leaf) {
+    free(bm->verticies);
+    free(bm->triangle_normals);
+    free(bm);
+  } else {
+    bsp_mesh_delete(bm->front);
+    bsp_mesh_delete(bm->back);
+    free(bm);
+  }
+  
+}
+
+static vector3 bsp_mesh_vertex_average(bsp_mesh* bm) {
+
+  vector3 midpoint = v3_zero();
+  for(int i = 0; i < bm->num_verticies; i++) {
+    midpoint = v3_add(midpoint, bm->verticies[i]);
+  }
+  midpoint = v3_div(midpoint, bm->num_verticies);
+  
+  return midpoint;
+
+}
+
+static plane bsp_mesh_division(bsp_mesh* bm) {
+  
+  bounding_box bb = bsp_mesh_bounding_box(bm);
+  
+  plane p;
+  p.position = bsp_mesh_vertex_average(bm);
   
   float x_diff = bb.x_max - bb.x_min;
   float y_diff = bb.y_max - bb.y_min;
   float z_diff = bb.z_max - bb.z_min;
-  
-  plane p;
-  p.position.x = (bb.x_min + bb.x_min) / 2;
-  p.position.y = (bb.y_min + bb.y_min) / 2;
-  p.position.z = (bb.z_min + bb.z_min) / 2;
   
   if ((x_diff >= y_diff) && (x_diff >= z_diff)) {
     p.direction = v3(1,0,0);
@@ -68,43 +126,150 @@ plane bounding_box_division(bounding_box bb) {
   }
   
   return p;
-  
 }
 
-void bsp_mesh_delete(bsp_mesh* bm) {
-  
-  if (bm->is_leaf) {
-    free(bm->verticies);
-    free(bm->triangles);
-    free(bm);
-  } else {
-    bsp_mesh_delete(bm->front);
-    bsp_mesh_delete(bm->back);
-    free(bm);
-  }
-  
-}
 
 void bsp_mesh_subdivide(bsp_mesh* bm, int iterations) {
-
+  
+  if (iterations == 0) { return; }
+  
+  if (!bm->is_leaf) {
+    error("Attempt to subdivide non-leaf bsp tree!");
+  }
+  
+  bm->division = bsp_mesh_division(bm);
+  
+  int num_front = 0;
+  int num_back = 0;
+  
+  for(int i = 0; i < bm->num_verticies / 3; i++) {
+  
+    vector3 p1 = bm->verticies[i*3+0];
+    vector3 p2 = bm->verticies[i*3+1];
+    vector3 p3 = bm->verticies[i*3+2];
+    
+    if (point_behind_plane(p1, bm->division) &&
+        point_behind_plane(p2, bm->division) &&
+        point_behind_plane(p3, bm->division)) {
+      num_back += 3;
+    } else if ((!point_behind_plane(p1, bm->division)) &&
+               (!point_behind_plane(p2, bm->division)) &&
+               (!point_behind_plane(p3, bm->division))) {
+      num_front += 3;
+    } else {
+      num_back += 3;
+      num_front += 3;
+    }
+  }
+  
+  debug("-- Iter %i --", iterations);
+  debug("Front: %i", num_front/3);
+  debug("Back: %i", num_back/3);
+  debug("-------------")
+  
+  bm->front = malloc(sizeof(bsp_mesh));
+  bm->front->is_leaf = true;
+  bm->front->front = NULL;
+  bm->front->back = NULL;
+  bm->front->division.position = v3_zero();
+  bm->front->division.direction = v3_zero();
+  bm->front->verticies = malloc(sizeof(vector3) * num_front);
+  bm->front->num_verticies = num_front;
+  bm->front->triangle_normals = malloc(sizeof(vector3) * (num_front / 3));
+  
+  bm->back = malloc(sizeof(bsp_mesh));
+  bm->back->is_leaf = true;
+  bm->back->front = NULL;
+  bm->back->back = NULL;
+  bm->back->division.position = v3_zero();
+  bm->back->division.direction = v3_zero();
+  bm->back->verticies = malloc(sizeof(vector3) * num_back);
+  bm->back->num_verticies = num_back;
+  bm->back->triangle_normals = malloc(sizeof(vector3) * (num_back / 3));
+  
+  int front_i = 0;
+  int back_i = 0;
+  
+  for(int i = 0; i < bm->num_verticies / 3; i++) {
+  
+    vector3 p1 = bm->verticies[i*3+0];
+    vector3 p2 = bm->verticies[i*3+1];
+    vector3 p3 = bm->verticies[i*3+2];
+    
+    vector3 norm = bm->triangle_normals[i];
+    
+    if (point_behind_plane(p1, bm->division) &&
+        point_behind_plane(p2, bm->division) &&
+        point_behind_plane(p3, bm->division)) {
+      
+      bm->back->triangle_normals[back_i / 3] = norm;
+      bm->back->verticies[back_i] = p1; back_i++;
+      bm->back->verticies[back_i] = p2; back_i++;
+      bm->back->verticies[back_i] = p3; back_i++;
+      
+    } else if ((!point_behind_plane(p1, bm->division)) &&
+               (!point_behind_plane(p2, bm->division)) &&
+               (!point_behind_plane(p3, bm->division))) {
+               
+      bm->front->triangle_normals[front_i / 3] = norm;
+      bm->front->verticies[front_i] = p1; front_i++;
+      bm->front->verticies[front_i] = p2; front_i++;
+      bm->front->verticies[front_i] = p3; front_i++;
+      
+    } else {
+      
+      bm->back->triangle_normals[back_i / 3] = norm;
+      bm->back->verticies[back_i] = p1; back_i++;
+      bm->back->verticies[back_i] = p2; back_i++;
+      bm->back->verticies[back_i] = p3; back_i++;
+      bm->front->triangle_normals[front_i / 3] = norm;
+      bm->front->verticies[front_i] = p1; front_i++;
+      bm->front->verticies[front_i] = p2; front_i++;
+      bm->front->verticies[front_i] = p3; front_i++;
+      
+    }
+    
+  }
+  
+  free(bm->verticies);
+  free(bm->triangle_normals);
+  
+  bm->is_leaf = false;
+  bm->verticies = NULL;
+  bm->triangle_normals = NULL;
+  bm->num_verticies = 0;
+  
+  bsp_mesh_subdivide(bm->front, iterations-1);
+  bsp_mesh_subdivide(bm->back, iterations-1);
+  
 }
 
-float bsp_mesh_bounding_distance(bsp_mesh* bm) {
+bounding_sphere bsp_mesh_bounding_sphere(bsp_mesh* bm) {
   
   if (bm->is_leaf) {
     
-    float dist = 0;
+    bounding_box bb = bsp_mesh_bounding_box(bm);
+    vector3 center;
+    center.x = (bb.x_min + bb.x_max) / 2;
+    center.y = (bb.y_min + bb.y_max) / 2;
+    center.z = (bb.z_min + bb.z_max) / 2;
     
+    float dist = 0;
     for(int i = 0; i < bm->num_verticies; i++) {
-      dist = max(dist, v3_length(bm->verticies[i]));
+      dist = max(dist, v3_dist(bm->verticies[i], center));
     }
     
-    return dist;
+    bounding_sphere bs;
+    bs.center = center;
+    bs.radius = dist;
+    bs.radius_sqrd = dist * dist;
+    
+    return bs;
     
   } else {
-    float front_dist = bsp_mesh_bounding_distance(bm->front);
-    float back_dist = bsp_mesh_bounding_distance(bm->back);
-    return max(front_dist, back_dist);
+    bounding_sphere front_bs = bsp_mesh_bounding_sphere(bm->front);
+    bounding_sphere back_bs = bsp_mesh_bounding_sphere(bm->back);
+    return bounding_sphere_merge(front_bs, back_bs);
   }
   
 }
@@ -134,102 +299,10 @@ bounding_box bsp_mesh_bounding_box(bsp_mesh* bm) {
 
 }
 
-static vector3 baricentric_coordinates(vector3 p1, vector3 p2, vector3 p3, vector3 pos) {
-
-	float b_top = (p2.z - p3.z) * (pos.x - p3.x) + (p3.x - p2.x) * (pos.z - p3.z);
-	float b_bot = (p2.z - p3.z) * (p1.x - p3.x) + (p3.x - p2.x) * (p1.z - p3.z);
-	
-	float y_top = (p3.z - p1.z) * (pos.x - p3.x) + (p1.x - p3.x) * (pos.z - p3.z);
-	float y_bot = (p2.z - p3.z) * (p1.x - p3.x) + (p3.x - p2.x) * (p1.z - p3.z);
-	
-	float b = b_top / b_bot;
-	float y = y_top / y_bot;
-	float a = 1 - b - y;
-	
-	return v3(a, b, y);
-}
-
-vector3 bsp_mesh_ground_point(bsp_mesh* bm, vector3 point) {
-  
-  if (bm->is_leaf) {
-    
-    float highest_y = 0;
-    
-    for(int i = 0; i < bm->num_triangles; i++) {
-      
-      int i1 = bm->triangles[i*3+0];
-      int i2 = bm->triangles[i*3+1];
-      int i3 = bm->triangles[i*3+2];
-      
-      vector3 p1 = bm->verticies[i1];
-      vector3 p2 = bm->verticies[i2];
-      vector3 p3 = bm->verticies[i3];
-      
-      /* Only search triangles below the point */
-      float y_min = min(min(p1.y, p2.y), p3.y);
-      if (y_min >= point.y) {
-        continue;
-      }
-      
-      float x_min = min(min(p1.x, p2.x), p3.x);
-      float x_max = max(max(p1.x, p2.x), p3.x);
-      float z_min = min(min(p1.z, p2.z), p3.z);
-      float z_max = max(max(p1.z, p2.z), p3.z);
-    
-      if ((point.x <= x_max) &&
-          (point.x >= x_min) &&
-          (point.z <= z_max) &&
-          (point.z >= z_min)) {
-        
-        vector3 bari = baricentric_coordinates(p1, p2, p3, point);
-        if ((bari.x >= 0.0) && (bari.x <= 1.0) && 
-            (bari.y >= 0.0) && (bari.y <= 1.0) && 
-            (bari.z >= 0.0) && (bari.z <= 1.0)) {
-          
-          /* Use the highest y which is below the point */
-          float triangle_y = bari.x * p1.y + bari.y * p2.y + bari.z * p3.y;
-          highest_y = max(highest_y, triangle_y);
-        }
-      }
-    }
-    
-    if (highest_y == 0) {
-      debug("Default to 0");
-    }
-    return v3(point.x, highest_y, point.z);
-  
-  } else {
-    if (point_behind_plane(point, bm->division)) {
-      return bsp_mesh_ground_point(bm->back, point);
-    } else {
-      return bsp_mesh_ground_point(bm->front, point);
-    }
-  }
-
-}
-
 void collision_body_delete(collision_body* cb) {
   
   bsp_mesh_delete(cb->collision_mesh);
   free(cb);
-  
-}
-
-vector3 collision_body_ground_point(collision_body* cb, matrix_4x4 world_matrix, vector3 point) {
-
-  matrix_4x4 world_inv = m44_inverse(world_matrix);
-  point = m44_mul_v3(world_inv, point);
-  
-  if (v3_length(point) > cb->bounding_distance) {
-    return m44_mul_v3(world_matrix, point);
-  }
-  
-  if (!bounding_box_contains(cb->bounding_box, point)) {
-    return m44_mul_v3(world_matrix, point);
-  }
-  
-  point = bsp_mesh_ground_point(cb->collision_mesh, point);
-  return m44_mul_v3(world_matrix, point);
   
 }
 
@@ -524,17 +597,27 @@ collision_body* col_load_file(char* filename) {
   
   SDL_RWclose(file);
 
-  mesh->num_verticies = vert_index;
-  mesh->num_triangles = tri_list->num_items / 3;
+  mesh->num_verticies = tri_list->num_items;
   
   mesh->verticies = malloc(sizeof(vector3) * mesh->num_verticies);
-  for(int i = 0; i < mesh->num_verticies; i++) {
-    mesh->verticies[i] = vertex_list_get(vert_list, i).position;
-  }
+  mesh->triangle_normals = malloc(sizeof(vector3) * mesh->num_verticies / 3);
   
-  mesh->triangles = malloc(sizeof(int) * mesh->num_triangles * 3);
-  for(int i = 0; i < mesh->num_triangles * 3; i++) {
-    mesh->triangles[i] = int_list_get(tri_list, i);
+  for(int i = 0; i < mesh->num_verticies / 3; i++) {
+    int i1 = int_list_get(tri_list, i*3+0);
+    int i2 = int_list_get(tri_list, i*3+1);
+    int i3 = int_list_get(tri_list, i*3+2);
+    
+    vertex v1 = vertex_list_get(vert_list, i1);
+    vertex v2 = vertex_list_get(vert_list, i1);
+    vertex v3 = vertex_list_get(vert_list, i1);
+    
+    vector3 norm = triangle_normal(v1, v2, v3);
+    
+    mesh->verticies[i*3+0] = v1.position;
+    mesh->verticies[i*3+1] = v2.position;
+    mesh->verticies[i*3+2] = v3.position;
+    
+    mesh->triangle_normals[i] = norm;
   }
   
   vertex_hashtable_delete(vert_hashes);
@@ -542,10 +625,13 @@ collision_body* col_load_file(char* filename) {
   vertex_list_delete(vert_list);
   int_list_delete(tri_list);
   
+  bsp_mesh_subdivide(mesh, 10);
+  
   collision_body* cb = malloc(sizeof(collision_body));
+  cb->collision_type = collision_type_mesh;
   cb->collision_mesh = mesh;
-  cb->bounding_distance = bsp_mesh_bounding_distance(cb->collision_mesh);
-  cb->bounding_box = bsp_mesh_bounding_box(cb->collision_mesh);
+  cb->collision_sphere = bsp_mesh_bounding_sphere(cb->collision_mesh);
+  cb->collision_box = bsp_mesh_bounding_box(cb->collision_mesh);
   
   return cb;
 }

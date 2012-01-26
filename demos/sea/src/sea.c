@@ -35,9 +35,6 @@ static void switch_wireframe(ui_rectangle* rect, SDL_Event event) {
   }
 }
 
-static vector3 camera_position;
-static vector3 camera_floor_position;
-
 void sea_init() {
 
   viewport_set_dimensions( v2(1280, 720) );
@@ -115,13 +112,9 @@ void sea_init() {
   wireframe_text->color = v4_white();
   ui_text_update_string(wireframe_text, "Wireframe");
   
-  camera_position = v3(0, 10, 0);
 }
 
 static float wave_time = 0.0f;
-
-static float camera_rotation_y = 0;
-static float camera_rotation_x = 0;
 
 void sea_update() {
 
@@ -135,35 +128,25 @@ void sea_update() {
   corvette->rotation = v4_quaternion_mul(corvette->rotation, v4_quaternion_yaw(sin(wave_time * 1.254) / 25));
   corvette->rotation = v4_quaternion_mul(corvette->rotation, v4_quaternion_roll(sin(wave_time * 1.355) / 100));
   
-  static_object* s_corvette = entity_get("corvette");
-  matrix_4x4 cor_world = m44_world( s_corvette->position, s_corvette->scale, s_corvette->rotation );
-  camera_floor_position = collision_body_ground_point(s_corvette->collision_body, cor_world, camera_position);
-  
   Uint8 keystate = SDL_GetMouseState(NULL, NULL);
   if(keystate & SDL_BUTTON(1)){
     float a1 = -(float)mouse_x * 0.01;
     float a2 = (float)mouse_y * 0.01;
     
-    camera_rotation_y += a1;
-    camera_rotation_x += a2;
+    cam->position = v3_sub(cam->position, cam->target);
+    cam->position = m33_mul_v3(m33_rotation_y( a1 ), cam->position );
+    cam->position = v3_add(cam->position, cam->target);
+    
+    cam->position = v3_sub(cam->position, cam->target);
+    vector3 rotation_axis = v3_normalize(v3_cross( v3_sub(cam->position, v3_zero()) , v3(0,1,0) ));
+    cam->position = m33_mul_v3(m33_rotation_axis_angle(rotation_axis, a2 ), cam->position );
+    cam->position = v3_add(cam->position, cam->target);
     
   }
   
-  cam->position = v3_add(camera_floor_position, v3(0, 3, 0));
-  
-  vector3 target_vector;
-  target_vector = m33_mul_v3(m33_rotation_y( camera_rotation_y ), v3(1,0,0) );
-  target_vector = m33_mul_v3(m33_rotation_x( camera_rotation_x ), target_vector );
-  
-  cam->target = v3_add(cam->position, target_vector);
-  
   if(keystate & SDL_BUTTON(3)){
-    //sun->position.x += (float)mouse_y / 2;
-    //sun->position.z -= (float)mouse_x / 2;
-    
-    vector3 direction = v3_mul(target_vector, -(float)mouse_y / 10);
-    direction.y = 0;
-    camera_position = v3_add(camera_position, direction);
+    sun->position.x += (float)mouse_y / 2;
+    sun->position.z -= (float)mouse_x / 2;
   }
 
   mouse_x = 0;
@@ -194,8 +177,6 @@ void sea_render() {
   }
   
   forward_renderer_render_light(sun);
-  
-  forward_renderer_render_axis(m44_translation(camera_floor_position));
   
   forward_renderer_end();
   
