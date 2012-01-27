@@ -106,6 +106,8 @@ float v2_dist_sqrd(vector2 v1, vector2 v2);
 float v2_dist(vector2 v1, vector2 v2);
 vector2 v2_normalize(vector2 v);
 
+vector2 v2_reflect(vector2 v1, vector2 v2);
+
 vector2 v2_from_string(char* s);
 void v2_print(vector2 v);
 
@@ -154,6 +156,8 @@ float v3_dist(vector3 v1, vector3 v2);
 vector3 v3_cross(vector3 v1, vector3 v2);
 vector3 v3_normalize(vector3 v);
 
+vector3 v3_reflect(vector3 v1, vector3 v2);
+
 vector3 v3_from_string(char* s);
 void v3_print(vector3 v);
 
@@ -200,6 +204,8 @@ float v4_length(vector4 v);
 float v4_dist_sqrd(vector4 v1, vector4 v2);
 float v4_dist(vector4 v1, vector4 v2);
 vector4 v4_normalize(vector4 v);
+
+vector4 v4_reflect(vector4 v1, vector4 v2);
 
 vector4 v4_from_string(char* s);
 void v4_print(vector4 v);

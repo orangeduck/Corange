@@ -74,6 +74,7 @@ void corange_init(char* core_assets_path) {
   
   entity_manager_handler(static_object, static_object_new, static_object_delete);
   entity_manager_handler(animated_object, animated_object_new, animated_object_delete);
+  entity_manager_handler(physics_object, physics_object_new, physics_object_delete);
   entity_manager_handler(camera, camera_new, camera_delete);
   entity_manager_handler(light, light_new, light_delete);
   

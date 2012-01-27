@@ -257,6 +257,10 @@ vector2 v2_normalize(vector2 v) {
   return v2_div(v, len);
 }
 
+vector2 v2_reflect(vector2 v1, vector2 v2) {
+  return v2_sub(v1, v2_mul(v2, 2 * v2_dot(v1, v2)));
+}
+
 vector2 v2_from_string(char* s) {
 
   char* pEnd;
@@ -500,6 +504,10 @@ vector3 v3_normalize(vector3 v) {
   }
 }
 
+vector3 v3_reflect(vector3 v1, vector3 v2) {
+  return v3_sub(v1, v3_mul(v2, 2 * v3_dot(v1, v2)));
+}
+
 vector3 v3_from_string(char* s) {
   
   char* pEnd;
@@ -731,6 +739,10 @@ vector4 v4_normalize(vector4 v) {
   } else {
     return v4_div(v, len);
   }
+}
+
+vector4 v4_reflect(vector4 v1, vector4 v2) {
+  return v4_sub(v1, v4_mul(v2, 2 * v4_dot(v1, v2)));
 }
 
 vector4 v4_from_string(char* s) {

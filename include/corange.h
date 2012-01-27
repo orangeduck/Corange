@@ -24,6 +24,7 @@ void corange_finish();
 
 #include "static_object.h"
 #include "animated_object.h"
+#include "physics_object.h"
 #include "camera.h"
 #include "light.h"
 

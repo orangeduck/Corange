@@ -98,6 +98,11 @@ void sea_init() {
   s_corvette->position = v3(0, 0.5, 0);
   entity_add("corvette", static_object, s_corvette);
   
+  static_object* center_sphere = entity_new("center_sphere", static_object);
+  center_sphere->position = v3(0, 5, 0);
+  center_sphere->renderable = asset_get("./resources/ball.obj");
+  center_sphere->collision_body = collision_body_new_sphere(v3_zero(), 1.0f);
+  
   ui_rectangle* wireframe_rect = ui_elem_new("wireframe_rect", ui_rectangle);
   wireframe_rect->top_left = v2(10,10);
   wireframe_rect->bottom_right = v2(100, 35);
@@ -127,6 +132,17 @@ void sea_update() {
   corvette->rotation = v4_quaternion_pitch(sin(wave_time * 1.123) / 50);
   corvette->rotation = v4_quaternion_mul(corvette->rotation, v4_quaternion_yaw(sin(wave_time * 1.254) / 25));
   corvette->rotation = v4_quaternion_mul(corvette->rotation, v4_quaternion_roll(sin(wave_time * 1.355) / 100));
+  
+  static_object* center_sphere = entity_get("center_sphere");
+  
+  physics_object* balls[100];
+  int num_balls;
+  entities_get(balls, &num_balls, physics_object);
+  for(int i = 0; i < num_balls; i++) {
+    physics_object_update(balls[i], frame_time());
+    physics_object_collide_static(balls[i], center_sphere);
+    physics_object_collide_static(balls[i], corvette);
+  }
   
   Uint8 keystate = SDL_GetMouseState(NULL, NULL);
   if(keystate & SDL_BUTTON(1)){
@@ -176,12 +192,23 @@ void sea_render() {
     glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
   }
   
+  physics_object* balls[100];
+  int num_balls;
+  entities_get(balls, &num_balls, physics_object);
+  for(int i = 0; i < num_balls; i++) {
+    forward_renderer_render_physics(balls[i]);
+  }
+  
+  static_object* center_sphere = entity_get("center_sphere");
+  forward_renderer_render_static(center_sphere);
+  
   forward_renderer_render_light(sun);
   
   forward_renderer_end();
   
 }
 
+static int ball_count = 0;
 void sea_event(SDL_Event event) {
 
   camera* cam = entity_get("camera");
@@ -190,6 +217,21 @@ void sea_event(SDL_Event event) {
   switch(event.type){
   case SDL_KEYUP:
     if (event.key.keysym.sym == SDLK_w) { if(wireframe == 1){wireframe = 0;} else { wireframe = 1;} }
+  
+    if (event.key.keysym.sym == SDLK_SPACE) {
+      
+      char ball_name[20];
+      sprintf(ball_name, "ball_%i", ball_count);
+      ball_count++;
+      
+      physics_object* ball = entity_new(ball_name, physics_object);
+      ball->renderable = asset_get("./resources/ball.obj");
+      ball->collision_body = collision_body_new_sphere(v3_zero(), 1);
+      ball->position = cam->position;
+      ball->scale = v3(0.5, 0.5, 0.5);
+      ball->velocity = v3_mul(v3_normalize(v3_sub(cam->target, cam->position)), 75);
+      
+    }
   
   case SDL_MOUSEBUTTONDOWN:
 

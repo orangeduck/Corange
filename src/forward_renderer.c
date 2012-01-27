@@ -457,11 +457,124 @@ void forward_renderer_render_static(static_object* so) {
 
   }
   
-  if (so->collision_body != NULL) {
-    bsp_counter = 0;
-    render_bsp_mesh(so->collision_body->collision_mesh);
+  //if (so->collision_body != NULL) {
+  //  bsp_counter = 0;
+  //  render_bsp_mesh(so->collision_body->collision_mesh);
+  //}
+  
+}
+
+void forward_renderer_render_physics(physics_object* po) {
+
+  matrix_4x4 r_world_matrix = m44_world( po->position, po->scale, po->rotation );
+  m44_to_array(r_world_matrix, world_matrix);
+  
+  renderable* r = po->renderable;
+  
+  for(int i=0; i < r->num_surfaces; i++) {
+    
+    renderable_surface* s = r->surfaces[i];
+    if(s->is_rigged) {
+
+      forward_renderer_use_material(s->base);
+      
+      shader_program* prog = dictionary_get(s->base->properties, "program");
+      GLint recieve_shadows = glGetUniformLocation(*prog, "recieve_shadows");
+      glUniform1i(recieve_shadows, po->recieve_shadows);
+      
+      GLsizei stride = sizeof(float) * 24;
+      
+      glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
+          
+      glVertexPointer(3, GL_FLOAT, stride, (void*)0);
+      glEnableClientState(GL_VERTEX_ARRAY);
+      
+      glNormalPointer(GL_FLOAT, stride, (void*)(sizeof(float) * 3));
+      glEnableClientState(GL_NORMAL_ARRAY);
+      
+      glVertexAttribPointer(TANGENT, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 6));
+      glEnableVertexAttribArray(TANGENT);
+      
+      glVertexAttribPointer(BINORMAL, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 9));
+      glEnableVertexAttribArray(BINORMAL);
+      
+      glTexCoordPointer(2, GL_FLOAT, stride, (void*)(sizeof(float) * 12));
+      glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+      
+      glVertexAttribPointer(COLOR, 4, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 14));
+      glEnableVertexAttribArray(COLOR);
+      
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
+        glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
+      
+      glDisableClientState(GL_VERTEX_ARRAY);
+      glDisableClientState(GL_NORMAL_ARRAY);
+      glDisableClientState(GL_TEXTURE_COORD_ARRAY);  
+      
+      glDisableVertexAttribArray(TANGENT);
+      glDisableVertexAttribArray(BINORMAL);
+      glDisableVertexAttribArray(COLOR);  
+      
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+      glBindBuffer(GL_ARRAY_BUFFER, 0);
+      
+      forward_renderer_disuse_material();
+    
+    } else {
+    
+      forward_renderer_use_material(s->base);
+      
+      shader_program* prog = dictionary_get(s->base->properties, "program");
+      GLint recieve_shadows = glGetUniformLocation(*prog, "recieve_shadows");
+      glUniform1i(recieve_shadows, po->recieve_shadows);
+      
+      GLsizei stride = sizeof(float) * 18;
+      
+      glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
+          
+      glVertexPointer(3, GL_FLOAT, stride, (void*)0);
+      glEnableClientState(GL_VERTEX_ARRAY);
+      
+      glNormalPointer(GL_FLOAT, stride, (void*)(sizeof(float) * 3));
+      glEnableClientState(GL_NORMAL_ARRAY);
+      
+      glVertexAttribPointer(TANGENT, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 6));
+      glEnableVertexAttribArray(TANGENT);
+      
+      glVertexAttribPointer(BINORMAL, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 9));
+      glEnableVertexAttribArray(BINORMAL);
+      
+      glTexCoordPointer(2, GL_FLOAT, stride, (void*)(sizeof(float) * 12));
+      glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+      
+      glVertexAttribPointer(COLOR, 4, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 14));
+      glEnableVertexAttribArray(COLOR);
+      
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
+        glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
+      
+      glDisableClientState(GL_VERTEX_ARRAY);
+      glDisableClientState(GL_NORMAL_ARRAY);
+      glDisableClientState(GL_TEXTURE_COORD_ARRAY);  
+      
+      glDisableVertexAttribArray(TANGENT);
+      glDisableVertexAttribArray(BINORMAL);
+      glDisableVertexAttribArray(COLOR);  
+      
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+      glBindBuffer(GL_ARRAY_BUFFER, 0);
+      
+      forward_renderer_disuse_material();
+    
+    }
+
   }
   
+  //if (po->collision_body != NULL) {
+  //  bsp_counter = 0;
+  //  render_bsp_mesh(po->collision_body->collision_mesh);
+  //}
+
 }
 
 #define MAX_BONES 32

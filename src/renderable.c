@@ -658,7 +658,7 @@ renderable* smd_load_file(char* filename) {
   
   char line[1024];
   while(SDL_RWreadline(file, line, 1024)) {
-  
+    
     if (state == state_load_empty) {
       
       int version;

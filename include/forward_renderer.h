@@ -7,6 +7,7 @@
 #include "texture.h"
 #include "material.h"
 #include "static_object.h"
+#include "physics_object.h"
 #include "animated_object.h"
 
 void forward_renderer_init();
@@ -23,6 +24,7 @@ void forward_renderer_begin();
 void forward_renderer_end();
 
 void forward_renderer_render_static(static_object* s);
+void forward_renderer_render_physics(physics_object* po);
 void forward_renderer_render_animated(animated_object* ao);
 void forward_renderer_render_skeleton(skeleton* s);
 void forward_renderer_render_axis(matrix_4x4 position);
