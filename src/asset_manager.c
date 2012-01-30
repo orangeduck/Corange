@@ -225,8 +225,11 @@ void load_folder(char* folder) {
   
     if ((strcmp(ent->d_name,".") != 0) && (strcmp(ent->d_name,"..") != 0)) {
     
-      char* filename = malloc(strlen(folder_map) + strlen(ent->d_name) + 1);
+      char* filename = malloc(MAX_PATH);
       strcpy(filename, folder_map);
+      if (folder_map[strlen(folder_map)-1] != '/') {
+        strcat(filename, "/");
+      }
       strcat(filename, ent->d_name);
       
       if (!asset_loaded(filename)) {

@@ -6,6 +6,16 @@
 
 #include "bool.h"
 
+#ifndef MAX_PATH
+  #include <limits.h>
+  
+  #ifdef PATH_MAX
+    #define MAX_PATH PATH_MAX
+  #else
+    #define MAX_PATH 256
+  #endif
+#endif
+
 #ifndef GLchar
   #define GLchar char
 #endif

@@ -47,7 +47,7 @@ void main() {
   vec4 light_pos = light_proj * light_view * world_position;
   
   float shadow = 1.0;
-  if (recieve_shadows) {
+  if (recieve_shadows == 1.0) {
     shadow = shadow_amount_soft_pcf25(light_pos, shadow_map, 0.0005);
   }
 

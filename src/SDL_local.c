@@ -74,7 +74,7 @@ void SDL_PathFullName(char* dst, char* path) {
 #include <stdlib.h>
 
 void SDL_PathFullName(char* dst, char* path) {
-  realpath(path, dst);
+  char* ret = realpath(path, dst);
 }
 
 #endif
@@ -406,6 +406,7 @@ char* SDL_OpenFileDialog(char* format_string, int default_format) {
 
 char* SDL_OpenFileDialog(char* format_string, int default_format) {
   error("Cannot open file dialog on platform that is not windows.");
+  return NULL;
 }
 
 #endif
