@@ -239,7 +239,6 @@ renderable* obj_load_file(char* filename) {
   
   obj_model->num_meshes = 0;
   obj_model->meshes = malloc(sizeof(mesh*) * 0);
-  obj_model->meshes[obj_model->num_meshes] = NULL;
   
   mesh* active_mesh = NULL;
   
@@ -580,9 +579,9 @@ renderable* obj_load_file(char* filename) {
     }
     
   }
-  
-  SDL_RWclose(file);
 
+  SDL_RWclose(file);
+  
   active_mesh->num_verts = vert_index;
   active_mesh->num_triangles = tri_list->num_items / 3;
   active_mesh->num_triangles_3 = tri_list->num_items;

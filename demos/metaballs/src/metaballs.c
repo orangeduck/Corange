@@ -16,6 +16,8 @@ const int max_particles = 1024;
 
 void metaballs_init() {
   
+  viewport_set_dimensions( v2(1280, 720) );
+  
   kernels_init_with_opengl();
   
   asset_manager_handler("cl", cl_load_file, kernel_program_delete);
@@ -158,6 +160,7 @@ void metaballs_render() {
 
   shadow_mapper_begin();
   shadow_mapper_render_static(s_podium);
+  marching_cubes_render_shadows(sun);
   shadow_mapper_end();
 
   

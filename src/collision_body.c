@@ -11,6 +11,13 @@
 
 #include "collision_body.h"
 
+plane plane_new(vector3 position, vector3 direction) {
+  plane p;
+  p.position = position;
+  p.direction = direction;
+  return p;
+}
+
 bool point_behind_plane(vector3 point, plane plane) {
   
   vector3 to_point = v3_sub(point, plane.position);
@@ -25,74 +32,126 @@ bool point_behind_plane(vector3 point, plane plane) {
 }
 
 plane plane_transform(plane p, matrix_4x4 world) {
+  
   p.position = m44_mul_v3(world, p.position);
-  p.direction = m44_mul_v3(world, p.direction);
+  
+  matrix_4x4 normworld = world;
+  normworld.xw = 0; normworld.yw = 0; normworld.zw = 0;
+  
+  p.direction = m44_mul_v3(normworld, p.direction);
+  
   return p;
+}
+
+bounding_box bounding_box_new(float x_min, float x_max, float y_min, float y_max, float z_min, float z_max) {
+
+  bounding_box bb;
+  bb.top    = plane_new( v3(0, y_max,0), v3(0, 1,0));
+  bb.bottom = plane_new( v3(0, y_min,0), v3(0,-1,0));
+  bb.left   = plane_new( v3( x_max,0,0), v3( 1,0,0));
+  bb.right  = plane_new( v3( x_min,0,0), v3(-1,0,0));
+  bb.front  = plane_new( v3(0,0, y_max), v3(0,0, 1));
+  bb.back   = plane_new( v3(0,0, y_min), v3(0,0,-1));
+  return bb;
+
 }
 
 bounding_box bounding_box_sphere(vector3 center, float radius) {
   
   bounding_box bb;
-  bb.x_min = center.x - radius;
-  bb.x_max = center.x + radius;
-  bb.y_min = center.y - radius;
-  bb.y_max = center.y + radius;
-  bb.z_min = center.z - radius;
-  bb.z_max = center.z + radius;
-  
+  bb.top    = plane_new(v3_add(center, v3(0, radius,0)), v3(0, 1,0));
+  bb.bottom = plane_new(v3_add(center, v3(0,-radius,0)), v3(0,-1,0));
+  bb.left   = plane_new(v3_add(center, v3( radius,0,0)), v3( 1,0,0));
+  bb.right  = plane_new(v3_add(center, v3(-radius,0,0)), v3(-1,0,0));
+  bb.front  = plane_new(v3_add(center, v3(0,0, radius)), v3(0,0, 1));
+  bb.back   = plane_new(v3_add(center, v3(0,0,-radius)), v3(0,0,-1));
   return bb;
   
 }
 
 bool bounding_box_contains(bounding_box bb, vector3 point) {
   
-  if (point.x > bb.x_max) { return false; }
-  if (point.x < bb.x_min) { return false; }
-  if (point.y > bb.y_max) { return false; }
-  if (point.y < bb.y_min) { return false; }
-  if (point.z > bb.z_max) { return false; }
-  if (point.z < bb.z_min) { return false; }
+  if ( !point_behind_plane(point, bb.top) ) { return false; }
+  if ( !point_behind_plane(point, bb.bottom) ) { return false; }
+  if ( !point_behind_plane(point, bb.left)) { return false; }
+  if ( !point_behind_plane(point, bb.right)) { return false; }
+  if ( !point_behind_plane(point, bb.front)) { return false; }
+  if ( !point_behind_plane(point, bb.back)) { return false; }
   
   return true;
 }
 
 bounding_box bounding_box_merge(bounding_box b1, bounding_box b2) {
   
-  bounding_box bb;
-  bb.x_min = min(b1.x_min, b2.x_min);
-  bb.x_max = max(b1.x_max, b2.x_max);
-  bb.y_min = min(b1.y_min, b2.y_min);
-  bb.y_max = max(b1.y_max, b2.y_max);
-  bb.z_min = min(b1.z_min, b2.z_min);
-  bb.z_max = max(b1.z_max, b2.z_max);
+  float b1_x_max = b1.left.position.x;
+  float b1_x_min = b1.right.position.x;
+  float b1_y_max = b1.top.position.y;
+  float b1_y_min = b1.bottom.position.y;
+  float b1_z_max = b1.front.position.z;
+  float b1_z_min = b1.back.position.z;
   
-  return bb;
+  float b2_x_max = b2.left.position.x;
+  float b2_x_min = b2.right.position.x;
+  float b2_y_max = b2.top.position.y;
+  float b2_y_min = b2.bottom.position.y;
+  float b2_z_max = b2.front.position.z;
+  float b2_z_min = b2.back.position.z;
+  
+  float x_min = min(b1_x_min, b2_x_min);
+  float x_max = max(b1_x_max, b2_x_max);
+  float y_min = min(b1_y_min, b2_y_min);
+  float y_max = max(b1_y_max, b2_y_max);
+  float z_min = min(b1_z_min, b2_z_min);
+  float z_max = max(b1_z_max, b2_z_max);
+  
+  return bounding_box_new(x_min, x_max, y_min, y_max, z_min, z_max);
 }
 
 bounding_box bounding_box_transform(bounding_box bb, matrix_4x4 world_matrix) {
   
-  warning("bounding_box_transform not implemented yet!");
+  bb.top = plane_transform(bb.top, world_matrix);
+  bb.bottom = plane_transform(bb.bottom, world_matrix);
+  bb.left = plane_transform(bb.left, world_matrix);
+  bb.right = plane_transform(bb.right, world_matrix);
+  bb.front = plane_transform(bb.front, world_matrix);
+  bb.back = plane_transform(bb.back, world_matrix);
   
   return bb;
   
 }
 
+bounding_sphere bounding_sphere_new(vector3 center, float radius) {
+  bounding_sphere bs;
+  bs.center = center;
+  bs.radius = radius;
+  bs.radius_sqrd = radius * radius;
+  
+  return bs;
+}
+
 bounding_sphere bounding_sphere_of_box(bounding_box bb) {
   
+  float x_max = bb.left.position.x;
+  float x_min = bb.right.position.x;
+  float y_max = bb.top.position.y;
+  float y_min = bb.bottom.position.y;
+  float z_max = bb.front.position.z;
+  float z_min = bb.back.position.z;
+  
   vector3 center;
-  center.x = (bb.x_min + bb.x_max) / 2;
-  center.y = (bb.y_min + bb.y_max) / 2;
-  center.z = (bb.z_min + bb.z_max) / 2;
+  center.x = (x_min + x_max) / 2;
+  center.y = (y_min + y_max) / 2;
+  center.z = (z_min + z_max) / 2;
   
   float radius = 0;
-  radius = max(radius, v3_dist(center, v3(bb.x_min, bb.y_min, bb.z_min)));
-  radius = max(radius, v3_dist(center, v3(bb.x_max, bb.y_min, bb.z_min)));
-  radius = max(radius, v3_dist(center, v3(bb.x_min, bb.y_max, bb.z_min)));
-  radius = max(radius, v3_dist(center, v3(bb.x_min, bb.y_min, bb.z_max)));
-  radius = max(radius, v3_dist(center, v3(bb.x_min, bb.y_max, bb.z_max)));
-  radius = max(radius, v3_dist(center, v3(bb.x_max, bb.y_max, bb.z_min)));
-  radius = max(radius, v3_dist(center, v3(bb.x_max, bb.y_min, bb.z_max)));
-  radius = max(radius, v3_dist(center, v3(bb.x_max, bb.y_max, bb.z_max)));
+  radius = max(radius, v3_dist(center, v3(x_min, y_min, z_min)));
+  radius = max(radius, v3_dist(center, v3(x_max, y_min, z_min)));
+  radius = max(radius, v3_dist(center, v3(x_min, y_max, z_min)));
+  radius = max(radius, v3_dist(center, v3(x_min, y_min, z_max)));
+  radius = max(radius, v3_dist(center, v3(x_min, y_max, z_max)));
+  radius = max(radius, v3_dist(center, v3(x_max, y_max, z_min)));
+  radius = max(radius, v3_dist(center, v3(x_max, y_min, z_max)));
+  radius = max(radius, v3_dist(center, v3(x_max, y_max, z_max)));
   
   bounding_sphere bs;
   bs.center = center;
@@ -137,42 +196,42 @@ bounding_sphere bounding_sphere_transform(bounding_sphere bs, matrix_4x4 world) 
   return b;
 }
 
-void bsp_mesh_delete(bsp_mesh* bm) {
+void collision_mesh_delete(collision_mesh* cm) {
   
-  if (bm->is_leaf) {
-    free(bm->verticies);
-    free(bm->triangle_normals);
-    free(bm);
+  if (cm->is_leaf) {
+    free(cm->verticies);
+    free(cm->triangle_normals);
+    free(cm);
   } else {
-    bsp_mesh_delete(bm->front);
-    bsp_mesh_delete(bm->back);
-    free(bm);
+    collision_mesh_delete(cm->front);
+    collision_mesh_delete(cm->back);
+    free(cm);
   }
   
 }
 
-static vector3 bsp_mesh_vertex_average(bsp_mesh* bm) {
+static vector3 collision_mesh_vertex_average(collision_mesh* cm) {
 
   vector3 midpoint = v3_zero();
-  for(int i = 0; i < bm->num_verticies; i++) {
-    midpoint = v3_add(midpoint, bm->verticies[i]);
+  for(int i = 0; i < cm->num_verticies; i++) {
+    midpoint = v3_add(midpoint, cm->verticies[i]);
   }
-  midpoint = v3_div(midpoint, bm->num_verticies);
+  midpoint = v3_div(midpoint, cm->num_verticies);
   
   return midpoint;
 
 }
 
-static plane bsp_mesh_division(bsp_mesh* bm) {
+static plane collision_mesh_division(collision_mesh* cm) {
   
-  bounding_box bb = bsp_mesh_bounding_box(bm);
+  bounding_box bb = collision_mesh_bounding_box(cm);
   
   plane p;
-  p.position = bsp_mesh_vertex_average(bm);
+  p.position = collision_mesh_vertex_average(cm);
   
-  float x_diff = bb.x_max - bb.x_min;
-  float y_diff = bb.y_max - bb.y_min;
-  float z_diff = bb.z_max - bb.z_min;
+  float x_diff = bb.left.position.x - bb.right.position.x;
+  float y_diff = bb.top.position.y - bb.bottom.position.y;
+  float z_diff = bb.front.position.z - bb.back.position.z;
   
   if ((x_diff >= y_diff) && (x_diff >= z_diff)) {
     p.direction = v3(1,0,0);
@@ -186,32 +245,32 @@ static plane bsp_mesh_division(bsp_mesh* bm) {
 }
 
 
-void bsp_mesh_subdivide(bsp_mesh* bm, int iterations) {
+void collision_mesh_subdivide(collision_mesh* cm, int iterations) {
   
   if (iterations == 0) { return; }
   
-  if (!bm->is_leaf) {
+  if (!cm->is_leaf) {
     error("Attempt to subdivide non-leaf bsp tree!");
   }
   
-  bm->division = bsp_mesh_division(bm);
+  cm->division = collision_mesh_division(cm);
   
   int num_front = 0;
   int num_back = 0;
   
-  for(int i = 0; i < bm->num_verticies / 3; i++) {
+  for(int i = 0; i < cm->num_verticies / 3; i++) {
   
-    vector3 p1 = bm->verticies[i*3+0];
-    vector3 p2 = bm->verticies[i*3+1];
-    vector3 p3 = bm->verticies[i*3+2];
+    vector3 p1 = cm->verticies[i*3+0];
+    vector3 p2 = cm->verticies[i*3+1];
+    vector3 p3 = cm->verticies[i*3+2];
     
-    if (point_behind_plane(p1, bm->division) &&
-        point_behind_plane(p2, bm->division) &&
-        point_behind_plane(p3, bm->division)) {
+    if (point_behind_plane(p1, cm->division) &&
+        point_behind_plane(p2, cm->division) &&
+        point_behind_plane(p3, cm->division)) {
       num_back += 3;
-    } else if ((!point_behind_plane(p1, bm->division)) &&
-               (!point_behind_plane(p2, bm->division)) &&
-               (!point_behind_plane(p3, bm->division))) {
+    } else if ((!point_behind_plane(p1, cm->division)) &&
+               (!point_behind_plane(p2, cm->division)) &&
+               (!point_behind_plane(p3, cm->division))) {
       num_front += 3;
     } else {
       num_back += 3;
@@ -219,101 +278,96 @@ void bsp_mesh_subdivide(bsp_mesh* bm, int iterations) {
     }
   }
   
-  debug("-- Iter %i --", iterations);
-  debug("Front: %i", num_front/3);
-  debug("Back: %i", num_back/3);
-  debug("-------------")
+  cm->front = malloc(sizeof(collision_mesh));
+  cm->front->is_leaf = true;
+  cm->front->front = NULL;
+  cm->front->back = NULL;
+  cm->front->division.position = v3_zero();
+  cm->front->division.direction = v3_zero();
+  cm->front->verticies = malloc(sizeof(vector3) * num_front);
+  cm->front->num_verticies = num_front;
+  cm->front->triangle_normals = malloc(sizeof(vector3) * (num_front / 3));
   
-  bm->front = malloc(sizeof(bsp_mesh));
-  bm->front->is_leaf = true;
-  bm->front->front = NULL;
-  bm->front->back = NULL;
-  bm->front->division.position = v3_zero();
-  bm->front->division.direction = v3_zero();
-  bm->front->verticies = malloc(sizeof(vector3) * num_front);
-  bm->front->num_verticies = num_front;
-  bm->front->triangle_normals = malloc(sizeof(vector3) * (num_front / 3));
-  
-  bm->back = malloc(sizeof(bsp_mesh));
-  bm->back->is_leaf = true;
-  bm->back->front = NULL;
-  bm->back->back = NULL;
-  bm->back->division.position = v3_zero();
-  bm->back->division.direction = v3_zero();
-  bm->back->verticies = malloc(sizeof(vector3) * num_back);
-  bm->back->num_verticies = num_back;
-  bm->back->triangle_normals = malloc(sizeof(vector3) * (num_back / 3));
+  cm->back = malloc(sizeof(collision_mesh));
+  cm->back->is_leaf = true;
+  cm->back->front = NULL;
+  cm->back->back = NULL;
+  cm->back->division.position = v3_zero();
+  cm->back->division.direction = v3_zero();
+  cm->back->verticies = malloc(sizeof(vector3) * num_back);
+  cm->back->num_verticies = num_back;
+  cm->back->triangle_normals = malloc(sizeof(vector3) * (num_back / 3));
   
   int front_i = 0;
   int back_i = 0;
   
-  for(int i = 0; i < bm->num_verticies / 3; i++) {
+  for(int i = 0; i < cm->num_verticies / 3; i++) {
   
-    vector3 p1 = bm->verticies[i*3+0];
-    vector3 p2 = bm->verticies[i*3+1];
-    vector3 p3 = bm->verticies[i*3+2];
+    vector3 p1 = cm->verticies[i*3+0];
+    vector3 p2 = cm->verticies[i*3+1];
+    vector3 p3 = cm->verticies[i*3+2];
     
-    vector3 norm = bm->triangle_normals[i];
+    vector3 norm = cm->triangle_normals[i];
     
-    if (point_behind_plane(p1, bm->division) &&
-        point_behind_plane(p2, bm->division) &&
-        point_behind_plane(p3, bm->division)) {
+    if (point_behind_plane(p1, cm->division) &&
+        point_behind_plane(p2, cm->division) &&
+        point_behind_plane(p3, cm->division)) {
       
-      bm->back->triangle_normals[back_i / 3] = norm;
-      bm->back->verticies[back_i] = p1; back_i++;
-      bm->back->verticies[back_i] = p2; back_i++;
-      bm->back->verticies[back_i] = p3; back_i++;
+      cm->back->triangle_normals[back_i / 3] = norm;
+      cm->back->verticies[back_i] = p1; back_i++;
+      cm->back->verticies[back_i] = p2; back_i++;
+      cm->back->verticies[back_i] = p3; back_i++;
       
-    } else if ((!point_behind_plane(p1, bm->division)) &&
-               (!point_behind_plane(p2, bm->division)) &&
-               (!point_behind_plane(p3, bm->division))) {
+    } else if ((!point_behind_plane(p1, cm->division)) &&
+               (!point_behind_plane(p2, cm->division)) &&
+               (!point_behind_plane(p3, cm->division))) {
                
-      bm->front->triangle_normals[front_i / 3] = norm;
-      bm->front->verticies[front_i] = p1; front_i++;
-      bm->front->verticies[front_i] = p2; front_i++;
-      bm->front->verticies[front_i] = p3; front_i++;
+      cm->front->triangle_normals[front_i / 3] = norm;
+      cm->front->verticies[front_i] = p1; front_i++;
+      cm->front->verticies[front_i] = p2; front_i++;
+      cm->front->verticies[front_i] = p3; front_i++;
       
     } else {
       
-      bm->back->triangle_normals[back_i / 3] = norm;
-      bm->back->verticies[back_i] = p1; back_i++;
-      bm->back->verticies[back_i] = p2; back_i++;
-      bm->back->verticies[back_i] = p3; back_i++;
-      bm->front->triangle_normals[front_i / 3] = norm;
-      bm->front->verticies[front_i] = p1; front_i++;
-      bm->front->verticies[front_i] = p2; front_i++;
-      bm->front->verticies[front_i] = p3; front_i++;
+      cm->back->triangle_normals[back_i / 3] = norm;
+      cm->back->verticies[back_i] = p1; back_i++;
+      cm->back->verticies[back_i] = p2; back_i++;
+      cm->back->verticies[back_i] = p3; back_i++;
+      cm->front->triangle_normals[front_i / 3] = norm;
+      cm->front->verticies[front_i] = p1; front_i++;
+      cm->front->verticies[front_i] = p2; front_i++;
+      cm->front->verticies[front_i] = p3; front_i++;
       
     }
     
   }
   
-  free(bm->verticies);
-  free(bm->triangle_normals);
+  free(cm->verticies);
+  free(cm->triangle_normals);
   
-  bm->is_leaf = false;
-  bm->verticies = NULL;
-  bm->triangle_normals = NULL;
-  bm->num_verticies = 0;
+  cm->is_leaf = false;
+  cm->verticies = NULL;
+  cm->triangle_normals = NULL;
+  cm->num_verticies = 0;
   
-  bsp_mesh_subdivide(bm->front, iterations-1);
-  bsp_mesh_subdivide(bm->back, iterations-1);
+  collision_mesh_subdivide(cm->front, iterations-1);
+  collision_mesh_subdivide(cm->back, iterations-1);
   
 }
 
-bounding_sphere bsp_mesh_bounding_sphere(bsp_mesh* bm) {
+bounding_sphere collision_mesh_bounding_sphere(collision_mesh* cm) {
   
-  if (bm->is_leaf) {
+  if (cm->is_leaf) {
     
-    bounding_box bb = bsp_mesh_bounding_box(bm);
+    bounding_box bb = collision_mesh_bounding_box(cm);
     vector3 center;
-    center.x = (bb.x_min + bb.x_max) / 2;
-    center.y = (bb.y_min + bb.y_max) / 2;
-    center.z = (bb.z_min + bb.z_max) / 2;
+    center.x = (bb.left.position.x + bb.right.position.x) / 2;
+    center.y = (bb.top.position.y + bb.bottom.position.y) / 2;
+    center.z = (bb.front.position.z + bb.back.position.z) / 2;
     
     float dist = 0;
-    for(int i = 0; i < bm->num_verticies; i++) {
-      dist = max(dist, v3_dist(bm->verticies[i], center));
+    for(int i = 0; i < cm->num_verticies; i++) {
+      dist = max(dist, v3_dist(cm->verticies[i], center));
     }
     
     bounding_sphere bs;
@@ -324,62 +378,46 @@ bounding_sphere bsp_mesh_bounding_sphere(bsp_mesh* bm) {
     return bs;
     
   } else {
-    bounding_sphere front_bs = bsp_mesh_bounding_sphere(bm->front);
-    bounding_sphere back_bs = bsp_mesh_bounding_sphere(bm->back);
+    bounding_sphere front_bs = collision_mesh_bounding_sphere(cm->front);
+    bounding_sphere back_bs = collision_mesh_bounding_sphere(cm->back);
     return bounding_sphere_merge(front_bs, back_bs);
   }
   
 }
 
-bounding_box bsp_mesh_bounding_box(bsp_mesh* bm) {
+bounding_box collision_mesh_bounding_box(collision_mesh* cm) {
 
-  if (bm->is_leaf) {
+  if (cm->is_leaf) {
     
-    bounding_box bb = {10000, -10000, 10000, -10000, 10000, -10000};
+    float x_min = 10000; float x_max = -10000;
+    float y_min = 10000; float y_max = -10000;
+    float z_min = 10000; float z_max = -10000;
     
-    for(int i = 0; i < bm->num_verticies; i++) {
-      bb.x_min = min(bb.x_min, bm->verticies[i].x);
-      bb.x_max = max(bb.x_max, bm->verticies[i].x);
-      bb.y_min = min(bb.y_min, bm->verticies[i].y);
-      bb.y_max = max(bb.y_max, bm->verticies[i].y);
-      bb.z_min = min(bb.z_min, bm->verticies[i].z);
-      bb.z_max = max(bb.z_max, bm->verticies[i].z);
+    for(int i = 0; i < cm->num_verticies; i++) {
+      x_min = min(x_min, cm->verticies[i].x);
+      x_max = max(x_max, cm->verticies[i].x);
+      y_min = min(y_min, cm->verticies[i].y);
+      y_max = max(y_max, cm->verticies[i].y);
+      z_min = min(z_min, cm->verticies[i].z);
+      z_max = max(z_max, cm->verticies[i].z);
     }
     
-    return bb;
+    return bounding_box_new(x_min, x_max, y_min, y_max, z_min, z_max);
     
   } else {
-    bounding_box front_box = bsp_mesh_bounding_box(bm->front);
-    bounding_box back_box = bsp_mesh_bounding_box(bm->back);
+    bounding_box front_box = collision_mesh_bounding_box(cm->front);
+    bounding_box back_box = collision_mesh_bounding_box(cm->back);
     return bounding_box_merge(front_box, back_box);
   }
 
 }
 
-void bsp_mesh_set_world_matrix(bsp_mesh* bm, matrix_4x4 world) {
-  
-  if (bm->is_leaf) {
-    
-    bm->world_matrix = world;
-    
-  } else {
-    
-    bm->world_matrix = world;
-    bsp_mesh_set_world_matrix(bm->front, world);
-    bsp_mesh_set_world_matrix(bm->back, world);
-  
-  }
-
-}
-
-collision_body* collision_body_new_sphere(vector3 center, float radius) {
+collision_body* collision_body_new_sphere(bounding_sphere bs) {
   
   collision_body*  cb = malloc(sizeof(collision_body));
   cb->collision_type = collision_type_sphere;
-  cb->collision_sphere.center = center;
-  cb->collision_sphere.radius = radius;
-  cb->collision_sphere.radius_sqrd = radius * radius;
-  cb->collision_box = bounding_box_sphere(center, radius);
+  cb->collision_sphere = bs;
+  cb->collision_box = bounding_box_sphere(bs.center, bs.radius);
   cb->collision_mesh = NULL;
   
   return cb;
@@ -397,27 +435,29 @@ collision_body* collision_body_new_box(bounding_box bb) {
   return cb;
 }
 
+collision_body* collision_body_new_mesh(collision_mesh* cm) {
+
+  collision_body*  cb = malloc(sizeof(collision_body));
+  cb->collision_type = collision_type_mesh;
+  cb->collision_sphere = collision_mesh_bounding_sphere(cm);
+  cb->collision_box = collision_mesh_bounding_box(cm);
+  cb->collision_mesh = cm;
+
+  return cb;
+}
+
 void collision_body_delete(collision_body* cb) {
   
   if (cb->collision_mesh != NULL) {
-    bsp_mesh_delete(cb->collision_mesh);
+    collision_mesh_delete(cb->collision_mesh);
   }
   free(cb);
   
 }
 
-void collision_body_set_world_matrix(collision_body* cb, matrix_4x4 world) {
+collision_mesh* col_load_file(char* filename) {
   
-  cb->world_matrix = world;
-  
-  if (cb->collision_type == collision_type_mesh) {
-    bsp_mesh_set_world_matrix(cb->collision_mesh, world);
-  }
-}
-
-collision_body* col_load_file(char* filename) {
-  
-  bsp_mesh* mesh = malloc(sizeof(bsp_mesh));
+  collision_mesh* mesh = malloc(sizeof(collision_mesh));
   mesh->division.position = v3_zero();
   mesh->division.direction = v3_zero();
   mesh->front = NULL;
@@ -746,283 +786,112 @@ collision_body* col_load_file(char* filename) {
   vertex_list_delete(vert_list);
   int_list_delete(tri_list);
   
-  bsp_mesh_subdivide(mesh, 5);
+  collision_mesh_subdivide(mesh, 5);
   
-  collision_body* cb = malloc(sizeof(collision_body));
-  cb->collision_type = collision_type_mesh;
-  cb->collision_mesh = mesh;
-  cb->collision_sphere = bsp_mesh_bounding_sphere(cb->collision_mesh);
-  cb->collision_box = bsp_mesh_bounding_box(cb->collision_mesh);
-  
-  return cb;
+  return mesh;
 }
 
-collision_info collision_info_merge(collision_info ci1, collision_info ci2) {
+/*
+  First, add object radius to target radius.
+  We now consider object as a ray.
   
-  collision_info ci;
+  Shift target to origin (also shifting ray obviously). This simplifies things.
+  Point intersects with target when.
   
-  int i, j;
-  for(i = 0; i < ci1.collisions; i++) {
-    ci.position[i] = ci1.position[i];
-    ci.normal[i] = ci1.normal[i];
+  p dot p = r*r
+  p = O + t * V
+  (O + t*V) dot (O + t*V) = r*r
+  
+  expands to quadratic in the form A^2 + B + C = 0 where
+  
+  A = (V dot V)
+  B = 2(V dot O)
+  C = (O dot O) - r*r
+  
+  Solutions given by: ( -B +-sqrt(B*B - 4*A*C) ) / 2A
+  
+  And if the descriminate (B*B - 4*A*C) < 0 we know as an early out that the ray has missed the sphere.
+*/
+
+void sphere_collide_sphere(collision* out, bounding_sphere object, vector3 object_velocity, bounding_sphere target, float timestep) {
+  
+  float r = object.radius + target.radius;
+  
+  vector3 V = object_velocity;
+  vector3 O = v3_sub(object.center, target.center);
+  
+  float A = v3_dot(V, V);
+  float B = 2 * v3_dot(V, O);
+  float C = v3_dot(O, O) - (r*r);
+  
+  float descrim = B*B - 4*A*C;
+  if (descrim < 0) {
+    out->collided = false;
+    return;
   }
   
-  for(j = i; j < MAX_COLLISIONS; j++) {
-    ci.position[j] = ci2.position[j-i];
-    ci.normal[j] = ci2.normal[j-i];
+  float dist_sqrd = sqrtf(descrim);
+  
+  /* This intermediate is used to reduce numerical instability */
+  float q;
+  if (B < 0) q = (-B - dist_sqrd)/2.0;
+  else q = (-B + dist_sqrd)/2.0;
+  
+  float t0 = q / A;
+  float t1 = C / q;
+  
+  /* If outside of time range we don't care about them this frame */
+  if (((t0 < 0) || (t0 > timestep)) &&
+      ((t1 < 0) || (t1 > timestep))) {
+    out->collided = false;
+    return;
   }
   
-  ci.collisions = max(ci1.collisions, ci2.collisions);
-  return ci;
-  
-}
-
-collision_info sphere_collide_sphere(bounding_sphere bs1, bounding_sphere bs2) {
-
-  collision_info ci;
-  memset(&ci, 0, sizeof(collision_info));
-  
-  if (v3_dist_sqrd(bs1.center, bs2.center) < bs1.radius_sqrd + bs2.radius_sqrd) {
-    ci.collisions = 1;
-    ci.position[0] = v3_div(v3_add(bs1.center, bs2.center), 2);
-    ci.normal[0] = v3_normalize( v3_sub(bs1.center, bs2.center) );
+  float time = 0;
+  if ((t0 >= 0) && (t0 <= timestep) &&
+      (t1 >= 0) && (t1 <= timestep)) {
+    time = min(t0, t1);
+  } else if ((t0 >= 0) && (t0 <= timestep)) {
+    time = t0;
+  } else if ((t1 >= 0) && (t1 <= timestep))  {
+    time = t1;
   }
   
-  return ci;
-
-}
-
-collision_info sphere_collide_box(bounding_sphere bs, bounding_box bb) {
-
-  collision_info ci;
-  memset(&ci, 0, sizeof(collision_info));
+  out->collided = true;
+  out->time = time;
+  out->object_position = v3_add(object.center, v3_mul(object_velocity, time - 0.001));
+  out->surface_normal = v3_normalize(v3_sub(out->object_position, target.center));
+  out->surface_position = v3_add(target.center, v3_mul(out->surface_normal, target.radius));
   
-  error("sphere_collide_box unimplemented");
-  
-  return ci;
-
-}
-
-collision_info sphere_collide_mesh(bounding_sphere bs, bsp_mesh* bm) {
-  
-  if (!bm->is_leaf) {
-    plane division = plane_transform(bm->division, bm->world_matrix);
-    
-    vector3 to_center = v3_sub(bs.center, division.position);
-    float dist = v3_dot(to_center, division.direction);
-    
-    /* Intersects plane. Check both sides */
-    if (fabs(dist) < bs.radius) {
-      collision_info ci1 = sphere_collide_mesh(bs, bm->back);
-      collision_info ci2 = sphere_collide_mesh(bs, bm->front);
-      return collision_info_merge(ci1, ci2);
-    }
-    
-    if (dist < 0) {
-      return sphere_collide_mesh(bs, bm->back);
-    } else {
-      return sphere_collide_mesh(bs, bm->front);
-    }
-    
-  }
-  
-  collision_info ci;
-  memset(&ci, 0, sizeof(collision_info));
-  
-  for(int i = 0; i < bm->num_verticies / 3; i++) {
-    
-    vector3 p1 = m44_mul_v3(bm->world_matrix, bm->verticies[i*3+0]);
-    vector3 p2 = m44_mul_v3(bm->world_matrix, bm->verticies[i*3+1]);
-    vector3 p3 = m44_mul_v3(bm->world_matrix, bm->verticies[i*3+2]);
-    
-    matrix_4x4 normworld = bm->world_matrix;
-    normworld.xw = 0; normworld.yw = 0; normworld.zw = 0;
-    
-    vector3 norm = m44_mul_v3(normworld, bm->triangle_normals[i]);
-    
-    /* Offset to sphere center */
-    p1 = v3_sub(p1, bs.center);
-    p2 = v3_sub(p2, bs.center);
-    p3 = v3_sub(p3, bs.center);
-    
-    /* Check intersection with triangle plane */
-    bool plane_sep = fabs(v3_dot(p1, norm)) > bs.radius;
-    if (plane_sep) continue;
-    
-    /* Check intersection on triangle verts */
-    float p1p1 = v3_dot(p1, p1); float p1p2 = v3_dot(p1, p2); float p1p3 = v3_dot(p1, p3);
-    float p2p2 = v3_dot(p2, p2); float p2p3 = v3_dot(p2, p3); float p3p3 = v3_dot(p3, p3);
-    
-    bool vert_sep1 = (p1p1 > bs.radius_sqrd) && (p1p2 > p1p1) && (p1p3 > p1p1);
-    bool vert_sep2 = (p2p2 > bs.radius_sqrd) && (p1p2 > p2p2) && (p2p3 > p2p2);
-    bool vert_sep3 = (p3p3 > bs.radius_sqrd) && (p1p3 > p3p3) && (p2p3 > p3p3);
-    
-    if (vert_sep1 || vert_sep2 || vert_sep3) continue;
-    
-    /* Check intersection on triangle edges */
-    vector3 p1_p2 = v3_sub(p2, p1);
-    vector3 p2_p3 = v3_sub(p3, p2);
-    vector3 p3_p1 = v3_sub(p1, p3);
-    float d1 = p1p2 - p1p1; float e1 = v3_dot(p1_p2, p1_p2);
-    float d2 = p2p3 - p2p2; float e2 = v3_dot(p2_p3, p2_p3);
-    float d3 = p1p3 - p3p3; float e3 = v3_dot(p3_p1, p3_p1);
-    vector3 q1 = v3_sub(v3_mul(p1, e1) , v3_mul(p1_p2, d1));
-    vector3 q2 = v3_sub(v3_mul(p2, e2) , v3_mul(p2_p3, d2));
-    vector3 q3 = v3_sub(v3_mul(p3, e3) , v3_mul(p3_p1, d3));
-    vector3 qp3 = v3_sub(v3_mul(p3, e1) , q1);
-    vector3 qp1 = v3_sub(v3_mul(p1, e2) , q2);
-    vector3 qp2 = v3_sub(v3_mul(p2, e3) , q3);
-    bool edge_sep1 = (v3_dot(q1, q1) > bs.radius_sqrd * e1 * e1) && (v3_dot(q1, qp3) > 0);
-    bool edge_sep2 = (v3_dot(q2, q2) > bs.radius_sqrd * e2 * e2) && (v3_dot(q2, qp1) > 0);
-    bool edge_sep3 = (v3_dot(q3, q3) > bs.radius_sqrd * e3 * e3) && (v3_dot(q3, qp2) > 0);
-    
-    if (edge_sep1 || edge_sep2 || edge_sep3) continue;
-        
-    ci.position[ci.collisions] = p1; /* TODO: This isn't actual collision point. */
-    ci.normal[ci.collisions] = norm; /* This is sometimes the opposide of the collision normal */
-    ci.collisions++;
-    
-    if (ci.collisions == MAX_COLLISIONS) break;
-  }
-  
-  return ci;
+  return;
   
 }
 
-collision_info box_collide_sphere(bounding_box bb, bounding_sphere bs) {
+/*
+  Time for collision between plane and sphere
+  
+  Translate sphere to origin, and obviously also translate plane.
+  
+  SignedDistance(p) = N dot p + C
+  
+  SignedDistance(P0 + t * V) = r
+  N dot (P0 + t * V) + C = r
+  N dot P0 + t * (N dot V) + C = r
+  t * (N dot V) + SignedDistance(P0) = r
+  
+  t = (r - SignedDistance(P0)) / N dot V
+  
+  We can get two versions of t - t0 for when r is positive and t1 for when r is negative.
+  
+  If both t are outside range 0..time_step we know there is no collision.
+  
+  Otherwise we have a collision sometime between t0..t1
+  
+*/
 
-  collision_info ci;
-  memset(&ci, 0, sizeof(collision_info));
-  
-  error("box_collide_sphere unimplemented");
-  
-  return ci;
+void sphere_collide_mesh(collision* out, bounding_sphere object, vector3 object_velocity, collision_mesh* target, matrix_4x4 target_world, float timestep) {
 
-}
-
-collision_info box_collide_box(bounding_box bb1, bounding_box bb2) {
-
-  collision_info ci;
-  memset(&ci, 0, sizeof(collision_info));
   
-  error("box_collide_box unimplemented");
   
-  return ci;
-
-}
-
-collision_info box_collide_mesh(bounding_box bb, bsp_mesh* bm) {
-
-  collision_info ci;
-  memset(&ci, 0, sizeof(collision_info));
-  
-  error("box_collide_mesh unimplemented");
-  
-  return ci;
-
-}
-
-collision_info mesh_collide_sphere(bsp_mesh* bm, bounding_sphere bs) {
-
-  collision_info ci;
-  memset(&ci, 0, sizeof(collision_info));
-  
-  error("mesh_collide_sphere unimplemented");
-  
-  return ci;
-
-}
-
-collision_info mesh_collide_box(bsp_mesh* bm, bounding_box bb) {
-
-  collision_info ci;
-  memset(&ci, 0, sizeof(collision_info));
-  
-  error("mesh_collide_box unimplemented");
-  
-  return ci;
-
-}
-
-collision_info mesh_collide_mesh(bsp_mesh* bm1, bsp_mesh* bm2) {
-
-  collision_info ci;
-  memset(&ci, 0, sizeof(collision_info));
-  
-  error("mesh_collide_mesh unimplemented");
-  
-  return ci;
-
-}
-
-collision_info collision_bodies_collide(collision_body* cb1, collision_body* cb2) {
-  
-  bounding_sphere sphere1 = bounding_sphere_transform(cb1->collision_sphere, cb1->world_matrix);
-  bounding_sphere sphere2 = bounding_sphere_transform(cb2->collision_sphere, cb2->world_matrix);
-  
-  /* We first get collision info between bounding spheres */
-  collision_info sphere_info = sphere_collide_sphere(sphere1, sphere2);
-  
-  /* If this doesn't collide we can be sure none of the others will */
-  if (sphere_info.collisions == 0) { return sphere_info; }
-  
-  /* If both are spheres return immediately */
-  if ((cb1->collision_type == collision_type_sphere) &&
-      (cb2->collision_type == collision_type_sphere)) {
-    return sphere_info;
-  }
-  
-  bsp_mesh* mesh1 = cb1->collision_mesh;
-  bsp_mesh* mesh2 = cb2->collision_mesh;
-  
-  /* Four special cases for sphere on mesh-box */
-  /* These collisions are little use in the general case */
-  /* So just return in these particular instances */
-  if ((cb1->collision_type == collision_type_sphere) &&
-      (cb2->collision_type == collision_type_mesh)) {
-    return sphere_collide_mesh(sphere1, mesh2);
-  }
-  if ((cb1->collision_type == collision_type_mesh) &&
-      (cb2->collision_type == collision_type_sphere)) {
-    return mesh_collide_sphere(mesh1, sphere2);
-  }
-  
-  bounding_box box1 = bounding_box_transform(cb1->collision_box, cb1->world_matrix);
-  bounding_box box2 = bounding_box_transform(cb2->collision_box, cb2->world_matrix);
-  
-  if ((cb1->collision_type == collision_type_box) &&
-      (cb2->collision_type == collision_type_sphere)) {
-    return box_collide_sphere(box1, sphere2);
-  }
-  if ((cb1->collision_type == collision_type_sphere) &&
-      (cb2->collision_type == collision_type_box)) {
-    return sphere_collide_box(sphere1, box2);
-  }
-  
-  /* We then get the bounding box info */
-  collision_info box_info = box_collide_box(box1, box2);
-  
-  /* Again, if this doesn't collide the rest wont */
-  if (box_info.collisions == 0) { return box_info; }
-  
-  /* If both are boxes return immediately */
-  if ((cb1->collision_type == collision_type_box) &&
-      (cb2->collision_type == collision_type_box)) {
-    return box_info;
-  }
-  
-  /* Twp more less interesting cases for mesh-box */
-  if ((cb1->collision_type == collision_type_mesh) &&
-      (cb2->collision_type == collision_type_box)) {
-    return mesh_collide_box(mesh1, box2);
-  }
-  if ((cb1->collision_type == collision_type_box) &&
-      (cb2->collision_type == collision_type_mesh)) {
-    return box_collide_mesh(box1, mesh2);
-  }
-
-  /* Finally interesting case for mesh on mesh */
-  return mesh_collide_mesh(mesh1, mesh2);
   
 }
-

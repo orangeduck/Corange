@@ -2,7 +2,7 @@ CC=gcc
 
 INCS= -I ./include -I ../../include
 
-CFLAGS= $(INCS) -std=gnu99 -Wall -Werror -Wno-unused -g
+CFLAGS= $(INCS) -std=gnu99 -Wall -Werror -Wno-unused -O3 -g
 
 LFLAGS= -g -L./ -L../../lib -lcorange -lmingw32 -lSDLmain -lSDL -lopengl32 
 LFLAGS_LINUX= -L./ -lcorange -lGL -lSDLmain -lSDL

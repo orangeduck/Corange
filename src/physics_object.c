@@ -18,8 +18,8 @@ physics_object* physics_object_new() {
   
   po->previous_position = v3_zero();
   
-  po->elasticity = 0.25;
-  po->friction = 0;
+  po->elasticity = 0.1;
+  po->friction = 0.25;
   
   po->active = true;
   po->recieve_shadows = true;
@@ -75,7 +75,7 @@ void physics_object_update(physics_object* po, float timestep) {
   
 }
 
-void physics_object_collide_static(physics_object* po, static_object* so) {
+void physics_object_collide_static(physics_object* po, static_object* so, float timestep) {
   
   collision_body* po_col = po->collision_body;
   collision_body* so_col = so->collision_body;
@@ -84,22 +84,29 @@ void physics_object_collide_static(physics_object* po, static_object* so) {
     error("Cannot collide objects. One or more has no collision body (%p, %p).", po_col, so_col);
   }
   
-  matrix_4x4 po_world_matrix = m44_world(po->position, po->scale, po->rotation);
-  matrix_4x4 so_world_matrix = m44_world(so->position, so->scale, so->rotation);
+  collision c; c.collided = true;
+  int col_count = 0;
   
-  collision_body_set_world_matrix(po_col, po_world_matrix);
-  collision_body_set_world_matrix(so_col, so_world_matrix);
-  
-  collision_info info = collision_bodies_collide(po_col, so_col);
-  
-  if (info.collisions > 0) {
-    
-    po->position = po->previous_position;
-    po->velocity = v3_mul(po->velocity, po->elasticity);
-    po->velocity = v3_normalize(po->velocity);
-    
-    po->velocity = v3_reflect(po->velocity, info.normal[0]);
+  if ((po_col->collision_type == collision_type_sphere) && 
+      (so_col->collision_type == collision_type_sphere)) {
+      
+    while(c.collided && (col_count < 5)) {
+      
+      matrix_4x4 po_world_matrix = m44_world(po->position, po->scale, po->rotation);
+      matrix_4x4 so_world_matrix = m44_world(so->position, so->scale, so->rotation);
+      
+      bounding_sphere po_sphere = bounding_sphere_transform(po_col->collision_sphere, po_world_matrix);
+      bounding_sphere so_sphere = bounding_sphere_transform(so_col->collision_sphere, so_world_matrix);
+      
+      sphere_collide_sphere(&c, po_sphere, po->velocity, so_sphere, timestep);
+      if (c.collided) {
+        po->position = c.object_position;
+        po->velocity = v3_mul(po->velocity, 0.25);
+        po->velocity = v3_reflect(po->velocity, c.surface_normal);
+        col_count++;
+      }
+      
+    }
     
   }
-
 }

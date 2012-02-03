@@ -36,7 +36,7 @@ static void switch_wireframe(ui_rectangle* rect, SDL_Event event) {
 }
 
 void sea_init() {
-
+  
   viewport_set_dimensions( v2(1280, 720) );
 
   camera* cam = entity_new("camera", camera);
@@ -58,7 +58,7 @@ void sea_init() {
   forward_renderer_set_shadow_texture( shadow_mapper_depth_texture() );
   
   load_folder("./resources/");
-    
+   
   texture* noise1 = asset_get("./resources/noise1.dds");
   texture* noise2 = asset_get("./resources/noise2.dds");
   texture* noise3 = asset_get("./resources/noise3.dds");
@@ -93,7 +93,7 @@ void sea_init() {
   multi_material* m_corvette = asset_get("./resources/corvette/corvette.mmat");
   renderable_set_multi_material(r_corvette, m_corvette);
   static_object* s_corvette = static_object_new(r_corvette);
-  s_corvette->collision_body = asset_get("./resources/corvette/corvette.col");
+  s_corvette->collision_body = collision_body_new_mesh(asset_get("./resources/corvette/corvette.col"));
   s_corvette->scale = v3(1.5, 1.5, 1.5);
   s_corvette->position = v3(0, 0.5, 0);
   entity_add("corvette", static_object, s_corvette);
@@ -101,7 +101,7 @@ void sea_init() {
   static_object* center_sphere = entity_new("center_sphere", static_object);
   center_sphere->position = v3(0, 5, 0);
   center_sphere->renderable = asset_get("./resources/ball.obj");
-  center_sphere->collision_body = collision_body_new_sphere(v3_zero(), 1.0f);
+  center_sphere->collision_body = collision_body_new_sphere(bounding_sphere_new(v3_zero(), 1.0f));
   
   ui_rectangle* wireframe_rect = ui_elem_new("wireframe_rect", ui_rectangle);
   wireframe_rect->top_left = v2(10,10);
@@ -139,9 +139,9 @@ void sea_update() {
   int num_balls;
   entities_get(balls, &num_balls, physics_object);
   for(int i = 0; i < num_balls; i++) {
+    physics_object_collide_static(balls[i], center_sphere, frame_time());
+    physics_object_collide_static(balls[i], corvette, frame_time());
     physics_object_update(balls[i], frame_time());
-    physics_object_collide_static(balls[i], center_sphere);
-    physics_object_collide_static(balls[i], corvette);
   }
   
   Uint8 keystate = SDL_GetMouseState(NULL, NULL);
@@ -226,7 +226,7 @@ void sea_event(SDL_Event event) {
       
       physics_object* ball = entity_new(ball_name, physics_object);
       ball->renderable = asset_get("./resources/ball.obj");
-      ball->collision_body = collision_body_new_sphere(v3_zero(), 1);
+      ball->collision_body = collision_body_new_sphere(bounding_sphere_new(v3_zero(), 1));
       ball->position = cam->position;
       ball->scale = v3(0.5, 0.5, 0.5);
       ball->velocity = v3_mul(v3_normalize(v3_sub(cam->target, cam->position)), 75);

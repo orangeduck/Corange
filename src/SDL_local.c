@@ -343,9 +343,80 @@ void SDL_PrintStackTrace() {
 }
 
 #elif _WIN32
+#include <windows.h>
+
+typedef struct _SYMBOL_INFO {
+  ULONG   SizeOfStruct;
+  ULONG   TypeIndex;
+  ULONG64 Reserved[2];
+  ULONG   Index;
+  ULONG   Size;
+  ULONG64 ModBase;
+  ULONG   Flags;
+  ULONG64 Value;
+  ULONG64 Address;
+  ULONG   Register;
+  ULONG   Scope;
+  ULONG   Tag;
+  ULONG   NameLen;
+  ULONG   MaxNameLen;
+  TCHAR   Name[1];
+} SYMBOL_INFO, *PSYMBOL_INFO;
+
+#define PCTSTR const char*
 
 void SDL_PrintStackTrace() {
+  
+  /* For some reason this is giving the incorrect symbol names */
+  
+  typedef USHORT (WINAPI *CaptureStackBackTraceType)(ULONG,ULONG,PVOID*,PULONG);
+  typedef BOOL (WINAPI *SymInitializeType)(HANDLE,PCTSTR,BOOL);
+  typedef BOOL (WINAPI *SymFromAddrType)(HANDLE,DWORD64,PDWORD64,PSYMBOL_INFO);
+  
+  CaptureStackBackTraceType CaptureStackBackTrace = (CaptureStackBackTraceType)(GetProcAddress(LoadLibrary("kernel32.dll"), "RtlCaptureStackBackTrace"));
+  SymInitializeType SymInitialize = (SymInitializeType)(GetProcAddress(LoadLibrary("Dbghelp.dll"), "SymInitialize"));
+  SymFromAddrType SymFromAddr = (SymFromAddrType)(GetProcAddress(LoadLibrary("Dbghelp.dll"), "SymFromAddr"));
+  
+  if ((CaptureStackBackTrace == NULL) || 
+      (SymInitialize == NULL) ||
+      (SymFromAddr == NULL)) {
+    printf("[STACK] Could not retrieve functions for stack trace\n");
+    return;
+  }
+  
+  void* stack[62];
+  
+  HANDLE process = GetCurrentProcess();
+  if (!SymInitialize(process, NULL, TRUE)) {
+    printf("[STACK] Could not retrieve functions for stack trace\n");
+  }
+   
+  int max_frames = CaptureStackBackTrace( 0, 62, stack, NULL );
+  SYMBOL_INFO* symbol = calloc(sizeof(SYMBOL_INFO) + 256, 1);
+  symbol->MaxNameLen   = 255;
+  symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
+  
+  DWORD64 displacement = 0;
+  
+  if (sizeof(void*) != sizeof(DWORD64)) {
+    printf("[STACK] Cannot retrive stack symbols on 32-bit binary\n");
+    return;
+  }
+  for(int i = 0; i < max_frames; i++ ){
+    
+    DWORD64 address = 0;
+    address = PtrToUlong(stack[i]);
+    if (SymFromAddr(process, address, &displacement, symbol)) {
+      printf("  %i: %s - %08X\n", max_frames-i-1, symbol->Name, (unsigned int)symbol->Address );
+    } else {
+      DWORD error = GetLastError();
+      printf("  %i: SymFromAddr returned error %d\n", max_frames-i-1, (int)error);
+    }
+    
+  }
 
+  free(symbol);
+  
 }
 
 #else

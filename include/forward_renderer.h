@@ -29,5 +29,6 @@ void forward_renderer_render_animated(animated_object* ao);
 void forward_renderer_render_skeleton(skeleton* s);
 void forward_renderer_render_axis(matrix_4x4 position);
 void forward_renderer_render_light(light* l);
+void forward_renderer_render_collision_body(collision_body* cb);
 
 #endif
