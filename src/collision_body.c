@@ -11,191 +11,6 @@
 
 #include "collision_body.h"
 
-plane plane_new(vector3 position, vector3 direction) {
-  plane p;
-  p.position = position;
-  p.direction = direction;
-  return p;
-}
-
-bool point_behind_plane(vector3 point, plane plane) {
-  
-  vector3 to_point = v3_sub(point, plane.position);
-  float dist = v3_dot(to_point, plane.direction);
-  
-  if (dist < 0) {
-    return true;
-  } else {
-    return false;
-  }
-  
-}
-
-plane plane_transform(plane p, matrix_4x4 world) {
-  
-  p.position = m44_mul_v3(world, p.position);
-  
-  matrix_4x4 normworld = world;
-  normworld.xw = 0; normworld.yw = 0; normworld.zw = 0;
-  
-  p.direction = m44_mul_v3(normworld, p.direction);
-  
-  return p;
-}
-
-bounding_box bounding_box_new(float x_min, float x_max, float y_min, float y_max, float z_min, float z_max) {
-
-  bounding_box bb;
-  bb.top    = plane_new( v3(0, y_max,0), v3(0, 1,0));
-  bb.bottom = plane_new( v3(0, y_min,0), v3(0,-1,0));
-  bb.left   = plane_new( v3( x_max,0,0), v3( 1,0,0));
-  bb.right  = plane_new( v3( x_min,0,0), v3(-1,0,0));
-  bb.front  = plane_new( v3(0,0, y_max), v3(0,0, 1));
-  bb.back   = plane_new( v3(0,0, y_min), v3(0,0,-1));
-  return bb;
-
-}
-
-bounding_box bounding_box_sphere(vector3 center, float radius) {
-  
-  bounding_box bb;
-  bb.top    = plane_new(v3_add(center, v3(0, radius,0)), v3(0, 1,0));
-  bb.bottom = plane_new(v3_add(center, v3(0,-radius,0)), v3(0,-1,0));
-  bb.left   = plane_new(v3_add(center, v3( radius,0,0)), v3( 1,0,0));
-  bb.right  = plane_new(v3_add(center, v3(-radius,0,0)), v3(-1,0,0));
-  bb.front  = plane_new(v3_add(center, v3(0,0, radius)), v3(0,0, 1));
-  bb.back   = plane_new(v3_add(center, v3(0,0,-radius)), v3(0,0,-1));
-  return bb;
-  
-}
-
-bool bounding_box_contains(bounding_box bb, vector3 point) {
-  
-  if ( !point_behind_plane(point, bb.top) ) { return false; }
-  if ( !point_behind_plane(point, bb.bottom) ) { return false; }
-  if ( !point_behind_plane(point, bb.left)) { return false; }
-  if ( !point_behind_plane(point, bb.right)) { return false; }
-  if ( !point_behind_plane(point, bb.front)) { return false; }
-  if ( !point_behind_plane(point, bb.back)) { return false; }
-  
-  return true;
-}
-
-bounding_box bounding_box_merge(bounding_box b1, bounding_box b2) {
-  
-  float b1_x_max = b1.left.position.x;
-  float b1_x_min = b1.right.position.x;
-  float b1_y_max = b1.top.position.y;
-  float b1_y_min = b1.bottom.position.y;
-  float b1_z_max = b1.front.position.z;
-  float b1_z_min = b1.back.position.z;
-  
-  float b2_x_max = b2.left.position.x;
-  float b2_x_min = b2.right.position.x;
-  float b2_y_max = b2.top.position.y;
-  float b2_y_min = b2.bottom.position.y;
-  float b2_z_max = b2.front.position.z;
-  float b2_z_min = b2.back.position.z;
-  
-  float x_min = min(b1_x_min, b2_x_min);
-  float x_max = max(b1_x_max, b2_x_max);
-  float y_min = min(b1_y_min, b2_y_min);
-  float y_max = max(b1_y_max, b2_y_max);
-  float z_min = min(b1_z_min, b2_z_min);
-  float z_max = max(b1_z_max, b2_z_max);
-  
-  return bounding_box_new(x_min, x_max, y_min, y_max, z_min, z_max);
-}
-
-bounding_box bounding_box_transform(bounding_box bb, matrix_4x4 world_matrix) {
-  
-  bb.top = plane_transform(bb.top, world_matrix);
-  bb.bottom = plane_transform(bb.bottom, world_matrix);
-  bb.left = plane_transform(bb.left, world_matrix);
-  bb.right = plane_transform(bb.right, world_matrix);
-  bb.front = plane_transform(bb.front, world_matrix);
-  bb.back = plane_transform(bb.back, world_matrix);
-  
-  return bb;
-  
-}
-
-bounding_sphere bounding_sphere_new(vector3 center, float radius) {
-  bounding_sphere bs;
-  bs.center = center;
-  bs.radius = radius;
-  bs.radius_sqrd = radius * radius;
-  
-  return bs;
-}
-
-bounding_sphere bounding_sphere_of_box(bounding_box bb) {
-  
-  float x_max = bb.left.position.x;
-  float x_min = bb.right.position.x;
-  float y_max = bb.top.position.y;
-  float y_min = bb.bottom.position.y;
-  float z_max = bb.front.position.z;
-  float z_min = bb.back.position.z;
-  
-  vector3 center;
-  center.x = (x_min + x_max) / 2;
-  center.y = (y_min + y_max) / 2;
-  center.z = (z_min + z_max) / 2;
-  
-  float radius = 0;
-  radius = max(radius, v3_dist(center, v3(x_min, y_min, z_min)));
-  radius = max(radius, v3_dist(center, v3(x_max, y_min, z_min)));
-  radius = max(radius, v3_dist(center, v3(x_min, y_max, z_min)));
-  radius = max(radius, v3_dist(center, v3(x_min, y_min, z_max)));
-  radius = max(radius, v3_dist(center, v3(x_min, y_max, z_max)));
-  radius = max(radius, v3_dist(center, v3(x_max, y_max, z_min)));
-  radius = max(radius, v3_dist(center, v3(x_max, y_min, z_max)));
-  radius = max(radius, v3_dist(center, v3(x_max, y_max, z_max)));
-  
-  bounding_sphere bs;
-  bs.center = center;
-  bs.radius = radius;
-  bs.radius_sqrd = radius * radius;
-  
-  return bs;
-}
-
-bounding_sphere bounding_sphere_merge(bounding_sphere bs1, bounding_sphere bs2) {
-  
-  vector3 center = v3_div(v3_add(bs1.center, bs2.center), 2);
-  
-  vector3 dir = v3_normalize(v3_sub(bs2.center, bs1.center));
-  vector3 edge = v3_add(v3_mul(dir, bs2.radius), bs2.center);
-  
-  float dist = v3_dist(edge, center);
-  
-  bounding_sphere bs;
-  bs.center = center;
-  bs.radius = dist;
-  bs.radius_sqrd = dist * dist;
-  
-  return bs;
-}
-
-bool bounding_sphere_contains(bounding_sphere bs1, vector3 point) {
-  float dist_sqrt = v3_dist_sqrd(bs1.center, point);
-  return dist_sqrt <= bs1.radius_sqrd;
-}
-
-bounding_sphere bounding_sphere_transform(bounding_sphere bs, matrix_4x4 world) {
-  
-  vector3 center = m44_mul_v3(world, bs.center);
-  float radius = bs.radius * max(max(world.xx, world.yy), world.zz);
-  
-  bounding_sphere b;
-  b.center = center;
-  b.radius = radius;
-  b.radius_sqrd = radius * radius;
-  
-  return b;
-}
-
 void collision_mesh_delete(collision_mesh* cm) {
   
   if (cm->is_leaf) {
@@ -224,7 +39,7 @@ static vector3 collision_mesh_vertex_average(collision_mesh* cm) {
 
 static plane collision_mesh_division(collision_mesh* cm) {
   
-  bounding_box bb = collision_mesh_bounding_box(cm);
+  box bb = collision_mesh_box(cm);
   
   plane p;
   p.position = collision_mesh_vertex_average(cm);
@@ -355,11 +170,11 @@ void collision_mesh_subdivide(collision_mesh* cm, int iterations) {
   
 }
 
-bounding_sphere collision_mesh_bounding_sphere(collision_mesh* cm) {
+sphere collision_mesh_sphere(collision_mesh* cm) {
   
   if (cm->is_leaf) {
     
-    bounding_box bb = collision_mesh_bounding_box(cm);
+    box bb = collision_mesh_box(cm);
     vector3 center;
     center.x = (bb.left.position.x + bb.right.position.x) / 2;
     center.y = (bb.top.position.y + bb.bottom.position.y) / 2;
@@ -370,7 +185,7 @@ bounding_sphere collision_mesh_bounding_sphere(collision_mesh* cm) {
       dist = max(dist, v3_dist(cm->verticies[i], center));
     }
     
-    bounding_sphere bs;
+    sphere bs;
     bs.center = center;
     bs.radius = dist;
     bs.radius_sqrd = dist * dist;
@@ -378,14 +193,14 @@ bounding_sphere collision_mesh_bounding_sphere(collision_mesh* cm) {
     return bs;
     
   } else {
-    bounding_sphere front_bs = collision_mesh_bounding_sphere(cm->front);
-    bounding_sphere back_bs = collision_mesh_bounding_sphere(cm->back);
-    return bounding_sphere_merge(front_bs, back_bs);
+    sphere front_bs = collision_mesh_sphere(cm->front);
+    sphere back_bs = collision_mesh_sphere(cm->back);
+    return sphere_merge(front_bs, back_bs);
   }
   
 }
 
-bounding_box collision_mesh_bounding_box(collision_mesh* cm) {
+box collision_mesh_box(collision_mesh* cm) {
 
   if (cm->is_leaf) {
     
@@ -402,33 +217,33 @@ bounding_box collision_mesh_bounding_box(collision_mesh* cm) {
       z_max = max(z_max, cm->verticies[i].z);
     }
     
-    return bounding_box_new(x_min, x_max, y_min, y_max, z_min, z_max);
+    return box_new(x_min, x_max, y_min, y_max, z_min, z_max);
     
   } else {
-    bounding_box front_box = collision_mesh_bounding_box(cm->front);
-    bounding_box back_box = collision_mesh_bounding_box(cm->back);
-    return bounding_box_merge(front_box, back_box);
+    box front_box = collision_mesh_box(cm->front);
+    box back_box = collision_mesh_box(cm->back);
+    return box_merge(front_box, back_box);
   }
 
 }
 
-collision_body* collision_body_new_sphere(bounding_sphere bs) {
+collision_body* collision_body_new_sphere(sphere bs) {
   
   collision_body*  cb = malloc(sizeof(collision_body));
   cb->collision_type = collision_type_sphere;
   cb->collision_sphere = bs;
-  cb->collision_box = bounding_box_sphere(bs.center, bs.radius);
+  cb->collision_box = box_sphere(bs.center, bs.radius);
   cb->collision_mesh = NULL;
   
   return cb;
   
 }
 
-collision_body* collision_body_new_box(bounding_box bb) {
+collision_body* collision_body_new_box(box bb) {
 
   collision_body*  cb = malloc(sizeof(collision_body));
   cb->collision_type = collision_type_box;
-  cb->collision_sphere = bounding_sphere_of_box(bb);
+  cb->collision_sphere = sphere_of_box(bb);
   cb->collision_box = bb;
   cb->collision_mesh = NULL;
 
@@ -439,20 +254,15 @@ collision_body* collision_body_new_mesh(collision_mesh* cm) {
 
   collision_body*  cb = malloc(sizeof(collision_body));
   cb->collision_type = collision_type_mesh;
-  cb->collision_sphere = collision_mesh_bounding_sphere(cm);
-  cb->collision_box = collision_mesh_bounding_box(cm);
+  cb->collision_sphere = collision_mesh_sphere(cm);
+  cb->collision_box = collision_mesh_box(cm);
   cb->collision_mesh = cm;
 
   return cb;
 }
 
 void collision_body_delete(collision_body* cb) {
-  
-  if (cb->collision_mesh != NULL) {
-    collision_mesh_delete(cb->collision_mesh);
-  }
   free(cb);
-  
 }
 
 collision_mesh* col_load_file(char* filename) {
@@ -791,6 +601,19 @@ collision_mesh* col_load_file(char* filename) {
   return mesh;
 }
 
+static float best_collision_time(float t0, float t1, float timestep) {
+  float time = 0;
+  if ((t0 >= 0) && (t0 <= timestep) &&
+      (t1 >= 0) && (t1 <= timestep)) {
+    time = min(t0, t1);
+  } else if ((t0 >= 0) && (t0 <= timestep)) {
+    time = t0;
+  } else if ((t1 >= 0) && (t1 <= timestep))  {
+    time = t1;
+  }
+  return time;
+}
+
 /*
   First, add object radius to target radius.
   We now consider object as a ray.
@@ -813,7 +636,7 @@ collision_mesh* col_load_file(char* filename) {
   And if the descriminate (B*B - 4*A*C) < 0 we know as an early out that the ray has missed the sphere.
 */
 
-void sphere_collide_sphere(collision* out, bounding_sphere object, vector3 object_velocity, bounding_sphere target, float timestep) {
+void sphere_collide_sphere(collision* out, sphere object, vector3 object_velocity, sphere target, float timestep) {
   
   float r = object.radius + target.radius;
   
@@ -826,7 +649,6 @@ void sphere_collide_sphere(collision* out, bounding_sphere object, vector3 objec
   
   float descrim = B*B - 4*A*C;
   if (descrim < 0) {
-    out->collided = false;
     return;
   }
   
@@ -840,31 +662,29 @@ void sphere_collide_sphere(collision* out, bounding_sphere object, vector3 objec
   float t0 = q / A;
   float t1 = C / q;
   
-  /* If outside of time range we don't care about them this frame */
+  /* If outside of time range we don't care about it this frame */
   if (((t0 < 0) || (t0 > timestep)) &&
       ((t1 < 0) || (t1 > timestep))) {
-    out->collided = false;
     return;
   }
   
-  float time = 0;
-  if ((t0 >= 0) && (t0 <= timestep) &&
-      (t1 >= 0) && (t1 <= timestep)) {
-    time = min(t0, t1);
-  } else if ((t0 >= 0) && (t0 <= timestep)) {
-    time = t0;
-  } else if ((t1 >= 0) && (t1 <= timestep))  {
-    time = t1;
+  float time = best_collision_time(t0, t1, timestep);
+  
+  if (time < out->time) {
+    out->collided = true;
+    out->time = time;
+    out->object_position = v3_add(object.center, v3_mul(object_velocity, time - 0.001));
+    out->surface_normal = v3_normalize(v3_sub(out->object_position, target.center));
+    out->surface_position = v3_add(target.center, v3_mul(out->surface_normal, target.radius));
   }
   
-  out->collided = true;
-  out->time = time;
-  out->object_position = v3_add(object.center, v3_mul(object_velocity, time - 0.001));
-  out->surface_normal = v3_normalize(v3_sub(out->object_position, target.center));
-  out->surface_position = v3_add(target.center, v3_mul(out->surface_normal, target.radius));
+}
+
+void sphere_collide_box(collision* out, sphere object, vector3 object_velocity, box target, float timestep) {
   
-  return;
   
+  
+
 }
 
 /*
@@ -872,14 +692,14 @@ void sphere_collide_sphere(collision* out, bounding_sphere object, vector3 objec
   
   Translate sphere to origin, and obviously also translate plane.
   
-  SignedDistance(p) = N dot p + C
+  PlaneDistance(p) = N dot p + P
   
-  SignedDistance(P0 + t * V) = r
-  N dot (P0 + t * V) + C = r
-  N dot P0 + t * (N dot V) + C = r
-  t * (N dot V) + SignedDistance(P0) = r
+  PlaneDistance(P0 + t * V) = r
+  N dot (P0 + t * V) + P = r
+  (N dot P0) + t * (N dot V) + P = r
+  t * (N dot V) + PlaneDistance(P0) = r
   
-  t = (r - SignedDistance(P0)) / N dot V
+  t = (r - PlaneDistance(P0)) / N dot V
   
   We can get two versions of t - t0 for when r is positive and t1 for when r is negative.
   
@@ -887,11 +707,273 @@ void sphere_collide_sphere(collision* out, bounding_sphere object, vector3 objec
   
   Otherwise we have a collision sometime between t0..t1
   
+  -------------------------------------------
+  
+  Once we know when/where it intersects with plane we can see if the point is in the middle of the triangle.
+  This can be done by making three planes positioned along the edges of the triangle.
+  
+  Cross product edge vector and normal to get plane normal. Plane position is just one of the verts on edge.
+  
+  If point is not inside triangle we need to test intersection for edges and verts.
+  
+  --------------------------------------------
+  
+  First test against verticies. This is easy and identical to sphere-sphere.
+  
+  We consider object as a ray.
+  
+  Shift vertex to origin (also shifting ray obviously). This simplifies things.
+  Point intersects with target when.
+  
+  p dot p = r*r
+  p = O + t * V
+  (O + t*V) dot (O + t*V) = r*r
+  
+  expands to quadratic in the form A^2 + B + C = 0 where
+  
+  A = (V dot V)
+  B = 2(V dot O)
+  C = (O dot O) - r*r
+  
+  Solutions given by: ( -B +-sqrt(B*B - 4*A*C) ) / 2A
+  
+  And if the descriminate (B*B - 4*A*C) < 0 we know as an early out that the ray has missed the sphere.
+  
+  --------------------------------------------
+  
+  Now to collide against an edge. First we collide against the infinite line.
+  If a collision occurs then we need to test if it is within the line segment.
+  
+  
 */
 
-void sphere_collide_mesh(collision* out, bounding_sphere object, vector3 object_velocity, collision_mesh* target, matrix_4x4 target_world, float timestep) {
-
+static bool point_in_triangle(vector3 point, vector3 normal, vector3 v0, vector3 v1, vector3 v2) {
   
+  vector3 e0 = v3_sub(v1, v0);
+  vector3 e1 = v3_sub(v2, v1);
+  vector3 e2 = v3_sub(v0, v2);
+  
+  vector3 n0 = v3_normalize(v3_cross(e0, normal));
+  vector3 n1 = v3_normalize(v3_cross(e1, normal));
+  vector3 n2 = v3_normalize(v3_cross(e2, normal));
+  
+  if (!point_behind_plane(point, plane_new(v0, n0))) { return false; }
+  if (!point_behind_plane(point, plane_new(v1, n1))) { return false; }
+  if (!point_behind_plane(point, plane_new(v2, n2))) { return false; }
+  
+  return true;
+  
+}
+
+static void sphere_collide_vertex(collision* out, sphere object, vector3 object_velocity, vector3 vertex, float timestep) {
+  
+  vector3 O = v3_sub(object.center, vertex);
+  vector3 V = object_velocity;
+  float r_r = object.radius_sqrd;
+  
+  float A = v3_dot(V, V);
+  float B = 2 * v3_dot(V, O);
+  float C = v3_dot(O, O) - r_r;
+  
+  float descrim = B*B - 4*A*C;
+  if (descrim < 0) {
+    return;
+  }
+  
+  float dist_sqrd = sqrtf(descrim);
+  
+  /* This intermediate is used to reduce numerical instability */
+  float q;
+  if (B < 0) q = (-B - dist_sqrd)/2.0;
+  else q = (-B + dist_sqrd)/2.0;
+  
+  float t0 = q / A;
+  float t1 = C / q;
+  
+  if (((t0 < 0) || (t0 > timestep)) &&
+      ((t1 < 0) || (t1 > timestep))) {
+    return;
+  }
+  
+  float time = best_collision_time(t0, t1, timestep);
+  
+  if (time < out->time) {
+    out->collided = true;
+    out->time = time;
+    out->object_position = v3_add(object.center, v3_mul(object_velocity, time - 0.001));;
+    out->surface_normal = v3_normalize(v3_sub(object.center, vertex));
+    out->surface_position = v3_add(out->object_position, v3_mul(out->surface_normal, -object.radius));;
+  }
+  
+}
+
+static void sphere_collide_edge(collision* out, sphere object, vector3 object_velocity, vector3 v0, vector3 v1, float timestep) {
+  
+  float r_r = object.radius * object.radius;
+  vector3 O = v3_sub(object.center, object.center);
+  v0 = v3_sub(v0, object.center);
+  v1 = v3_sub(v1, object.center);
+  
+  vector3 E = v3_sub(v1, v0);
+  vector3 V = object_velocity;
+  vector3 X = v3_sub(v0, O);
+  
+  float A = v3_length_sqrd(E) * -v3_length_sqrd(V) + v3_dot(E, V) * v3_dot(E, V);
+  float B = v3_length_sqrd(E) * 2 * v3_dot(V, X) - 2 * v3_dot(E, V) * v3_dot(E, X);
+  float C = v3_length_sqrd(E) * (r_r - v3_length_sqrd(X)) + v3_dot(E, X) * v3_dot(E, X);
+  
+  float descrim = B*B - 4*A*C;
+  if (descrim < 0) {
+    return;
+  }
+  
+  float dist_sqrd = sqrtf(descrim);
+  
+  /* This intermediate is used to reduce numerical instability */
+  float q;
+  if (B < 0) q = (-B - dist_sqrd)/2.0;
+  else q = (-B + dist_sqrd)/2.0;
+  
+  float t0 = q / A;
+  float t1 = C / q;
+  
+  if (((t0 < 0) || (t0 > timestep)) &&
+      ((t1 < 0) || (t1 > timestep))) {
+    return;
+  }
+  
+  float time = best_collision_time(t0, t1, timestep);
+  
+  float range = (v3_dot(E, V) * time - v3_dot(E, X)) / v3_length_sqrd(E);
+  if ((range < 0) || (range > 1)) return;
+  
+  if (time < out->time) {
+    out->collided = true;
+    out->time = time;
+    out->object_position = v3_add(object.center, v3_mul(object_velocity, time - 0.001));
+    out->surface_position = v3_add(v0, v3_mul(E, range));
+    
+    /* Not sure how accurate this is */
+    vector3 incident = v3_sub(out->surface_position, out->object_position);
+    vector3 outward = v3_cross(incident, E);
+    vector3 normal = v3_cross(outward, E);
+    
+    out->surface_normal = v3_normalize(normal);
+  }
+  
+}
+
+static const int before = 0; 
+static const int behind = 1; 
+static const int intersecting = 2; 
+
+static int sphere_plane_location(sphere object, vector3 object_velocity, plane p, float timestep) {
+  
+  float angle = v3_dot(p.direction, object_velocity);
+  float dist = v3_dot(p.direction, v3_sub(object.center, p.position)); 
+  
+  float t0 = ( object.radius - dist) / angle;
+  float t1 = (-object.radius - dist) / angle;
+  
+  if ((t0 < 0) && (t1 < 0)) {
+    if (angle < 0) {
+      return behind;
+    } else {
+      return before;
+    }
+  }
+  if ((t0 > timestep) && (t1 > timestep)) {
+    if (angle < 0) {
+      return before;
+    } else {
+      return behind;
+    }
+  }
+  
+  return intersecting;
+  
+}
+
+void sphere_collide_mesh(collision* out, sphere object, vector3 object_velocity, collision_mesh* target, matrix_4x4 target_world, float timestep) {
+  
+  if (!target->is_leaf) {
+    
+    plane division = plane_transform(target->division, target_world);
+    int location = sphere_plane_location(object, object_velocity, division, timestep);
+    
+    if (location == before) {
+      sphere_collide_mesh(out, object, object_velocity, target->front, target_world, timestep);
+      return;
+    }
+    if (location == behind) {
+      sphere_collide_mesh(out, object, object_velocity, target->back, target_world, timestep);
+      return;
+    }
+    if (location == intersecting) {
+      sphere_collide_mesh(out, object, object_velocity, target->front, target_world, timestep);
+      sphere_collide_mesh(out, object, object_velocity, target->back, target_world, timestep);
+      return;
+    }
+
+  }
+  
+  for(int i=0; i < target->num_verticies / 3; i++) {
+    
+    vector3 v0 = target->verticies[i*3+0];
+    vector3 v1 = target->verticies[i*3+1];
+    vector3 v2 = target->verticies[i*3+2];
+        
+    v0 = m44_mul_v3(target_world, v0);
+    v1 = m44_mul_v3(target_world, v1);
+    v2 = m44_mul_v3(target_world, v2);
+    
+    vector3 norm = target->triangle_normals[i];
+    matrix_4x4 norm_world = target_world;
+    norm_world.xw = 0; norm_world.yw = 0; norm_world.zw = 0;
+    
+    norm = m44_mul_v3(norm_world, norm);
+    norm = v3_normalize(norm);
+    
+    float angle = v3_dot(norm, object_velocity);
+    float dist = v3_dot(norm, v3_sub(object.center, v0)); 
+    
+    float t0 = ( object.radius - dist) / angle;
+    float t1 = (-object.radius - dist) / angle;
+    
+    if (((t0 < 0) || (t0 > timestep)) &&
+        ((t1 < 0) || (t1 > timestep))) {
+      goto sweep_test;
+    }
+    
+    /* Test plane collision inside triangle */
+    
+    float time = best_collision_time(t0, t1, timestep);
+    
+    vector3 collision_point = v3_add(object.center, v3_mul(object_velocity, time - 0.001));
+    vector3 surface_point = v3_add(collision_point, v3_mul(norm, -object.radius));
+    
+    if ((time < out->time) && point_in_triangle(surface_point, norm, v0, v1, v2)) {
+      out->collided = true;
+      out->time = time;
+      out->object_position = collision_point;
+      out->surface_normal = norm;
+      out->surface_position = surface_point;
+      continue;
+    }
+    
+    /* Sweep test */
+    
+    sweep_test:
+    
+    sphere_collide_vertex(out, object, object_velocity, v0, timestep);
+    sphere_collide_vertex(out, object, object_velocity, v1, timestep);
+    sphere_collide_vertex(out, object, object_velocity, v2, timestep);
+    
+    sphere_collide_edge(out, object, object_velocity, v0, v1, timestep);
+    sphere_collide_edge(out, object, object_velocity, v1, v2, timestep);
+    sphere_collide_edge(out, object, object_velocity, v2, v0, timestep);
+    
+  }
   
   
 }

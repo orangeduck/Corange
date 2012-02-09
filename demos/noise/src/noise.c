@@ -12,8 +12,6 @@ void noise_render() {
   
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   
-  glUseProgram(*asset_get_as("./shaders/noise.prog",shader));
-  
 	glMatrixMode(GL_PROJECTION);
   glPushMatrix();
 	glLoadIdentity();
@@ -23,11 +21,12 @@ void noise_render() {
   glPushMatrix();
 	glLoadIdentity();
   
+  glUseProgram(*asset_get_as("./shaders/noise.prog",shader));
+  
   glEnable(GL_TEXTURE_2D);
   glBindTexture(GL_TEXTURE_2D, *asset_get_as("$CORANGE/resources/random.dds", texture));
   glUniform1i(glGetUniformLocation(*asset_get_as("./shaders/noise.prog",shader), "noise_texture"), 0);
   
-  shader_time += frame_time();
   glUniform1f(glGetUniformLocation(*asset_get_as("./shaders/noise.prog",shader), "time"), shader_time);
   
 	glBegin(GL_QUADS);
@@ -179,6 +178,7 @@ int main(int argc, char **argv) {
       
     }
     
+    shader_time += frame_time();
     ui_update();
     
     noise_render();

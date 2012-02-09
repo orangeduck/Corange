@@ -6,6 +6,201 @@
 #include "vector.h"
 #include "geometry.h"
 
+plane plane_new(vector3 position, vector3 direction) {
+  plane p;
+  p.position = position;
+  p.direction = direction;
+  return p;
+}
+
+bool point_behind_plane(vector3 point, plane plane) {
+  
+  vector3 to_point = v3_sub(point, plane.position);
+  float dist = v3_dot(to_point, plane.direction);
+  
+  if (dist < 0) {
+    return true;
+  } else {
+    return false;
+  }
+  
+}
+
+float plane_signed_distance(plane plane, vector3 point) {
+  vector3 to_point = v3_sub(point, plane.position);
+  return v3_dot(to_point, plane.direction);
+}
+
+plane plane_transform(plane p, matrix_4x4 world) {
+  
+  p.position = m44_mul_v3(world, p.position);
+  
+  matrix_4x4 normworld = world;
+  normworld.xw = 0; normworld.yw = 0; normworld.zw = 0;
+  
+  p.direction = m44_mul_v3(normworld, p.direction);
+  
+  return p;
+}
+
+box box_new(float x_min, float x_max, float y_min, float y_max, float z_min, float z_max) {
+
+  box bb;
+  bb.top    = plane_new( v3(0, y_max,0), v3(0, 1,0));
+  bb.bottom = plane_new( v3(0, y_min,0), v3(0,-1,0));
+  bb.left   = plane_new( v3( x_max,0,0), v3( 1,0,0));
+  bb.right  = plane_new( v3( x_min,0,0), v3(-1,0,0));
+  bb.front  = plane_new( v3(0,0, y_max), v3(0,0, 1));
+  bb.back   = plane_new( v3(0,0, y_min), v3(0,0,-1));
+  return bb;
+
+}
+
+box box_sphere(vector3 center, float radius) {
+  
+  box bb;
+  bb.top    = plane_new(v3_add(center, v3(0, radius,0)), v3(0, 1,0));
+  bb.bottom = plane_new(v3_add(center, v3(0,-radius,0)), v3(0,-1,0));
+  bb.left   = plane_new(v3_add(center, v3( radius,0,0)), v3( 1,0,0));
+  bb.right  = plane_new(v3_add(center, v3(-radius,0,0)), v3(-1,0,0));
+  bb.front  = plane_new(v3_add(center, v3(0,0, radius)), v3(0,0, 1));
+  bb.back   = plane_new(v3_add(center, v3(0,0,-radius)), v3(0,0,-1));
+  return bb;
+  
+}
+
+bool box_contains(box bb, vector3 point) {
+  
+  if ( !point_behind_plane(point, bb.top) ) { return false; }
+  if ( !point_behind_plane(point, bb.bottom) ) { return false; }
+  if ( !point_behind_plane(point, bb.left)) { return false; }
+  if ( !point_behind_plane(point, bb.right)) { return false; }
+  if ( !point_behind_plane(point, bb.front)) { return false; }
+  if ( !point_behind_plane(point, bb.back)) { return false; }
+  
+  return true;
+}
+
+box box_merge(box b1, box b2) {
+  
+  float b1_x_max = b1.left.position.x;
+  float b1_x_min = b1.right.position.x;
+  float b1_y_max = b1.top.position.y;
+  float b1_y_min = b1.bottom.position.y;
+  float b1_z_max = b1.front.position.z;
+  float b1_z_min = b1.back.position.z;
+  
+  float b2_x_max = b2.left.position.x;
+  float b2_x_min = b2.right.position.x;
+  float b2_y_max = b2.top.position.y;
+  float b2_y_min = b2.bottom.position.y;
+  float b2_z_max = b2.front.position.z;
+  float b2_z_min = b2.back.position.z;
+  
+  float x_min = min(b1_x_min, b2_x_min);
+  float x_max = max(b1_x_max, b2_x_max);
+  float y_min = min(b1_y_min, b2_y_min);
+  float y_max = max(b1_y_max, b2_y_max);
+  float z_min = min(b1_z_min, b2_z_min);
+  float z_max = max(b1_z_max, b2_z_max);
+  
+  return box_new(x_min, x_max, y_min, y_max, z_min, z_max);
+}
+
+box box_transform(box bb, matrix_4x4 world_matrix) {
+  
+  bb.top = plane_transform(bb.top, world_matrix);
+  bb.bottom = plane_transform(bb.bottom, world_matrix);
+  bb.left = plane_transform(bb.left, world_matrix);
+  bb.right = plane_transform(bb.right, world_matrix);
+  bb.front = plane_transform(bb.front, world_matrix);
+  bb.back = plane_transform(bb.back, world_matrix);
+  
+  return bb;
+  
+}
+
+sphere sphere_new(vector3 center, float radius) {
+  sphere bs;
+  bs.center = center;
+  bs.radius = radius;
+  bs.radius_sqrd = radius * radius;
+  
+  return bs;
+}
+
+sphere sphere_of_box(box bb) {
+  
+  float x_max = bb.left.position.x;
+  float x_min = bb.right.position.x;
+  float y_max = bb.top.position.y;
+  float y_min = bb.bottom.position.y;
+  float z_max = bb.front.position.z;
+  float z_min = bb.back.position.z;
+  
+  vector3 center;
+  center.x = (x_min + x_max) / 2;
+  center.y = (y_min + y_max) / 2;
+  center.z = (z_min + z_max) / 2;
+  
+  float radius = 0;
+  radius = max(radius, v3_dist(center, v3(x_min, y_min, z_min)));
+  radius = max(radius, v3_dist(center, v3(x_max, y_min, z_min)));
+  radius = max(radius, v3_dist(center, v3(x_min, y_max, z_min)));
+  radius = max(radius, v3_dist(center, v3(x_min, y_min, z_max)));
+  radius = max(radius, v3_dist(center, v3(x_min, y_max, z_max)));
+  radius = max(radius, v3_dist(center, v3(x_max, y_max, z_min)));
+  radius = max(radius, v3_dist(center, v3(x_max, y_min, z_max)));
+  radius = max(radius, v3_dist(center, v3(x_max, y_max, z_max)));
+  
+  sphere bs;
+  bs.center = center;
+  bs.radius = radius;
+  bs.radius_sqrd = radius * radius;
+  
+  return bs;
+}
+
+sphere sphere_merge(sphere bs1, sphere bs2) {
+  
+  vector3 center = v3_div(v3_add(bs1.center, bs2.center), 2);
+  
+  vector3 dir = v3_normalize(v3_sub(bs2.center, bs1.center));
+  vector3 edge = v3_add(v3_mul(dir, bs2.radius), bs2.center);
+  
+  float dist = v3_dist(edge, center);
+  
+  sphere bs;
+  bs.center = center;
+  bs.radius = dist;
+  bs.radius_sqrd = dist * dist;
+  
+  return bs;
+}
+
+bool sphere_contains_point(sphere s1, vector3 point) {
+  float dist_sqrt = v3_dist_sqrd(s1.center, point);
+  return dist_sqrt <= s1.radius_sqrd;
+}
+
+bool sphere_contains_sphere(sphere s1, sphere s2) {
+  float dist_sqrt = v3_dist_sqrd(s1.center, s2.center);
+  return dist_sqrt <= s1.radius_sqrd + s2.radius_sqrd;
+}
+
+sphere sphere_transform(sphere bs, matrix_4x4 world) {
+  
+  vector3 center = m44_mul_v3(world, bs.center);
+  float radius = bs.radius * max(max(world.xx, world.yy), world.zz);
+  
+  sphere b;
+  b.center = center;
+  b.radius = radius;
+  b.radius_sqrd = radius * radius;
+  
+  return b;
+}
+
 vertex vertex_new() {
   vertex v;
   memset(&v, 0, sizeof(vertex));

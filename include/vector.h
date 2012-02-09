@@ -101,6 +101,7 @@ vector2 v2_clamp(vector2 v, float b, float t);
 int v2_equ(vector2 v1, vector2 v2);
 
 float v2_dot(vector2 v1, vector2 v2);
+float v2_length_sqrd(vector2 v);
 float v2_length(vector2 v);
 float v2_dist_sqrd(vector2 v1, vector2 v2);
 float v2_dist(vector2 v1, vector2 v2);
@@ -150,6 +151,7 @@ vector3 v3_fmod(vector3 v, float val);
 int v3_equ(vector3 v1, vector3 v2);
 
 float v3_dot(vector3 v1, vector3 v2);
+float v3_length_sqrd(vector3 v);
 float v3_length(vector3 v);
 float v3_dist_sqrd(vector3 v1, vector3 v2);
 float v3_dist(vector3 v1, vector3 v2);
@@ -200,6 +202,7 @@ vector4 v4_fmod(vector4 v, float val);
 int v4_equ(vector4 v1, vector4 v2);
 
 float v4_dot(vector4 v1, vector4 v2);
+float v4_length_sqrd(vector4 v);
 float v4_length(vector4 v);
 float v4_dist_sqrd(vector4 v1, vector4 v2);
 float v4_dist(vector4 v1, vector4 v2);

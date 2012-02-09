@@ -101,7 +101,7 @@ void sea_init() {
   static_object* center_sphere = entity_new("center_sphere", static_object);
   center_sphere->position = v3(0, 5, 0);
   center_sphere->renderable = asset_get("./resources/ball.obj");
-  center_sphere->collision_body = collision_body_new_sphere(bounding_sphere_new(v3_zero(), 1.0f));
+  center_sphere->collision_body = collision_body_new_sphere(sphere_new(v3_zero(), 1.0f));
   
   ui_rectangle* wireframe_rect = ui_elem_new("wireframe_rect", ui_rectangle);
   wireframe_rect->top_left = v2(10,10);
@@ -226,7 +226,7 @@ void sea_event(SDL_Event event) {
       
       physics_object* ball = entity_new(ball_name, physics_object);
       ball->renderable = asset_get("./resources/ball.obj");
-      ball->collision_body = collision_body_new_sphere(bounding_sphere_new(v3_zero(), 1));
+      ball->collision_body = collision_body_new_sphere(sphere_new(v3_zero(), 1));
       ball->position = cam->position;
       ball->scale = v3(0.5, 0.5, 0.5);
       ball->velocity = v3_mul(v3_normalize(v3_sub(cam->target, cam->position)), 75);
