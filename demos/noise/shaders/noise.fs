@@ -21,7 +21,7 @@ vec3 gradient_lookup(gradient g, float amount) {
 
 float perlin_noise(sampler2D noise, vec2 uvs, int octaves) {
   
-  vec2 resolution = vec2(1680, 1050) / vec2(512, 512);
+  vec2 resolution = vec2(1280, 720) / vec2(512, 512);
   
   float total = 0.0;
   for(int i = 0; i < octaves; i++) {
