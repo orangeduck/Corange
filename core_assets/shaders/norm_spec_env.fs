@@ -61,7 +61,7 @@ void main() {
   vec3 diffuse = from_gamma(diffuse_a.rgb);
   
   vec3 bump = texture2D( bump_map, uvs ).rgb;
-  vec3 spec = from_gamma(texture2D( spec_map, uvs ).rgb);
+  vec3 spec = texture2D( spec_map, uvs ).rgb;
   
   bump = mix( bump, vec3( 0.5, 0.5, 1.0 ), bumpiness );
   bump = normalize( ( bump * 2.0 ) - 1.0 );

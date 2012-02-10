@@ -5,7 +5,7 @@ uniform sampler2D depth_texture;
 
 uniform sampler2D shadows_texture;
 
-uniform sampler2D random_texture;
+uniform sampler2D ssao_texture;
 uniform sampler2D env_texture;
 
 uniform sampler3D lut;
@@ -30,8 +30,8 @@ vec3 color_correction(vec3 color, sampler3D lut, int lut_size);
 
 /* End */
 
-void main( void )
-{
+void main() {
+
 	vec4 position = texture2D( positions_texture, gl_TexCoord[0].xy );
   int mat_id = int(position.a);
   
@@ -62,8 +62,7 @@ void main( void )
 	vec3 eyeDir = normalize(camera_position - position.xyz);
 	vec3 vHalfVector = normalize(lightDir + eyeDir);
 	
-  float ssao = ssao_depth(gl_TexCoord[0].xy, depth_texture, random_texture);
-  
+  float ssao = texture2DLod(ssao_texture, gl_TexCoord[0].xy, 1);
   
   vec3 ambient_amount = albedo * ssao * 1.25;
   float light_amount = max(dot(normal, lightDir), 0.0);

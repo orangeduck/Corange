@@ -412,7 +412,7 @@ void renderers_update() {
 void renderers_render() {
 
   static_object* s_podium = entity_get("podium");
-
+  
   static_object* s_piano = entity_get("piano");
   static_object* s_cello = entity_get("cello");
   static_object* s_dino = entity_get("dino");

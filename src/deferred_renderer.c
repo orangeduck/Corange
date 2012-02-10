@@ -28,6 +28,8 @@ static float LIGHT_PROJ_MATRIX[16];
 static shader_program* PROGRAM;
 static shader_program* PROGRAM_ANIMATED;
 static shader_program* PROGRAM_CLEAR;
+static shader_program* PROGRAM_SSAO;
+
 static shader_program* SCREEN_PROGRAM;
 
 static int NORMAL;
@@ -40,7 +42,7 @@ static int BINORMAL_ANIMATED;
 static int BONE_INDICIES;
 static int BONE_WEIGHTS;
 
-static GLuint fbo = 0;
+static GLuint fbo;
 static GLuint depth_buffer;
 static GLuint diffuse_buffer;
 static GLuint positions_buffer;
@@ -51,10 +53,15 @@ static GLuint positions_texture;
 static GLuint normals_texture;
 static GLuint depth_texture;
 
+static GLuint ssao_fbo;
+static GLuint ssao_buffer;
+static GLuint ssao_texture;
+
 static texture* SHADOW_TEX;
 static texture* COLOR_CORRECTION;
 static texture* RANDOM;
 static texture* ENVIRONMENT;
+
 static light* LIGHT;
 
 void deferred_renderer_init() {
@@ -66,6 +73,8 @@ void deferred_renderer_init() {
   PROGRAM = asset_load_get("$SHADERS/deferred.prog");
   PROGRAM_ANIMATED = asset_load_get("$SHADERS/deferred_animated.prog");
   PROGRAM_CLEAR = asset_load_get("$SHADERS/deferred_clear.prog");
+  PROGRAM_SSAO = asset_load_get("$SHADERS/deferred_ssao.prog");
+  
   SCREEN_PROGRAM = asset_load_get("$SHADERS/deferred_screen.prog");
   
   NORMAL = glGetAttribLocation(*PROGRAM, "normal");
@@ -81,23 +90,22 @@ void deferred_renderer_init() {
   glGenFramebuffers(1, &fbo);
   glBindFramebuffer(GL_FRAMEBUFFER, fbo);
   
-  glGenRenderbuffers(1, &depth_buffer);
   glGenRenderbuffers(1, &diffuse_buffer);
-  glGenRenderbuffers(1, &positions_buffer);
-  glGenRenderbuffers(1, &normals_buffer);  
-  
   glBindRenderbuffer(GL_RENDERBUFFER, diffuse_buffer);
   glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, viewport_width(), viewport_height());
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, diffuse_buffer);   
   
+  glGenRenderbuffers(1, &positions_buffer);
   glBindRenderbuffer(GL_RENDERBUFFER, positions_buffer);
   glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA32F, viewport_width(), viewport_height());
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_RENDERBUFFER, positions_buffer);  
   
+  glGenRenderbuffers(1, &normals_buffer);  
   glBindRenderbuffer(GL_RENDERBUFFER, normals_buffer);
   glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA16F, viewport_width(), viewport_height());
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_RENDERBUFFER, normals_buffer);  
   
+  glGenRenderbuffers(1, &depth_buffer);
   glBindRenderbuffer(GL_RENDERBUFFER, depth_buffer);
   glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, viewport_width(), viewport_height());
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_buffer);  
@@ -138,6 +146,25 @@ void deferred_renderer_init() {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth_texture, 0);
   
+  
+  glGenFramebuffers(1, &ssao_fbo);
+  glBindFramebuffer(GL_FRAMEBUFFER, ssao_fbo);
+  
+  glGenRenderbuffers(1, &ssao_buffer);
+  glBindRenderbuffer(GL_RENDERBUFFER, ssao_buffer);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, viewport_width() / 2, viewport_height() / 2);
+  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, ssao_buffer);   
+  
+  glGenTextures(1, &ssao_texture);
+  glBindTexture(GL_TEXTURE_2D, ssao_texture);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, viewport_width() / 2, viewport_height() / 2, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ssao_texture, 0);
+  
+  
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   
 }
@@ -155,6 +182,10 @@ void deferred_renderer_finish() {
   glDeleteTextures(1,&positions_texture);
   glDeleteTextures(1,&normals_texture);
   glDeleteTextures(1,&depth_texture);
+  
+  glDeleteFramebuffers(1, &ssao_fbo);
+  glDeleteRenderbuffers(1, &ssao_buffer);
+  glDeleteTextures(1,&ssao_texture);
   
 }
 
@@ -174,7 +205,7 @@ void deferred_renderer_set_light(light* l) {
   LIGHT = l;
 }
 
-static void deferred_renderer_use_material(material* mat) {
+static void deferred_renderer_use_material(material* mat, shader_program* PROG) {
   
   /* Set material parameters */
   
@@ -186,62 +217,46 @@ static void deferred_renderer_use_material(material* mat) {
     int* type = dictionary_get(mat->types, key);
     void* property = dictionary_get(mat->properties, key);
     
-    GLint loc1 = glGetUniformLocation(*PROGRAM, key);
-    GLint loc2 = glGetUniformLocation(*PROGRAM_ANIMATED, key);
+    GLint loc = glGetUniformLocation(*PROG, key);
     
-    GLint world_matrix_u = glGetUniformLocation(*PROGRAM, "world_matrix");
+    GLint world_matrix_u = glGetUniformLocation(*PROG, "world_matrix");
     glUniformMatrix4fv(world_matrix_u, 1, 0, WORLD_MATRIX);
   
-    GLint proj_matrix_u = glGetUniformLocation(*PROGRAM, "proj_matrix");
+    GLint proj_matrix_u = glGetUniformLocation(*PROG, "proj_matrix");
     glUniformMatrix4fv(proj_matrix_u, 1, 0, PROJ_MATRIX);
     
-    GLint view_matrix_u = glGetUniformLocation(*PROGRAM, "view_matrix");
-    glUniformMatrix4fv(view_matrix_u, 1, 0, VIEW_MATRIX);
-    
-    world_matrix_u = glGetUniformLocation(*PROGRAM_ANIMATED, "world_matrix");
-    glUniformMatrix4fv(world_matrix_u, 1, 0, WORLD_MATRIX);
-  
-    proj_matrix_u = glGetUniformLocation(*PROGRAM_ANIMATED, "proj_matrix");
-    glUniformMatrix4fv(proj_matrix_u, 1, 0, PROJ_MATRIX);
-    
-    view_matrix_u = glGetUniformLocation(*PROGRAM_ANIMATED, "view_matrix");
+    GLint view_matrix_u = glGetUniformLocation(*PROG, "view_matrix");
     glUniformMatrix4fv(view_matrix_u, 1, 0, VIEW_MATRIX);
     
     if (*type == mat_type_texture) {
     
-      glUniform1i(loc1, tex_counter);
-      glUniform1i(loc2, tex_counter);
+      glUniform1i(loc, tex_counter);
       glActiveTexture(GL_TEXTURE0 + tex_counter);
       glBindTexture(GL_TEXTURE_2D, *((texture*)property));
       tex_counter++;
     
     } else if (*type == mat_type_int) {
       
-      glUniform1i(loc1, *((int*)property));
-      glUniform1i(loc2, *((int*)property));
+      glUniform1i(loc, *((int*)property));
     
     } else if (*type == mat_type_float) {
     
-      glUniform1f(loc1, *((float*)property));
-      glUniform1f(loc2, *((float*)property));
+      glUniform1f(loc, *((float*)property));
       
     } else if (*type == mat_type_vector2) {
     
       vector2 v = *((vector2*)property);
-      glUniform2f(loc1, v.x, v.y);
-      glUniform2f(loc2, v.x, v.y);
+      glUniform2f(loc, v.x, v.y);
     
     } else if (*type == mat_type_vector3) {
     
       vector3 v = *((vector3*)property);
-      glUniform3f(loc1, v.x, v.y, v.z);
-      glUniform3f(loc2, v.x, v.y, v.z);
+      glUniform3f(loc, v.x, v.y, v.z);
   
     } else if (*type == mat_type_vector4) {
     
       vector4 v = *((vector4*)property);
-      glUniform4f(loc1, v.w, v.x, v.y, v.z);
-      glUniform4f(loc2, v.w, v.x, v.y, v.z);
+      glUniform4f(loc, v.w, v.x, v.y, v.z);
     
     } else {
       /* Do nothing */
@@ -323,6 +338,59 @@ void deferred_renderer_begin() {
 
 void deferred_renderer_end() {
   
+  /* Render out ssao */
+  
+  glBindFramebuffer(GL_FRAMEBUFFER, ssao_fbo);
+  
+  glViewport(0, 0, viewport_width() / 2, viewport_height() / 2);
+  
+  glUseProgram(*PROGRAM_SSAO);
+  
+	glMatrixMode(GL_PROJECTION);
+  glPushMatrix();
+	glLoadIdentity();
+	glOrtho(-1.0, 1.0, -1.0, 1.0, -1, 1);
+  
+	glMatrixMode(GL_MODELVIEW);
+  glPushMatrix();
+	glLoadIdentity();
+  
+  glActiveTexture(GL_TEXTURE0 + 0 );
+  glBindTexture(GL_TEXTURE_2D, depth_texture);
+  glEnable(GL_TEXTURE_2D);
+  glUniform1i(glGetUniformLocation(*PROGRAM_SSAO, "depth_texture"), 0);
+  
+  glActiveTexture(GL_TEXTURE0 + 1 );
+  glBindTexture(GL_TEXTURE_2D, *RANDOM);
+  glEnable(GL_TEXTURE_2D);
+  glUniform1i(glGetUniformLocation(*PROGRAM_SSAO, "random_texture"), 1);
+  
+  float seed = CAMERA->position.x + CAMERA->position.y + CAMERA->position.z;
+  glUniform1f(glGetUniformLocation(*PROGRAM_SSAO, "seed"), seed);
+  
+	glBegin(GL_QUADS);
+		glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0, -1.0,  0.0f);
+		glTexCoord2f(1.0f, 0.0f); glVertex3f(1.0, -1.0,  0.0f);
+		glTexCoord2f(1.0f, 1.0f); glVertex3f(1.0,  1.0,  0.0f);
+		glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0,  1.0,  0.0f);
+	glEnd();
+  
+  glActiveTexture(GL_TEXTURE0 + 1 );
+  glDisable(GL_TEXTURE_2D);
+  
+  glActiveTexture(GL_TEXTURE0 + 0 );
+  glDisable(GL_TEXTURE_2D);
+  
+  glMatrixMode(GL_PROJECTION);
+  glPopMatrix();
+
+  glMatrixMode(GL_MODELVIEW);
+  glPopMatrix();
+  
+  /* End */
+  
+  glViewport(0, 0, viewport_width(), viewport_height());
+  
   glUseProgram(0);
   
   glDisable(GL_DEPTH_TEST);
@@ -370,9 +438,10 @@ void deferred_renderer_end() {
   glUniform1i(glGetUniformLocation(*SCREEN_PROGRAM, "shadows_texture"), 4);
   
   glActiveTexture(GL_TEXTURE0 + 5 );
-  glBindTexture(GL_TEXTURE_2D, *RANDOM);
+  glBindTexture(GL_TEXTURE_2D, ssao_texture);
   glEnable(GL_TEXTURE_2D);
-  glUniform1i(glGetUniformLocation(*SCREEN_PROGRAM, "random_texture"), 5);
+  glGenerateMipmap(GL_TEXTURE_2D);
+  glUniform1i(glGetUniformLocation(*SCREEN_PROGRAM, "ssao_texture"), 5);
   
   glActiveTexture(GL_TEXTURE0 + 6 );
   glBindTexture(GL_TEXTURE_2D, *ENVIRONMENT);
@@ -461,7 +530,7 @@ void deferred_renderer_render_static(static_object* s) {
       
       glUseProgram(*PROGRAM);
       
-      deferred_renderer_use_material(s->base);
+      deferred_renderer_use_material(s->base, PROGRAM);
       
       GLsizei stride = sizeof(float) * 24;
       
@@ -501,7 +570,7 @@ void deferred_renderer_render_static(static_object* s) {
     
       glUseProgram(*PROGRAM);
       
-      deferred_renderer_use_material(s->base);
+      deferred_renderer_use_material(s->base, PROGRAM);
       
       GLsizei stride = sizeof(float) * 18;
       
@@ -540,7 +609,7 @@ void deferred_renderer_render_static(static_object* s) {
     }
 
   }
-
+  
 }
 
 #define MAX_BONES 32
@@ -576,7 +645,7 @@ void deferred_renderer_render_animated(animated_object* ao) {
       
       glUseProgram(*PROGRAM_ANIMATED);
       
-      deferred_renderer_use_material(s->base);
+      deferred_renderer_use_material(s->base, PROGRAM_ANIMATED);
       
       GLint bone_world_matrices_u = glGetUniformLocation(*PROGRAM_ANIMATED, "bone_world_matrices");
       glUniformMatrix4fv(bone_world_matrices_u, ao->skeleton->num_bones, GL_FALSE, bone_matrix_data);
