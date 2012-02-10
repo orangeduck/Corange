@@ -127,24 +127,39 @@ static void switch_object_imrod(ui_rectangle* rect, SDL_Event event) {
   }
 }
 
-#define any_button_pressed (imrod_button_pressed || cello_button_pressed || piano_button_pressed || renderer_button_pressed)
+static bool dino_button_pressed;
+static void switch_object_dino(ui_rectangle* rect, SDL_Event event) {
+  
+  if (event.type == SDL_MOUSEBUTTONDOWN) {
+    
+    if (ui_rectangle_contains_position(rect, v2(event.motion.x, event.motion.y))) {
+      dino_button_pressed = true;
+      rect->color = v4(0.5, 0.5, 0.5, 1);
+    }
+  
+  } else if (event.type == SDL_MOUSEBUTTONUP) {
+    
+    if (dino_button_pressed) {
+      dino_button_pressed = false;
+      rect->color = v4_black();
+      
+      object_id = 4;
+    }
+  }
+}
+
+#define any_button_pressed (imrod_button_pressed || cello_button_pressed || piano_button_pressed || renderer_button_pressed || dino_button_pressed)
 
 void renderers_init() {
   
-  viewport_set_dimensions( v2(1280, 720) );
+  viewport_set_dimensions(1280, 720);
 
-  load_folder("./resources/skybox/");
   load_folder("./resources/podium/");
   load_folder("./resources/cello/");
   load_folder("./resources/piano/");
   load_folder("./resources/imrod/");
   load_folder("./resources/pirate/");
-  
-  renderable* r_skybox = asset_get("./resources/skybox/skybox.obj");
-  renderable_set_material(r_skybox, asset_get("./resources/skybox/skybox.mat"));
-  static_object* s_skybox = static_object_new(r_skybox);
-  s_skybox->recieve_shadows = false;
-  entity_add("skybox", static_object, s_skybox);
+  load_folder("./resources/dino/");
   
   renderable* r_podium = asset_get("./resources/podium/podium.obj");
   renderable_set_material(r_podium, asset_get("./resources/podium/podium.mat"));
@@ -163,6 +178,12 @@ void renderers_init() {
   static_object* s_piano = static_object_new(r_piano);
   s_piano->position = v3(1, 5, 0);
   entity_add("piano", static_object, s_piano);
+  
+  renderable* r_dino = asset_get("./resources/dino/dino.obj");
+  renderable_set_multi_material(r_dino, asset_get("./resources/dino/dino.mmat"));
+  static_object* s_dino = static_object_new(r_dino);
+  s_dino->scale = v3(4,4,4);
+  entity_add("dino", static_object, s_dino);
   
   renderable* r_imrod = asset_get("./resources/imrod/imrod.smd");
   material* mat_imrod = asset_get("./resources/imrod/imrod_animated.mat");  
@@ -274,11 +295,24 @@ void renderers_init() {
   imrod_text->color = v4_white();
   ui_text_update_string(imrod_text, "Imrod");
   
+  ui_rectangle* dino_rect = ui_elem_new("dino_rect", ui_rectangle);
+  dino_rect->top_left = v2(10,185);
+  dino_rect->bottom_right = v2(60,210);
+  dino_rect->color = v4_black();
+  dino_rect->border_color = v4_white();
+  dino_rect->border_size = 1;
+  
+  ui_text* dino_text = ui_elem_new("dino_text", ui_text);
+  dino_text->position = v2(15,190);
+  dino_text->color = v4_white();
+  ui_text_update_string(dino_text, "Dino");
+  
   ui_elem_add_event("switch_rect", switch_renderer_event);
   
   ui_elem_add_event("piano_rect", switch_object_piano);
   ui_elem_add_event("cello_rect", switch_object_cello);
   ui_elem_add_event("imrod_rect", switch_object_imrod);
+  ui_elem_add_event("dino_rect", switch_object_dino);
   
   /* New Camera and light */
   
@@ -377,11 +411,11 @@ void renderers_update() {
 
 void renderers_render() {
 
-  static_object* s_skybox = entity_get("skybox");
   static_object* s_podium = entity_get("podium");
 
   static_object* s_piano = entity_get("piano");
   static_object* s_cello = entity_get("cello");
+  static_object* s_dino = entity_get("dino");
   
   animated_object* a_imrod = entity_get("imrod");
   animated_object* a_pirate = entity_get("pirate");
@@ -398,13 +432,14 @@ void renderers_render() {
   } else if (object_id == 3) {
     shadow_mapper_render_animated(a_pirate);
     shadow_mapper_render_animated(a_boots);
+  } else if (object_id == 4) {
+    shadow_mapper_render_static(s_dino);
   }
   shadow_mapper_end();
   
   if (use_deferred) {
     
     deferred_renderer_begin();
-    deferred_renderer_render_static(s_skybox);
     deferred_renderer_render_static(s_podium);
     
     if (object_id == 0) {
@@ -416,6 +451,8 @@ void renderers_render() {
     } else if (object_id == 3) {
       deferred_renderer_render_animated(a_pirate);
       deferred_renderer_render_animated(a_boots);
+    } else if (object_id == 4) {
+      deferred_renderer_render_static(s_dino);
     }
     
     deferred_renderer_end();
@@ -424,7 +461,6 @@ void renderers_render() {
   
     forward_renderer_begin();
     
-    forward_renderer_render_static(s_skybox);
     forward_renderer_render_static(s_podium);
     
     if (object_id == 0) {
@@ -436,6 +472,8 @@ void renderers_render() {
     } else if (object_id == 3) {
       forward_renderer_render_animated(a_pirate);
       forward_renderer_render_animated(a_boots);
+    } else if (object_id == 4) {
+      forward_renderer_render_static(s_dino);
     }
     
     forward_renderer_end();

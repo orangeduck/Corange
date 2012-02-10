@@ -16,7 +16,7 @@ const int max_particles = 1024;
 
 void metaballs_init() {
   
-  viewport_set_dimensions( v2(1280, 720) );
+  viewport_set_dimensions(1280, 720);
   
   kernels_init_with_opengl();
   

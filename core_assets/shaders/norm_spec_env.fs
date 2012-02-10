@@ -15,6 +15,7 @@ uniform float bumpiness;
 uniform float env_amount;
 
 uniform float specular_level;
+uniform float alpha_test;
 
 uniform int recieve_shadows;
 
@@ -52,6 +53,11 @@ void main() {
   }
 
   vec4 diffuse_a = texture2D( diffuse_map, uvs );
+  
+  if (diffuse_a.a < alpha_test) {
+    discard;
+  }
+  
   vec3 diffuse = from_gamma(diffuse_a.rgb);
   
   vec3 bump = texture2D( bump_map, uvs ).rgb;

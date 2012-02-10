@@ -1,14 +1,16 @@
 -- To Finish Demos --
 
-New gradient background for renderers instead of skybox
+Alpha test shadow mapper
+Metaballs self shadowing
+Multiple Lights support
 Remove cello bow from cello model.
 Sea Game - Add depth pass and foam effects? Walk around on moving deck? Proper Skybox. Bigger waterplane.
 Comment platformer game nicely. Reorganize.
 
 -- Tweaks/Cleanup --
 
-const char stuff where needed
-Convert skeleton stuff to quaternions - Not sure about this, if I trust my quaternion code.
+const char stuff where needed (including asset stuff)
+Convert skeleton stuff to quaternions - though not sure if I trust my quaternion code.
 
 -- In the Future --
 

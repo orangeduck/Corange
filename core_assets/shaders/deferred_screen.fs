@@ -33,6 +33,11 @@ void main( void )
 {
 	vec4 position = texture2D( positions_texture, gl_TexCoord[0].xy );
   
+  if (position.a == 0.0) {
+    gl_FragColor = texture2D( diffuse_texture, gl_TexCoord[0].xy );
+    return;
+  }
+  
   vec4 light_pos = light_proj * light_view * vec4(position.xyz,1);
   
   float shadow = shadow_amount_soft_pcf25(light_pos, shadows_texture, 0.0005);

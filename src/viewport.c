@@ -155,9 +155,9 @@ void viewport_set_width(int width) {
   viewport_restart();
 }
 
-void viewport_set_dimensions(vector2 dim) {
-  window_width = dim.x;
-  window_height = dim.y;
+void viewport_set_dimensions(int width, int height) {
+  window_width = width;
+  window_height = height;
   viewport_restart();
 }
 

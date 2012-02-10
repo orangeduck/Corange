@@ -27,6 +27,7 @@ static float LIGHT_PROJ_MATRIX[16];
 
 static shader_program* PROGRAM;
 static shader_program* PROGRAM_ANIMATED;
+static shader_program* PROGRAM_CLEAR;
 static shader_program* SCREEN_PROGRAM;
 
 static int NORMAL;
@@ -62,6 +63,7 @@ void deferred_renderer_init() {
   
   PROGRAM = asset_load_get("$SHADERS/deferred.prog");
   PROGRAM_ANIMATED = asset_load_get("$SHADERS/deferred_animated.prog");
+  PROGRAM_CLEAR = asset_load_get("$SHADERS/deferred_clear.prog");
   SCREEN_PROGRAM = asset_load_get("$SHADERS/deferred_screen.prog");
   
   NORMAL = glGetAttribLocation(*PROGRAM, "normal");
@@ -274,7 +276,6 @@ void deferred_renderer_begin() {
   glBindFramebuffer(GL_FRAMEBUFFER, fbo);
   
   deferred_renderer_setup_camera();
-  glEnable(GL_DEPTH_TEST);
   
   GLenum buffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
   glDrawBuffers(3, buffers);
@@ -282,6 +283,39 @@ void deferred_renderer_begin() {
   glClearColor(0.2, 0.2, 0.2, 1.0f);
   glClearDepth(1.0f);
   glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+  
+  glUseProgram(*PROGRAM_CLEAR);
+  
+  GLint start = glGetUniformLocation(*PROGRAM_CLEAR, "start");
+  GLint end = glGetUniformLocation(*PROGRAM_CLEAR, "end");
+  glUniform4f(start, 0.5, 0.5, 0.5, 1.0);
+  glUniform4f(end, 0.0, 0.0, 0.0, 1.0);
+  
+	glMatrixMode(GL_PROJECTION);
+  glPushMatrix();
+	glLoadIdentity();
+	glOrtho(-1.0, 1.0, -1.0, 1.0, -1, 1);
+  
+	glMatrixMode(GL_MODELVIEW);
+  glPushMatrix();
+	glLoadIdentity();
+  
+	glBegin(GL_QUADS);
+		glVertex3f(-1.0, -1.0,  0.0f);
+		glVertex3f(1.0, -1.0,  0.0f);
+		glVertex3f(1.0,  1.0,  0.0f);
+		glVertex3f(-1.0,  1.0,  0.0f);
+	glEnd();
+  
+  glMatrixMode(GL_PROJECTION);
+  glPopMatrix();
+
+  glMatrixMode(GL_MODELVIEW);
+  glPopMatrix();
+  
+  glUseProgram(0);
+  
+  glEnable(GL_DEPTH_TEST);
   
 }
 

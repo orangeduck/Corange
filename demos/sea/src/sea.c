@@ -37,7 +37,7 @@ static void switch_wireframe(ui_rectangle* rect, SDL_Event event) {
 
 void sea_init() {
   
-  viewport_set_dimensions( v2(1280, 720) );
+  viewport_set_dimensions(1280, 720);
 
   camera* cam = entity_new("camera", camera);
   cam->position = v3(50.0, 50.0, 50.0);

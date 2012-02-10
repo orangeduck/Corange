@@ -26,6 +26,7 @@ static camera* CAMERA = NULL;
 static light* LIGHT = NULL;
 static texture* SHADOW_TEX = NULL;
 static texture* COLOR_CORRECTION = NULL;
+static shader_program* GRADIENT = NULL;
 
 static float proj_matrix[16];
 static float view_matrix[16];
@@ -44,6 +45,10 @@ static int BONE_WEIGHTS;
 void forward_renderer_init() {
   
   COLOR_CORRECTION = asset_load_get("$CORANGE/resources/identity.lut");
+  GRADIENT = asset_load_get("$SHADERS/gradient.prog");
+  
+  glClearColor(0.2, 0.2, 0.2, 1.0f);
+  glClearDepth(1.0f);
   
 }
 
@@ -74,11 +79,46 @@ void forward_renderer_set_color_correction(texture* t) {
   COLOR_CORRECTION = t;
 }
 
+static void render_gradient() {
+
+  glUseProgram(*GRADIENT);
+  
+  GLint start = glGetUniformLocation(*GRADIENT, "start");
+  GLint end = glGetUniformLocation(*GRADIENT, "end");
+  glUniform4f(start, 0.5, 0.5, 0.5, 1.0);
+  glUniform4f(end, 0.0, 0.0, 0.0, 1.0);
+  
+	glMatrixMode(GL_PROJECTION);
+  glPushMatrix();
+	glLoadIdentity();
+	glOrtho(-1.0, 1.0, -1.0, 1.0, -1, 1);
+  
+	glMatrixMode(GL_MODELVIEW);
+  glPushMatrix();
+	glLoadIdentity();
+  
+	glBegin(GL_QUADS);
+		glVertex3f(-1.0, -1.0,  0.0f);
+		glVertex3f(1.0, -1.0,  0.0f);
+		glVertex3f(1.0,  1.0,  0.0f);
+		glVertex3f(-1.0,  1.0,  0.0f);
+	glEnd();
+  
+  glMatrixMode(GL_PROJECTION);
+  glPopMatrix();
+
+  glMatrixMode(GL_MODELVIEW);
+  glPopMatrix();
+  
+  glUseProgram(0);
+
+}
+
 void forward_renderer_begin() {
   
-  glClearColor(0.2, 0.2, 0.2, 1.0f);
-  glClearDepth(1.0f);
   glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+  
+  render_gradient();
   
   forward_renderer_setup_camera();
   
