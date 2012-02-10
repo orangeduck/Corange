@@ -6,6 +6,7 @@ uniform sampler2D depth_texture;
 uniform sampler2D shadows_texture;
 
 uniform sampler2D random_texture;
+uniform sampler2D env_texture;
 
 uniform sampler3D lut;
 
@@ -32,8 +33,9 @@ vec3 color_correction(vec3 color, sampler3D lut, int lut_size);
 void main( void )
 {
 	vec4 position = texture2D( positions_texture, gl_TexCoord[0].xy );
+  int mat_id = int(position.a);
   
-  if (position.a == 0.0) {
+  if (mat_id == 1) {
     gl_FragColor = texture2D( diffuse_texture, gl_TexCoord[0].xy );
     return;
   }
@@ -47,7 +49,7 @@ void main( void )
 	
 	float spec = diffuse_a.a;
 	
-	vec4 normal_a = texture2D( normals_texture, gl_TexCoord[0].xy );
+	vec4 normal_a = texture2D(normals_texture, gl_TexCoord[0].xy);
 	vec3 normal = normal_a.rgb;
 	float glossiness = normal_a.a;
 	
@@ -60,16 +62,28 @@ void main( void )
 	vec3 eyeDir = normalize(camera_position - position.xyz);
 	vec3 vHalfVector = normalize(lightDir + eyeDir);
 	
-  //float ssao = ssao_depth(gl_TexCoord[0].xy, depth_texture, random_texture);
-  float ssao = 1.0;
+  float ssao = ssao_depth(gl_TexCoord[0].xy, depth_texture, random_texture);
   
-	vec3 ambient_amount = albedo * ssao;
-	float light_amount = max(dot(normal, lightDir), 0.0);
-	float spec_amount = spec * pow(max(dot(normal, vHalfVector),0.0), glossiness);
   
+  vec3 ambient_amount = albedo * ssao * 1.25;
+  float light_amount = max(dot(normal, lightDir), 0.0);
+  float spec_amount = spec * pow(max(dot(normal, vHalfVector),0.0), glossiness);
+    
   vec3 diffuse = shadow * light_amount * albedo * diffuse_light;
   vec3 ambient = ambient_amount * ambient_light;
   vec3 specular = shadow * spec_amount * specular_light;
+  
+  if ((mat_id == 2) || (mat_id == 3)) {
+  
+    float env_factor = 1;
+    if (mat_id == 3) { env_factor = 3; }
+  
+    vec3 reflected = normalize(reflect(eyeDir, normal));
+    vec3 env = from_gamma(texture2D(env_texture, reflected.xy).rgb) * 0.25;
+    float env_amount = (1.0 - dot(eyeDir, normal)) * spec * env_factor;
+    
+    diffuse = mix(diffuse, env, env_amount);
+  } 
   
   vec3 total = to_gamma(diffuse + ambient + specular);
   

@@ -185,10 +185,6 @@ int viewport_width() {
   return window_width;
 }
 
-vector2 viewport_dimensions() {
-  return v2(window_width, window_height);
-}
-
 float viewport_ratio() {
   return (float)window_height / (float)window_width;
 }

@@ -64,6 +64,7 @@ float glossiness = 25.0
 float bumpiness = 1.5
 float specular_level = 1.5
 float env_amount = 3.0
+int mat_id = 3
 
 submaterial flag
 program prog = $SHADERS/norm_spec_env.prog
@@ -76,6 +77,7 @@ float bumpiness = 1.5
 float specular_level = 1.5
 float env_amount = 3.0
 float alpha_test = 0.5
+int mat_id = 3
 
 submaterial gunturret
 program prog = $SHADERS/norm_spec_env.prog
@@ -87,6 +89,7 @@ float glossiness = 25.0
 float bumpiness = 1.5
 float specular_level = 1.5
 float env_amount = 3.0
+int mat_id = 3
 
 submaterial neck_ring
 program prog = $SHADERS/norm_spec_env.prog
@@ -98,6 +101,7 @@ float glossiness = 25.0
 float bumpiness = 1.5
 float specular_level = 1.5
 float env_amount = 3.0
+int mat_id = 3
 
 submaterial body
 program prog = $SHADERS/norm_spec_env.prog
@@ -109,3 +113,4 @@ float glossiness = 5.0
 float bumpiness = 1.5
 float specular_level = 0.25
 float env_amount = 0.5
+int mat_id = 2

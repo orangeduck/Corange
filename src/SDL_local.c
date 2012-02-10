@@ -160,6 +160,7 @@ void SDL_RWsize(SDL_RWops* file, int* size) {
   SDL_RWseek(file, pos, SEEK_SET);
 }
 
+
 int SDL_RWreadline(SDL_RWops* file, char* buffer, int buffersize) {
   
   char c = ' ';
@@ -180,11 +181,9 @@ int SDL_RWreadline(SDL_RWops* file, char* buffer, int buffersize) {
   }
   
   if(i > 0) {
-    /* End of file but actually data on the final line */
     buffer[i] = '\0';
     return i;
   } else {
-    /* Actual end of file */
     return 0;
   }
   

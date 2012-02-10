@@ -10,7 +10,7 @@ void main() {
 	gl_FragData[0].a = 0.0;
 	
 	gl_FragData[1].rgb = vec3(0,0,0);
-	gl_FragData[1].a = 0.0;
+	gl_FragData[1].a = float(1);
 	
 	gl_FragData[2].rgb = vec3(0,0,0);
 	gl_FragData[2].a = 0.0;

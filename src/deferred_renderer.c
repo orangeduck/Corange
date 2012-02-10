@@ -54,12 +54,14 @@ static GLuint depth_texture;
 static texture* SHADOW_TEX;
 static texture* COLOR_CORRECTION;
 static texture* RANDOM;
+static texture* ENVIRONMENT;
 static light* LIGHT;
 
 void deferred_renderer_init() {
   
   COLOR_CORRECTION = asset_load_get("$CORANGE/resources/identity.lut");
   RANDOM = asset_load_get("$CORANGE/resources/random.dds");
+  ENVIRONMENT = asset_load_get("$CORANGE/resources/envmap.dds");
   
   PROGRAM = asset_load_get("$SHADERS/deferred.prog");
   PROGRAM_ANIMATED = asset_load_get("$SHADERS/deferred_animated.prog");
@@ -214,9 +216,9 @@ static void deferred_renderer_use_material(material* mat) {
       tex_counter++;
     
     } else if (*type == mat_type_int) {
-    
-      glUniform1i(loc1, *((float*)property));
-      glUniform1i(loc2, *((float*)property));
+      
+      glUniform1i(loc1, *((int*)property));
+      glUniform1i(loc2, *((int*)property));
     
     } else if (*type == mat_type_float) {
     
@@ -373,9 +375,14 @@ void deferred_renderer_end() {
   glUniform1i(glGetUniformLocation(*SCREEN_PROGRAM, "random_texture"), 5);
   
   glActiveTexture(GL_TEXTURE0 + 6 );
+  glBindTexture(GL_TEXTURE_2D, *ENVIRONMENT);
+  glEnable(GL_TEXTURE_2D);
+  glUniform1i(glGetUniformLocation(*SCREEN_PROGRAM, "env_texture"), 6);
+  
+  glActiveTexture(GL_TEXTURE0 + 7 );
   glBindTexture(GL_TEXTURE_3D, *COLOR_CORRECTION);
   glEnable(GL_TEXTURE_3D);
-  glUniform1i(glGetUniformLocation(*SCREEN_PROGRAM, "lut"), 6);
+  glUniform1i(glGetUniformLocation(*SCREEN_PROGRAM, "lut"), 7);
   
   GLint cam_position = glGetUniformLocation(*SCREEN_PROGRAM, "camera_position");
   glUniform3f(cam_position, CAMERA->position.x, CAMERA->position.y, CAMERA->position.z);
@@ -404,8 +411,11 @@ void deferred_renderer_end() {
 		glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0,  1.0,  0.0f);
 	glEnd();
   
-  glActiveTexture(GL_TEXTURE0 + 6 );
+  glActiveTexture(GL_TEXTURE0 + 7 );
   glDisable(GL_TEXTURE_3D);
+  
+  glActiveTexture(GL_TEXTURE0 + 6 );
+  glDisable(GL_TEXTURE_2D);
   
   glActiveTexture(GL_TEXTURE0 + 5 );
   glDisable(GL_TEXTURE_2D);

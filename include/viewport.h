@@ -29,7 +29,6 @@ bool viewport_fullscreen();
 
 int viewport_height();
 int viewport_width();
-vector2 viewport_dimensions();
 float viewport_ratio();
 
 void viewport_screenshot();

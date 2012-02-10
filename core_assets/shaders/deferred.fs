@@ -9,6 +9,8 @@ uniform float bumpiness;
 uniform float specular_level;
 uniform float alpha_test;
 
+uniform int mat_id;
+
 uniform sampler2D diffuse_map;
 uniform sampler2D bump_map;
 uniform sampler2D spec_map;
@@ -43,7 +45,7 @@ void main( void ) {
 	gl_FragData[0].a = spec;
 	
 	gl_FragData[1].rgb = position.xyz;
-	gl_FragData[1].a = 1.0;
+	gl_FragData[1].a = float(mat_id);
 	
 	gl_FragData[2] = normal;
 	gl_FragData[2].a = glossiness;

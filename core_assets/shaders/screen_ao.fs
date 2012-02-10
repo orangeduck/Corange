@@ -37,8 +37,11 @@ float ssao_depth(vec2 texcoords, sampler2D depth_texture, sampler2D random_textu
   const float total_strength = 1.0;
   const float base = 0.2;
   
-  const float area = 0.0075;
-  const float falloff = 0.000001;
+  /* Area basically refers to how "detailed" the SSAO is. Higher the less detailed */
+  const float area = 0.0001;
+  
+  /* Falloff must be less than area and erm, doesn't seem to do much */
+  const float falloff = 0.00009;
   
   const float radius = 0.05;
   

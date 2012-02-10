@@ -1,5 +1,7 @@
 -- To Finish Demos --
 
+Low specularity on Imrod
+Better rig/skeleton for Imrod.
 Alpha test shadow mapper
 Metaballs self shadowing
 Multiple Lights support

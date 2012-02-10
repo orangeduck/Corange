@@ -8,3 +8,4 @@ float glossiness = 30.0
 float bumpiness = 2.5
 float specular_level = 1.5
 float env_amount = 1.25
+int mat_id = 2
