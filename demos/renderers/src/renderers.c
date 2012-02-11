@@ -317,11 +317,11 @@ void renderers_init() {
   /* New Camera and light */
   
   camera* cam = entity_new("camera", camera);
-  cam->position = v3(20.0, 20.0, 20.0);
+  cam->position = v3(25.0, 25.0, 10.0);
   cam->target = v3(0, 5, 0);
   
   light* sun = entity_new("sun", light);
-  sun->position = v3(30,43,-26);
+  sun->position = v3(15,23,16);
   sun->ambient_color = v3(0.5, 0.5, 0.5);
   sun->diffuse_color = v3(0.75, 0.75, 0.75);
   light_set_type(sun, light_type_spot);
@@ -330,12 +330,8 @@ void renderers_init() {
   
   shadow_mapper_init(sun);
   
-  deferred_renderer_init();
-  deferred_renderer_set_camera(cam);
-  deferred_renderer_set_light(sun);
-  deferred_renderer_set_shadow_texture( shadow_mapper_depth_texture() );
-  
   use_deferred = 1;
+  swap_renderer();
 
 }
 
@@ -411,6 +407,8 @@ void renderers_update() {
 
 void renderers_render() {
 
+  light* sun = entity_get("sun");
+
   static_object* s_podium = entity_get("podium");
   
   static_object* s_piano = entity_get("piano");
@@ -455,6 +453,7 @@ void renderers_render() {
       deferred_renderer_render_static(s_dino);
     }
     
+    deferred_renderer_render_light(sun);
     deferred_renderer_end();
     
   } else {
@@ -476,12 +475,9 @@ void renderers_render() {
       forward_renderer_render_static(s_dino);
     }
     
+    forward_renderer_render_light(sun);
     forward_renderer_end();
   }
-  
-  ui_render();
-  
-  SDL_GL_SwapBuffers(); 
   
 }
 
@@ -527,6 +523,8 @@ int main(int argc, char **argv) {
     renderers_update();
     
     renderers_render();
+    ui_render();
+    SDL_GL_SwapBuffers(); 
     
     frame_end();
   }

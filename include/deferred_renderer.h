@@ -20,5 +20,6 @@ void deferred_renderer_end();
 
 void deferred_renderer_render_static(static_object* s);
 void deferred_renderer_render_animated(animated_object* ao);
+void deferred_renderer_render_light(light* l);
 
 #endif

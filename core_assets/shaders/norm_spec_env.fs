@@ -38,7 +38,7 @@ float shadow_amount_soft_pcf25(vec4 light_pos, sampler2D light_depth, float hard
 
 vec3 to_gamma(vec3 color);
 vec3 from_gamma(vec3 color);
-vec3 swap_red_green(vec3 color);
+vec3 swap_red_green_inv(vec3 color);
 vec3 color_correction(vec3 color, sampler3D lut, int lut_size);
 
 /* End */
@@ -61,12 +61,12 @@ void main() {
   vec3 diffuse = from_gamma(diffuse_a.rgb);
   
   vec3 bump = texture2D( bump_map, uvs ).rgb;
+  bump = swap_red_green_inv(bump);
+  
   vec3 spec = texture2D( spec_map, uvs ).rgb;
   
   bump = mix( bump, vec3( 0.5, 0.5, 1.0 ), bumpiness );
   bump = normalize( ( bump * 2.0 ) - 1.0 );
-  
-  bump = swap_red_green(bump);
   
   vec4 world_bump = TBN * vec4(bump,1.0);
   

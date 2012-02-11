@@ -8,8 +8,6 @@ uniform sampler2D shadows_texture;
 uniform sampler2D ssao_texture;
 uniform sampler2D env_texture;
 
-uniform sampler3D lut;
-
 uniform vec3 camera_position;
 uniform vec3 light_position;
 
@@ -26,7 +24,6 @@ float ssao_depth(vec2 texcoords, sampler2D depth_texture, sampler2D random_textu
 float shadow_amount_soft_pcf25(vec4 light_pos, sampler2D light_depth, float hardness);
 vec3 to_gamma(vec3 color);
 vec3 from_gamma(vec3 color);
-vec3 color_correction(vec3 color, sampler3D lut, int lut_size);
 
 /* End */
 
@@ -86,7 +83,7 @@ void main() {
   
   vec3 total = to_gamma(diffuse + ambient + specular);
   
-	gl_FragColor.rgb = color_correction(total, lut, 64);
+	gl_FragColor.rgb = total;
 	gl_FragColor.a = 1.0;
 	
 } 

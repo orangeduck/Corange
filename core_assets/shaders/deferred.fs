@@ -21,7 +21,7 @@ float to_gamma(float color);
 float from_gamma(float color);
 vec3 to_gamma(vec3 color);
 vec3 from_gamma(vec3 color);
-vec3 swap_red_green(vec3 color);
+vec3 swap_red_green_inv(vec3 color);
 
 /* End */
 
@@ -32,8 +32,9 @@ void main( void ) {
 	float spec = texture2D(spec_map,uvs).r * specular_level;
 	
 	vec4 normal = texture2D(bump_map, uvs);
-	normal.rgb = swap_red_green(normal.rgb);
-	normal = mix(normal, vec4( 0.5, 0.5, 1.0, 1.0 ), bumpiness);
+	normal.rgb = swap_red_green_inv(normal.rgb);
+  
+  normal = mix(normal, vec4( 0.5, 0.5, 1.0, 1.0 ), bumpiness);
 	normal = (normal * 2.0 - vec4(1.0,1.0,1.0,0.0)) * TBN;
 	
   vec4 diffuse = texture2D(diffuse_map, uvs);

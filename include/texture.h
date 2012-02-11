@@ -17,6 +17,8 @@ image* texture_get_image(texture* t);
 
 void texture_generate_mipmaps(texture* t);
 void texture_set_filtering_nearest(texture* t);
+void texture_set_filtering_linear(texture* t);
+void texture_set_filtering_anisotropic(texture* t);
 
 texture* dds_load_file( char* filename );
 texture* lut_load_file( char* filename );
