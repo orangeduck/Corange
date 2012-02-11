@@ -24,9 +24,13 @@ static int use_shadows = 0;
 
 static camera* CAMERA = NULL;
 static light* LIGHT = NULL;
+
 static texture* SHADOW_TEX = NULL;
 static texture* COLOR_CORRECTION = NULL;
+static texture* VIGNETTING = NULL;
+
 static shader_program* GRADIENT = NULL;
+static shader_program* SCREEN_POST = NULL;
 
 static float proj_matrix[16];
 static float view_matrix[16];
@@ -41,17 +45,62 @@ static int BINORMAL;
 static int BONE_INDICIES;
 static int BONE_WEIGHTS;
 
+static GLuint ldr_fbo;
+static GLuint ldr_buffer;
+static GLuint ldr_dpeth_buffer;
+static GLuint ldr_texture;
+static GLuint ldr_depth_texture;
+
 void forward_renderer_init() {
   
   COLOR_CORRECTION = asset_load_get("$CORANGE/resources/identity.lut");
+  VIGNETTING = asset_load_get("$CORANGE/resources/vignetting.dds");
   GRADIENT = asset_load_get("$SHADERS/gradient.prog");
+  SCREEN_POST = asset_load_get("$SHADERS/deferred_post.prog");
   
   glClearColor(0.2, 0.2, 0.2, 1.0f);
   glClearDepth(1.0f);
   
+  glGenFramebuffers(1, &ldr_fbo);
+  glBindFramebuffer(GL_FRAMEBUFFER, ldr_fbo);
+  
+  glGenRenderbuffers(1, &ldr_buffer);
+  glBindRenderbuffer(GL_RENDERBUFFER, ldr_buffer);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, viewport_width(), viewport_height());
+  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, ldr_buffer);   
+  
+  glGenRenderbuffers(1, &ldr_dpeth_buffer);
+  glBindRenderbuffer(GL_RENDERBUFFER, ldr_dpeth_buffer);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, viewport_width(), viewport_height());
+  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, ldr_dpeth_buffer);  
+  
+  glGenTextures(1, &ldr_texture);
+  glBindTexture(GL_TEXTURE_2D, ldr_texture);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, viewport_width(), viewport_height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ldr_texture, 0);
+  
+  glGenTextures(1, &ldr_depth_texture);
+  glBindTexture(GL_TEXTURE_2D, ldr_depth_texture);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, viewport_width(), viewport_height(), 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, ldr_depth_texture, 0);
+  
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  
 }
 
 void forward_renderer_finish() {  
+  
+  glDeleteFramebuffers(1, &ldr_fbo);
+  glDeleteRenderbuffers(1, &ldr_buffer);
+  glDeleteTextures(1,&ldr_texture);
   
 }
 
@@ -115,13 +164,15 @@ static void render_gradient() {
 
 void forward_renderer_begin() {
   
+  timer += frame_time();
+  
+  glBindFramebuffer(GL_FRAMEBUFFER, ldr_fbo);
+  
   glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
   
   render_gradient();
   
   forward_renderer_setup_camera();
-  
-  timer += frame_time();
   
   glEnable(GL_DEPTH_TEST);
   
@@ -161,6 +212,63 @@ void forward_renderer_setup_camera() {
 void forward_renderer_end() {
   
   glDisable(GL_DEPTH_TEST);
+  
+  /* Render final frame */
+  
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  
+  glUseProgram(*SCREEN_POST);
+  
+	glMatrixMode(GL_PROJECTION);
+  glPushMatrix();
+	glLoadIdentity();
+	glOrtho(-1.0, 1.0, -1.0, 1.0, -1, 1);
+  
+	glMatrixMode(GL_MODELVIEW);
+  glPushMatrix();
+	glLoadIdentity();
+  
+  glActiveTexture(GL_TEXTURE0 + 0 );
+  glBindTexture(GL_TEXTURE_2D, ldr_texture);
+  glEnable(GL_TEXTURE_2D);
+  glUniform1i(glGetUniformLocation(*SCREEN_POST, "diffuse_texture"), 0);
+  
+  glActiveTexture(GL_TEXTURE0 + 1 );
+  glBindTexture(GL_TEXTURE_2D, *VIGNETTING);
+  glEnable(GL_TEXTURE_2D);
+  glUniform1i(glGetUniformLocation(*SCREEN_POST, "vignetting_texture"), 1);
+  
+  glActiveTexture(GL_TEXTURE0 + 2 );
+  glBindTexture(GL_TEXTURE_3D, *COLOR_CORRECTION);
+  glEnable(GL_TEXTURE_3D);
+  glUniform1i(glGetUniformLocation(*SCREEN_POST, "lut"), 2);
+  
+  glUniform1i(glGetUniformLocation(*SCREEN_POST, "width"), viewport_width());
+  glUniform1i(glGetUniformLocation(*SCREEN_POST, "height"), viewport_height());
+  
+	glBegin(GL_QUADS);
+		glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0, -1.0,  0.0f);
+		glTexCoord2f(1.0f, 0.0f); glVertex3f(1.0, -1.0,  0.0f);
+		glTexCoord2f(1.0f, 1.0f); glVertex3f(1.0,  1.0,  0.0f);
+		glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0,  1.0,  0.0f);
+	glEnd();
+  
+  glActiveTexture(GL_TEXTURE0 + 2 );
+  glDisable(GL_TEXTURE_3D);
+  
+  glActiveTexture(GL_TEXTURE0 + 1 );
+  glDisable(GL_TEXTURE_2D);
+  
+  glActiveTexture(GL_TEXTURE0 + 0 );
+  glDisable(GL_TEXTURE_2D);
+  
+  glMatrixMode(GL_PROJECTION);
+  glPopMatrix();
+
+  glMatrixMode(GL_MODELVIEW);
+  glPopMatrix();
+  
+  glUseProgram(0);
   
 }
 
