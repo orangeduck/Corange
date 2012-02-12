@@ -529,8 +529,6 @@ void deferred_renderer_end() {
   GLint lview_matrix_u = glGetUniformLocation(*SCREEN_PROGRAM, "light_view");
   glUniformMatrix4fv(lview_matrix_u, 1, 0, LIGHT_VIEW_MATRIX);
   
-  /* Start */
-  
   for(int i = 0; i < num_lights; i++) {
     light_power[i] = lights[i]->power;
     light_falloff[i] = lights[i]->falloff;
@@ -540,8 +538,6 @@ void deferred_renderer_end() {
     light_ambient[i] = lights[i]->ambient_color;
     light_specular[i] = lights[i]->specular_color;
   }
-  
-  /* End */
   
   glUniform1i(glGetUniformLocation(*SCREEN_PROGRAM, "num_lights"), num_lights);
   

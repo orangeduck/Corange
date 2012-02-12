@@ -23,7 +23,7 @@
 static int use_shadows = 0;
 
 static camera* CAMERA = NULL;
-static light* LIGHT = NULL;
+static light* SHADOW_LIGHT = NULL;
 
 static texture* SHADOW_TEX = NULL;
 static texture* COLOR_CORRECTION = NULL;
@@ -51,7 +51,22 @@ static GLuint ldr_dpeth_buffer;
 static GLuint ldr_texture;
 static GLuint ldr_depth_texture;
 
+#define FORWARD_MAX_LIGHTS 32
+
+static int num_lights;
+
+static light* lights[FORWARD_MAX_LIGHTS];
+static float light_power[FORWARD_MAX_LIGHTS];
+static float light_falloff[FORWARD_MAX_LIGHTS];
+static vector3 light_position[FORWARD_MAX_LIGHTS];
+static vector3 light_target[FORWARD_MAX_LIGHTS];
+static vector3 light_diffuse[FORWARD_MAX_LIGHTS];
+static vector3 light_ambient[FORWARD_MAX_LIGHTS];
+static vector3 light_specular[FORWARD_MAX_LIGHTS];
+
 void forward_renderer_init() {
+  
+  num_lights = 0;
   
   COLOR_CORRECTION = asset_load_get("$CORANGE/resources/identity.lut");
   VIGNETTING = asset_load_get("$CORANGE/resources/vignetting.dds");
@@ -104,12 +119,44 @@ void forward_renderer_finish() {
   
 }
 
+void forward_renderer_add_light(light* l) {
+  
+  if (num_lights == FORWARD_MAX_LIGHTS) {
+    warning("Cannot add extra light. Maxiumum lights reached!");
+    return;
+  }
+  
+  lights[num_lights] = l;
+  num_lights++;
+}
+
+void forward_renderer_remove_light(light* l) {
+  
+  bool found = false;
+  for(int i = 0; i < num_lights; i++) {
+    if ((lights[i] == l) && !found) {
+      found = true;
+    }
+    
+    if (found) {
+      lights[i] = lights[i+1];
+    }
+  }
+  
+  if (found) {
+    num_lights--;
+  } else {
+    warning("Could not find light %p to remove!", l);
+  }
+  
+}
+
 void forward_renderer_set_camera(camera* c) {
   CAMERA = c;
 }
 
-void forward_renderer_set_light(light* l) {
-  LIGHT = l;
+void forward_renderer_set_shadow_light(light* l) {
+  SHADOW_LIGHT = l;
 }
 
 void forward_renderer_set_shadow_texture(texture* t) {
@@ -183,7 +230,7 @@ void forward_renderer_setup_camera() {
   if (CAMERA == NULL) {
     error("Camera not set yet!");
   }
-  if (LIGHT == NULL) {
+  if (SHADOW_LIGHT == NULL) {
     error("Light not set yet!");
   }
 
@@ -201,8 +248,8 @@ void forward_renderer_setup_camera() {
   
   /* Setup light stuff */
   
-  matrix_4x4 lviewm = light_view_matrix(LIGHT);
-  matrix_4x4 lprojm = light_proj_matrix(LIGHT);
+  matrix_4x4 lviewm = light_view_matrix(SHADOW_LIGHT);
+  matrix_4x4 lprojm = light_proj_matrix(SHADOW_LIGHT);
   
   m44_to_array(lviewm, lview_matrix);
   m44_to_array(lprojm, lproj_matrix);
@@ -285,23 +332,39 @@ static void forward_renderer_use_material(material* mat) {
   BINORMAL = glGetAttribLocation(*prog, "binormal");
   BONE_INDICIES = glGetAttribLocation(*prog, "bone_indicies");
   BONE_WEIGHTS = glGetAttribLocation(*prog, "bone_weights");
-  
-  GLint light_position = glGetUniformLocation(*prog, "light_position");
-  GLint eye_position = glGetUniformLocation(*prog, "eye_position");
-  
-  GLint diffuse_light = glGetUniformLocation(*prog, "diffuse_light");
-  GLint ambient_light = glGetUniformLocation(*prog, "ambient_light");
-  GLint specular_light = glGetUniformLocation(*prog, "specular_light");
- 
-  GLint time = glGetUniformLocation(*prog, "time");
-  
-  glUniform3f(light_position, LIGHT->position.x, LIGHT->position.y, LIGHT->position.z);
-  glUniform3f(eye_position, CAMERA->position.x, CAMERA->position.y, CAMERA->position.z);
-  
-  glUniform3f(diffuse_light, LIGHT->diffuse_color.r, LIGHT->diffuse_color.g, LIGHT->diffuse_color.b);
-  glUniform3f(specular_light, LIGHT->specular_color.r, LIGHT->specular_color.g, LIGHT->specular_color.b);
-  glUniform3f(ambient_light, LIGHT->ambient_color.r, LIGHT->ambient_color.g, LIGHT->ambient_color.b);
 
+  GLint camera_position = glGetUniformLocation(*prog, "camera_position");
+  glUniform3f(camera_position, CAMERA->position.x, CAMERA->position.y, CAMERA->position.z);
+  
+  for(int i = 0; i < num_lights; i++) {
+    light_power[i] = lights[i]->power;
+    light_falloff[i] = lights[i]->falloff;
+    light_position[i] = lights[i]->position;
+    light_target[i] = lights[i]->target;
+    light_diffuse[i] = lights[i]->diffuse_color;
+    light_ambient[i] = lights[i]->ambient_color;
+    light_specular[i] = lights[i]->specular_color;
+  }
+  
+  glUniform1i(glGetUniformLocation(*prog, "num_lights"), num_lights);
+  
+  GLint light_power_u = glGetUniformLocation(*prog, "light_power");
+  GLint light_falloff_u = glGetUniformLocation(*prog, "light_falloff");
+  GLint light_position_u = glGetUniformLocation(*prog, "light_position");
+  GLint light_target_u = glGetUniformLocation(*prog, "light_target");
+  GLint light_diffuse_u = glGetUniformLocation(*prog, "light_diffuse");
+  GLint light_ambient_u = glGetUniformLocation(*prog, "light_ambient");
+  GLint light_specular_u = glGetUniformLocation(*prog, "light_specular");
+  
+  glUniform1fv(light_power_u, num_lights, (const GLfloat*)light_power);
+  glUniform1fv(light_falloff_u, num_lights, (const GLfloat*)light_falloff);
+  glUniform3fv(light_position_u, num_lights, (const GLfloat*)light_position);
+  glUniform3fv(light_target_u, num_lights, (const GLfloat*)light_target);
+  glUniform3fv(light_diffuse_u, num_lights, (const GLfloat*)light_diffuse);
+  glUniform3fv(light_ambient_u, num_lights, (const GLfloat*)light_ambient);
+  glUniform3fv(light_specular_u, num_lights, (const GLfloat*)light_specular);
+
+  GLint time = glGetUniformLocation(*prog, "time");
   glUniform1f(time,timer);
   
   GLint world_matrix_u = glGetUniformLocation(*prog, "world_matrix");
@@ -377,22 +440,10 @@ static void forward_renderer_use_material(material* mat) {
     glEnable(GL_TEXTURE_2D);
     tex_counter++;
   }
-
-  
-  GLuint color_correction = glGetUniformLocation(*prog, "lut");
-  glUniform1i(color_correction, tex_counter);
-  glActiveTexture(GL_TEXTURE0 + tex_counter );
-  glBindTexture(GL_TEXTURE_3D, *COLOR_CORRECTION);
-  glEnable(GL_TEXTURE_3D);
-  tex_counter++;
   
 }
 
 static void forward_renderer_disuse_material() {
-  
-  tex_counter--;
-  glActiveTexture(GL_TEXTURE0 + tex_counter );
-  glDisable(GL_TEXTURE_3D);
   
   while(tex_counter > 0) {
     tex_counter--;

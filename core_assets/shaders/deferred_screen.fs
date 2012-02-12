@@ -69,17 +69,17 @@ void main() {
     vec3 light_dir = normalize(light_position[i] - light_target[i]);
     vec3 light_half = normalize(light_dir + eye_dir);
     
-    float l_dot_n = max(dot(normal, light_dir), 0.0);
-    float l_dot_h = spec * pow(max(dot(normal, light_half),0.0), glossiness);
+    float n_dot_l = max(dot(normal, light_dir), 0.0);
+    float n_dot_h = spec * pow(max(dot(normal, light_half),0.0), glossiness);
     
     if (i == 0) {
-      l_dot_n *= shadow;
-      l_dot_h *= shadow;
+      n_dot_l *= shadow;
+      n_dot_h *= shadow;
     }
     
     ambient += power * light_ambient[i] * albedo * ssao;
-    diffuse += power * light_diffuse[i] * albedo * l_dot_n;
-    specular += power * light_specular[i] * l_dot_h;
+    diffuse += power * light_diffuse[i] * albedo * n_dot_l;
+    specular += power * light_specular[i] * n_dot_h;
     
   }
   

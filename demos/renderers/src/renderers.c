@@ -21,8 +21,10 @@ static void swap_renderer() {
     deferred_renderer_finish();
     forward_renderer_init();
     forward_renderer_set_camera(cam);
-    forward_renderer_set_light(sun);
+    forward_renderer_set_shadow_light(sun);
     forward_renderer_set_shadow_texture( shadow_mapper_depth_texture() );
+    forward_renderer_add_light(sun);
+    forward_renderer_add_light(backlight);
     
     ui_text* renderer_text = ui_elem_get("renderer_text");
     ui_text_update_string(renderer_text,"Forward Renderer");

@@ -3,12 +3,18 @@ uniform mat4 world_matrix;
 uniform mat4 light_view;
 uniform mat4 light_proj;
 
-uniform vec3 light_position;
-uniform vec3 eye_position;
+uniform vec3 camera_position;
 
-uniform vec3 diffuse_light;
-uniform vec3 ambient_light;
-uniform vec3 specular_light;
+#define MAX_LIGHTS 32
+
+uniform int num_lights;
+uniform float light_power[MAX_LIGHTS];
+uniform float light_falloff[MAX_LIGHTS];
+uniform vec3 light_position[MAX_LIGHTS];
+uniform vec3 light_target[MAX_LIGHTS];
+uniform vec3 light_diffuse[MAX_LIGHTS];
+uniform vec3 light_ambient[MAX_LIGHTS];
+uniform vec3 light_specular[MAX_LIGHTS];
  
 uniform float glossiness;
 uniform float bumpiness;
@@ -24,8 +30,6 @@ uniform sampler2D bump_map;
 uniform sampler2D spec_map;
 uniform sampler2D env_map;
 uniform sampler2D shadow_map;
-
-uniform sampler3D lut;
 
 varying vec2 uvs;
 varying vec4 world_position;
@@ -58,7 +62,7 @@ void main() {
     discard;
   }
   
-  vec3 diffuse = from_gamma(diffuse_a.rgb);
+  vec3 albedo = from_gamma(diffuse_a.rgb);
   
   vec3 bump = texture2D( bump_map, uvs ).rgb;
   bump = swap_red_green_inv(bump);
@@ -73,25 +77,38 @@ void main() {
   vec3 normal = world_bump.xyz / world_bump.w;
   vec3 position = world_position.xyz / world_position.w;
   
-  vec3 light_vector = normalize(light_position - position);
-  vec3 eye_vector = normalize(eye_position - position);
-  vec3 half_vector = normalize(light_vector + eye_vector); 
+  vec3 camera_vector = normalize(camera_position - position);
   
-  float n_dot_l = max( dot( normal, light_vector) , 0.0);
-  float n_dot_h = max( dot( normal, half_vector ) , 0.0);
+  vec3 diffuse = vec3(0,0,0);
+  vec3 ambient = vec3(0,0,0);
+  vec3 specular = vec3(0,0,0);
   
-  vec3 reflected = normalize(reflect(eye_vector, normal));
+  for(int i = 0; i < num_lights; i++) {
+    vec3 light_vector = light_position[i] - position;
+    float power = light_power[i] / pow(length(light_vector), light_falloff[i]);
+    
+    vec3 light_dir = normalize(light_position[i] - light_target[i]);
+    vec3 half_vector = normalize(light_dir + camera_vector); 
+    
+    float n_dot_l = max( dot( normal, light_dir) , 0.0);
+    float n_dot_h = specular_level * pow(max(dot(normal, half_vector),0.0), glossiness);
+    
+    if (i == 0) {
+      n_dot_l *= shadow;
+      n_dot_h *= shadow;
+    }
+    
+    diffuse += power * light_diffuse[i] * albedo * n_dot_l;
+    ambient += power * light_ambient[i] * albedo;
+    specular += power * light_specular[i] * spec * n_dot_h;
+  }
+  
+  vec3 reflected = normalize(reflect(camera_vector, normal));
   vec3 env = from_gamma(texture2D(env_map, reflected.xy).rgb) * 0.25;
-  float env_amount = (1.0 - dot(eye_vector, normal)) * spec.r * env_amount;
+  float env_amount = (1.0 - dot(camera_vector, normal)) * spec.r * env_amount;
+  diffuse = mix(diffuse, env, env_amount);
   
-  vec3 final_diffuse = (diffuse * diffuse_light * shadow * n_dot_l);
-  final_diffuse = mix(final_diffuse, env, env_amount);
-  vec3 final_ambient = ambient_light * diffuse;
-  vec3 final_spec = (spec * specular_light * shadow * pow( n_dot_h, glossiness ) * specular_level );
-  
-  vec3 final = to_gamma(final_diffuse + final_ambient + final_spec);
-  
-  gl_FragColor.rgb = color_correction(final, lut, 64);
+  gl_FragColor.rgb = to_gamma(diffuse + ambient + specular);
   gl_FragColor.a = diffuse_a.a;
 
 }
