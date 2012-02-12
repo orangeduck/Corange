@@ -62,15 +62,30 @@ static GLuint ldr_fbo;
 static GLuint ldr_buffer;
 static GLuint ldr_texture;
 
-static texture* SHADOW_TEX;
-static texture* COLOR_CORRECTION;
-static texture* RANDOM;
-static texture* ENVIRONMENT;
-static texture* VIGNETTING;
+static texture* SHADOW_TEX = NULL;
+static texture* COLOR_CORRECTION = NULL;
+static texture* RANDOM = NULL;
+static texture* ENVIRONMENT = NULL;
+static texture* VIGNETTING = NULL;
 
-static light* LIGHT;
+static light* SHADOW_LIGHT = NULL;
+
+#define DEFERRED_MAX_LIGHTS 32
+
+static int num_lights;
+
+static light* lights[DEFERRED_MAX_LIGHTS];
+static float light_power[DEFERRED_MAX_LIGHTS];
+static float light_falloff[DEFERRED_MAX_LIGHTS];
+static vector3 light_position[DEFERRED_MAX_LIGHTS];
+static vector3 light_target[DEFERRED_MAX_LIGHTS];
+static vector3 light_diffuse[DEFERRED_MAX_LIGHTS];
+static vector3 light_ambient[DEFERRED_MAX_LIGHTS];
+static vector3 light_specular[DEFERRED_MAX_LIGHTS];
 
 void deferred_renderer_init() {
+  
+  num_lights = 0;
   
   COLOR_CORRECTION = asset_load_get("$CORANGE/resources/identity.lut");
   RANDOM = asset_load_get("$CORANGE/resources/random.dds");
@@ -217,6 +232,38 @@ void deferred_renderer_finish() {
   
 }
 
+void deferred_renderer_add_light(light* l) {
+  
+  if (num_lights == DEFERRED_MAX_LIGHTS) {
+    warning("Cannot add extra light. Maxiumum lights reached!");
+    return;
+  }
+  
+  lights[num_lights] = l;
+  num_lights++;
+}
+
+void deferred_renderer_remove_light(light* l) {
+  
+  bool found = false;
+  for(int i = 0; i < num_lights; i++) {
+    if ((lights[i] == l) && !found) {
+      found = true;
+    }
+    
+    if (found) {
+      lights[i] = lights[i+1];
+    }
+  }
+  
+  if (found) {
+    num_lights--;
+  } else {
+    warning("Could not find light %p to remove!", l);
+  }
+  
+}
+
 void deferred_renderer_set_camera(camera* cam) {
   CAMERA = cam;
 }
@@ -229,8 +276,8 @@ void deferred_renderer_set_color_correction(texture* t) {
   COLOR_CORRECTION = t;
 }
 
-void deferred_renderer_set_light(light* l) {
-  LIGHT = l;
+void deferred_renderer_set_shadow_light(light* l) {
+  SHADOW_LIGHT = l;
 }
 
 static void deferred_renderer_use_material(material* mat, shader_program* PROG) {
@@ -308,8 +355,8 @@ static void deferred_renderer_setup_camera() {
   glMatrixMode(GL_PROJECTION);
   glLoadMatrixf(PROJ_MATRIX);
   
-  matrix_4x4 lviewm = light_view_matrix(LIGHT);
-  matrix_4x4 lprojm = light_proj_matrix(LIGHT);
+  matrix_4x4 lviewm = light_view_matrix(SHADOW_LIGHT);
+  matrix_4x4 lprojm = light_proj_matrix(SHADOW_LIGHT);
   
   m44_to_array(lviewm, LIGHT_VIEW_MATRIX);
   m44_to_array(lprojm, LIGHT_PROJ_MATRIX);
@@ -476,22 +523,43 @@ void deferred_renderer_end() {
   GLint cam_position = glGetUniformLocation(*SCREEN_PROGRAM, "camera_position");
   glUniform3f(cam_position, CAMERA->position.x, CAMERA->position.y, CAMERA->position.z);
   
-  GLint light_position = glGetUniformLocation(*SCREEN_PROGRAM, "light_position");
-  glUniform3f(light_position, LIGHT->position.x, LIGHT->position.y, LIGHT->position.z);
-  
   GLint lproj_matrix_u = glGetUniformLocation(*SCREEN_PROGRAM, "light_proj");
   glUniformMatrix4fv(lproj_matrix_u, 1, 0, LIGHT_PROJ_MATRIX);
   
   GLint lview_matrix_u = glGetUniformLocation(*SCREEN_PROGRAM, "light_view");
   glUniformMatrix4fv(lview_matrix_u, 1, 0, LIGHT_VIEW_MATRIX);
   
-  GLint diffuse_light = glGetUniformLocation(*SCREEN_PROGRAM, "diffuse_light");
-  GLint ambient_light = glGetUniformLocation(*SCREEN_PROGRAM, "ambient_light");
-  GLint specular_light = glGetUniformLocation(*SCREEN_PROGRAM, "specular_light");
+  /* Start */
   
-  glUniform3f(diffuse_light, LIGHT->diffuse_color.r, LIGHT->diffuse_color.g, LIGHT->diffuse_color.b);
-  glUniform3f(specular_light, LIGHT->specular_color.r, LIGHT->specular_color.g, LIGHT->specular_color.b);
-  glUniform3f(ambient_light, LIGHT->ambient_color.r, LIGHT->ambient_color.g, LIGHT->ambient_color.b);
+  for(int i = 0; i < num_lights; i++) {
+    light_power[i] = lights[i]->power;
+    light_falloff[i] = lights[i]->falloff;
+    light_position[i] = lights[i]->position;
+    light_target[i] = lights[i]->target;
+    light_diffuse[i] = lights[i]->diffuse_color;
+    light_ambient[i] = lights[i]->ambient_color;
+    light_specular[i] = lights[i]->specular_color;
+  }
+  
+  /* End */
+  
+  glUniform1i(glGetUniformLocation(*SCREEN_PROGRAM, "num_lights"), num_lights);
+  
+  GLint light_power_u = glGetUniformLocation(*SCREEN_PROGRAM, "light_power");
+  GLint light_falloff_u = glGetUniformLocation(*SCREEN_PROGRAM, "light_falloff");
+  GLint light_position_u = glGetUniformLocation(*SCREEN_PROGRAM, "light_position");
+  GLint light_target_u = glGetUniformLocation(*SCREEN_PROGRAM, "light_target");
+  GLint light_diffuse_u = glGetUniformLocation(*SCREEN_PROGRAM, "light_diffuse");
+  GLint light_ambient_u = glGetUniformLocation(*SCREEN_PROGRAM, "light_ambient");
+  GLint light_specular_u = glGetUniformLocation(*SCREEN_PROGRAM, "light_specular");
+  
+  glUniform1fv(light_power_u, num_lights, (const GLfloat*)light_power);
+  glUniform1fv(light_falloff_u, num_lights, (const GLfloat*)light_falloff);
+  glUniform3fv(light_position_u, num_lights, (const GLfloat*)light_position);
+  glUniform3fv(light_target_u, num_lights, (const GLfloat*)light_target);
+  glUniform3fv(light_diffuse_u, num_lights, (const GLfloat*)light_diffuse);
+  glUniform3fv(light_ambient_u, num_lights, (const GLfloat*)light_ambient);
+  glUniform3fv(light_specular_u, num_lights, (const GLfloat*)light_specular);
   
 	glBegin(GL_QUADS);
 		glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0, -1.0,  0.0f);
@@ -835,6 +903,51 @@ void deferred_renderer_render_light(light* l) {
 
   glMatrixMode(GL_MODELVIEW);
   glPopMatrix();
+
+}
+
+void deferred_renderer_render_axis(matrix_4x4 world) {
+
+  vector4 x_pos = m44_mul_v4(world, v4(2,0,0,1));
+  vector4 y_pos = m44_mul_v4(world, v4(0,2,0,1));
+  vector4 z_pos = m44_mul_v4(world, v4(0,0,2,1));
+  vector4 base_pos = m44_mul_v4(world, v4(0,0,0,1));
+  
+  x_pos = v4_div(x_pos, x_pos.w);
+  y_pos = v4_div(y_pos, y_pos.w);
+  z_pos = v4_div(z_pos, z_pos.w);
+  base_pos = v4_div(base_pos, base_pos.w);
+  
+  glDisable(GL_DEPTH_TEST);
+  
+  glLineWidth(2.0);
+  glBegin(GL_LINES);
+    glColor3f(1.0,0.0,0.0);
+    glVertex3f(x_pos.x, x_pos.y, x_pos.z);
+    glVertex3f(base_pos.x, base_pos.y, base_pos.z);
+    glColor3f(0.0,1.0,0.0);
+    glVertex3f(y_pos.x, y_pos.y, y_pos.z);
+    glVertex3f(base_pos.x, base_pos.y, base_pos.z);
+    glColor3f(0.0,0.0,1.0);
+    glVertex3f(z_pos.x, z_pos.y, z_pos.z);
+    glVertex3f(base_pos.x, base_pos.y, base_pos.z);
+  glEnd();
+  glLineWidth(1.0);
+  
+  glPointSize(5.0);
+  glBegin(GL_POINTS);
+    glColor3f(1.0,0.0,0.0);
+    glVertex3f(x_pos.x, x_pos.y, x_pos.z);
+    glColor3f(0.0,1.0,0.0);
+    glVertex3f(y_pos.x, y_pos.y, y_pos.z);
+    glColor3f(0.0,0.0,1.0);
+    glVertex3f(z_pos.x, z_pos.y, z_pos.z);
+    glColor3f(1.0,1.0,1.0);
+    glVertex3f(base_pos.x, base_pos.y, base_pos.z);
+  glEnd();
+  glPointSize(1.0);
+  
+  glEnable(GL_DEPTH_TEST);
 
 }
 

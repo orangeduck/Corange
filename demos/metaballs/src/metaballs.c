@@ -165,9 +165,6 @@ void metaballs_render() {
 
   
   forward_renderer_begin();
-  
-    glClearColor(0.5f, 0.5f, 0.5f, 0.5f);
-    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
     
     forward_renderer_render_static(s_podium);
     forward_renderer_render_light(sun);

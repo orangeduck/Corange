@@ -42,6 +42,7 @@ GLUNIFORM4FFN glUniform4f;
 GLUNIFORMMATRIX4FVFN glUniformMatrix4fv;
 GLUNIFORM1FVFN glUniform1fv;
 GLUNIFORM2FVFN glUniform2fv;
+GLUNIFORM3FVFN glUniform3fv;
 GLGETSHADERIVFN glGetShaderiv;
 GLGETPROGRAMIVFN glGetProgramiv;
 GLBINDATTRIBLOCATIONFN glBindAttribLocation;
@@ -277,6 +278,7 @@ void SDL_LoadOpenGLExtensions() {
 	glUniform4f                = (GLUNIFORM4FFN)SDL_GL_GetProcAddress( "glUniform4f" ); SDL_CheckOpenGLExtension("glUniform4f", glUniform4f);
 	glUniform1fv               = (GLUNIFORM1FVFN)SDL_GL_GetProcAddress( "glUniform1fv" ); SDL_CheckOpenGLExtension("glUniform1fv", glUniform1fv);
 	glUniform2fv               = (GLUNIFORM2FVFN)SDL_GL_GetProcAddress( "glUniform2fv" ); SDL_CheckOpenGLExtension("glUniform2fv", glUniform2fv);
+	glUniform3fv               = (GLUNIFORM3FVFN)SDL_GL_GetProcAddress( "glUniform3fv" ); SDL_CheckOpenGLExtension("glUniform3fv", glUniform3fv);
 	glUniformMatrix4fv         = (GLUNIFORMMATRIX4FVFN)SDL_GL_GetProcAddress( "glUniformMatrix4fv" ); SDL_CheckOpenGLExtension("glUniformMatrix4fv", glUniformMatrix4fv);
   
   glGetAttribLocation        = (GLGETATTRIBLOCATIONFN)SDL_GL_GetProcAddress( "glGetAttribLocation" ); SDL_CheckOpenGLExtension("glGetAttribLocation", glGetAttribLocation);

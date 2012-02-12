@@ -811,9 +811,9 @@ void forward_renderer_render_skeleton(skeleton* s) {
 
 void forward_renderer_render_axis(matrix_4x4 world) {
   
-  vector4 x_pos = m44_mul_v4(world, v4(1,0,0,1));
-  vector4 y_pos = m44_mul_v4(world, v4(0,1,0,1));
-  vector4 z_pos = m44_mul_v4(world, v4(0,0,1,1));
+  vector4 x_pos = m44_mul_v4(world, v4(2,0,0,1));
+  vector4 y_pos = m44_mul_v4(world, v4(0,2,0,1));
+  vector4 z_pos = m44_mul_v4(world, v4(0,0,2,1));
   vector4 base_pos = m44_mul_v4(world, v4(0,0,0,1));
   
   x_pos = v4_div(x_pos, x_pos.w);

@@ -5,7 +5,6 @@ Better rig/skeleton for Imrod.
 Alpha test shadow mapper
 Metaballs self shadowing
 Multiple Lights support
-Unify normal mapping for assets
 Sea Game - Add depth pass and foam effects? Walk around on moving deck? Proper Skybox. Bigger waterplane.
 Comment platformer game nicely. Reorganize.
 
@@ -19,5 +18,5 @@ Convert skeleton stuff to quaternions - though not sure if I trust my quaternion
 
 Make multi material behaviour default.
 PLY loader
-UI slider bar, Other UI elements
+UI button, slider bar, Other UI elements
 LUA wrappers for asset, entity, ui managers

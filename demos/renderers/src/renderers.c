@@ -14,6 +14,7 @@ static void swap_renderer() {
   
   camera* cam = entity_get("camera");
   light* sun = entity_get("sun");
+  light* backlight = entity_get("backlight");
   
   if (use_deferred) {
     
@@ -33,8 +34,10 @@ static void swap_renderer() {
     forward_renderer_finish();
     deferred_renderer_init();
     deferred_renderer_set_camera(cam);
-    deferred_renderer_set_light(sun);
+    deferred_renderer_set_shadow_light(sun);
     deferred_renderer_set_shadow_texture( shadow_mapper_depth_texture() );
+    deferred_renderer_add_light(sun);
+    deferred_renderer_add_light(backlight);
     
     ui_text* renderer_text = ui_elem_get("renderer_text");
     ui_text_update_string(renderer_text,"Deferred Renderer");
@@ -321,10 +324,19 @@ void renderers_init() {
   cam->target = v3(0, 5, 0);
   
   light* sun = entity_new("sun", light);
-  sun->position = v3(15,23,16);
-  sun->ambient_color = v3(0.5, 0.5, 0.5);
-  sun->diffuse_color = v3(0.75, 0.75, 0.75);
   light_set_type(sun, light_type_spot);
+  sun->position = v3(20,23,16);
+  sun->ambient_color = v3(0.5, 0.5, 0.5);
+  sun->diffuse_color = v3(1.0,  0.894, 0.811);
+  sun->power = 4.5;
+  
+  light* backlight = entity_new("backlight", light);
+  light_set_type(backlight, light_type_point);
+  backlight->position = v3(-22,10,-13);
+  backlight->ambient_color = v3(0.2, 0.2, 0.2);
+  backlight->diffuse_color = v3(0.729, 0.729, 1.0);
+  backlight->specular_color = v3(0.5, 0.5, 0.5);
+  backlight->power = 2;
   
   /* Renderer Setup */
   
@@ -335,6 +347,45 @@ void renderers_init() {
 
 }
 
+light* selected_light = NULL;
+static void select_light(int x, int y) {
+  
+  float x_clip =  ((float)x / viewport_width()) * 2 - 1;
+  float y_clip = -(((float)y / viewport_height()) * 2 - 1);
+  
+  light* light_ents[10];
+  int num_light_ents;
+  entities_get(light_ents, &num_light_ents, light);
+  
+  camera* cam = entity_get("camera");
+  matrix_4x4 viewm = camera_view_matrix(cam);
+  matrix_4x4 projm = camera_proj_matrix(cam, viewport_ratio() );
+  
+  selected_light = NULL;
+  float range = 0.1;
+  
+  for(int i = 0; i < num_light_ents; i++) {
+    
+    light* l = light_ents[i];
+    
+    vector4 light_pos = v4(l->position.x, l->position.y, l->position.z, 1);
+    light_pos = m44_mul_v4(viewm, light_pos);
+    light_pos = m44_mul_v4(projm, light_pos);
+    
+    light_pos = v4_div(light_pos, light_pos.w);
+    
+    float distance = v2_dist(v2(light_pos.x, light_pos.y), v2(x_clip, y_clip));
+    if (distance < range) {
+      range = distance;
+      selected_light = l;
+      debug("Selected Light %i", i);
+    }
+  }
+  
+}
+
+static bool g_down = false;
+
 void renderers_event(SDL_Event event) {
   
   ui_event(event);
@@ -344,7 +395,16 @@ void renderers_event(SDL_Event event) {
   static_object* s_cello = entity_get("cello");
 
   switch(event.type){
+  case SDL_KEYDOWN:
+    if (event.key.keysym.sym == SDLK_g) {
+      g_down = true;
+    }
+  break;
+  
   case SDL_KEYUP:
+    if (event.key.keysym.sym == SDLK_g) {
+      g_down = false;
+    }
   break;
 
   case SDL_MOUSEBUTTONDOWN:
@@ -354,6 +414,14 @@ void renderers_event(SDL_Event event) {
     if (event.button.button == SDL_BUTTON_WHEELDOWN) {
       cam->position = v3_add(cam->position, v3_normalize(cam->position));
     }
+  break;
+  
+  case SDL_MOUSEBUTTONUP:
+    
+    if (event.button.button == SDL_BUTTON_RIGHT) {
+      select_light(event.motion.x, event.motion.y);
+    }
+    
   break;
   
   case SDL_MOUSEMOTION:
@@ -385,12 +453,12 @@ void renderers_update() {
     
     cam->position = m33_mul_v3(m33_rotation_axis_angle(rotation_axis, a2 ), cam->position );
   }
-  
-  if(keystate & SDL_BUTTON(3)){
-    sun->position.x += (float)mouse_y / 2;
-    sun->position.z -= (float)mouse_x / 2;
-  }
 
+  if (g_down && selected_light) {
+    selected_light->position.x += (float)mouse_x * 0.1;
+    selected_light->position.z += (float)mouse_y * 0.1;
+  }
+  
   mouse_x = 0;
   mouse_y = 0;
   
@@ -408,6 +476,7 @@ void renderers_update() {
 void renderers_render() {
 
   light* sun = entity_get("sun");
+  light* backlight = entity_get("backlight");
 
   static_object* s_podium = entity_get("podium");
   
@@ -454,6 +523,12 @@ void renderers_render() {
     }
     
     deferred_renderer_render_light(sun);
+    deferred_renderer_render_light(backlight);
+    
+    if (selected_light != NULL) {
+      deferred_renderer_render_axis(m44_world(selected_light->position, v3_one(), v4_quaternion_id()));
+    }
+    
     deferred_renderer_end();
     
   } else {
@@ -476,6 +551,12 @@ void renderers_render() {
     }
     
     forward_renderer_render_light(sun);
+    forward_renderer_render_light(backlight);
+    
+    if (selected_light != NULL) {
+      forward_renderer_render_axis(m44_world(selected_light->position, v3_one(), v4_quaternion_id()));
+    }
+    
     forward_renderer_end();
   }
   
