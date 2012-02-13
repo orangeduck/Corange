@@ -644,8 +644,8 @@ renderable* smd_load_file(char* filename) {
   vertex_list* vert_list = vertex_list_new();
   int_list* tri_list = int_list_new();
   
-  /* TODO: Please fix this, it is the worst of the worst */
-  vertex_weight* weights = malloc(sizeof(vertex_weight) * 20000);
+  int allocated_weights = 1024;
+  vertex_weight* weights = malloc(sizeof(vertex_weight) * allocated_weights);
   
   int vert_index = 0;
   
@@ -724,6 +724,12 @@ renderable* smd_load_file(char* filename) {
             vw.bone_ids[0] = 0; vw.bone_ids[1] = 0; vw.bone_ids[2] = 0;
             vw.bone_weights[0] = 1; vw.bone_weights[1] = 0; vw.bone_weights[2] = 0;
           }
+          
+          while(vert_pos >= allocated_weights) {
+            allocated_weights = allocated_weights * 2;
+            weights = realloc(weights, sizeof(vertex_weight) * allocated_weights);
+          }
+
           weights[vert_pos] = vw;
           
           vert_index++;
@@ -733,11 +739,12 @@ renderable* smd_load_file(char* filename) {
         
       }
       
-      if (strstr(line, "end")) {
-        state = state_load_empty;
-      }
-      
     }
+    
+    if (strstr(line, "end")) {
+      state = state_load_empty;
+    }
+    
   }
   
   SDL_RWclose(file);

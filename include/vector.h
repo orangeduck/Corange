@@ -1,6 +1,8 @@
 #ifndef vector_h
 #define vector_h
 
+#include "bool.h"
+
 typedef union {
   struct {
     float x;
@@ -98,7 +100,7 @@ vector2 v2_max(vector2 v, float x);
 vector2 v2_min(vector2 v, float x);
 vector2 v2_clamp(vector2 v, float b, float t);
 
-int v2_equ(vector2 v1, vector2 v2);
+bool v2_equ(vector2 v1, vector2 v2);
 
 float v2_dot(vector2 v1, vector2 v2);
 float v2_length_sqrd(vector2 v);
@@ -148,7 +150,7 @@ vector3 v3_abs(vector3 v);
 vector3 v3_floor(vector3 v);
 vector3 v3_fmod(vector3 v, float val);
 
-int v3_equ(vector3 v1, vector3 v2);
+bool v3_equ(vector3 v1, vector3 v2);
 
 float v3_dot(vector3 v1, vector3 v2);
 float v3_length_sqrd(vector3 v);
@@ -199,7 +201,7 @@ vector4 v4_abs(vector4 v);
 vector4 v4_floor(vector4 v);
 vector4 v4_fmod(vector4 v, float val);
 
-int v4_equ(vector4 v1, vector4 v2);
+bool v4_equ(vector4 v1, vector4 v2);
 
 float v4_dot(vector4 v1, vector4 v2);
 float v4_length_sqrd(vector4 v);

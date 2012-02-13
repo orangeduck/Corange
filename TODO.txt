@@ -1,18 +1,16 @@
 -- To Finish Demos --
 
-Low specularity on Imrod
-Better rig/skeleton for Imrod.
+Moving text bug.
 Alpha test shadow mapper
 Metaballs self shadowing
-Multiple Lights support
 Sea Game - Add depth pass and foam effects? Walk around on moving deck? Proper Skybox. Bigger waterplane.
-Comment platformer game nicely. Reorganize.
 
 -- Tweaks/Cleanup --
 
 Optimise SDL_ReadLine to read more than one character at once.
 const char stuff where needed (including asset stuff)
 Convert skeleton stuff to quaternions - though not sure if I trust my quaternion code.
+Reorganize shaders into component specific and general sections. Make them unload and load correctly on init/finish.
 
 -- In the Future --
 

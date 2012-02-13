@@ -5,7 +5,17 @@ vec3 fxaa(sampler2D input, vec2 pos, int width, int height);
 
 /* End */
 
+/*
+  Basic technique of my own invention. Very simple and fast. Odd effects for far away objects.
+  
+  First applies an unsharp mask. Then looks for areas of high color difference and blurs them.
+  Works because it essentially maintains/sharpens the per-pixel detail in low-contrast areas.
+  While bluring edges to remove any aliasing too intense.
+*/
 vec3 fxaa_fast(sampler2D input, vec2 pos, int width, int height) {
+  
+  const float sharpen = 0.5;
+  const float boundry = 0.1;
   
   float kernel = 1.0;
   
@@ -23,13 +33,17 @@ vec3 fxaa_fast(sampler2D input, vec2 pos, int width, int height) {
   vec3 rgb_se = texture2D(input, pos + vec2(xoff,-yoff)).rgb;
   
   vec3 average = (rgb_ne + rgb_n + rgb_nw + rgb_w + rgb_e + rgb_sw + rgb_s + rgb_se) / 8;
+  vec3 difference = rgb_o - average;
   
-  float diff = abs(dot(vec3(1,1,1), average - rgb_o));
+  rgb_o = rgb_o + (difference * sharpen);
+  difference = rgb_o - average;
   
-  if (diff > 0.15) {
+  float fdiff = abs(dot(vec3(1,1,1), difference));
+  
+  if (fdiff > boundry) {
     
-    float alias_amount = clamp(diff * 2, 0.25, 0.75);
-    //return mix(vec3(1,0,0), vec3(0,1,0), alias_amount);
+    float alias_amount = clamp(fdiff * 2.75, 0.25, 0.75);
+    //return mix(vec3(0,1,0), vec3(1,0,0), alias_amount);
     return mix(rgb_o, average, alias_amount);
     
   } else {

@@ -2,6 +2,8 @@
 	|  Corange game engine  |
 	~~~~~~~~~~~~~~~~~~~~~~~~~
 	
+	Version 0.5.1
+	
 	Written in Pure C (Because it is beautiful)
 	
 	Uses SDL and OpenGL.

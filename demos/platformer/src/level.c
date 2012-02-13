@@ -5,6 +5,8 @@
 const int MAX_WIDTH = 512;
 const int MAX_HEIGHT = 512;
 
+/* These vast case statements are basically a nasty way of assigning properties to the tile types */
+
 static texture* tile_get_texture(int tiletype) {
   texture* t;
   switch(tiletype) {
@@ -55,6 +57,8 @@ bool tile_has_collision(int tiletype) {
   return false;
 }
 
+/* Levels are basically stored in an ascii file, with these being the tile type characters. */
+
 static int tile_for_char(char c) {
 
   switch(c) {
@@ -93,6 +97,8 @@ static int tile_for_char(char c) {
 }
 
 static int tile_counts[num_tile_types];
+
+/* This just runs through the file and fills some vertex buffers with tile properties */
 
 level* level_load_file(char* filename) {
   
@@ -207,6 +213,9 @@ void level_delete(level* l) {
   
 }
 
+
+/* Just renders a full screen quad with background texture */
+
 void level_render_background(level* l) {
   
 	glMatrixMode(GL_PROJECTION);
@@ -245,6 +254,8 @@ void level_render_background(level* l) {
   glPopMatrix();
 
 }
+
+/* Renders each tileset in one go. Uses vertex buffers. */
 
 void level_render_tiles(level* l, vector2 camera_position) {
   
@@ -301,17 +312,10 @@ void level_render_tiles(level* l, vector2 camera_position) {
 
 }
 
-void level_render(level* l, vector2 camera_position) {
-  
-  level_render_background(l);
-  level_render_tiles(l, camera_position);
-  
-}
-
 int level_tile_at(level* l, vector2 position) {
   
-  int x = floor( position.x / 32 );
-  int y = floor( position.y / 32 );
+  int x = floor( position.x / TILE_SIZE );
+  int y = floor( position.y / TILE_SIZE );
   
   assert(x >= 0, "Invalid Position, (%0.2f,%0.2f)", position.x, position.y);
   assert(y >= 0, "Invalid Position, (%0.2f,%0.2f)", position.x, position.y);
@@ -323,6 +327,6 @@ int level_tile_at(level* l, vector2 position) {
 
 vector2 level_tile_position(level* l, int x, int y) {
   
-  return v2(x * 32, y * 32);
+  return v2(x * TILE_SIZE, y * TILE_SIZE);
   
 }

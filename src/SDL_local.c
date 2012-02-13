@@ -164,18 +164,21 @@ void SDL_RWsize(SDL_RWops* file, int* size) {
 
 int SDL_RWreadline(SDL_RWops* file, char* buffer, int buffersize) {
   
-  char c = ' ';
+  char c[10];
   int i = 0;
-  while( SDL_RWread(file, &c, 1, 1) ) {
+  int stat = 0;
+  while(1) {
     
-    if (i >= buffersize) {
-      error("Buffer not large enough to read line!");
-    }
+    stat = SDL_RWread(file, &c[0], 1, 1);
     
-    buffer[i] = c;
+    if (stat == -1) error("Error reading file.");
+    if (i == buffersize-1) error("Buffer not large enough to read line!");
+    if (stat == 0) break;
+    
+    buffer[i] = c[0];
     i++;
     
-    if (c == '\n') {
+    if (c[0] == '\n') {
       buffer[i] = '\0';
       return i;
     }

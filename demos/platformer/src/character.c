@@ -24,6 +24,9 @@ void character_update(character* c) {
 
 static float previous_x = 0.0;
 
+
+/* Renders a simple quad to the screen */
+
 void character_render(character* c, vector2 camera_position) {
 
 	glMatrixMode(GL_PROJECTION);
@@ -44,6 +47,7 @@ void character_render(character* c, vector2 camera_position) {
   
   glEnable(GL_TEXTURE_2D);
   
+  /* Conditional as to if we render flap or normal icon */
   texture* character_tex;
   if (c->flap_timer > 0.0) {
     character_tex = asset_get("./tiles/character_flap.dds");
@@ -52,6 +56,7 @@ void character_render(character* c, vector2 camera_position) {
   }
   glBindTexture(GL_TEXTURE_2D, *character_tex);
   
+  /* Swaps the direction of the uvs when facing the opposite direction */
   if (c->facing_left) {
   
     glBegin(GL_TRIANGLES);

@@ -45,17 +45,20 @@ void sea_init() {
   cam->near_clip = 0.1;
   
   light* sun = entity_new("sun", light);
+  light_set_type(sun, light_type_spot);
   sun->position = v3(20,30,-20);
   sun->ambient_color = v3(0.5, 0.5, 0.5);
   sun->diffuse_color = v3(0.75, 0.75, 0.75);
-  light_set_type(sun, light_type_spot);
+  sun->power = 1.25;
+  sun->falloff = 0;
   
   shadow_mapper_init(sun);  
   
   forward_renderer_init();
   forward_renderer_set_camera(cam);
-  forward_renderer_set_light(sun);
+  forward_renderer_set_shadow_light(sun);
   forward_renderer_set_shadow_texture( shadow_mapper_depth_texture() );
+  forward_renderer_add_light(sun);
   
   load_folder("./resources/");
    

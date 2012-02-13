@@ -203,14 +203,14 @@ void renderers_init() {
   renderable_set_material(r_boots, mat_boots);
   
   skeleton* skel_imrod = asset_get("./resources/imrod/imrod.skl");
+  animation* ani_imrod = asset_get("./resources/imrod/imrod.ani");
   skeleton* skel_pirate = asset_get("./resources/pirate/pirate.skl");
   animation* ani_stand = asset_get("./resources/pirate/stand.ani");
   animation* ani_cheer = asset_get("./resources/pirate/cheer.ani");
   
   animated_object* imrod = animated_object_new(r_imrod, skel_imrod);
-  imrod->animation = ani_stand;
-  imrod->position = v3(0, -1.5, 0);
-  imrod->scale = v3(1.1, 1.1, 1.1);
+  imrod->animation = ani_imrod;
+  //imrod->position = v3(0, -1.5, 0);
   imrod->rotation = v4_quaternion_mul(imrod->rotation, v4_quaternion_roll(1.57));
   entity_add("imrod", animated_object, imrod);
   
@@ -470,7 +470,7 @@ void renderers_update() {
   animated_object* imrod = entity_get("imrod");
   animated_object* pirate = entity_get("pirate");
   animated_object* boots = entity_get("boots");
-  animated_object_update(imrod, 0.5);
+  animated_object_update(imrod, 0.1);
   animated_object_update(pirate, 0.5);
   animated_object_update(boots, 0.5);
 }

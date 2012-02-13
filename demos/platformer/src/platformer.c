@@ -9,10 +9,6 @@
 
 #include "platformer.h"
 
-/* Some booleans to monitor key inputs */
-static bool left_held = false;
-static bool right_held = false;
-
 /* Some game state variables */
 static level* current_level = NULL;
 static vector2 camera_position;
@@ -57,13 +53,15 @@ static void reset_game() {
     coins[i]->position = v2_mul(coin_positions[i], TILE_SIZE);
   }
   
+  /* Deactivate victory and new game UI elements */
   ui_rectangle* victory_rect = ui_elem_get("victory_rect");
-  victory_rect->active = false;
   ui_text* victory_text = ui_elem_get("victory_text");
-  victory_text->active = false;
   ui_rectangle* new_game_rect = ui_elem_get("new_game_rect");
-  new_game_rect->active = false;
   ui_text* new_game_text = ui_elem_get("new_game_text");
+  
+  victory_rect->active = false;
+  victory_text->active = false;
+  new_game_rect->active = false;
   new_game_text->active = false;
   
 }
@@ -101,7 +99,7 @@ static void disable_audio(ui_rectangle* rect, SDL_Event event) {
   }
 }
 
-/* This is an event we attach to the audio button */
+/* This is an event we attach to the new game button */
 static bool new_game_pressed = false;
 static void new_game(ui_rectangle* rect, SDL_Event event) {
   
@@ -113,7 +111,7 @@ static void new_game(ui_rectangle* rect, SDL_Event event) {
       rect->color = v4(0.5, 0.5, 0.5, 1);
     }
   
-  /* On click up it disables/enabled the audio and changes back */
+  /* On click up it resets the game */
   } else if (event.type == SDL_MOUSEBUTTONUP) {
     
     if (new_game_pressed) {
@@ -226,9 +224,14 @@ void platformer_init() {
   /* Set volume to something more reasonable */
   audio_mixer_set_volume(0.1);
   
+  /* Reset all the game variables */
   reset_game();
   
 }
+
+/* Some booleans to monitor key inputs */
+static bool left_held = false;
+static bool right_held = false;
 
 void platformer_event(SDL_Event event) {
   
@@ -237,18 +240,11 @@ void platformer_event(SDL_Event event) {
     if (event.key.keysym.sym == SDLK_LEFT) { left_held = true; }
     if (event.key.keysym.sym == SDLK_RIGHT) { right_held = true; }
     
-    /* Up key used to "jump". Just adds to up velocity and flaps wings */
+    /* Up key used to "jump". Just adds to up velocity and flaps wings of icon */
     if (event.key.keysym.sym == SDLK_UP) {
       character* main_char = entity_get("main_char");
       main_char->velocity.y -= 5.0;
       main_char->flap_timer = 0.15;
-    }
-    
-    if (event.key.keysym.sym == SDLK_p) {
-      character* main_char = entity_get("main_char");
-      vector2 pos = v2_div(main_char->position, 32);
-      debug("Player Position: (%0.2f, %0.2f)", pos.x, pos.y);
-      debug("Coins Left: %i", entity_type_count(coin));
     }
     
   break;
@@ -267,9 +263,9 @@ static void collision_detection() {
     Collision is fairly simplistic and looks something like this.
     
      @-----@    We check for collision in those points here which
-    @       @   are crosses. If any are colliding with a solid tile
+    @       @   are @ signs. If any are colliding with a solid tile
     |       |   then we shift the player so that they are no longer
-    @       @   colliding with it. Also invert their velocity.
+    @       @   colliding with it. Also invert the velocity.
      @-----@ 
   */
   
@@ -347,10 +343,11 @@ static void collision_detection_coins() {
   /* We simply check if the player intersects with the coins */
   
   character* main_char = entity_get("main_char");
+  
   vector2 top_left = v2_add(main_char->position, v2(-TILE_SIZE, -TILE_SIZE));
   vector2 bottom_right = v2_add(main_char->position, v2(TILE_SIZE, TILE_SIZE));
   
-  /* Again we collect points to all the coin type entities */
+  /* Again we collect pointers to all the coin type entities */
   int num_coins = 0;
   coin* coins[COIN_COUNT];
   entities_get(coins, &num_coins, coin); 
@@ -369,8 +366,10 @@ static void collision_detection_coins() {
       /* Play a nice twinkle sound */
       audio_mixer_play_sound(asset_get_as("./sounds/coin.wav", sound));
       
+      /* Add some score! */
       level_score += 10;
       
+      /* Update the ui text */
       ui_text* score_text = ui_elem_get("score_text");
       sprintf(score_text->string, "Score %06i", level_score);
       ui_text_update_properties(score_text);
@@ -379,6 +378,7 @@ static void collision_detection_coins() {
   
   ui_rectangle* victory_rect = ui_elem_get("victory_rect");
   
+  /* if all the coins are gone and the victory rectangle isn't disaplayed then show it */
   if ((entity_type_count(coin) == 0) && (!victory_rect->active)) {
     ui_rectangle* victory_rect = ui_elem_get("victory_rect");
     victory_rect->active = true;
@@ -425,7 +425,6 @@ void platformer_update() {
   ui_text_update_string(framerate_text, frame_rate_string());
   
   /* Update the time text */
-  
   ui_rectangle* victory_rect = ui_elem_get("victory_rect");
   if (!victory_rect->active) {
     level_time += frame_time();
@@ -443,9 +442,9 @@ void platformer_render() {
   
   level_render_background(current_level);
   
-  /* Render main character */
   character_render(entity_get_as("main_char", character), camera_position);
   
+  /* Get pointers to all the coins for rendering */
   coin* coins[COIN_COUNT];
   int num_coins = 0;
   entities_get(coins, &num_coins, coin); 
@@ -454,14 +453,12 @@ void platformer_render() {
     coin_render(coins[i], camera_position);
   }
   
-  /* Render level */
   level_render_tiles(current_level, camera_position);
-  
 }
 
 void platformer_finish() {
   
-  /* Entity and asset managers will automatically delete any remaining objects */
+  /* Entity and asset managers will automatically delete any remaining objects. */
   
 }
 
@@ -511,7 +508,6 @@ int main(int argc, char **argv) {
     
     /* This allows us to fix the framerate to 60 fps, even on my laptop with vsync broken */
     frame_end_at_rate(60);
-    
   }
   
   platformer_finish();

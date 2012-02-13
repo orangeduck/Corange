@@ -49,8 +49,9 @@ void metaballs_init() {
   
   forward_renderer_init();
   forward_renderer_set_camera(cam);
-  forward_renderer_set_light(sun);
+  forward_renderer_set_shadow_light(sun);
   forward_renderer_set_shadow_texture( shadow_mapper_depth_texture() );
+  forward_renderer_add_light(sun);
   
   vector3* temp_pos = malloc(sizeof(vector3) * 4 * max_particles);
   int i = 0;

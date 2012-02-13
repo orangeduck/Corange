@@ -655,9 +655,7 @@ void sphere_collide_sphere(collision* out, sphere object, vector3 object_velocit
   float dist_sqrd = sqrtf(descrim);
   
   /* This intermediate is used to reduce numerical instability */
-  float q;
-  if (B < 0) q = (-B - dist_sqrd)/2.0;
-  else q = (-B + dist_sqrd)/2.0;
+  float q = (B < 0) ? (-B - dist_sqrd)/2.0 : (-B + dist_sqrd)/2.0;
   
   float t0 = q / A;
   float t1 = C / q;
@@ -783,9 +781,7 @@ static void sphere_collide_vertex(collision* out, sphere object, vector3 object_
   float dist_sqrd = sqrtf(descrim);
   
   /* This intermediate is used to reduce numerical instability */
-  float q;
-  if (B < 0) q = (-B - dist_sqrd)/2.0;
-  else q = (-B + dist_sqrd)/2.0;
+  float q = (B < 0) ? (-B - dist_sqrd)/2.0 : (-B + dist_sqrd)/2.0;
   
   float t0 = q / A;
   float t1 = C / q;
@@ -830,9 +826,7 @@ static void sphere_collide_edge(collision* out, sphere object, vector3 object_ve
   float dist_sqrd = sqrtf(descrim);
   
   /* This intermediate is used to reduce numerical instability */
-  float q;
-  if (B < 0) q = (-B - dist_sqrd)/2.0;
-  else q = (-B + dist_sqrd)/2.0;
+  float q = (B < 0) ? (-B - dist_sqrd)/2.0 : (-B + dist_sqrd)/2.0;
   
   float t0 = q / A;
   float t1 = C / q;
@@ -876,18 +870,10 @@ static int sphere_plane_location(sphere object, vector3 object_velocity, plane p
   float t1 = (-object.radius - dist) / angle;
   
   if ((t0 < 0) && (t1 < 0)) {
-    if (angle < 0) {
-      return behind;
-    } else {
-      return before;
-    }
+    return (angle < 0) ? behind : before;
   }
   if ((t0 > timestep) && (t1 > timestep)) {
-    if (angle < 0) {
-      return before;
-    } else {
-      return behind;
-    }
+    return (angle < 0) ? before : behind;
   }
   
   return intersecting;

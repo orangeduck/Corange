@@ -12,6 +12,8 @@ void coin_delete(coin* c) {
   free(c);
 }
 
+/* Renders a quad to the screen with coin texture */
+
 void coin_render(coin* c, vector2 camera_position) {
 
 	glMatrixMode(GL_PROJECTION);
