@@ -26,4 +26,7 @@ void deferred_renderer_render_animated(animated_object* ao);
 void deferred_renderer_render_light(light* l);
 void deferred_renderer_render_axis(matrix_4x4 world);
 
+float deferred_renderer_get_exposure();
+void deferred_renderer_set_exposure(float exposure);
+
 #endif

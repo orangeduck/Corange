@@ -31,6 +31,7 @@ static shader_program* PROGRAM_CLEAR;
 static shader_program* PROGRAM_SSAO;
 
 static shader_program* SCREEN_PROGRAM;
+static shader_program* SCREEN_TONEMAP;
 static shader_program* SCREEN_POST;
 
 static int NORMAL;
@@ -58,6 +59,10 @@ static GLuint ssao_fbo;
 static GLuint ssao_buffer;
 static GLuint ssao_texture;
 
+static GLuint hdr_fbo;
+static GLuint hdr_buffer;
+static GLuint hdr_texture;
+
 static GLuint ldr_fbo;
 static GLuint ldr_buffer;
 static GLuint ldr_texture;
@@ -83,6 +88,17 @@ static vector3 light_diffuse[DEFERRED_MAX_LIGHTS];
 static vector3 light_ambient[DEFERRED_MAX_LIGHTS];
 static vector3 light_specular[DEFERRED_MAX_LIGHTS];
 
+static float EXPOSURE = 4.0;
+
+/*
+  Pipeline:
+  
+  Start --transform--> G-Buffer
+  G-Buffer --compose--> HDR-Buffer
+  HDR-Buffer --tonemap--> LDR-Buffer
+  LDR-Buffer --post--> Screen
+*/
+
 void deferred_renderer_init() {
   
   num_lights = 0;
@@ -97,6 +113,7 @@ void deferred_renderer_init() {
   PROGRAM_CLEAR = asset_load_get("$SHADERS/deferred_clear.prog");
   PROGRAM_SSAO = asset_load_get("$SHADERS/deferred_ssao.prog");
   
+  SCREEN_TONEMAP = asset_load_get("$SHADERS/deferred_tonemap.prog");
   SCREEN_PROGRAM = asset_load_get("$SHADERS/deferred_screen.prog");
   SCREEN_POST = asset_load_get("$SHADERS/deferred_post.prog");
   
@@ -187,6 +204,23 @@ void deferred_renderer_init() {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ssao_texture, 0);
   
+  glGenFramebuffers(1, &hdr_fbo);
+  glBindFramebuffer(GL_FRAMEBUFFER, hdr_fbo);
+  
+  glGenRenderbuffers(1, &hdr_buffer);
+  glBindRenderbuffer(GL_RENDERBUFFER, hdr_buffer);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA16F, viewport_width(), viewport_height());
+  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, ldr_buffer);   
+  
+  glGenTextures(1, &hdr_texture);
+  glBindTexture(GL_TEXTURE_2D, hdr_texture);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, viewport_width(), viewport_height(), 0, GL_RGBA, GL_FLOAT, NULL);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, hdr_texture, 0);
+  
   glGenFramebuffers(1, &ldr_fbo);
   glBindFramebuffer(GL_FRAMEBUFFER, ldr_fbo);
   
@@ -225,6 +259,10 @@ void deferred_renderer_finish() {
   glDeleteFramebuffers(1, &ssao_fbo);
   glDeleteRenderbuffers(1, &ssao_buffer);
   glDeleteTextures(1,&ssao_texture);
+  
+  glDeleteFramebuffers(1, &hdr_fbo);
+  glDeleteRenderbuffers(1, &hdr_buffer);
+  glDeleteTextures(1,&hdr_texture);
   
   glDeleteFramebuffers(1, &ldr_fbo);
   glDeleteRenderbuffers(1, &ldr_buffer);
@@ -464,9 +502,9 @@ void deferred_renderer_end() {
   
   /* End */
   
-  /* Render full screen quad to ldr_buffer */
+  /* Render full screen quad to hdr fbo */
   
-  glBindFramebuffer(GL_FRAMEBUFFER, ldr_fbo);
+  glBindFramebuffer(GL_FRAMEBUFFER, hdr_fbo);
   
   glViewport(0, 0, viewport_width(), viewport_height());
   glDisable(GL_DEPTH_TEST);
@@ -481,8 +519,6 @@ void deferred_renderer_end() {
 	glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
 	glLoadIdentity();
-  
-  glDepthMask(GL_FALSE);
   
   glActiveTexture(GL_TEXTURE0 + 0 );
   glBindTexture(GL_TEXTURE_2D, diffuse_texture);
@@ -592,9 +628,47 @@ void deferred_renderer_end() {
   glPopMatrix();
   
   glUseProgram(0);
-  
-  glDepthMask(GL_TRUE);
 
+  /* Render HDR to LDR buffer */
+  
+  glBindFramebuffer(GL_FRAMEBUFFER, ldr_fbo);
+  
+  glUseProgram(*SCREEN_TONEMAP);
+  
+	glMatrixMode(GL_PROJECTION);
+  glPushMatrix();
+	glLoadIdentity();
+	glOrtho(-1.0, 1.0, -1.0, 1.0, -1, 1);
+  
+	glMatrixMode(GL_MODELVIEW);
+  glPushMatrix();
+	glLoadIdentity();
+  
+  glActiveTexture(GL_TEXTURE0 + 0 );
+  glBindTexture(GL_TEXTURE_2D, hdr_texture);
+  glEnable(GL_TEXTURE_2D);
+  glUniform1i(glGetUniformLocation(*SCREEN_TONEMAP, "hdr_texture"), 0);
+
+  glUniform1f(glGetUniformLocation(*SCREEN_TONEMAP, "exposure"), EXPOSURE);
+  
+	glBegin(GL_QUADS);
+		glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0, -1.0,  0.0f);
+		glTexCoord2f(1.0f, 0.0f); glVertex3f(1.0, -1.0,  0.0f);
+		glTexCoord2f(1.0f, 1.0f); glVertex3f(1.0,  1.0,  0.0f);
+		glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0,  1.0,  0.0f);
+	glEnd();
+  
+  glActiveTexture(GL_TEXTURE0 + 0 );
+  glDisable(GL_TEXTURE_2D);
+  
+  glMatrixMode(GL_PROJECTION);
+  glPopMatrix();
+
+  glMatrixMode(GL_MODELVIEW);
+  glPopMatrix();
+  
+  glUseProgram(0);
+  
   /* Render final frame */
   
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -652,6 +726,14 @@ void deferred_renderer_end() {
   
   glUseProgram(0);
   
+}
+
+float deferred_renderer_get_exposure() {
+  return EXPOSURE;
+}
+
+void deferred_renderer_set_exposure(float exposure) {
+  EXPOSURE = exposure;
 }
 
 void deferred_renderer_render_static(static_object* s) {

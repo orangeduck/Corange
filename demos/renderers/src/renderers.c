@@ -407,6 +407,16 @@ void renderers_event(SDL_Event event) {
     if (event.key.keysym.sym == SDLK_g) {
       g_down = false;
     }
+    if (event.key.keysym.sym == SDLK_z) {
+      float expo = deferred_renderer_get_exposure();
+      forward_renderer_set_exposure(expo + 1.0);
+      deferred_renderer_set_exposure(expo + 1.0);
+    }
+    if (event.key.keysym.sym == SDLK_x) {
+      float expo = deferred_renderer_get_exposure();
+      forward_renderer_set_exposure(expo - 1.0);
+      deferred_renderer_set_exposure(expo - 1.0);
+    }
   break;
 
   case SDL_MOUSEBUTTONDOWN:

@@ -1,6 +1,6 @@
 /* Headers */
 
-vec3 fxaa_fast(sampler2D input, vec2 pos, int width, int height);
+vec3 fxaa_unsharp(sampler2D input, vec2 pos, int width, int height);
 vec3 fxaa(sampler2D input, vec2 pos, int width, int height);
 
 /* End */
@@ -12,7 +12,7 @@ vec3 fxaa(sampler2D input, vec2 pos, int width, int height);
   Works because it essentially maintains/sharpens the per-pixel detail in low-contrast areas.
   While bluring edges to remove any aliasing too intense.
 */
-vec3 fxaa_fast(sampler2D input, vec2 pos, int width, int height) {
+vec3 fxaa_unsharp(sampler2D input, vec2 pos, int width, int height) {
   
   const float sharpen = 0.5;
   const float boundry = 0.1;
