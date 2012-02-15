@@ -20,7 +20,7 @@
 
 #include "forward_renderer.h"
 
-static int use_shadows = 0;
+static int use_shadows;
 
 static camera* CAMERA = NULL;
 static light* SHADOW_LIGHT = NULL;
@@ -69,11 +69,18 @@ static vector3 light_diffuse[FORWARD_MAX_LIGHTS];
 static vector3 light_ambient[FORWARD_MAX_LIGHTS];
 static vector3 light_specular[FORWARD_MAX_LIGHTS];
 
-static float EXPOSURE = 4.0;
+static float EXPOSURE;
+static float EXPOSURE_SPEED;
+static float EXPOSURE_TARGET;
 
 void forward_renderer_init() {
   
+  use_shadows = false;
   num_lights = 0;
+  
+  EXPOSURE = 0.0;
+  EXPOSURE_SPEED = 1.0;
+  EXPOSURE_TARGET = 0.4;
   
   COLOR_CORRECTION = asset_load_get("$CORANGE/resources/identity.lut");
   VIGNETTING = asset_load_get("$CORANGE/resources/vignetting.dds");
@@ -332,6 +339,39 @@ void forward_renderer_end() {
   glPopMatrix();
   
   glUseProgram(0);
+  
+  /* Generate Mipmaps, adjust exposure */
+  
+  unsigned char color[4] = {0,0,0,0};
+  int level = -1;
+  int width = 0;
+  int height = 0;
+  
+  glActiveTexture(GL_TEXTURE0 + 0 );
+  glBindTexture(GL_TEXTURE_2D, ldr_texture);
+  glEnable(GL_TEXTURE_2D);
+  
+  glGenerateMipmap(GL_TEXTURE_2D);
+  
+  do {
+    level++;
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, level, GL_TEXTURE_WIDTH, &width);
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, level, GL_TEXTURE_WIDTH, &height);
+    
+    if (level > 50) { error("Unable to find lowest mip level. Perhaps mipmaps were not generated"); }
+    
+  } while ((width > 1) || (height > 1));
+  
+  glGetTexImage(GL_TEXTURE_2D, level, GL_RGBA, GL_UNSIGNED_BYTE, color);
+  
+  glActiveTexture(GL_TEXTURE0 + 0 );
+  glDisable(GL_TEXTURE_2D);
+  
+  float average = (float)(color[0] + color[1] + color[2]) / (3.0 * 255.0);
+  
+  EXPOSURE += (EXPOSURE_TARGET - average) * EXPOSURE_SPEED;
+  
+  /* Render final frame */
   
   /* Render final frame */
   

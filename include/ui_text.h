@@ -16,7 +16,7 @@ static int text_align_bottom = 1;
   This will re-draw the quads needed for rendering the updated text.
 */
 
-typedef struct ui_text_temp {
+typedef struct {
   
   /* Don't change manually */
   
@@ -52,7 +52,7 @@ typedef struct ui_text_temp {
 } ui_text;
 
 ui_text* ui_text_new();
-ui_text* ui_text_new_string(char* string, font* text_font);
+ui_text* ui_text_new_string(char* string);
 void ui_text_delete(ui_text* text);
 
 void ui_text_update_string(ui_text* text, char* string);

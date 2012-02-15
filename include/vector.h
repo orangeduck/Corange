@@ -138,6 +138,7 @@ vector3 v3_green();
 vector3 v3_blue();
 vector3 v3_white();
 vector3 v3_black();
+vector3 v3_grey();
 
 vector3 v3_add(vector3 v1, vector3 v2);
 vector3 v3_sub(vector3 v1, vector3 v2);
@@ -189,6 +190,7 @@ vector4 v4_green();
 vector4 v4_blue();
 vector4 v4_white();
 vector4 v4_black();
+vector4 v4_grey();
 
 vector4 v4_add(vector4 v1, vector4 v2);
 vector4 v4_sub(vector4 v1, vector4 v2);

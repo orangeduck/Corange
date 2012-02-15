@@ -88,20 +88,17 @@ static vector3 light_diffuse[DEFERRED_MAX_LIGHTS];
 static vector3 light_ambient[DEFERRED_MAX_LIGHTS];
 static vector3 light_specular[DEFERRED_MAX_LIGHTS];
 
-static float EXPOSURE = 4.0;
-
-/*
-  Pipeline:
-  
-  Start --transform--> G-Buffer
-  G-Buffer --compose--> HDR-Buffer
-  HDR-Buffer --tonemap--> LDR-Buffer
-  LDR-Buffer --post--> Screen
-*/
+static float EXPOSURE;
+static float EXPOSURE_SPEED;
+static float EXPOSURE_TARGET;
 
 void deferred_renderer_init() {
   
   num_lights = 0;
+  
+  EXPOSURE = 0.0;
+  EXPOSURE_SPEED = 1.0;
+  EXPOSURE_TARGET = 0.4;
   
   COLOR_CORRECTION = asset_load_get("$CORANGE/resources/identity.lut");
   RANDOM = asset_load_get("$CORANGE/resources/random.dds");
@@ -232,8 +229,8 @@ void deferred_renderer_init() {
   glGenTextures(1, &ldr_texture);
   glBindTexture(GL_TEXTURE_2D, ldr_texture);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, viewport_width(), viewport_height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ldr_texture, 0);
@@ -668,6 +665,37 @@ void deferred_renderer_end() {
   glPopMatrix();
   
   glUseProgram(0);
+  
+  /* Generate Mipmaps, adjust exposure */
+  
+  unsigned char color[4] = {0,0,0,0};
+  int level = -1;
+  int width = 0;
+  int height = 0;
+  
+  glActiveTexture(GL_TEXTURE0 + 0 );
+  glBindTexture(GL_TEXTURE_2D, ldr_texture);
+  glEnable(GL_TEXTURE_2D);
+  
+  glGenerateMipmap(GL_TEXTURE_2D);
+  
+  do {
+    level++;
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, level, GL_TEXTURE_WIDTH, &width);
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, level, GL_TEXTURE_WIDTH, &height);
+    
+    if (level > 50) { error("Unable to find lowest mip level. Perhaps mipmaps were not generated"); }
+    
+  } while ((width > 1) || (height > 1));
+  
+  glGetTexImage(GL_TEXTURE_2D, level, GL_RGBA, GL_UNSIGNED_BYTE, color);
+  
+  glActiveTexture(GL_TEXTURE0 + 0 );
+  glDisable(GL_TEXTURE_2D);
+  
+  float average = (float)(color[0] + color[1] + color[2]) / (3.0 * 255.0);
+  
+  EXPOSURE += (EXPOSURE_TARGET - average) * EXPOSURE_SPEED;
   
   /* Render final frame */
   

@@ -392,6 +392,10 @@ vector3 v3_black() {
   return v3(0, 0, 0);
 }
 
+vector3 v3_grey() {
+  return v3(0.5, 0.5, 0.5);
+}
+
 vector3 v3_add(vector3 v1, vector3 v2) {
   vector3 v;
   v.x = v1.x + v2.x;
@@ -627,6 +631,10 @@ vector4 v4_white() {
 
 vector4 v4_black() {
   return v4(0,0,0,1);
+}
+
+vector4 v4_grey() {
+  return v4(0.5,0.5,0.5,1);
 }
 
 vector4 v4_add(vector4 v1, vector4 v2) {

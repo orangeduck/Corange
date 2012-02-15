@@ -26,9 +26,6 @@ static void swap_renderer() {
     forward_renderer_add_light(sun);
     forward_renderer_add_light(backlight);
     
-    ui_text* renderer_text = ui_elem_get("renderer_text");
-    ui_text_update_string(renderer_text,"Forward Renderer");
-    
     use_deferred = 0;
     
   } else {
@@ -41,119 +38,68 @@ static void swap_renderer() {
     deferred_renderer_add_light(sun);
     deferred_renderer_add_light(backlight);
     
-    ui_text* renderer_text = ui_elem_get("renderer_text");
-    ui_text_update_string(renderer_text,"Deferred Renderer");
-    
     use_deferred = 1;
   }
 
 }
 
-static bool renderer_button_pressed = false;
-static void switch_renderer_event(ui_rectangle* rect, SDL_Event event) {
-  
-  if (event.type == SDL_MOUSEBUTTONDOWN) {
-    
-    if (ui_rectangle_contains_position(rect, v2(event.motion.x, event.motion.y))) {
-      renderer_button_pressed = true;
-      rect->color = v4(0.5, 0.5, 0.5, 1);
-    }
-  
-  } else if (event.type == SDL_MOUSEBUTTONUP) {
-    
-    if (renderer_button_pressed) {
-      renderer_button_pressed = false;
-      rect->color = v4_black();
-      swap_renderer();
-    }
-  }
-}
+static bool any_button_pressed = false;
 
-static bool piano_button_pressed;
-static void switch_object_piano(ui_rectangle* rect, SDL_Event event) {
+static void switch_renderer_event(ui_button* b, SDL_Event event) {
   
   if (event.type == SDL_MOUSEBUTTONDOWN) {
     
-    if (ui_rectangle_contains_position(rect, v2(event.motion.x, event.motion.y))) {
-      piano_button_pressed = true;
-      rect->color = v4(0.5, 0.5, 0.5, 1);
+    if (ui_button_contains_position(b, v2(event.motion.x, event.motion.y))) {
+      any_button_pressed = true;
+      b->pressed = true;
     }
   
   } else if (event.type == SDL_MOUSEBUTTONUP) {
     
-    if (piano_button_pressed) {
-      piano_button_pressed = false;
-      rect->color = v4_black();
+    if (b->pressed) {
+      any_button_pressed = false;
+      b->pressed = false;
+      if ((strcmp(ui_elem_name(b), "forward_renderer") == 0) && (use_deferred)) {
+        swap_renderer();
+      }
+      if ((strcmp(ui_elem_name(b), "deferred_renderer") == 0) && (!use_deferred)) {
+        swap_renderer();
+      }
       
-      object_id = 1;
     }
   }
 }
 
-static bool cello_button_pressed;
-static void switch_object_cello(ui_rectangle* rect, SDL_Event event) {
+static void switch_object_event(ui_button* b, SDL_Event event) {
   
   if (event.type == SDL_MOUSEBUTTONDOWN) {
     
-    if (ui_rectangle_contains_position(rect, v2(event.motion.x, event.motion.y))) {
-      cello_button_pressed = true;
-      rect->color = v4(0.5, 0.5, 0.5, 1);
+    if (ui_button_contains_position(b, v2(event.motion.x, event.motion.y))) {
+      any_button_pressed = true;
+      b->pressed = true;
     }
   
   } else if (event.type == SDL_MOUSEBUTTONUP) {
     
-    if (cello_button_pressed) {
-      cello_button_pressed = false;
-      rect->color = v4_black();
+    if (b->pressed) {
+      any_button_pressed = false;
+      b->pressed = false;
       
-      object_id = 0;
+      char* name = ui_elem_name(b);
+      if (strcmp(name, "piano") == 0) {
+        object_id = 1;
+      } else if (strcmp(name, "cello") == 0) {
+        object_id = 0;
+      } else if (strcmp(name, "imrod") == 0) {
+        object_id = 2;
+      } else if (strcmp(name, "dino") == 0) {
+        object_id = 3;
+      }
+      
     }
   }
+  
 }
-
-static bool imrod_button_pressed;
-static void switch_object_imrod(ui_rectangle* rect, SDL_Event event) {
-  
-  if (event.type == SDL_MOUSEBUTTONDOWN) {
-    
-    if (ui_rectangle_contains_position(rect, v2(event.motion.x, event.motion.y))) {
-      imrod_button_pressed = true;
-      rect->color = v4(0.5, 0.5, 0.5, 1);
-    }
-  
-  } else if (event.type == SDL_MOUSEBUTTONUP) {
-    
-    if (imrod_button_pressed) {
-      imrod_button_pressed = false;
-      rect->color = v4_black();
-      
-      object_id = 2;
-    }
-  }
-}
-
-static bool dino_button_pressed;
-static void switch_object_dino(ui_rectangle* rect, SDL_Event event) {
-  
-  if (event.type == SDL_MOUSEBUTTONDOWN) {
-    
-    if (ui_rectangle_contains_position(rect, v2(event.motion.x, event.motion.y))) {
-      dino_button_pressed = true;
-      rect->color = v4(0.5, 0.5, 0.5, 1);
-    }
-  
-  } else if (event.type == SDL_MOUSEBUTTONUP) {
-    
-    if (dino_button_pressed) {
-      dino_button_pressed = false;
-      rect->color = v4_black();
-      
-      object_id = 4;
-    }
-  }
-}
-
-#define any_button_pressed (imrod_button_pressed || cello_button_pressed || piano_button_pressed || renderer_button_pressed || dino_button_pressed)
 
 void renderers_init() {
   
@@ -163,7 +109,6 @@ void renderers_init() {
   load_folder("./resources/cello/");
   load_folder("./resources/piano/");
   load_folder("./resources/imrod/");
-  load_folder("./resources/pirate/");
   load_folder("./resources/dino/");
   
   renderable* r_podium = asset_get("./resources/podium/podium.obj");
@@ -194,130 +139,71 @@ void renderers_init() {
   material* mat_imrod = asset_get("./resources/imrod/imrod_animated.mat");  
   renderable_set_material(r_imrod, mat_imrod);
   
-  renderable* r_pirate = asset_get("./resources/pirate/pirate.smd");
-  material* mat_pirate = asset_get("./resources/pirate/pirate.mat");  
-  renderable_set_material(r_pirate, mat_pirate);
-  
-  renderable* r_boots = asset_get("./resources/pirate/boots.smd");
-  material* mat_boots = asset_get("./resources/pirate/boots.mat");  
-  renderable_set_material(r_boots, mat_boots);
-  
   skeleton* skel_imrod = asset_get("./resources/imrod/imrod.skl");
   animation* ani_imrod = asset_get("./resources/imrod/imrod.ani");
-  skeleton* skel_pirate = asset_get("./resources/pirate/pirate.skl");
-  animation* ani_stand = asset_get("./resources/pirate/stand.ani");
-  animation* ani_cheer = asset_get("./resources/pirate/cheer.ani");
   
-  animated_object* imrod = animated_object_new(r_imrod, skel_imrod);
-  imrod->animation = ani_imrod;
-  //imrod->position = v3(0, -1.5, 0);
-  imrod->rotation = v4_quaternion_mul(imrod->rotation, v4_quaternion_roll(1.57));
-  entity_add("imrod", animated_object, imrod);
-  
-  animated_object* pirate = animated_object_new(r_pirate, skel_pirate);
-  pirate->animation = ani_cheer;
-  pirate->position = v3(0, 0, 0);
-  entity_add("pirate", animated_object, pirate);
-  
-  animated_object* boots = animated_object_new(r_boots, skel_pirate);
-  boots->animation = ani_cheer;
-  boots->position = v3(0, 0, 0);
-  entity_add("boots", animated_object, boots);
+  animated_object* a_imrod = animated_object_new(r_imrod, skel_imrod);
+  a_imrod->animation = ani_imrod;
+  a_imrod->rotation = v4_quaternion_mul(a_imrod->rotation, v4_quaternion_roll(1.57));
+  entity_add("imrod", animated_object, a_imrod);
   
   /* Put some text on the screen */
   
-  ui_rectangle* framerate_rect = ui_elem_new("framerate_rect", ui_rectangle);
-  framerate_rect->top_left = v2(10,10);
-  framerate_rect->bottom_right = v2(45, 35);
-  framerate_rect->color = v4_black();
-  framerate_rect->border_color = v4_white();
-  framerate_rect->border_size = 1;
+  ui_button* framerate = ui_elem_new("framerate", ui_button);
+  ui_button_move(framerate, v2(10,10));
+  ui_button_set_label(framerate, "FRAMERATE");
+  framerate->bottom_right.x = 40;
+  framerate->enabled = false;
   
-  ui_text* framerate_text = ui_elem_new("framerate_text", ui_text);
-  framerate_text->position = v2(15, 15);
-  framerate_text->color = v4_white();
-  ui_text_update_string(framerate_text, "framerate");
+  ui_button* renderer = ui_elem_new("renderer", ui_button);
+  ui_button_move(renderer, v2(10, viewport_height() - 35));
+  ui_button_set_label(renderer, "Renderer");
+  renderer->enabled = false;
+  renderer->bottom_right.x = 85;
   
-  ui_rectangle* renderer_rect = ui_elem_new("renderer_rect", ui_rectangle);
-  renderer_rect->top_left = v2(55,10);
-  renderer_rect->bottom_right = v2(210,35);
-  renderer_rect->color = v4_black();
-  renderer_rect->border_color = v4_white();
-  renderer_rect->border_size = 1;
+  ui_button* forward_renderer = ui_elem_new("forward_renderer", ui_button);
+  ui_button_move(forward_renderer, v2(95, viewport_height() - 35));
+  ui_button_set_label(forward_renderer, "Forward");
+  forward_renderer->bottom_right.x = 160;
   
-  ui_text* renderer_text = ui_elem_new("renderer_text", ui_text);
-  renderer_text->position = v2(65, 15);
-  renderer_text->color = v4_white();
-  ui_text_update_string(renderer_text, "Deferred Renderer");
+  ui_button* deferred_renderer = ui_elem_new("deferred_renderer", ui_button);
+  ui_button_move(deferred_renderer, v2(170, viewport_height() - 35));
+  ui_button_set_label(deferred_renderer, "Deferred");
+  deferred_renderer->bottom_right.x = 245;
   
-  /* Object Buttons */
+  ui_button* object = ui_elem_new("object", ui_button);
+  ui_button_move(object, v2(10, viewport_height() - 70));
+  ui_button_set_label(object, "Object");
+  object->enabled = false;
+  object->bottom_right.x = 70;
   
-  ui_rectangle* switch_rect = ui_elem_new("switch_rect", ui_rectangle);
-  switch_rect->top_left = v2(10,45);
-  switch_rect->bottom_right = v2(150,70);
-  switch_rect->color = v4_black();
-  switch_rect->border_color = v4_white();
-  switch_rect->border_size = 1;
+  ui_button* piano = ui_elem_new("piano", ui_button);
+  ui_button_move(piano, v2(80, viewport_height() - 70));
+  ui_button_set_label(piano, "Piano");
+  piano->bottom_right.x = 130;
   
-  ui_text* switch_text = ui_elem_new("switch_text", ui_text);
-  switch_text->position = v2(15, 50);
-  switch_text->color = v4_white();
-  ui_text_update_string(switch_text, "Switch Renderer");
+  ui_button* cello = ui_elem_new("cello", ui_button);
+  ui_button_move(cello, v2(140, viewport_height() - 70));
+  ui_button_set_label(cello, "Cello");
+  cello->bottom_right.x = 190;
   
-  ui_rectangle* piano_rect = ui_elem_new("piano_rect", ui_rectangle);
-  piano_rect->top_left = v2(10,80);
-  piano_rect->bottom_right = v2(60,105);
-  piano_rect->color = v4_black();
-  piano_rect->border_color = v4_white();
-  piano_rect->border_size = 1;
+  ui_button* imrod = ui_elem_new("imrod", ui_button);
+  ui_button_move(imrod, v2(200, viewport_height() - 70));
+  ui_button_set_label(imrod, "Imrod");
+  imrod->bottom_right.x = 250;
   
-  ui_text* piano_text = ui_elem_new("piano_text", ui_text);
-  piano_text->position = v2(15,85);
-  piano_text->color = v4_white();
-  ui_text_update_string(piano_text, "Piano");
+  ui_button* dino = ui_elem_new("dino", ui_button);
+  ui_button_move(dino, v2(260, viewport_height() - 70));
+  ui_button_set_label(dino, "Dino");
+  dino->bottom_right.x = 300;
   
-  ui_rectangle* cello_rect = ui_elem_new("cello_rect", ui_rectangle);
-  cello_rect->top_left = v2(10,115);
-  cello_rect->bottom_right = v2(60,140);
-  cello_rect->color = v4_black();
-  cello_rect->border_color = v4_white();
-  cello_rect->border_size = 1;
+  ui_elem_add_event("forward_renderer", switch_renderer_event);
+  ui_elem_add_event("deferred_renderer", switch_renderer_event);
   
-  ui_text* cello_text = ui_elem_new("cello_text", ui_text);
-  cello_text->position = v2(15,120);
-  cello_text->color = v4_white();
-  ui_text_update_string(cello_text, "Cello");
-  
-  ui_rectangle* imrod_rect = ui_elem_new("imrod_rect", ui_rectangle);
-  imrod_rect->top_left = v2(10,150);
-  imrod_rect->bottom_right = v2(60,175);
-  imrod_rect->color = v4_black();
-  imrod_rect->border_color = v4_white();
-  imrod_rect->border_size = 1;
-  
-  ui_text* imrod_text = ui_elem_new("imrod_text", ui_text);
-  imrod_text->position = v2(15,155);
-  imrod_text->color = v4_white();
-  ui_text_update_string(imrod_text, "Imrod");
-  
-  ui_rectangle* dino_rect = ui_elem_new("dino_rect", ui_rectangle);
-  dino_rect->top_left = v2(10,185);
-  dino_rect->bottom_right = v2(60,210);
-  dino_rect->color = v4_black();
-  dino_rect->border_color = v4_white();
-  dino_rect->border_size = 1;
-  
-  ui_text* dino_text = ui_elem_new("dino_text", ui_text);
-  dino_text->position = v2(15,190);
-  dino_text->color = v4_white();
-  ui_text_update_string(dino_text, "Dino");
-  
-  ui_elem_add_event("switch_rect", switch_renderer_event);
-  
-  ui_elem_add_event("piano_rect", switch_object_piano);
-  ui_elem_add_event("cello_rect", switch_object_cello);
-  ui_elem_add_event("imrod_rect", switch_object_imrod);
-  ui_elem_add_event("dino_rect", switch_object_dino);
+  ui_elem_add_event("piano", switch_object_event);
+  ui_elem_add_event("cello", switch_object_event);
+  ui_elem_add_event("imrod", switch_object_event);
+  ui_elem_add_event("dino", switch_object_event);
   
   /* New Camera and light */
   
@@ -330,6 +216,7 @@ void renderers_init() {
   sun->position = v3(20,23,16);
   sun->ambient_color = v3(0.5, 0.5, 0.5);
   sun->diffuse_color = v3(1.0,  0.894, 0.811);
+  sun->specular_color = v3_mul(v3(1.0,  0.894, 0.811), 2);
   sun->power = 4.5;
   
   light* backlight = entity_new("backlight", light);
@@ -337,7 +224,7 @@ void renderers_init() {
   backlight->position = v3(-22,10,-13);
   backlight->ambient_color = v3(0.2, 0.2, 0.2);
   backlight->diffuse_color = v3(0.729, 0.729, 1.0);
-  backlight->specular_color = v3(0.5, 0.5, 0.5);
+  backlight->specular_color = v3_mul(v3(0.729, 0.729, 1.0), 1);
   backlight->power = 2;
   
   /* Renderer Setup */
@@ -387,6 +274,7 @@ static void select_light(int x, int y) {
 }
 
 static bool g_down = false;
+static bool t_down = false;
 
 void renderers_event(SDL_Event event) {
   
@@ -398,25 +286,13 @@ void renderers_event(SDL_Event event) {
 
   switch(event.type){
   case SDL_KEYDOWN:
-    if (event.key.keysym.sym == SDLK_g) {
-      g_down = true;
-    }
+    if (event.key.keysym.sym == SDLK_g) g_down = true;
+    if (event.key.keysym.sym == SDLK_t) t_down = true;
   break;
   
   case SDL_KEYUP:
-    if (event.key.keysym.sym == SDLK_g) {
-      g_down = false;
-    }
-    if (event.key.keysym.sym == SDLK_z) {
-      float expo = deferred_renderer_get_exposure();
-      forward_renderer_set_exposure(expo + 1.0);
-      deferred_renderer_set_exposure(expo + 1.0);
-    }
-    if (event.key.keysym.sym == SDLK_x) {
-      float expo = deferred_renderer_get_exposure();
-      forward_renderer_set_exposure(expo - 1.0);
-      deferred_renderer_set_exposure(expo - 1.0);
-    }
+    if (event.key.keysym.sym == SDLK_g) g_down = false;
+    if (event.key.keysym.sym == SDLK_t) t_down = false;
   break;
 
   case SDL_MOUSEBUTTONDOWN:
@@ -467,22 +343,29 @@ void renderers_update() {
   }
 
   if (g_down && selected_light) {
-    selected_light->position.x += (float)mouse_x * 0.1;
-    selected_light->position.z += (float)mouse_y * 0.1;
+    vector3 move_dir = v3_sub(cam->target, cam->position); move_dir.y = 0;
+    
+    vector3 move_forward = v3_normalize(move_dir);
+    vector3 move_left = v3_cross(move_forward, v3(0,1,0));
+    
+    vector3 move = v3_add( v3_mul(move_forward, -mouse_y), v3_mul(move_left, mouse_x));
+    
+    selected_light->position.x += (float)move.x * 0.1;
+    selected_light->position.z += (float)move.z * 0.1;
+  }
+  
+  if (t_down && selected_light) {
+    selected_light->position.y += (float)-mouse_y * 0.1;
   }
   
   mouse_x = 0;
   mouse_y = 0;
   
-  ui_text* framerate_text = ui_elem_get("framerate_text");
-  ui_text_update_string(framerate_text, frame_rate_string());
+  ui_button* framerate = ui_elem_get("framerate");
+  ui_button_set_label(framerate, frame_rate_string());
   
   animated_object* imrod = entity_get("imrod");
-  animated_object* pirate = entity_get("pirate");
-  animated_object* boots = entity_get("boots");
   animated_object_update(imrod, 0.1);
-  animated_object_update(pirate, 0.5);
-  animated_object_update(boots, 0.5);
 }
 
 void renderers_render() {
@@ -495,10 +378,7 @@ void renderers_render() {
   static_object* s_piano = entity_get("piano");
   static_object* s_cello = entity_get("cello");
   static_object* s_dino = entity_get("dino");
-  
   animated_object* a_imrod = entity_get("imrod");
-  animated_object* a_pirate = entity_get("pirate");
-  animated_object* a_boots = entity_get("boots");
   
   shadow_mapper_begin();
   shadow_mapper_render_static(s_podium);
@@ -509,9 +389,6 @@ void renderers_render() {
   } else if (object_id == 2) {
     shadow_mapper_render_animated(a_imrod);
   } else if (object_id == 3) {
-    shadow_mapper_render_animated(a_pirate);
-    shadow_mapper_render_animated(a_boots);
-  } else if (object_id == 4) {
     shadow_mapper_render_static(s_dino);
   }
   shadow_mapper_end();
@@ -528,9 +405,6 @@ void renderers_render() {
     } else if (object_id == 2) {
       deferred_renderer_render_animated(a_imrod);
     } else if (object_id == 3) {
-      deferred_renderer_render_animated(a_pirate);
-      deferred_renderer_render_animated(a_boots);
-    } else if (object_id == 4) {
       deferred_renderer_render_static(s_dino);
     }
     
@@ -556,9 +430,6 @@ void renderers_render() {
     } else if (object_id == 2) {
       forward_renderer_render_animated(a_imrod);
     } else if (object_id == 3) {
-      forward_renderer_render_animated(a_pirate);
-      forward_renderer_render_animated(a_boots);
-    } else if (object_id == 4) {
       forward_renderer_render_static(s_dino);
     }
     

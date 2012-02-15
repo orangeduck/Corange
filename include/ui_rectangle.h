@@ -5,7 +5,7 @@
 
 #include "texture.h"
 
-typedef struct ui_rectangle_temp {
+typedef struct {
 
   vector2 top_left;
   vector2 bottom_right;
@@ -20,7 +20,7 @@ typedef struct ui_rectangle_temp {
   
 } ui_rectangle;
 
-ui_rectangle* ui_rectangle_new(vector2 top_left, vector2 bottom_right);
+ui_rectangle* ui_rectangle_new();
 void ui_rectangle_delete(ui_rectangle* rect);
 
 void ui_rectangle_update(ui_rectangle* rect);
