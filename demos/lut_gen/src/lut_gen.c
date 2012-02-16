@@ -44,7 +44,8 @@ static void lut_gen_rebuild_cube() {
 
 static void load_new_curves_file() {
 
-  char* filename = SDL_OpenFileDialog("Photoshop Curves (.acv)\0*.acv\0\0", 0);
+  //char* filename = SDL_OpenFileDialog("Photoshop Curves (.acv)\0*.acv\0\0", 0);
+  char* filename = "";
   
   if (filename[0] != '\0') {
   

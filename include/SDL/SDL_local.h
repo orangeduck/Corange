@@ -46,8 +46,6 @@ void SDL_CheckOpenGLError(const char* name);
 
 void SDL_PrintStackTrace();
 
-char* SDL_OpenFileDialog(char* format_string, int default_format);
-
 typedef GLuint (APIENTRY * GLCREATESHADERFN)( GLenum type );
 typedef GLuint (APIENTRY * GLCREATEPROGRAMFN)( void );
 typedef void (APIENTRY * GLSHADERSOURCEFN)( GLuint shader, GLsizei count, const GLchar** string, const GLint* length );
