@@ -44,6 +44,10 @@ void main(){
   position = world_matrix * blendpos;
   gl_Position = proj_matrix * view_matrix * position;
   
+  blendnorm = mat3(world_matrix) * blendnorm;
+  blendtang = mat3(world_matrix) * blendtang;
+  blendbinorm = mat3(world_matrix) * blendbinorm;
+  
   TBN = mat4(blendtang.x, blendbinorm.x, blendnorm.x, 0.0,
              blendtang.y, blendbinorm.y, blendnorm.y, 0.0,
              blendtang.z, blendbinorm.z, blendnorm.z, 0.0,

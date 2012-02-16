@@ -21,20 +21,26 @@ ui_text* ui_text_new() {
   text->buffersize = strlen("New Text") + 1;
   strcpy(text->string, "New Text");
   
+  glGenBuffers(1, &text->positions_buffer);
+  glGenBuffers(1, &text->texcoords_buffer);
+  
+  text->num_positions = 0;
+  text->num_texcoords = 0;
+  text->top_left = v2_zero();
+  text->bottom_right = v2_zero();
+  
   text->font = asset_load_get("$CORANGE/fonts/console_font.fnt");
   text->position = v2(0.0,0.0);
   text->scale = v2(1.0,1.0);
   text->color = v4_black();
   
   text->alignment = text_align_left;
+  text->vertical_alignment = text_align_top;
   text->line_spacing = 0.0;
   text->char_spacing = 0.0;
   text->rotation = 0.0;
   
   text->active = true;
-  
-  glGenBuffers(1, &text->positions_buffer);
-  glGenBuffers(1, &text->texcoords_buffer);
   
   ui_text_update_properties(text);
   
@@ -42,30 +48,10 @@ ui_text* ui_text_new() {
 
 }
 
-ui_text* ui_text_new_string(char* string, font* text_font) {
+ui_text* ui_text_new_string(char* string) {
   
-  ui_text* text = malloc( sizeof(ui_text) );
-  
-  int buffersize = strlen(string) + 1;
-  
-  text->string = malloc(buffersize);
-  text->buffersize = buffersize;
-  strcpy(text->string, string);
-  
-  text->font = text_font;
-  text->position = v2(0.0,0.0);
-  text->scale = v2(1.0,1.0);
-  text->color = v4_black();
-  
-  text->alignment = text_align_left;
-  text->line_spacing = 0.0;
-  text->char_spacing = 0.0;
-  text->rotation = 0.0;
-  
-  glGenBuffers(1, &text->positions_buffer);
-  glGenBuffers(1, &text->texcoords_buffer);
-  
-  ui_text_update_properties(text);
+  ui_text* text = ui_text_new();
+  ui_text_update_string(text, string);
   
   return text;
 }
@@ -354,6 +340,7 @@ void ui_text_render(ui_text* text) {
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   
+  glActiveTexture(GL_TEXTURE0 + 0);
   glBindTexture(GL_TEXTURE_2D, *(text->font->texture_map) );
   glEnable(GL_TEXTURE_2D);
   
@@ -373,10 +360,11 @@ void ui_text_render(ui_text* text) {
   glDisableClientState(GL_VERTEX_ARRAY);
   glDisableClientState(GL_TEXTURE_COORD_ARRAY);
   
-  glColor4f(1.0,1.0,1.0,1.0);
-  
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   
+  glColor4f(1.0,1.0,1.0,1.0);
+  
+  glActiveTexture(GL_TEXTURE0 + 0);
   glDisable(GL_TEXTURE_2D);
   
   glDisable(GL_BLEND);

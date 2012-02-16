@@ -42,6 +42,7 @@ GLUNIFORM4FFN glUniform4f;
 GLUNIFORMMATRIX4FVFN glUniformMatrix4fv;
 GLUNIFORM1FVFN glUniform1fv;
 GLUNIFORM2FVFN glUniform2fv;
+GLUNIFORM3FVFN glUniform3fv;
 GLGETSHADERIVFN glGetShaderiv;
 GLGETPROGRAMIVFN glGetProgramiv;
 GLBINDATTRIBLOCATIONFN glBindAttribLocation;
@@ -160,31 +161,33 @@ void SDL_RWsize(SDL_RWops* file, int* size) {
   SDL_RWseek(file, pos, SEEK_SET);
 }
 
+
 int SDL_RWreadline(SDL_RWops* file, char* buffer, int buffersize) {
   
-  char c = ' ';
+  char c[10];
   int i = 0;
-  while( SDL_RWread(file, &c, 1, 1) ) {
+  int stat = 0;
+  while(1) {
     
-    if (i >= buffersize) {
-      error("Buffer not large enough to read line!");
-    }
+    stat = SDL_RWread(file, &c[0], 1, 1);
     
-    buffer[i] = c;
+    if (stat == -1) error("Error reading file.");
+    if (i == buffersize-1) error("Buffer not large enough to read line!");
+    if (stat == 0) break;
+    
+    buffer[i] = c[0];
     i++;
     
-    if (c == '\n') {
+    if (c[0] == '\n') {
       buffer[i] = '\0';
       return i;
     }
   }
   
   if(i > 0) {
-    /* End of file but actually data on the final line */
     buffer[i] = '\0';
     return i;
   } else {
-    /* Actual end of file */
     return 0;
   }
   
@@ -278,6 +281,7 @@ void SDL_LoadOpenGLExtensions() {
 	glUniform4f                = (GLUNIFORM4FFN)SDL_GL_GetProcAddress( "glUniform4f" ); SDL_CheckOpenGLExtension("glUniform4f", glUniform4f);
 	glUniform1fv               = (GLUNIFORM1FVFN)SDL_GL_GetProcAddress( "glUniform1fv" ); SDL_CheckOpenGLExtension("glUniform1fv", glUniform1fv);
 	glUniform2fv               = (GLUNIFORM2FVFN)SDL_GL_GetProcAddress( "glUniform2fv" ); SDL_CheckOpenGLExtension("glUniform2fv", glUniform2fv);
+	glUniform3fv               = (GLUNIFORM3FVFN)SDL_GL_GetProcAddress( "glUniform3fv" ); SDL_CheckOpenGLExtension("glUniform3fv", glUniform3fv);
 	glUniformMatrix4fv         = (GLUNIFORMMATRIX4FVFN)SDL_GL_GetProcAddress( "glUniformMatrix4fv" ); SDL_CheckOpenGLExtension("glUniformMatrix4fv", glUniformMatrix4fv);
   
   glGetAttribLocation        = (GLGETATTRIBLOCATIONFN)SDL_GL_GetProcAddress( "glGetAttribLocation" ); SDL_CheckOpenGLExtension("glGetAttribLocation", glGetAttribLocation);
@@ -294,7 +298,7 @@ void SDL_LoadOpenGLExtensions() {
   glCompressedTexImage2D     = (GLCOMPRESSEDTEXIMAGE2DFN)SDL_GL_GetProcAddress( "glCompressedTexImage2D" ); SDL_CheckOpenGLExtension("glCompressedTexImage2D", glCompressedTexImage2D);
   glTexImage3D               = (GLTEXIMAGE3DFN)SDL_GL_GetProcAddress( "glTexImage3D" ); SDL_CheckOpenGLExtension("glTexImage3D", glTexImage3D);
   #endif
-
+  
   /* Buffers */
   
 	glGenBuffers               = (GLGENBUFFERSFN)SDL_GL_GetProcAddress( "glGenBuffers" ); SDL_CheckOpenGLExtension("glGenBuffers", glGenBuffers);
@@ -303,10 +307,10 @@ void SDL_LoadOpenGLExtensions() {
 	glDeleteBuffers            = (GLDELETEBUFFERSFN)SDL_GL_GetProcAddress( "glDeleteBuffers" ); SDL_CheckOpenGLExtension("glDeleteBuffers", glDeleteBuffers);
   glDrawBuffers              = (GLDRAWBUFFERSFN)SDL_GL_GetProcAddress( "glDrawBuffers" ); SDL_CheckOpenGLExtension("glDrawBuffers", glDrawBuffers);
 
-  glGenRenderbuffers         = (GLGENRENDERBUFFERSFN)SDL_GL_GetProcAddress( "glGenRenderbuffers" ); SDL_CheckOpenGLExtension("glGenRenderbuffers", glGenRenderbuffers);
-  glBindRenderbuffer         = (GLBINDRENDERBUFFERFN)SDL_GL_GetProcAddress( "glBindRenderbuffer" ); SDL_CheckOpenGLExtension("glBindRenderbuffer", glBindRenderbuffer);
-  glRenderbufferStorage      = (GLRENDERBUFFERSTORAGEFN)SDL_GL_GetProcAddress( "glRenderbufferStorage" ); SDL_CheckOpenGLExtension("glRenderbufferStorage", glRenderbufferStorage);
-	glDeleteRenderbuffers      = (GLDELETERENDERBUFFERSFN)SDL_GL_GetProcAddress( "glDeleteRenderbuffers" ); SDL_CheckOpenGLExtension("glDeleteRenderbuffers", glDeleteRenderbuffers);
+  glGenRenderbuffers                = (GLGENRENDERBUFFERSFN)SDL_GL_GetProcAddress( "glGenRenderbuffers" ); SDL_CheckOpenGLExtension("glGenRenderbuffers", glGenRenderbuffers);
+  glBindRenderbuffer                = (GLBINDRENDERBUFFERFN)SDL_GL_GetProcAddress( "glBindRenderbuffer" ); SDL_CheckOpenGLExtension("glBindRenderbuffer", glBindRenderbuffer);
+  glRenderbufferStorage             = (GLRENDERBUFFERSTORAGEFN)SDL_GL_GetProcAddress( "glRenderbufferStorage" ); SDL_CheckOpenGLExtension("glRenderbufferStorage", glRenderbufferStorage);
+	glDeleteRenderbuffers             = (GLDELETERENDERBUFFERSFN)SDL_GL_GetProcAddress( "glDeleteRenderbuffers" ); SDL_CheckOpenGLExtension("glDeleteRenderbuffers", glDeleteRenderbuffers);
   
 	glGenFramebuffers          = (GLGENFRAMEBUFFERSFN)SDL_GL_GetProcAddress( "glGenFramebuffers" ); SDL_CheckOpenGLExtension("glGenFramebuffers", glGenFramebuffers);
 	glBindFramebuffer          = (GLBINDFRAMEBUFFERFN)SDL_GL_GetProcAddress( "glBindFramebuffer" ); SDL_CheckOpenGLExtension("glBindFramebuffer", glBindFramebuffer);
@@ -343,9 +347,80 @@ void SDL_PrintStackTrace() {
 }
 
 #elif _WIN32
+#include <windows.h>
+
+typedef struct _SYMBOL_INFO {
+  ULONG   SizeOfStruct;
+  ULONG   TypeIndex;
+  ULONG64 Reserved[2];
+  ULONG   Index;
+  ULONG   Size;
+  ULONG64 ModBase;
+  ULONG   Flags;
+  ULONG64 Value;
+  ULONG64 Address;
+  ULONG   Register;
+  ULONG   Scope;
+  ULONG   Tag;
+  ULONG   NameLen;
+  ULONG   MaxNameLen;
+  TCHAR   Name[1];
+} SYMBOL_INFO, *PSYMBOL_INFO;
+
+#define PCTSTR const char*
 
 void SDL_PrintStackTrace() {
+  
+  /* For some reason this is giving the incorrect symbol names */
+  
+  typedef USHORT (WINAPI *CaptureStackBackTraceType)(ULONG,ULONG,PVOID*,PULONG);
+  typedef BOOL (WINAPI *SymInitializeType)(HANDLE,PCTSTR,BOOL);
+  typedef BOOL (WINAPI *SymFromAddrType)(HANDLE,DWORD64,PDWORD64,PSYMBOL_INFO);
+  
+  CaptureStackBackTraceType CaptureStackBackTrace = (CaptureStackBackTraceType)(GetProcAddress(LoadLibrary("kernel32.dll"), "RtlCaptureStackBackTrace"));
+  SymInitializeType SymInitialize = (SymInitializeType)(GetProcAddress(LoadLibrary("Dbghelp.dll"), "SymInitialize"));
+  SymFromAddrType SymFromAddr = (SymFromAddrType)(GetProcAddress(LoadLibrary("Dbghelp.dll"), "SymFromAddr"));
+  
+  if ((CaptureStackBackTrace == NULL) || 
+      (SymInitialize == NULL) ||
+      (SymFromAddr == NULL)) {
+    printf("[STACK] Could not retrieve functions for stack trace\n");
+    return;
+  }
+  
+  void* stack[62];
+  
+  HANDLE process = GetCurrentProcess();
+  if (!SymInitialize(process, NULL, TRUE)) {
+    printf("[STACK] Could not retrieve functions for stack trace\n");
+  }
+   
+  int max_frames = CaptureStackBackTrace( 0, 62, stack, NULL );
+  SYMBOL_INFO* symbol = calloc(sizeof(SYMBOL_INFO) + 256, 1);
+  symbol->MaxNameLen   = 255;
+  symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
+  
+  DWORD64 displacement = 0;
+  
+  if (sizeof(void*) != sizeof(DWORD64)) {
+    printf("[STACK] Cannot retrive stack symbols on 32-bit binary\n");
+    return;
+  }
+  for(int i = 0; i < max_frames; i++ ){
+    
+    DWORD64 address = 0;
+    address = PtrToUlong(stack[i]);
+    if (SymFromAddr(process, address, &displacement, symbol)) {
+      printf("  %i: %s - %08X\n", max_frames-i-1, symbol->Name, (unsigned int)symbol->Address );
+    } else {
+      DWORD error = GetLastError();
+      printf("  %i: SymFromAddr returned error %d\n", max_frames-i-1, (int)error);
+    }
+    
+  }
 
+  free(symbol);
+  
 }
 
 #else

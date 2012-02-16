@@ -64,7 +64,30 @@ void texture_set_filtering_nearest(texture* t) {
   glBindTexture(GL_TEXTURE_2D, *t);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 0);
   
+}
+
+void texture_set_filtering_linear(texture* t) {
+
+  glBindTexture(GL_TEXTURE_2D, *t);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 0);
+  
+}
+
+void texture_set_filtering_anisotropic(texture* t) {
+
+  float max;
+  glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &max);
+
+  glBindTexture(GL_TEXTURE_2D, *t);
+  
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, max);
+
 }
 
 
@@ -477,6 +500,8 @@ texture* dds_load_file( char* filename ){
   
   texture* tex = malloc(sizeof(texture));
   *tex = my_texture;
+  
+  texture_set_filtering_anisotropic(tex);
   
   return tex;
   

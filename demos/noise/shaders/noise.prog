@@ -1,2 +1,2 @@
-vertex_shader : $SHADERS/basic.vs
+vertex_shader : ./shaders/noise.vs
 fragment_shader : ./shaders/noise.fs

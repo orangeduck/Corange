@@ -330,3 +330,50 @@ void marching_cubes_render(bool wireframe, vector3 camera_position, vector3 ligh
   }
   
 }
+
+static float proj_matrix[16];
+static float view_matrix[16];
+static float world_matrix[16];
+
+void marching_cubes_render_shadows(light* l) {
+  
+  matrix_4x4 viewm = light_view_matrix(l);
+  matrix_4x4 projm = light_proj_matrix(l);
+  
+  m44_to_array(viewm, view_matrix);
+  m44_to_array(projm, proj_matrix);
+  
+  glMatrixMode(GL_MODELVIEW);
+  glLoadMatrixf(view_matrix);
+  
+  glMatrixMode(GL_PROJECTION);
+  glLoadMatrixf(proj_matrix);    
+  
+  m44_to_array(m44_id(), world_matrix);
+  
+  shader_program* depth_shader = asset_load_get("$SHADERS/depth.prog");
+  glUseProgram(*depth_shader);
+  
+  GLint world_matrix_u = glGetUniformLocation(*depth_shader, "world_matrix");
+  glUniformMatrix4fv(world_matrix_u, 1, 0, world_matrix);
+  
+  GLint proj_matrix_u = glGetUniformLocation(*depth_shader, "proj_matrix");
+  glUniformMatrix4fv(proj_matrix_u, 1, 0, proj_matrix);
+  
+  GLint view_matrix_u = glGetUniformLocation(*depth_shader, "view_matrix");
+  glUniformMatrix4fv(view_matrix_u, 1, 0, view_matrix);
+  
+  glBindBuffer(GL_ARRAY_BUFFER, vertex_positions);
+  glVertexPointer(4, GL_FLOAT, 0, (void*)0);
+  glEnableClientState(GL_VERTEX_ARRAY);
+  
+    glDrawArrays(GL_TRIANGLES, 0, num_verts);
+  
+  glDisableClientState(GL_VERTEX_ARRAY);
+  
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  
+  glUseProgram(0);
+
+}

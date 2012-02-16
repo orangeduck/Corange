@@ -155,9 +155,9 @@ void viewport_set_width(int width) {
   viewport_restart();
 }
 
-void viewport_set_dimensions(vector2 dim) {
-  window_width = dim.x;
-  window_height = dim.y;
+void viewport_set_dimensions(int width, int height) {
+  window_width = width;
+  window_height = height;
   viewport_restart();
 }
 
@@ -183,10 +183,6 @@ int viewport_height() {
 
 int viewport_width() {
   return window_width;
-}
-
-vector2 viewport_dimensions() {
-  return v2(window_width, window_height);
 }
 
 float viewport_ratio() {

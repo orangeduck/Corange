@@ -21,7 +21,7 @@ void viewport_set_fullscreen(bool fullscreen);
 
 void viewport_set_height(int height);
 void viewport_set_width(int width);
-void viewport_set_dimensions(vector2 dim);
+void viewport_set_dimensions(int width, int height);
 
 bool viewport_vsync();
 int viewport_multisamples();
@@ -29,7 +29,6 @@ bool viewport_fullscreen();
 
 int viewport_height();
 int viewport_width();
-vector2 viewport_dimensions();
 float viewport_ratio();
 
 void viewport_screenshot();

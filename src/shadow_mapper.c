@@ -144,11 +144,30 @@ void shadow_mapper_render_static(static_object* s) {
   GLint view_matrix_u = glGetUniformLocation(*depth_shader, "view_matrix");
   glUniformMatrix4fv(view_matrix_u, 1, 0, view_matrix);
   
+  GLint alpha_test_u = glGetUniformLocation(*depth_shader, "alpha_test");
+  GLint diffuse_u = glGetUniformLocation(*depth_shader, "diffuse");
+  
   renderable* r = s->renderable;
   
   for(int i=0; i < r->num_surfaces; i++) {
     
     renderable_surface* s = r->surfaces[i];
+    
+    float* alpha_test = dictionary_get(s->base->properties, "alpha_test");
+    if (alpha_test != NULL) {
+      glUniform1f(alpha_test_u, *alpha_test);
+    } else {
+      glUniform1f(alpha_test_u, 0.0);
+    }
+    
+    texture* diffuse_texture = dictionary_get(s->base->properties, "diffuse_texture");
+    if (diffuse_texture != NULL) {
+      glUniform1i(diffuse_u, 0);
+      glActiveTexture(GL_TEXTURE0 + 0);
+      glBindTexture(GL_TEXTURE_2D, *diffuse_texture);
+      glEnable(GL_TEXTURE_2D);
+    }
+    
     if(s->is_rigged) {
     
       GLsizei stride = sizeof(float) * 24;
@@ -181,6 +200,11 @@ void shadow_mapper_render_static(static_object* s) {
       
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
       glBindBuffer(GL_ARRAY_BUFFER, 0);
+    }
+    
+    if (diffuse_texture != NULL) {
+      glActiveTexture(GL_TEXTURE0 + 0);
+      glDisable(GL_TEXTURE_2D);
     }
 
   }

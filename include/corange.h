@@ -50,6 +50,7 @@ void corange_finish();
 #include "ui_text.h"
 #include "ui_rectangle.h"
 #include "ui_spinner.h"
+#include "ui_button.h"
 
 /* Rendering */
 

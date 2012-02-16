@@ -70,6 +70,7 @@ typedef void (APIENTRY * GLUNIFORM4FFN)( GLint location, GLfloat x, GLfloat y, G
 typedef void (APIENTRY * GLUNIFORMMATRIX4FVFN)( GLint location, GLsizei count,GLboolean transpose, const GLfloat* value );
 typedef void (APIENTRY * GLUNIFORM1FVFN)( GLint location, GLsizei count, const GLfloat* value );
 typedef void (APIENTRY * GLUNIFORM2FVFN)( GLint location, GLsizei count, const GLfloat* value );
+typedef void (APIENTRY * GLUNIFORM3FVFN)( GLint location, GLsizei count, const GLfloat* value );
 typedef void (APIENTRY * GLGETSHADERIVFN)( GLuint shader, GLenum pname, GLint* params );
 typedef void (APIENTRY * GLGETPROGRAMIVFN)( GLuint program, GLenum pname, GLint* params );
 typedef void (APIENTRY * GLBINDATTRIBLOCATIONFN)( GLuint program, GLuint index, const GLchar* name );
@@ -121,6 +122,7 @@ extern GLUNIFORM4FFN glUniform4f;
 extern GLUNIFORMMATRIX4FVFN glUniformMatrix4fv;
 extern GLUNIFORM1FVFN glUniform1fv;
 extern GLUNIFORM2FVFN glUniform2fv;
+extern GLUNIFORM2FVFN glUniform3fv;
 extern GLGETSHADERIVFN glGetShaderiv;
 extern GLGETPROGRAMIVFN glGetProgramiv;
 extern GLBINDATTRIBLOCATIONFN glBindAttribLocation;
@@ -195,6 +197,8 @@ extern GLGENERATEMIPMAPFN glGenerateMipmap;
 #define GL_TEXTURE_WRAP_R 0x8072
 #define GL_MIRRORED_REPEAT 0x8370
 #define GL_TEXTURE_DEPTH 0x8071
+#define GL_TEXTURE_MAX_ANISOTROPY_EXT 0x84FE
+#define GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT 0x84FF
 
 
 #endif

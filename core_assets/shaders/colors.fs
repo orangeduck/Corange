@@ -7,6 +7,8 @@ vec3 to_gamma(vec3 color);
 vec3 from_gamma(vec3 color);
 
 vec3 swap_red_green(vec3 color);
+vec3 swap_red_green_inv(vec3 color);
+vec3 swap_red_inv_green(vec3 color);
 vec3 swap_invert_red_green(vec3 color);
 
 vec3 tonemap(vec3 color, float exposure, float brightmax);
@@ -47,10 +49,17 @@ vec3 swap_red_green(vec3 color) {
   return color;
 }
 
-vec3 swap_invert_red_green(vec3 color) {
-  float temp = color.r;
-  color.r = -color.g;
-  color.g = -temp;
+vec3 swap_red_inv_green(vec3 color) {
+  float temp = 1-color.r;
+  color.r = color.g;
+  color.g = temp;
+  return color;
+}
+
+vec3 swap_red_green_inv(vec3 color) {
+  float temp = 1-color.r;
+  color.r = 1-color.g;
+  color.g = temp;
   return color;
 }
 

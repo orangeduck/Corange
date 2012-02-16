@@ -20,12 +20,18 @@
 
 #include "forward_renderer.h"
 
-static int use_shadows = 0;
+static int use_shadows;
 
 static camera* CAMERA = NULL;
-static light* LIGHT = NULL;
+static light* SHADOW_LIGHT = NULL;
+
 static texture* SHADOW_TEX = NULL;
 static texture* COLOR_CORRECTION = NULL;
+static texture* VIGNETTING = NULL;
+
+static shader_program* GRADIENT = NULL;
+static shader_program* SCREEN_TONEMAP = NULL;
+static shader_program* SCREEN_POST = NULL;
 
 static float proj_matrix[16];
 static float view_matrix[16];
@@ -37,17 +43,149 @@ static float timer = 0.0;
 
 static int TANGENT;
 static int BINORMAL;
-static int COLOR;
 static int BONE_INDICIES;
 static int BONE_WEIGHTS;
 
+static GLuint hdr_fbo;
+static GLuint hdr_buffer;
+static GLuint hdr_depth_buffer;
+static GLuint hdr_texture;
+static GLuint hdr_depth_texture;
+
+static GLuint ldr_fbo;
+static GLuint ldr_buffer;
+static GLuint ldr_texture;
+
+#define FORWARD_MAX_LIGHTS 32
+
+static int num_lights;
+
+static light* lights[FORWARD_MAX_LIGHTS];
+static float light_power[FORWARD_MAX_LIGHTS];
+static float light_falloff[FORWARD_MAX_LIGHTS];
+static vector3 light_position[FORWARD_MAX_LIGHTS];
+static vector3 light_target[FORWARD_MAX_LIGHTS];
+static vector3 light_diffuse[FORWARD_MAX_LIGHTS];
+static vector3 light_ambient[FORWARD_MAX_LIGHTS];
+static vector3 light_specular[FORWARD_MAX_LIGHTS];
+
+static float EXPOSURE;
+static float EXPOSURE_SPEED;
+static float EXPOSURE_TARGET;
+
 void forward_renderer_init() {
   
+  use_shadows = false;
+  num_lights = 0;
+  
+  EXPOSURE = 0.0;
+  EXPOSURE_SPEED = 1.0;
+  EXPOSURE_TARGET = 0.4;
+  
   COLOR_CORRECTION = asset_load_get("$CORANGE/resources/identity.lut");
+  VIGNETTING = asset_load_get("$CORANGE/resources/vignetting.dds");
+  GRADIENT = asset_load_get("$SHADERS/gradient.prog");
+  SCREEN_TONEMAP = asset_load_get("$SHADERS/deferred_tonemap.prog");
+  SCREEN_POST = asset_load_get("$SHADERS/deferred_post.prog");
+  
+  glClearColor(0.2, 0.2, 0.2, 1.0f);
+  glClearDepth(1.0f);
+  
+  glGenFramebuffers(1, &hdr_fbo);
+  glBindFramebuffer(GL_FRAMEBUFFER, hdr_fbo);
+  
+  glGenRenderbuffers(1, &hdr_buffer);
+  glBindRenderbuffer(GL_RENDERBUFFER, hdr_buffer);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA16F, viewport_width(), viewport_height());
+  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, hdr_buffer);   
+  
+  glGenRenderbuffers(1, &hdr_depth_buffer);
+  glBindRenderbuffer(GL_RENDERBUFFER, hdr_depth_buffer);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, viewport_width(), viewport_height());
+  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, hdr_depth_buffer);  
+  
+  glGenTextures(1, &hdr_texture);
+  glBindTexture(GL_TEXTURE_2D, hdr_texture);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, viewport_width(), viewport_height(), 0, GL_RGBA, GL_FLOAT, NULL);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, hdr_texture, 0);
+  
+  glGenTextures(1, &hdr_depth_texture);
+  glBindTexture(GL_TEXTURE_2D, hdr_depth_texture);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, viewport_width(), viewport_height(), 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, hdr_depth_texture, 0);
+  
+  glGenFramebuffers(1, &ldr_fbo);
+  glBindFramebuffer(GL_FRAMEBUFFER, ldr_fbo);
+  
+  glGenRenderbuffers(1, &ldr_buffer);
+  glBindRenderbuffer(GL_RENDERBUFFER, ldr_buffer);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, viewport_width(), viewport_height());
+  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, ldr_buffer);   
+  
+  glGenTextures(1, &ldr_texture);
+  glBindTexture(GL_TEXTURE_2D, ldr_texture);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, viewport_width(), viewport_height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ldr_texture, 0);
+  
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
   
 }
 
 void forward_renderer_finish() {  
+  
+  glDeleteFramebuffers(1, &hdr_fbo);
+  glDeleteRenderbuffers(1, &hdr_buffer);
+  glDeleteRenderbuffers(1, &hdr_depth_buffer);
+  glDeleteTextures(1,&hdr_texture);
+  glDeleteTextures(1,&hdr_depth_texture);
+  
+  glDeleteFramebuffers(1, &ldr_fbo);
+  glDeleteRenderbuffers(1, &ldr_buffer);
+  glDeleteTextures(1,&ldr_texture);
+  
+}
+
+void forward_renderer_add_light(light* l) {
+  
+  if (num_lights == FORWARD_MAX_LIGHTS) {
+    warning("Cannot add extra light. Maxiumum lights reached!");
+    return;
+  }
+  
+  lights[num_lights] = l;
+  num_lights++;
+}
+
+void forward_renderer_remove_light(light* l) {
+  
+  bool found = false;
+  for(int i = 0; i < num_lights; i++) {
+    if ((lights[i] == l) && !found) {
+      found = true;
+    }
+    
+    if (found) {
+      lights[i] = lights[i+1];
+    }
+  }
+  
+  if (found) {
+    num_lights--;
+  } else {
+    warning("Could not find light %p to remove!", l);
+  }
   
 }
 
@@ -55,8 +193,8 @@ void forward_renderer_set_camera(camera* c) {
   CAMERA = c;
 }
 
-void forward_renderer_set_light(light* l) {
-  LIGHT = l;
+void forward_renderer_set_shadow_light(light* l) {
+  SHADOW_LIGHT = l;
 }
 
 void forward_renderer_set_shadow_texture(texture* t) {
@@ -74,17 +212,55 @@ void forward_renderer_set_color_correction(texture* t) {
   COLOR_CORRECTION = t;
 }
 
+static void render_gradient() {
+
+  glUseProgram(*GRADIENT);
+  
+  GLint start = glGetUniformLocation(*GRADIENT, "start");
+  GLint end = glGetUniformLocation(*GRADIENT, "end");
+  glUniform4f(start, 0.5, 0.5, 0.5, 1.0);
+  glUniform4f(end, 0.0, 0.0, 0.0, 1.0);
+  
+	glMatrixMode(GL_PROJECTION);
+  glPushMatrix();
+	glLoadIdentity();
+	glOrtho(-1.0, 1.0, -1.0, 1.0, -1, 1);
+  
+	glMatrixMode(GL_MODELVIEW);
+  glPushMatrix();
+	glLoadIdentity();
+  
+	glBegin(GL_QUADS);
+		glVertex3f(-1.0, -1.0,  0.0f);
+		glVertex3f(1.0, -1.0,  0.0f);
+		glVertex3f(1.0,  1.0,  0.0f);
+		glVertex3f(-1.0,  1.0,  0.0f);
+	glEnd();
+  
+  glMatrixMode(GL_PROJECTION);
+  glPopMatrix();
+
+  glMatrixMode(GL_MODELVIEW);
+  glPopMatrix();
+  
+  glUseProgram(0);
+
+}
+
 void forward_renderer_begin() {
-  
-  glClearColor(0.2, 0.2, 0.2, 1.0f);
-  glClearDepth(1.0f);
-  glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-  
-  forward_renderer_setup_camera();
   
   timer += frame_time();
   
+  glBindFramebuffer(GL_FRAMEBUFFER, hdr_fbo);
+  
+  glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+  
+  render_gradient();
+  
+  forward_renderer_setup_camera();
+  
   glEnable(GL_DEPTH_TEST);
+  
 }
 
 void forward_renderer_setup_camera() {
@@ -92,7 +268,7 @@ void forward_renderer_setup_camera() {
   if (CAMERA == NULL) {
     error("Camera not set yet!");
   }
-  if (LIGHT == NULL) {
+  if (SHADOW_LIGHT == NULL) {
     error("Light not set yet!");
   }
 
@@ -110,8 +286,8 @@ void forward_renderer_setup_camera() {
   
   /* Setup light stuff */
   
-  matrix_4x4 lviewm = light_view_matrix(LIGHT);
-  matrix_4x4 lprojm = light_proj_matrix(LIGHT);
+  matrix_4x4 lviewm = light_view_matrix(SHADOW_LIGHT);
+  matrix_4x4 lprojm = light_proj_matrix(SHADOW_LIGHT);
   
   m44_to_array(lviewm, lview_matrix);
   m44_to_array(lprojm, lproj_matrix);
@@ -122,6 +298,146 @@ void forward_renderer_end() {
   
   glDisable(GL_DEPTH_TEST);
   
+  /* Tonemap to ldr texture */
+  
+  /* Render HDR to LDR buffer */
+  
+  glBindFramebuffer(GL_FRAMEBUFFER, ldr_fbo);
+  
+  glUseProgram(*SCREEN_TONEMAP);
+  
+	glMatrixMode(GL_PROJECTION);
+  glPushMatrix();
+	glLoadIdentity();
+	glOrtho(-1.0, 1.0, -1.0, 1.0, -1, 1);
+  
+	glMatrixMode(GL_MODELVIEW);
+  glPushMatrix();
+	glLoadIdentity();
+  
+  glActiveTexture(GL_TEXTURE0 + 0 );
+  glBindTexture(GL_TEXTURE_2D, hdr_texture);
+  glEnable(GL_TEXTURE_2D);
+  glUniform1i(glGetUniformLocation(*SCREEN_TONEMAP, "hdr_texture"), 0);
+
+  glUniform1f(glGetUniformLocation(*SCREEN_TONEMAP, "exposure"), EXPOSURE);
+  
+	glBegin(GL_QUADS);
+		glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0, -1.0,  0.0f);
+		glTexCoord2f(1.0f, 0.0f); glVertex3f(1.0, -1.0,  0.0f);
+		glTexCoord2f(1.0f, 1.0f); glVertex3f(1.0,  1.0,  0.0f);
+		glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0,  1.0,  0.0f);
+	glEnd();
+  
+  glActiveTexture(GL_TEXTURE0 + 0 );
+  glDisable(GL_TEXTURE_2D);
+  
+  glMatrixMode(GL_PROJECTION);
+  glPopMatrix();
+
+  glMatrixMode(GL_MODELVIEW);
+  glPopMatrix();
+  
+  glUseProgram(0);
+  
+  /* Generate Mipmaps, adjust exposure */
+  
+  unsigned char color[4] = {0,0,0,0};
+  int level = -1;
+  int width = 0;
+  int height = 0;
+  
+  glActiveTexture(GL_TEXTURE0 + 0 );
+  glBindTexture(GL_TEXTURE_2D, ldr_texture);
+  glEnable(GL_TEXTURE_2D);
+  
+  glGenerateMipmap(GL_TEXTURE_2D);
+  
+  do {
+    level++;
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, level, GL_TEXTURE_WIDTH, &width);
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, level, GL_TEXTURE_WIDTH, &height);
+    
+    if (level > 50) { error("Unable to find lowest mip level. Perhaps mipmaps were not generated"); }
+    
+  } while ((width > 1) || (height > 1));
+  
+  glGetTexImage(GL_TEXTURE_2D, level, GL_RGBA, GL_UNSIGNED_BYTE, color);
+  
+  glActiveTexture(GL_TEXTURE0 + 0 );
+  glDisable(GL_TEXTURE_2D);
+  
+  float average = (float)(color[0] + color[1] + color[2]) / (3.0 * 255.0);
+  
+  EXPOSURE += (EXPOSURE_TARGET - average) * EXPOSURE_SPEED;
+  
+  /* Render final frame */
+  
+  /* Render final frame */
+  
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  
+  glUseProgram(*SCREEN_POST);
+  
+	glMatrixMode(GL_PROJECTION);
+  glPushMatrix();
+	glLoadIdentity();
+	glOrtho(-1.0, 1.0, -1.0, 1.0, -1, 1);
+  
+	glMatrixMode(GL_MODELVIEW);
+  glPushMatrix();
+	glLoadIdentity();
+  
+  glActiveTexture(GL_TEXTURE0 + 0 );
+  glBindTexture(GL_TEXTURE_2D, ldr_texture);
+  glEnable(GL_TEXTURE_2D);
+  glUniform1i(glGetUniformLocation(*SCREEN_POST, "diffuse_texture"), 0);
+  
+  glActiveTexture(GL_TEXTURE0 + 1 );
+  glBindTexture(GL_TEXTURE_2D, *VIGNETTING);
+  glEnable(GL_TEXTURE_2D);
+  glUniform1i(glGetUniformLocation(*SCREEN_POST, "vignetting_texture"), 1);
+  
+  glActiveTexture(GL_TEXTURE0 + 2 );
+  glBindTexture(GL_TEXTURE_3D, *COLOR_CORRECTION);
+  glEnable(GL_TEXTURE_3D);
+  glUniform1i(glGetUniformLocation(*SCREEN_POST, "lut"), 2);
+  
+  glUniform1i(glGetUniformLocation(*SCREEN_POST, "width"), viewport_width());
+  glUniform1i(glGetUniformLocation(*SCREEN_POST, "height"), viewport_height());
+  
+	glBegin(GL_QUADS);
+		glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0, -1.0,  0.0f);
+		glTexCoord2f(1.0f, 0.0f); glVertex3f(1.0, -1.0,  0.0f);
+		glTexCoord2f(1.0f, 1.0f); glVertex3f(1.0,  1.0,  0.0f);
+		glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0,  1.0,  0.0f);
+	glEnd();
+  
+  glActiveTexture(GL_TEXTURE0 + 2 );
+  glDisable(GL_TEXTURE_3D);
+  
+  glActiveTexture(GL_TEXTURE0 + 1 );
+  glDisable(GL_TEXTURE_2D);
+  
+  glActiveTexture(GL_TEXTURE0 + 0 );
+  glDisable(GL_TEXTURE_2D);
+  
+  glMatrixMode(GL_PROJECTION);
+  glPopMatrix();
+
+  glMatrixMode(GL_MODELVIEW);
+  glPopMatrix();
+  
+  glUseProgram(0);
+  
+}
+
+float forward_renderer_get_exposure() {
+  return EXPOSURE;
+}
+
+void forward_renderer_set_exposure(float exposure) {
+  EXPOSURE = exposure;
 }
 
 static int tex_counter = 0;
@@ -135,26 +451,41 @@ static void forward_renderer_use_material(material* mat) {
   
   TANGENT = glGetAttribLocation(*prog, "tangent");
   BINORMAL = glGetAttribLocation(*prog, "binormal");
-  COLOR = glGetAttribLocation(*prog, "color");
   BONE_INDICIES = glGetAttribLocation(*prog, "bone_indicies");
   BONE_WEIGHTS = glGetAttribLocation(*prog, "bone_weights");
-  
-  GLint light_position = glGetUniformLocation(*prog, "light_position");
-  GLint eye_position = glGetUniformLocation(*prog, "eye_position");
-  
-  GLint diffuse_light = glGetUniformLocation(*prog, "diffuse_light");
-  GLint ambient_light = glGetUniformLocation(*prog, "ambient_light");
-  GLint specular_light = glGetUniformLocation(*prog, "specular_light");
- 
-  GLint time = glGetUniformLocation(*prog, "time");
-  
-  glUniform3f(light_position, LIGHT->position.x, LIGHT->position.y, LIGHT->position.z);
-  glUniform3f(eye_position, CAMERA->position.x, CAMERA->position.y, CAMERA->position.z);
-  
-  glUniform3f(diffuse_light, LIGHT->diffuse_color.r, LIGHT->diffuse_color.g, LIGHT->diffuse_color.b);
-  glUniform3f(specular_light, LIGHT->specular_color.r, LIGHT->specular_color.g, LIGHT->specular_color.b);
-  glUniform3f(ambient_light, LIGHT->ambient_color.r, LIGHT->ambient_color.g, LIGHT->ambient_color.b);
 
+  GLint camera_position = glGetUniformLocation(*prog, "camera_position");
+  glUniform3f(camera_position, CAMERA->position.x, CAMERA->position.y, CAMERA->position.z);
+  
+  for(int i = 0; i < num_lights; i++) {
+    light_power[i] = lights[i]->power;
+    light_falloff[i] = lights[i]->falloff;
+    light_position[i] = lights[i]->position;
+    light_target[i] = lights[i]->target;
+    light_diffuse[i] = lights[i]->diffuse_color;
+    light_ambient[i] = lights[i]->ambient_color;
+    light_specular[i] = lights[i]->specular_color;
+  }
+  
+  glUniform1i(glGetUniformLocation(*prog, "num_lights"), num_lights);
+  
+  GLint light_power_u = glGetUniformLocation(*prog, "light_power");
+  GLint light_falloff_u = glGetUniformLocation(*prog, "light_falloff");
+  GLint light_position_u = glGetUniformLocation(*prog, "light_position");
+  GLint light_target_u = glGetUniformLocation(*prog, "light_target");
+  GLint light_diffuse_u = glGetUniformLocation(*prog, "light_diffuse");
+  GLint light_ambient_u = glGetUniformLocation(*prog, "light_ambient");
+  GLint light_specular_u = glGetUniformLocation(*prog, "light_specular");
+  
+  glUniform1fv(light_power_u, num_lights, (const GLfloat*)light_power);
+  glUniform1fv(light_falloff_u, num_lights, (const GLfloat*)light_falloff);
+  glUniform3fv(light_position_u, num_lights, (const GLfloat*)light_position);
+  glUniform3fv(light_target_u, num_lights, (const GLfloat*)light_target);
+  glUniform3fv(light_diffuse_u, num_lights, (const GLfloat*)light_diffuse);
+  glUniform3fv(light_ambient_u, num_lights, (const GLfloat*)light_ambient);
+  glUniform3fv(light_specular_u, num_lights, (const GLfloat*)light_specular);
+
+  GLint time = glGetUniformLocation(*prog, "time");
   glUniform1f(time,timer);
   
   GLint world_matrix_u = glGetUniformLocation(*prog, "world_matrix");
@@ -230,22 +561,10 @@ static void forward_renderer_use_material(material* mat) {
     glEnable(GL_TEXTURE_2D);
     tex_counter++;
   }
-
-  
-  GLuint color_correction = glGetUniformLocation(*prog, "lut");
-  glUniform1i(color_correction, tex_counter);
-  glActiveTexture(GL_TEXTURE0 + tex_counter );
-  glBindTexture(GL_TEXTURE_3D, *COLOR_CORRECTION);
-  glEnable(GL_TEXTURE_3D);
-  tex_counter++;
   
 }
 
 static void forward_renderer_disuse_material() {
-  
-  tex_counter--;
-  glActiveTexture(GL_TEXTURE0 + tex_counter );
-  glDisable(GL_TEXTURE_3D);
   
   while(tex_counter > 0) {
     tex_counter--;
@@ -257,63 +576,15 @@ static void forward_renderer_disuse_material() {
 
 }
 
-static int bsp_counter = 0;
-static void render_bsp_mesh(bsp_mesh* bm) {
+static void render_collision_mesh(collision_mesh* cm) {
   
-  if (bm->is_leaf) {
+  if (cm->is_leaf) {
     
     shader_program* collision_prog = asset_load_get("$SHADERS/collision_mesh.prog");
     glUseProgram(*collision_prog);
     
     GLint color = glGetUniformLocation(*collision_prog, "color");
-    if (bsp_counter == 0) {
-      glUniform3f(color, 1, 0, 0);
-    } else if (bsp_counter == 1) {
-      glUniform3f(color, 0, 1, 0);
-    } else if (bsp_counter == 2) {
-      glUniform3f(color, 0, 0, 1);
-    } else if (bsp_counter == 3) {
-      glUniform3f(color, 1, 1, 0);
-    } else if (bsp_counter == 4) {
-      glUniform3f(color, 1, 0, 1);
-    } else if (bsp_counter == 5) {
-      glUniform3f(color, 0, 1, 1);
-    } else if (bsp_counter == 6) {
-      glUniform3f(color, 0.25, 0, 0);
-    } else if (bsp_counter == 7) {
-      glUniform3f(color, 0, 0.25, 0);
-    } else if (bsp_counter == 8) {
-      glUniform3f(color, 0, 0, 0.25);
-    } else if (bsp_counter == 9) {
-      glUniform3f(color, 0.25, 0.25, 0);
-    } else if (bsp_counter == 10) {
-      glUniform3f(color, 0.25, 0, 0.25);
-    } else if (bsp_counter == 11) {
-      glUniform3f(color, 0, 0.25, 0.25);
-    } else if (bsp_counter == 12) {
-      glUniform3f(color, 0.75, 0, 0);
-    } else if (bsp_counter == 13) {
-      glUniform3f(color, 0, 0.75, 0);
-    } else if (bsp_counter == 14) {
-      glUniform3f(color, 0, 0, 0.75);
-    } else if (bsp_counter == 15) {
-      glUniform3f(color, 0.75, 0, 0.75);
-    } else if (bsp_counter == 16) {
-      glUniform3f(color, 0, 0.75, 0.75);
-    } else if (bsp_counter == 17) {
-      glUniform3f(color, 0.75, 0.75, 0);
-    } else if (bsp_counter == 18) {
-      glUniform3f(color, 0, 0, 0);
-    } else if (bsp_counter == 19) {
-      glUniform3f(color, 0.25, 0.25, 0.25);
-    } else if (bsp_counter == 20) {
-      glUniform3f(color, 0.5, 0.5, 0.5);
-    } else if (bsp_counter == 21) {
-      glUniform3f(color, 0.75, 0.75, 0.75);
-    } else {
-      glUniform3f(color, 1, 1, 1);
-    }
-    bsp_counter++;
+    glUniform3f(color, 1, 1, 1);
     
     GLint world_matrix_u = glGetUniformLocation(*collision_prog, "world_matrix");
     glUniformMatrix4fv(world_matrix_u, 1, 0, world_matrix);
@@ -330,10 +601,10 @@ static void render_bsp_mesh(bsp_mesh* bm) {
     glEnable(GL_POLYGON_OFFSET_FILL);
     glPolygonOffset(-1, 1.0);
     
-    glVertexPointer(3, GL_FLOAT, 0, bm->verticies);
+    glVertexPointer(3, GL_FLOAT, 0, cm->verticies);
     glEnableClientState(GL_VERTEX_ARRAY);
     
-      glDrawArrays(GL_TRIANGLES, 0, bm->num_verticies);
+      glDrawArrays(GL_TRIANGLES, 0, cm->num_verticies);
     
     glDisableClientState(GL_VERTEX_ARRAY);
     
@@ -345,10 +616,18 @@ static void render_bsp_mesh(bsp_mesh* bm) {
     glUseProgram(0);
     
   } else {
-    render_bsp_mesh(bm->front);
-    render_bsp_mesh(bm->back);
+    render_collision_mesh(cm->front);
+    render_collision_mesh(cm->back);
   }
 
+}
+
+void forward_renderer_render_collision_body(collision_body* cb) {
+  
+  if (cb->collision_type == collision_type_mesh) {
+    render_collision_mesh(cb->collision_mesh);
+  }
+  
 }
 
 void forward_renderer_render_static(static_object* so) {
@@ -362,7 +641,7 @@ void forward_renderer_render_static(static_object* so) {
     
     renderable_surface* s = r->surfaces[i];
     if(s->is_rigged) {
-
+      
       forward_renderer_use_material(s->base);
       
       shader_program* prog = dictionary_get(s->base->properties, "program");
@@ -372,7 +651,7 @@ void forward_renderer_render_static(static_object* so) {
       GLsizei stride = sizeof(float) * 24;
       
       glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
-          
+      
       glVertexPointer(3, GL_FLOAT, stride, (void*)0);
       glEnableClientState(GL_VERTEX_ARRAY);
       
@@ -388,8 +667,8 @@ void forward_renderer_render_static(static_object* so) {
       glTexCoordPointer(2, GL_FLOAT, stride, (void*)(sizeof(float) * 12));
       glEnableClientState(GL_TEXTURE_COORD_ARRAY);
       
-      glVertexAttribPointer(COLOR, 4, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 14));
-      glEnableVertexAttribArray(COLOR);
+      glColorPointer(4, GL_FLOAT, stride, (void*)(sizeof(float) * 14));
+      glEnableClientState(GL_COLOR_ARRAY);
       
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
         glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
@@ -397,10 +676,10 @@ void forward_renderer_render_static(static_object* so) {
       glDisableClientState(GL_VERTEX_ARRAY);
       glDisableClientState(GL_NORMAL_ARRAY);
       glDisableClientState(GL_TEXTURE_COORD_ARRAY);  
+      glDisableClientState(GL_COLOR_ARRAY);  
       
       glDisableVertexAttribArray(TANGENT);
-      glDisableVertexAttribArray(BINORMAL);
-      glDisableVertexAttribArray(COLOR);  
+      glDisableVertexAttribArray(BINORMAL); 
       
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
       glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -434,8 +713,8 @@ void forward_renderer_render_static(static_object* so) {
       glTexCoordPointer(2, GL_FLOAT, stride, (void*)(sizeof(float) * 12));
       glEnableClientState(GL_TEXTURE_COORD_ARRAY);
       
-      glVertexAttribPointer(COLOR, 4, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 14));
-      glEnableVertexAttribArray(COLOR);
+      glColorPointer(4, GL_FLOAT, stride, (void*)(sizeof(float) * 14));
+      glEnableClientState(GL_COLOR_ARRAY);
       
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
         glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
@@ -443,10 +722,10 @@ void forward_renderer_render_static(static_object* so) {
       glDisableClientState(GL_VERTEX_ARRAY);
       glDisableClientState(GL_NORMAL_ARRAY);
       glDisableClientState(GL_TEXTURE_COORD_ARRAY);  
+      glDisableClientState(GL_COLOR_ARRAY);  
       
       glDisableVertexAttribArray(TANGENT);
       glDisableVertexAttribArray(BINORMAL);
-      glDisableVertexAttribArray(COLOR);  
       
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
       glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -457,10 +736,12 @@ void forward_renderer_render_static(static_object* so) {
 
   }
   
-  //if (so->collision_body != NULL) {
-  //  bsp_counter = 0;
-  //  render_bsp_mesh(so->collision_body->collision_mesh);
-  //}
+  /*
+  if (so->collision_body != NULL) {
+    bsp_counter = 0;
+    render_bsp_mesh(so->collision_body->collision_mesh);
+  }
+  */
   
 }
 
@@ -501,19 +782,19 @@ void forward_renderer_render_physics(physics_object* po) {
       glTexCoordPointer(2, GL_FLOAT, stride, (void*)(sizeof(float) * 12));
       glEnableClientState(GL_TEXTURE_COORD_ARRAY);
       
-      glVertexAttribPointer(COLOR, 4, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 14));
-      glEnableVertexAttribArray(COLOR);
+      glColorPointer(4, GL_FLOAT, stride, (void*)(sizeof(float) * 14));
+      glEnableClientState(GL_COLOR_ARRAY);
       
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
         glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
       
       glDisableClientState(GL_VERTEX_ARRAY);
+      glDisableClientState(GL_VERTEX_ARRAY);
       glDisableClientState(GL_NORMAL_ARRAY);
-      glDisableClientState(GL_TEXTURE_COORD_ARRAY);  
+      glDisableClientState(GL_COLOR_ARRAY);  
       
       glDisableVertexAttribArray(TANGENT);
       glDisableVertexAttribArray(BINORMAL);
-      glDisableVertexAttribArray(COLOR);  
       
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
       glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -547,8 +828,8 @@ void forward_renderer_render_physics(physics_object* po) {
       glTexCoordPointer(2, GL_FLOAT, stride, (void*)(sizeof(float) * 12));
       glEnableClientState(GL_TEXTURE_COORD_ARRAY);
       
-      glVertexAttribPointer(COLOR, 4, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 14));
-      glEnableVertexAttribArray(COLOR);
+      glColorPointer(4, GL_FLOAT, stride, (void*)(sizeof(float) * 14));
+      glEnableClientState(GL_COLOR_ARRAY);
       
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
         glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
@@ -556,10 +837,10 @@ void forward_renderer_render_physics(physics_object* po) {
       glDisableClientState(GL_VERTEX_ARRAY);
       glDisableClientState(GL_NORMAL_ARRAY);
       glDisableClientState(GL_TEXTURE_COORD_ARRAY);  
+      glDisableClientState(GL_COLOR_ARRAY);  
       
       glDisableVertexAttribArray(TANGENT);
       glDisableVertexAttribArray(BINORMAL);
-      glDisableVertexAttribArray(COLOR);  
       
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
       glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -640,8 +921,8 @@ void forward_renderer_render_animated(animated_object* ao) {
       glTexCoordPointer(2, GL_FLOAT, stride, (void*)(sizeof(float) * 12));
       glEnableClientState(GL_TEXTURE_COORD_ARRAY);
       
-      glVertexAttribPointer(COLOR, 4, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 14));
-      glEnableVertexAttribArray(COLOR);
+      glColorPointer(4, GL_FLOAT, stride, (void*)(sizeof(float) * 14));
+      glEnableClientState(GL_COLOR_ARRAY);
       
       glVertexAttribPointer(BONE_INDICIES, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 18));
       glEnableVertexAttribArray(BONE_INDICIES);
@@ -655,10 +936,10 @@ void forward_renderer_render_animated(animated_object* ao) {
       glDisableClientState(GL_VERTEX_ARRAY);
       glDisableClientState(GL_NORMAL_ARRAY);
       glDisableClientState(GL_TEXTURE_COORD_ARRAY);  
+      glDisableClientState(GL_COLOR_ARRAY);  
       
       glDisableVertexAttribArray(TANGENT);
       glDisableVertexAttribArray(BINORMAL);
-      glDisableVertexAttribArray(COLOR);  
       glDisableVertexAttribArray(BONE_INDICIES);  
       glDisableVertexAttribArray(BONE_WEIGHTS);  
       
@@ -702,9 +983,9 @@ void forward_renderer_render_skeleton(skeleton* s) {
 
 void forward_renderer_render_axis(matrix_4x4 world) {
   
-  vector4 x_pos = m44_mul_v4(world, v4(1,0,0,1));
-  vector4 y_pos = m44_mul_v4(world, v4(0,1,0,1));
-  vector4 z_pos = m44_mul_v4(world, v4(0,0,1,1));
+  vector4 x_pos = m44_mul_v4(world, v4(2,0,0,1));
+  vector4 y_pos = m44_mul_v4(world, v4(0,2,0,1));
+  vector4 z_pos = m44_mul_v4(world, v4(0,0,2,1));
   vector4 base_pos = m44_mul_v4(world, v4(0,0,0,1));
   
   x_pos = v4_div(x_pos, x_pos.w);

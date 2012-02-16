@@ -34,6 +34,9 @@ void light_set_type(light* l, int type) {
     
     l->type = light_type_directional;
     
+    l->power = 1;
+    l->falloff = 0;
+    
     l->enabled = 1;
     l->cast_shadows = 0;
     
@@ -51,6 +54,9 @@ void light_set_type(light* l, int type) {
   } else if (type == light_type_point) {
     
     l->type = light_type_point;
+    
+    l->power = 5;
+    l->falloff = 0.5;
     
     l->enabled = 1;
     l->cast_shadows = 0;
@@ -70,6 +76,9 @@ void light_set_type(light* l, int type) {
     
     l->type = light_type_sun;
     
+    l->power = 1;
+    l->falloff = 0;
+    
     l->enabled = 1;
     l->cast_shadows = 1;
     
@@ -87,6 +96,9 @@ void light_set_type(light* l, int type) {
   } else if (type == light_type_spot) {
     
     l->type = light_type_spot;
+    
+    l->power = 5;
+    l->falloff = 0.5;
     
     l->enabled = 1;
     l->cast_shadows = 1;

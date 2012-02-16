@@ -6,12 +6,12 @@
 
 #include "viewport.h"
 
-ui_rectangle* ui_rectangle_new(vector2 top_left, vector2 bottom_right) {
+ui_rectangle* ui_rectangle_new() {
 
   ui_rectangle* rect = malloc(sizeof(ui_rectangle));
   
-  rect->top_left = top_left;
-  rect->bottom_right = bottom_right;
+  rect->top_left = v2(10, 10);
+  rect->bottom_right = v2(20, 20);
   rect->color = v4_white();
   
   rect->texture = NULL;

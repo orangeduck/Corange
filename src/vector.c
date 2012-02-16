@@ -236,11 +236,15 @@ float v2_dot(vector2 v1, vector2 v2) {
   return (v1.x * v2.x) + (v1.y * v2.y);
 }
 
-float v2_length(vector2 v) {
+float v2_length_sqrd(vector2 v) {
   float length = 0.0;
   length += v.x * v.x;
   length += v.y * v.y;
-  return sqrt(length);
+  return length;
+}
+
+float v2_length(vector2 v) {
+  return sqrt(v2_length_sqrd(v));
 }
 
 float v2_dist_sqrd(vector2 v1, vector2 v2) {
@@ -275,10 +279,10 @@ vector2 v2_from_string(char* s) {
   return v;
 }
 
-int v2_equ(vector2 v1, vector2 v2) {
-  if(!(v1.x == v2.x)) { return 0; }
-  if(!(v1.y == v2.y)) { return 0; }
-  return 1;
+bool v2_equ(vector2 v1, vector2 v2) {
+  if(!(v1.x == v2.x)) { return false; }
+  if(!(v1.y == v2.y)) { return false; }
+  return true;
 }
 
 void v2_to_array(vector2 v, float* out) {
@@ -388,6 +392,10 @@ vector3 v3_black() {
   return v3(0, 0, 0);
 }
 
+vector3 v3_grey() {
+  return v3(0.5, 0.5, 0.5);
+}
+
 vector3 v3_add(vector3 v1, vector3 v2) {
   vector3 v;
   v.x = v1.x + v2.x;
@@ -477,12 +485,16 @@ vector3 v3_cross(vector3 v1, vector3 v2) {
   return v;
 }
 
-float v3_length(vector3 v) {
+float v3_length_sqrd(vector3 v) {
   float length = 0.0;
   length += v.x * v.x;
   length += v.y * v.y;
   length += v.z * v.z;
-  return sqrt(length);
+  return length;
+}
+
+float v3_length(vector3 v) {
+  return sqrt(v3_length_sqrd(v));
 }
 
 float v3_dist_sqrd(vector3 v1, vector3 v2) {
@@ -525,11 +537,11 @@ vector3 v3_from_string(char* s) {
 
 }
 
-int v3_equ(vector3 v1, vector3 v2) {
-  if(!(v1.x == v2.x)) { return 0; }
-  if(!(v1.y == v2.y)) { return 0; }
-  if(!(v1.z == v2.z)) { return 0; }
-  return 1;
+bool v3_equ(vector3 v1, vector3 v2) {
+  if(!(v1.x == v2.x)) { return false; }
+  if(!(v1.y == v2.y)) { return false; }
+  if(!(v1.z == v2.z)) { return false; }
+  return true;
 }
 
 void v3_to_array(vector3 v, float* out) {
@@ -619,6 +631,10 @@ vector4 v4_white() {
 
 vector4 v4_black() {
   return v4(0,0,0,1);
+}
+
+vector4 v4_grey() {
+  return v4(0.5,0.5,0.5,1);
 }
 
 vector4 v4_add(vector4 v1, vector4 v2) {
@@ -712,13 +728,17 @@ float v4_dot(vector4 v1, vector4 v2) {
   return  (v1.x * v2.x) + (v1.y * v2.y) + (v1.z * v2.z) + (v1.w * v2.w);
 }
 
-float v4_length(vector4 v) {
+float v4_length_sqrd(vector4 v) {
   float length = 0.0;
   length += v.x * v.x;
   length += v.y * v.y;
   length += v.z * v.z;
   length += v.w * v.w;
-  return sqrt(length);
+  return length;
+}
+
+float v4_length(vector4 v) {
+  return sqrt(v4_length_sqrd(v));
 }
 
 float v4_dist_sqrd(vector4 v1, vector4 v2) {
@@ -764,12 +784,12 @@ vector4 v4_from_string(char* s) {
 
 }
 
-int v4_equ(vector4 v1, vector4 v2) {
-  if(!(v1.x == v2.x)) { return 0; }
-  if(!(v1.y == v2.y)) { return 0; }
-  if(!(v1.z == v2.z)) { return 0; }
-  if(!(v1.w == v2.w)) { return 0; }
-  return 1;
+bool v4_equ(vector4 v1, vector4 v2) {
+  if(!(v1.x == v2.x)) { return false; }
+  if(!(v1.y == v2.y)) { return false; }
+  if(!(v1.z == v2.z)) { return false; }
+  if(!(v1.w == v2.w)) { return false; }
+  return true;
 }
 
 void v4_to_array(vector4 v, float* out) {

@@ -16,6 +16,8 @@ const int max_particles = 1024;
 
 void metaballs_init() {
   
+  viewport_set_dimensions(1280, 720);
+  
   kernels_init_with_opengl();
   
   asset_manager_handler("cl", cl_load_file, kernel_program_delete);
@@ -47,8 +49,9 @@ void metaballs_init() {
   
   forward_renderer_init();
   forward_renderer_set_camera(cam);
-  forward_renderer_set_light(sun);
+  forward_renderer_set_shadow_light(sun);
   forward_renderer_set_shadow_texture( shadow_mapper_depth_texture() );
+  forward_renderer_add_light(sun);
   
   vector3* temp_pos = malloc(sizeof(vector3) * 4 * max_particles);
   int i = 0;
@@ -158,13 +161,11 @@ void metaballs_render() {
 
   shadow_mapper_begin();
   shadow_mapper_render_static(s_podium);
+  marching_cubes_render_shadows(sun);
   shadow_mapper_end();
 
   
   forward_renderer_begin();
-  
-    glClearColor(0.5f, 0.5f, 0.5f, 0.5f);
-    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
     
     forward_renderer_render_static(s_podium);
     forward_renderer_render_light(sun);

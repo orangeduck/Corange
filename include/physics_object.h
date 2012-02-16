@@ -32,8 +32,8 @@ typedef struct {
 physics_object* physics_object_new();
 void physics_object_delete(physics_object* po);
 
-void physics_object_update(physics_object* po, float timestep);
 
-void physics_object_collide_static(physics_object* po, static_object* so);
+void physics_object_collide_static(physics_object* po, static_object* so, float timestep);
+void physics_object_update(physics_object* po, float timestep);
 
 #endif

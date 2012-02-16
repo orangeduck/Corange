@@ -13,6 +13,9 @@ typedef struct {
   vector3 specular_color;
   vector3 ambient_color;
   
+  float power;
+  float falloff;
+  
   int type;
   
   int enabled;
