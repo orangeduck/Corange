@@ -1,18 +1,31 @@
 uniform vec3 camera_position;
 uniform vec3 light_position;
 
-uniform sampler2D env_map;
+uniform mat4 light_view;
+uniform mat4 light_proj;
 
-varying vec3 position;
+uniform sampler2D env_map;
+uniform sampler2D shadow_map;
+
+varying vec4 position;
 varying vec3 normal;
 varying vec2 uvs;
 
+/* Headers */
+
+float shadow_amount_soft_pcf25(vec4 light_pos, sampler2D light_depth, float hardness);
+
+/* End */
+
 void main() {
   
-  normal = normalize(normal);
+  vec4 light_pos = light_proj * light_view * position;
+  float shadow = shadow_amount_soft_pcf25(light_pos, shadow_map, 0.0005);
   
-  vec3 light_dir = normalize(light_position - position);
-  vec3 camera_dir = normalize(camera_position - position);
+  vec3 normal = normalize(normal);
+  
+  vec3 light_dir = normalize(light_position - position.xyz);
+  vec3 camera_dir = normalize(camera_position - position.xyz);
   
   vec3 reflected = normalize(reflect(camera_dir, normal));
   vec3 env = texture2D(env_map, reflected.xy).rgb;
@@ -24,7 +37,7 @@ void main() {
   float n_dot_h = max( dot( normal, half_vector ) , 0.0);
   vec3 spec = 1.0 * pow( n_dot_h, 75 );
   
-  float light = clamp(dot(light_dir, normal) + 1.25, 0.0, 1.0);
+  float light = shadow * clamp(dot(light_dir, normal) + 1.25, 0.0, 1.0);
   
   gl_FragColor = vec4(color * light + spec, 1.0);
 }

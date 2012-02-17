@@ -729,6 +729,7 @@ void deferred_renderer_end() {
   
   glUniform1i(glGetUniformLocation(*SCREEN_POST, "width"), viewport_width());
   glUniform1i(glGetUniformLocation(*SCREEN_POST, "height"), viewport_height());
+  glUniform1i(glGetUniformLocation(*SCREEN_POST, "aa_type"), 1);
   
 	glBegin(GL_QUADS);
 		glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0, -1.0,  0.0f);

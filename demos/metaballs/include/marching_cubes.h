@@ -15,7 +15,7 @@ void marching_cubes_metaball(vector3 pos, int id);
 void marching_cubes_metaball_data(kernel_memory positions, int num_metaballs);
 
 void marching_cubes_update();
-void marching_cubes_render(bool wireframe, vector3 camera_position, vector3 light_position);
+void marching_cubes_render(bool wireframe, camera* c, light* l);
 
 void marching_cubes_render_shadows(light* l);
 

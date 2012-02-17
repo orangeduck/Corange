@@ -216,8 +216,8 @@ void renderers_init() {
   sun->position = v3(20,23,16);
   sun->ambient_color = v3(0.5, 0.5, 0.5);
   sun->diffuse_color = v3(1.0,  0.894, 0.811);
-  sun->specular_color = v3_mul(v3(1.0,  0.894, 0.811), 2);
-  sun->power = 4.5;
+  sun->specular_color = v3_mul(v3(1.0,  0.894, 0.811), 4);
+  sun->power = 5;
   
   light* backlight = entity_new("backlight", light);
   light_set_type(backlight, light_type_point);

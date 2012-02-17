@@ -49,8 +49,9 @@ static int BONE_WEIGHTS;
 static GLuint hdr_fbo;
 static GLuint hdr_buffer;
 static GLuint hdr_depth_buffer;
-static GLuint hdr_texture;
-static GLuint hdr_depth_texture;
+
+static GLuint hdr_res_fbo;
+static GLuint hdr_res_texture;
 
 static GLuint ldr_fbo;
 static GLuint ldr_buffer;
@@ -73,7 +74,11 @@ static float EXPOSURE;
 static float EXPOSURE_SPEED;
 static float EXPOSURE_TARGET;
 
+static int MULTISAMPLES;
+
 void forward_renderer_init() {
+  
+  MULTISAMPLES = 16;
   
   use_shadows = false;
   num_lights = 0;
@@ -96,31 +101,25 @@ void forward_renderer_init() {
   
   glGenRenderbuffers(1, &hdr_buffer);
   glBindRenderbuffer(GL_RENDERBUFFER, hdr_buffer);
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA16F, viewport_width(), viewport_height());
+  glRenderbufferStorageMultisample(GL_RENDERBUFFER, MULTISAMPLES, GL_RGBA16F, viewport_width(), viewport_height());
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, hdr_buffer);   
   
   glGenRenderbuffers(1, &hdr_depth_buffer);
   glBindRenderbuffer(GL_RENDERBUFFER, hdr_depth_buffer);
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, viewport_width(), viewport_height());
+  glRenderbufferStorageMultisample(GL_RENDERBUFFER, MULTISAMPLES, GL_DEPTH_COMPONENT24, viewport_width(), viewport_height());
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, hdr_depth_buffer);  
+
+  glGenFramebuffers(1, &hdr_res_fbo);
+  glBindFramebuffer(GL_FRAMEBUFFER, hdr_res_fbo);
   
-  glGenTextures(1, &hdr_texture);
-  glBindTexture(GL_TEXTURE_2D, hdr_texture);
+  glGenTextures(1, &hdr_res_texture);
+  glBindTexture(GL_TEXTURE_2D, hdr_res_texture);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, viewport_width(), viewport_height(), 0, GL_RGBA, GL_FLOAT, NULL);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, hdr_texture, 0);
-  
-  glGenTextures(1, &hdr_depth_texture);
-  glBindTexture(GL_TEXTURE_2D, hdr_depth_texture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, viewport_width(), viewport_height(), 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, hdr_depth_texture, 0);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, hdr_res_texture, 0);
   
   glGenFramebuffers(1, &ldr_fbo);
   glBindFramebuffer(GL_FRAMEBUFFER, ldr_fbo);
@@ -133,8 +132,8 @@ void forward_renderer_init() {
   glGenTextures(1, &ldr_texture);
   glBindTexture(GL_TEXTURE_2D, ldr_texture);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, viewport_width(), viewport_height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ldr_texture, 0);
@@ -148,8 +147,9 @@ void forward_renderer_finish() {
   glDeleteFramebuffers(1, &hdr_fbo);
   glDeleteRenderbuffers(1, &hdr_buffer);
   glDeleteRenderbuffers(1, &hdr_depth_buffer);
-  glDeleteTextures(1,&hdr_texture);
-  glDeleteTextures(1,&hdr_depth_texture);
+  
+  glDeleteFramebuffers(1, &hdr_res_fbo);
+  glDeleteTextures(1,&hdr_res_texture);
   
   glDeleteFramebuffers(1, &ldr_fbo);
   glDeleteRenderbuffers(1, &ldr_buffer);
@@ -296,9 +296,13 @@ void forward_renderer_setup_camera() {
 
 void forward_renderer_end() {
   
-  glDisable(GL_DEPTH_TEST);
+  /* Resolve multisamples */
   
-  /* Tonemap to ldr texture */
+  glBindFramebuffer(GL_READ_FRAMEBUFFER, hdr_fbo);
+  glBindFramebuffer(GL_DRAW_FRAMEBUFFER, hdr_res_fbo);
+  glBlitFramebuffer(0, 0, viewport_width(), viewport_height(), 0, 0, viewport_width(), viewport_height(), GL_COLOR_BUFFER_BIT, GL_LINEAR);
+  
+  glDisable(GL_DEPTH_TEST);
   
   /* Render HDR to LDR buffer */
   
@@ -316,7 +320,7 @@ void forward_renderer_end() {
 	glLoadIdentity();
   
   glActiveTexture(GL_TEXTURE0 + 0 );
-  glBindTexture(GL_TEXTURE_2D, hdr_texture);
+  glBindTexture(GL_TEXTURE_2D, hdr_res_texture);
   glEnable(GL_TEXTURE_2D);
   glUniform1i(glGetUniformLocation(*SCREEN_TONEMAP, "hdr_texture"), 0);
 
@@ -405,6 +409,12 @@ void forward_renderer_end() {
   
   glUniform1i(glGetUniformLocation(*SCREEN_POST, "width"), viewport_width());
   glUniform1i(glGetUniformLocation(*SCREEN_POST, "height"), viewport_height());
+  
+  if (MULTISAMPLES == 0) {
+    glUniform1i(glGetUniformLocation(*SCREEN_POST, "aa_type"), 1);
+  } else {
+    glUniform1i(glGetUniformLocation(*SCREEN_POST, "aa_type"), 0);
+  }
   
 	glBegin(GL_QUADS);
 		glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0, -1.0,  0.0f);

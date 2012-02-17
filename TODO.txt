@@ -1,9 +1,6 @@
 -- To Finish Demos --
 
-HDR for both renderers.
-MSAA for forward renderer.
-Moving text bug.
-Metaballs self shadowing
+Replace Buttons
 Sea Game - Add depth pass and foam effects? Walk around on moving deck? Proper Skybox. Bigger waterplane.
 
 -- Tweaks/Cleanup --
@@ -18,5 +15,5 @@ Remove all fixed function stuff inc builtins from all shaders.
 
 Make multi material behaviour default.
 PLY loader
-UI button, slider bar, Other UI elements
+Other UI elements
 LUA wrappers for asset, entity, ui managers

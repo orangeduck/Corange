@@ -104,7 +104,7 @@ void main() {
   }
   
   vec3 reflected = normalize(reflect(camera_vector, normal));
-  vec3 env = from_gamma(texture2D(env_map, reflected.xy).rgb) * 0.25;
+  vec3 env = from_gamma(texture2D(env_map, reflected.xy).rgb) * ambient;
   float env_amount = (1.0 - dot(camera_vector, normal)) * spec.r * env_amount;
   diffuse = mix(diffuse, env, env_amount);
   

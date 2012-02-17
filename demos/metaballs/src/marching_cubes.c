@@ -254,7 +254,7 @@ void marching_cubes_update() {
   
 }
 
-void marching_cubes_render(bool wireframe, vector3 camera_position, vector3 light_position) {
+void marching_cubes_render(bool wireframe, camera* c, light* l) {
   
   const int full_size = width * height * depth;
   
@@ -296,16 +296,30 @@ void marching_cubes_render(bool wireframe, vector3 camera_position, vector3 ligh
   glUseProgram(*metaballs);
   
   GLint light_position_u = glGetUniformLocation(*metaballs, "light_position");
-  glUniform3f(light_position_u, light_position.x, light_position.y, light_position.z);
+  glUniform3f(light_position_u, l->position.x, l->position.y, l->position.z);
   
   GLint camera_position_u = glGetUniformLocation(*metaballs, "camera_position");
-  glUniform3f(camera_position_u, camera_position.x, camera_position.y, camera_position.z);
+  glUniform3f(camera_position_u, c->position.x, c->position.y, c->position.z);
+  
+  float lproj_matrix[16]; m44_to_array(light_view_matrix(l), lproj_matrix);
+  float lview_matrix[16]; m44_to_array(light_proj_matrix(l), lview_matrix);
+  
+  GLint lproj_matrix_u = glGetUniformLocation(*metaballs, "light_proj");
+  glUniformMatrix4fv(lproj_matrix_u, 1, 0, lproj_matrix);
+  
+  GLint lview_matrix_u = glGetUniformLocation(*metaballs, "light_view");
+  glUniformMatrix4fv(lview_matrix_u, 1, 0, lview_matrix);
   
   texture* env_map = asset_load_get("./resources/metaballs_env.dds");
   glActiveTexture(GL_TEXTURE0 + 0 );
   glBindTexture(GL_TEXTURE_2D, *env_map);
   glEnable(GL_TEXTURE_2D);
   glUniform1i(glGetUniformLocation(*metaballs, "env_map"), 0);
+  
+  glActiveTexture(GL_TEXTURE0 + 1);
+  glBindTexture(GL_TEXTURE_2D, *shadow_mapper_depth_texture());
+  glEnable(GL_TEXTURE_2D);
+  glUniform1i(glGetUniformLocation(*metaballs, "shadow_map"), 1);
   
   glBindBuffer(GL_ARRAY_BUFFER, vertex_positions);
   glVertexPointer(4, GL_FLOAT, 0, (void*)0);
@@ -319,6 +333,9 @@ void marching_cubes_render(bool wireframe, vector3 camera_position, vector3 ligh
   
   glDisableClientState(GL_VERTEX_ARRAY);
   glDisableVertexAttribArray(NORMALS);
+  
+  glActiveTexture(GL_TEXTURE0 + 1 );
+  glDisable(GL_TEXTURE_2D);
   
   glActiveTexture(GL_TEXTURE0 + 0 );
   glDisable(GL_TEXTURE_2D);

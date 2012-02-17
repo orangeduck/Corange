@@ -78,6 +78,8 @@ typedef void (APIENTRY * GLGETPROGRAMIVFN)( GLuint program, GLenum pname, GLint*
 typedef void (APIENTRY * GLBINDATTRIBLOCATIONFN)( GLuint program, GLuint index, const GLchar* name );
 typedef void (APIENTRY * GLGENFRAMEBUFFERSFN)( GLsizei n, GLuint* ids );
 typedef void (APIENTRY * GLBINDFRAMEBUFFERFN)( GLenum target, GLuint framebuffer );
+typedef void (APIENTRY * GLBLITFRAMEBUFFERFN)( GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter);
+typedef void (APIENTRY * GLFRAMEBUFFERTEXTUREFN)( GLenum target, GLenum attachment, GLuint texture, GLint level );
 typedef void (APIENTRY * GLFRAMEBUFFERTEXTURE2DFN)( GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level );
 typedef void (APIENTRY * GLDELETEFRAMEBUFFERSFN)( GLsizei n, GLuint* framebuffers );
 typedef GLenum (APIENTRY * GLCHECKFRAMEBUFFERSTATUSFN)( GLenum target );
@@ -91,6 +93,7 @@ typedef void (APIENTRY * GLBUFFERDATAFN)( GLenum target, GLsizeiptr size, const 
 typedef void (APIENTRY * GLFRAMEBUFFERRENDERBUFFERFN)( GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer );
 typedef GLint (APIENTRY * GLGETATTRIBLOCATIONFN)( GLuint program, const GLchar* name );
 typedef void (APIENTRY * GLRENDERBUFFERSTORAGEFN)( GLenum target, GLenum format, GLsizei width, GLsizei height);
+typedef void (APIENTRY * GLRENDERBUFFERSTORAGEMULTISAMPLEFN)( GLenum target, GLuint samples, GLenum format, GLsizei width, GLsizei height);
 typedef void (APIENTRY * GLDRAWBUFFERSFN)(GLsizei n, const GLenum* buffers);
 typedef void (APIENTRY * GLGENERATEMIPMAPFN)(GLenum target);
 typedef void (APIENTRY * GLCOMPRESSEDTEXIMAGE2DFN)(GLenum target, GLint level, GLenum format, GLsizei width, GLsizei height, GLint border, GLsizei imagesize, const GLvoid* data);
@@ -130,6 +133,8 @@ extern GLGETPROGRAMIVFN glGetProgramiv;
 extern GLBINDATTRIBLOCATIONFN glBindAttribLocation;
 extern GLGENFRAMEBUFFERSFN glGenFramebuffers;
 extern GLBINDFRAMEBUFFERFN glBindFramebuffer;
+extern GLBLITFRAMEBUFFERFN glBlitFramebuffer;
+extern GLFRAMEBUFFERTEXTUREFN glFramebufferTexture;
 extern GLFRAMEBUFFERTEXTURE2DFN glFramebufferTexture2D;
 extern GLDELETEFRAMEBUFFERSFN glDeleteFramebuffers;
 extern GLCHECKFRAMEBUFFERSTATUSFN glCheckFramebufferStatus;
@@ -143,6 +148,7 @@ extern GLBUFFERDATAFN glBufferData;
 extern GLFRAMEBUFFERRENDERBUFFERFN glFramebufferRenderbuffer;
 extern GLGETATTRIBLOCATIONFN glGetAttribLocation;
 extern GLRENDERBUFFERSTORAGEFN glRenderbufferStorage;
+extern GLRENDERBUFFERSTORAGEMULTISAMPLEFN glRenderbufferStorageMultisample;
 extern GLDRAWBUFFERSFN glDrawBuffers;
 extern GLGENERATEMIPMAPFN glGenerateMipmap;
 
@@ -151,6 +157,8 @@ extern GLGENERATEMIPMAPFN glGenerateMipmap;
 #define GL_SHADING_LANGUAGE_VERSION 0x8B8C
 #define GL_FRAMEBUFFER 0x8D40
 #define GL_RENDERBUFFER 0x8D41
+#define GL_READ_FRAMEBUFFER 0x8CA8
+#define GL_DRAW_FRAMEBUFFER 0x8CA9
 #define GL_MAX_COLOR_ATTACHMENTS 0x8CDF
 #define GL_COLOR_ATTACHMENT0 0x8CE0
 #define GL_COLOR_ATTACHMENT1 0x8CE1

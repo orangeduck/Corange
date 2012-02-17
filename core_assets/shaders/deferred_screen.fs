@@ -45,7 +45,7 @@ void main() {
   
   vec4 pos_light = light_proj * light_view * vec4(position.xyz,1);
   float shadow = shadow_amount_soft_pcf25(pos_light, shadows_texture, 0.0005);
-	float ssao = texture2DLod(ssao_texture, gl_TexCoord[0].xy, 1);
+	float ssao = texture2DLod(ssao_texture, gl_TexCoord[0].xy, 1).r;
   
 	vec4 diffuse_a = texture2D( diffuse_texture, gl_TexCoord[0].xy );
 	vec3 albedo = diffuse_a.rgb;
@@ -88,13 +88,13 @@ void main() {
     float env_factor;
     
     if (mat_id == 3) {
-      env_factor = 3;
+      env_factor = 2;
     } else {
       env_factor = 1;
     }
   
     vec3 reflected = normalize(reflect(eye_dir, normal));
-    vec3 env = from_gamma(texture2D(env_texture, reflected.xy).rgb) * 0.25;
+    vec3 env = from_gamma(texture2D(env_texture, vec2(reflected.x, -reflected.y)).rgb) * ambient * 2.0;
     float env_amount = (1.0 - dot(eye_dir, normal)) * spec * env_factor;
     
     diffuse = mix(diffuse, env, env_amount);

@@ -170,7 +170,7 @@ void metaballs_render() {
     forward_renderer_render_static(s_podium);
     forward_renderer_render_light(sun);
   
-    marching_cubes_render(wireframe, cam->position, sun->position);
+    marching_cubes_render(wireframe, cam, sun);
   
   forward_renderer_end();
   
