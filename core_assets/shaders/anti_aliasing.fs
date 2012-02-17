@@ -1,7 +1,7 @@
 /* Headers */
 
-vec3 fxaa_unsharp(sampler2D input, vec2 pos, int width, int height);
-vec3 fxaa(sampler2D input, vec2 pos, int width, int height);
+vec3 fxaa_unsharp(sampler2D screen, vec2 pos, int width, int height);
+vec3 fxaa(sampler2D screen, vec2 pos, int width, int height);
 
 /* End */
 
@@ -12,7 +12,7 @@ vec3 fxaa(sampler2D input, vec2 pos, int width, int height);
   Works because it essentially maintains/sharpens the per-pixel detail in low-contrast areas.
   While bluring edges to remove any aliasing too intense.
 */
-vec3 fxaa_unsharp(sampler2D input, vec2 pos, int width, int height) {
+vec3 fxaa_unsharp(sampler2D screen, vec2 pos, int width, int height) {
   
   const float sharpen = 0.5;
   const float boundry = 0.1;
@@ -22,15 +22,15 @@ vec3 fxaa_unsharp(sampler2D input, vec2 pos, int width, int height) {
   float xoff = kernel / float(width);
   float yoff = kernel / float(height);
 
-  vec3 rgb_ne = texture2D(input, pos + vec2(-xoff,yoff)).rgb;
-  vec3 rgb_n = texture2D(input, pos + vec2(0,yoff)).rgb;
-  vec3 rgb_nw = texture2D(input, pos + vec2(xoff,yoff)).rgb;
-  vec3 rgb_w = texture2D(input, pos + vec2(xoff,0)).rgb;
-  vec3 rgb_o = texture2D(input, pos + vec2(0,0)).rgb;
-  vec3 rgb_e = texture2D(input, pos + vec2(-xoff,0)).rgb;
-  vec3 rgb_sw = texture2D(input, pos + vec2(-xoff,-yoff)).rgb;
-  vec3 rgb_s = texture2D(input, pos + vec2(0,-yoff)).rgb;
-  vec3 rgb_se = texture2D(input, pos + vec2(xoff,-yoff)).rgb;
+  vec3 rgb_ne = texture2D(screen, pos + vec2(-xoff,yoff)).rgb;
+  vec3 rgb_n = texture2D(screen, pos + vec2(0,yoff)).rgb;
+  vec3 rgb_nw = texture2D(screen, pos + vec2(xoff,yoff)).rgb;
+  vec3 rgb_w = texture2D(screen, pos + vec2(xoff,0)).rgb;
+  vec3 rgb_o = texture2D(screen, pos + vec2(0,0)).rgb;
+  vec3 rgb_e = texture2D(screen, pos + vec2(-xoff,0)).rgb;
+  vec3 rgb_sw = texture2D(screen, pos + vec2(-xoff,-yoff)).rgb;
+  vec3 rgb_s = texture2D(screen, pos + vec2(0,-yoff)).rgb;
+  vec3 rgb_se = texture2D(screen, pos + vec2(xoff,-yoff)).rgb;
   
   vec3 average = (rgb_ne + rgb_n + rgb_nw + rgb_w + rgb_e + rgb_sw + rgb_s + rgb_se) / 8;
   vec3 difference = rgb_o - average;
@@ -69,16 +69,16 @@ float fxaa_lum(vec3 rgb) {
 
 #define SEARCH_STEPS 5
 
-vec3 fxaa(sampler2D input, vec2 pos, int width, int height) {
+vec3 fxaa(sampler2D screen, vec2 pos, int width, int height) {
   
   float xoff = 1.0 / float(width);
   float yoff = 1.0 / float(height);
   
-  vec3 rgb_n = texture2D(input, pos + vec2(0,yoff)).rgb;
-  vec3 rgb_w = texture2D(input, pos + vec2(xoff,0)).rgb;
-  vec3 rgb_o = texture2D(input, pos + vec2(0,0)).rgb;
-  vec3 rgb_e = texture2D(input, pos + vec2(-xoff,0)).rgb;
-  vec3 rgb_s = texture2D(input, pos + vec2(0,-yoff)).rgb;
+  vec3 rgb_n = texture2D(screen, pos + vec2(0,yoff)).rgb;
+  vec3 rgb_w = texture2D(screen, pos + vec2(xoff,0)).rgb;
+  vec3 rgb_o = texture2D(screen, pos + vec2(0,0)).rgb;
+  vec3 rgb_e = texture2D(screen, pos + vec2(-xoff,0)).rgb;
+  vec3 rgb_s = texture2D(screen, pos + vec2(0,-yoff)).rgb;
 
   float lum_n = fxaa_lum(rgb_n);
   float lum_w = fxaa_lum(rgb_w);
@@ -101,10 +101,10 @@ vec3 fxaa(sampler2D input, vec2 pos, int width, int height) {
     
     vec3 rgb_l = rgb_n + rgb_w + rgb_o + rgb_e + rgb_s;
     
-    vec3 rgb_nw = texture2D(input, pos + vec2(xoff,yoff)).rgb;
-    vec3 rgb_ne = texture2D(input, pos + vec2(-xoff,yoff)).rgb;
-    vec3 rgb_sw = texture2D(input, pos + vec2(xoff,-yoff)).rgb;
-    vec3 rgb_se = texture2D(input, pos + vec2(-xoff,-yoff)).rgb;
+    vec3 rgb_nw = texture2D(screen, pos + vec2(xoff,yoff)).rgb;
+    vec3 rgb_ne = texture2D(screen, pos + vec2(-xoff,yoff)).rgb;
+    vec3 rgb_sw = texture2D(screen, pos + vec2(xoff,-yoff)).rgb;
+    vec3 rgb_se = texture2D(screen, pos + vec2(-xoff,-yoff)).rgb;
     
     float lum_nw = fxaa_lum(rgb_nw);
     float lum_ne = fxaa_lum(rgb_ne);
@@ -146,8 +146,8 @@ vec3 fxaa(sampler2D input, vec2 pos, int width, int height) {
     float gradient_n = 0.0;
     
     for(int i = 0; i < SEARCH_STEPS; i++) {
-      if (!done_n) lum_end_n = fxaa_lum(texture2DGrad(input, pos_n, off_np).rgb);
-      if (!done_p) lum_end_p = fxaa_lum(texture2DGrad(input, pos_p, off_np).rgb);
+      if (!done_n) lum_end_n = fxaa_lum(texture2DGrad(screen, pos_n, off_np).rgb);
+      if (!done_p) lum_end_p = fxaa_lum(texture2DGrad(screen, pos_p, off_np).rgb);
       
       done_n = done_n || (abs(lum_end_n - lum_n) >= gradient_n;
       done_p = done_p || (abs(lum_end_p - lum_p) >= gradient_n;

@@ -1,5 +1,6 @@
 #include "ui_button.h"
 
+#include "error.h"
 #include "viewport.h"
 
 ui_button* ui_button_new() {
@@ -144,7 +145,7 @@ void ui_button_set_texture(ui_button* b, texture* t) {
 bool ui_button_contains_position(ui_button* b, vector2 pos) {
 
   if (!b->active) { return false; }
-
+  
   if(( pos.x > b->top_left.x ) && ( pos.x < b->bottom_right.x ) &&
      ( pos.y > b->top_left.y ) && ( pos.y < b->bottom_right.y )) {
     return true;
