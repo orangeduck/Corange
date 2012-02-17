@@ -49,8 +49,6 @@ static void switch_renderer_event(ui_button* b, SDL_Event event) {
   
   if (event.type == SDL_MOUSEBUTTONDOWN) {
     
-    debug("x: %i, y: %i, l: %0.2f, r: %0.2f, t: %0.2f, b: %0.2f", event.motion.x, event.motion.y, b->top_left.x, b->bottom_right.x, b->top_left.y, b->bottom_right.y);
-    
     if (ui_button_contains_position(b, v2(event.motion.x, event.motion.y))) {
       any_button_pressed = true;
       b->pressed = true;

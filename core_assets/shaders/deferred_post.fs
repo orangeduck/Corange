@@ -12,6 +12,8 @@ uniform sampler3D lut;
 vec3 color_correction(vec3 color, sampler3D lut, int lut_size);
 vec3 fxaa(sampler2D tex, vec2 uvs, int width, int height);
 vec3 fxaa_unsharp(sampler2D tex, vec2 uvs, int width, int height);
+vec3 unsharp_mask(sampler2D input, vec2 coords, float strength, int width, int height);
+vec3 chromatic_aberration(sampler2D input, vec2 coords, float offset);
 
 /* End */
 
@@ -23,9 +25,11 @@ void main() {
   
   vec3 color;
   if (aa_type == 1) {
-    color = fxaa_unsharp(ldr_texture, gl_TexCoord[0].xy, width, height);
+	color = fxaa_unsharp(ldr_texture, gl_TexCoord[0].xy, width, height);
   } else {
-    color = texture2D(ldr_texture, gl_TexCoord[0].xy).rgb;
+    //color = texture2D(ldr_texture, gl_TexCoord[0].xy).rgb;
+    //color = chromatic_aberration(ldr_texture, gl_TexCoord[0].xy, 1.0);
+    color = unsharp_mask(ldr_texture, gl_TexCoord[0].xy, 0.5, width, height);
   }
   
 	vec3 vignetting = texture2D(vignetting_texture, gl_TexCoord[0].xy).rgb;

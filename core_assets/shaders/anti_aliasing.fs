@@ -14,8 +14,8 @@ vec3 fxaa(sampler2D screen, vec2 pos, int width, int height);
 */
 vec3 fxaa_unsharp(sampler2D screen, vec2 pos, int width, int height) {
   
-  const float sharpen = 0.5;
-  const float boundry = 0.1;
+  const float sharpen = 1.0;
+  const float boundry = 0.2;
   
   float kernel = 1.0;
   
@@ -42,7 +42,7 @@ vec3 fxaa_unsharp(sampler2D screen, vec2 pos, int width, int height) {
   
   if (fdiff > boundry) {
     
-    float alias_amount = clamp(fdiff * 2.75, 0.25, 0.75);
+    float alias_amount = clamp(fdiff * 2, 0.0, 0.75);
     //return mix(vec3(0,1,0), vec3(1,0,0), alias_amount);
     return mix(rgb_o, average, alias_amount);
     
