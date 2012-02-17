@@ -254,6 +254,9 @@ void marching_cubes_update() {
   
 }
 
+static float lview_matrix[16];
+static float lproj_matrix[16];
+
 void marching_cubes_render(bool wireframe, camera* c, light* l) {
   
   const int full_size = width * height * depth;
@@ -301,8 +304,11 @@ void marching_cubes_render(bool wireframe, camera* c, light* l) {
   GLint camera_position_u = glGetUniformLocation(*metaballs, "camera_position");
   glUniform3f(camera_position_u, c->position.x, c->position.y, c->position.z);
   
-  float lproj_matrix[16]; m44_to_array(light_view_matrix(l), lproj_matrix);
-  float lview_matrix[16]; m44_to_array(light_proj_matrix(l), lview_matrix);
+  matrix_4x4 lviewm = light_view_matrix(l);
+  matrix_4x4 lprojm = light_proj_matrix(l);
+  
+  m44_to_array(lviewm, lview_matrix);
+  m44_to_array(lprojm, lproj_matrix);
   
   GLint lproj_matrix_u = glGetUniformLocation(*metaballs, "light_proj");
   glUniformMatrix4fv(lproj_matrix_u, 1, 0, lproj_matrix);
@@ -316,8 +322,9 @@ void marching_cubes_render(bool wireframe, camera* c, light* l) {
   glEnable(GL_TEXTURE_2D);
   glUniform1i(glGetUniformLocation(*metaballs, "env_map"), 0);
   
+  texture* shadow_map = shadow_mapper_depth_texture();
   glActiveTexture(GL_TEXTURE0 + 1);
-  glBindTexture(GL_TEXTURE_2D, *shadow_mapper_depth_texture());
+  glBindTexture(GL_TEXTURE_2D, *shadow_map);
   glEnable(GL_TEXTURE_2D);
   glUniform1i(glGetUniformLocation(*metaballs, "shadow_map"), 1);
   

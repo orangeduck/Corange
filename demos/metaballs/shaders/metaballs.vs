@@ -8,5 +8,5 @@ void main() {
   uvs = gl_MultiTexCoord0.xy;
   normal = normals.xyz;
   position = gl_Vertex;
-  gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
+  gl_Position = gl_ModelViewProjectionMatrix * position;
 }

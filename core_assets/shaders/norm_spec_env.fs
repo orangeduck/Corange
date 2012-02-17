@@ -110,5 +110,4 @@ void main() {
   
   gl_FragColor.rgb = to_gamma(diffuse + ambient + specular);
   gl_FragColor.a = diffuse_a.a;
-
 }
