@@ -20,7 +20,7 @@
 		$ make
 
 		To compile on Linux you need to install SDL1.2. Then you should run "make linux"
-
+		
 		$ sudo apt-get install libsdl1.2-dev
 		$ make linux
 		
@@ -46,7 +46,7 @@
 	
 		This is still mainly a personal project and so there are going to be lots of bugs, unfinished features and messy bits of code. The engine is heavily WIP and subject to sweeping changes. It isn't really viable to use without also being part of the project development and in communication with me. Rather than a full game engine like Unity, Corange is more of a framework and gives you access to features at about the same level as XNA.
 		
-		Still, I very much welcome help, and if the project appeals to you here are a couple of quick things that might help get you started.
+		Still, it is a great excuse to practise your C and I very much welcome help. If the project appeals to you here are a couple of quick things that might help get you started.
 		
 			* First take a look at the demos. These give a brief overview of how Corange can be used. The platformer demo is probably the most commented.
 			

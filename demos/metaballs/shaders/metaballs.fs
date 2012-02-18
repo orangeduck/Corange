@@ -36,9 +36,9 @@ void main() {
   
   vec3 half_vector = normalize(light_dir + camera_dir); 
   float n_dot_h = max( dot( normal, half_vector ) , 0.0);
-  vec3 spec = 1.0 * pow( n_dot_h, 75 );
+  vec3 spec = 5.0 * pow( n_dot_h, 75 );
   
-  float light = clamp(dot(light_dir, normal) + 1.25, 0.0, 1.0);
+  float light = 2 * clamp(dot(light_dir, normal) + 1.25, 0.0, 1.0);
   
   gl_FragColor = vec4(shadow * light * color + shadow * spec, 1.0);
 }

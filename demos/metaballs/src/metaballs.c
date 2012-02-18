@@ -42,7 +42,8 @@ void metaballs_init() {
   light* sun = entity_new("sun", light);
   sun->position = v3(50,40,50);
   sun->ambient_color = v3(0.5, 0.5, 0.5);
-  sun->diffuse_color = v3(0.75, 0.75, 0.75);
+  sun->diffuse_color = v3_mul(v3_one(), 2);
+  sun->specular_color = v3_mul(v3_one(), 5);
   light_set_type(sun, light_type_spot);  
   
   shadow_mapper_init(sun);  

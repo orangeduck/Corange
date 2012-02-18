@@ -10,10 +10,10 @@
 #include "platformer.h"
 
 /* Some game state variables */
-static level* current_level = NULL;
+static level* current_level;
 static vector2 camera_position;
-static int level_score = 0;
-static float level_time = 0.0;
+static int level_score;
+static float level_time;
 
 /* We store all the coin positions here */
 #define COIN_COUNT 45
@@ -54,45 +54,33 @@ static void reset_game() {
   }
   
   /* Deactivate victory and new game UI elements */
-  ui_rectangle* victory_rect = ui_elem_get("victory_rect");
-  ui_text* victory_text = ui_elem_get("victory_text");
-  ui_rectangle* new_game_rect = ui_elem_get("new_game_rect");
-  ui_text* new_game_text = ui_elem_get("new_game_text");
+  ui_button* victory = ui_elem_get("victory");
+  ui_button* new_game = ui_elem_get("new_game");
   
-  victory_rect->active = false;
-  victory_text->active = false;
-  new_game_rect->active = false;
-  new_game_text->active = false;
-  
+  victory->active = false;
+  new_game->active = false;
 }
 
 /* This is an event we attach to the audio button */
-static bool disable_audio_pressed = false;
-static void disable_audio(ui_rectangle* rect, SDL_Event event) {
+static void disable_audio(ui_button* b, SDL_Event event) {
   
-  /* On click down the button changes color */
   if (event.type == SDL_MOUSEBUTTONDOWN) {
     
-    if (ui_rectangle_contains_position(rect, v2(event.motion.x, event.motion.y))) {
-      disable_audio_pressed = true;
-      rect->color = v4(0.5, 0.5, 0.5, 1);
+    if (ui_button_contains_position(b, v2(event.motion.x, event.motion.y))) {
+      b->pressed = true;
     }
   
-  /* On click up it disables/enabled the audio and changes back */
   } else if (event.type == SDL_MOUSEBUTTONUP) {
     
-    if (disable_audio_pressed) {
-      disable_audio_pressed = false;
-      rect->color = v4_black();
+    if (b->pressed) {
+      b->pressed = false;
       
       if (audio_mixer_enabled()) {
         audio_mixer_disable();
-        ui_text* audio_text = ui_elem_get("audio_text");
-        ui_text_update_string(audio_text, "Enable Audio");
+        ui_button_set_label(b, "Enable Audio");
       } else {
         audio_mixer_enable();
-        ui_text* audio_text = ui_elem_get("audio_text");
-        ui_text_update_string(audio_text, "Disable Audio");
+        ui_button_set_label(b, "Disable Audio");
       }
       
     }
@@ -100,23 +88,18 @@ static void disable_audio(ui_rectangle* rect, SDL_Event event) {
 }
 
 /* This is an event we attach to the new game button */
-static bool new_game_pressed = false;
-static void new_game(ui_rectangle* rect, SDL_Event event) {
+static void new_game(ui_button* b, SDL_Event event) {
   
-  /* On click down the button changes color */
   if (event.type == SDL_MOUSEBUTTONDOWN) {
     
-    if (ui_rectangle_contains_position(rect, v2(event.motion.x, event.motion.y))) {
-      new_game_pressed = true;
-      rect->color = v4(0.5, 0.5, 0.5, 1);
+    if (ui_button_contains_position(b, v2(event.motion.x, event.motion.y))) {
+      b->pressed = true;
     }
   
-  /* On click up it resets the game */
   } else if (event.type == SDL_MOUSEBUTTONUP) {
     
-    if (new_game_pressed) {
-      new_game_pressed = false;
-      rect->color = v4_black();
+    if (b->pressed) {
+      b->pressed = false;
       reset_game();
     }
   }
@@ -137,89 +120,47 @@ void platformer_init() {
   entity_manager_handler(character, character_new, character_delete);
   entity_manager_handler(coin, coin_new, coin_delete);
   
-  /* Create out main character */
+  /* Create our main character */
   character* main_char = entity_new("main_char", character);
   
   /* Add some UI elements */
-  ui_rectangle* framerate_rect = ui_elem_new("framerate_rect", ui_rectangle);
-  framerate_rect->top_left = v2(10, 10);
-  framerate_rect->bottom_right = v2(40, 35);
-  framerate_rect->color = v4_black();
-  framerate_rect->border_color = v4_white();
-  framerate_rect->border_size = 1;
+  ui_button* framerate = ui_elem_new("framerate", ui_button);
+  ui_button_move(framerate, v2(10,10));
+  ui_button_resize(framerate, v2(30,25));
+  ui_button_set_label(framerate, "");
+  ui_button_disable(framerate);
   
-  ui_text* framerate_text = ui_elem_new("framerate_text", ui_text);
-  framerate_text->position = v2(17, 15);
-  framerate_text->color = v4_white();
-  ui_text_update_string(framerate_text, "framerate");
+  ui_button* score = ui_elem_new("score", ui_button);
+  ui_button_move(score, v2(50, 10));
+  ui_button_resize(score, v2(120, 25));
+  ui_button_set_label(score, "Score 000000");
+  ui_button_disable(score);
   
-  ui_rectangle* audio_rect = ui_elem_new("audio_rect", ui_rectangle);
-  audio_rect->top_left = v2(50, 10);
-  audio_rect->bottom_right = v2(170, 35);
-  audio_rect->color = v4_black();
-  audio_rect->border_color = v4_white();
-  audio_rect->border_size = 1;
+  ui_button* time = ui_elem_new("time", ui_button);
+  ui_button_move(time, v2(180, 10));
+  ui_button_resize(time, v2(110, 25));
+  ui_button_set_label(time, "Time 000000");
+  ui_button_disable(time);
   
-  ui_elem_add_event("audio_rect", disable_audio);
+  ui_button* audio = ui_elem_new("audio", ui_button);
+  ui_button_move(audio, v2(300, 10));
+  ui_button_resize(audio, v2(120, 25));
+  ui_button_set_label(audio, "Disable Audio");
   
-  ui_text* audio_text = ui_elem_new("audio_text", ui_text);
-  audio_text->position = v2(60, 15);
-  audio_text->color = v4_white();
-  ui_text_update_string(audio_text, "Disable Audio");
+  ui_elem_add_event("audio", disable_audio);
   
-  ui_rectangle* score_rect = ui_elem_new("score_rect", ui_rectangle);
-  score_rect->top_left = v2(180, 10);
-  score_rect->bottom_right = v2(300, 35);
-  score_rect->color = v4_black();
-  score_rect->border_color = v4_white();
-  score_rect->border_size = 1;
+  ui_button* victory = ui_elem_new("victory", ui_button);
+  ui_button_move(victory, v2(365, 200));
+  ui_button_resize(victory, v2(70, 25));
+  ui_button_set_label(victory, "Victory!");
+  ui_button_disable(victory);
   
-  ui_text* score_text = ui_elem_new("score_text", ui_text);
-  score_text->position = v2(190, 15);
-  score_text->color = v4_white();
-  ui_text_update_string(score_text, "Score 000000");
+  ui_button* new_game_but = ui_elem_new("new_game", ui_button);
+  ui_button_move(new_game_but, v2(365, 230));
+  ui_button_resize(new_game_but, v2(70, 25));
+  ui_button_set_label(new_game_but, "New Game");
   
-  ui_rectangle* time_rect = ui_elem_new("time_rect", ui_rectangle);
-  time_rect->top_left = v2(310, 10);
-  time_rect->bottom_right = v2(420, 35);
-  time_rect->color = v4_black();
-  time_rect->border_color = v4_white();
-  time_rect->border_size = 1;
-  
-  ui_text* time_text = ui_elem_new("time_text", ui_text);
-  time_text->position = v2(320, 15);
-  time_text->color = v4_white();
-  ui_text_update_string(time_text, "Time 000000");
-  
-  ui_rectangle* victory_rect = ui_elem_new("victory_rect", ui_rectangle);
-  victory_rect->top_left = v2(365, 200);
-  victory_rect->bottom_right = v2(435, 225);
-  victory_rect->color = v4_black();
-  victory_rect->border_color = v4_white();
-  victory_rect->border_size = 1;
-  victory_rect->active = false;
-  
-  ui_text* victory_text = ui_elem_new("victory_text", ui_text);
-  victory_text->position = v2(370, 205);
-  victory_text->color = v4_white();
-  victory_text->active = false;
-  ui_text_update_string(victory_text, "Victory!");
-  
-  ui_rectangle* new_game_rect = ui_elem_new("new_game_rect", ui_rectangle);
-  new_game_rect->top_left = v2(365, 230);
-  new_game_rect->bottom_right = v2(435, 255);
-  new_game_rect->color = v4_black();
-  new_game_rect->border_color = v4_white();
-  new_game_rect->border_size = 1;
-  new_game_rect->active = false;
-  
-  ui_text* new_game_text = ui_elem_new("new_game_text", ui_text);
-  new_game_text->position = v2(370, 235);
-  new_game_text->color = v4_white();
-  new_game_text->active = false;
-  ui_text_update_string(new_game_text, "New Game");
-  
-  ui_elem_add_event("new_game_rect", new_game);
+  ui_elem_add_event("new_game", new_game);
   
   /* Set volume to something more reasonable */
   audio_mixer_set_volume(0.1);
@@ -370,24 +311,20 @@ static void collision_detection_coins() {
       level_score += 10;
       
       /* Update the ui text */
-      ui_text* score_text = ui_elem_get("score_text");
-      sprintf(score_text->string, "Score %06i", level_score);
-      ui_text_update_properties(score_text);
+      ui_button* score = ui_elem_get("score");
+      sprintf(score->label->string, "Score %06i", level_score);
+      ui_text_update_properties(score->label);
     }
   }
   
-  ui_rectangle* victory_rect = ui_elem_get("victory_rect");
+  ui_button* victory = ui_elem_get("victory");
   
   /* if all the coins are gone and the victory rectangle isn't disaplayed then show it */
-  if ((entity_type_count(coin) == 0) && (!victory_rect->active)) {
-    ui_rectangle* victory_rect = ui_elem_get("victory_rect");
-    victory_rect->active = true;
-    ui_text* victory_text = ui_elem_get("victory_text");
-    victory_text->active = true;
-    ui_rectangle* new_game_rect = ui_elem_get("new_game_rect");
-    new_game_rect->active = true;
-    ui_text* new_game_text = ui_elem_get("new_game_text");
-    new_game_text->active = true;
+  if ((entity_type_count(coin) == 0) && (!victory->active)) {
+    ui_button* victory = ui_elem_get("victory");
+    ui_button* new_game = ui_elem_get("new_game");
+    victory->active = true;
+    new_game->active = true;
   }
   
 }
@@ -421,16 +358,16 @@ void platformer_update() {
   camera_position = v2(main_char->position.x, -main_char->position.y);
   
   /* Update the framerate text */
-  ui_text* framerate_text = ui_elem_get("framerate_text");
-  ui_text_update_string(framerate_text, frame_rate_string());
+  ui_button* framerate = ui_elem_get("framerate");
+  ui_button_set_label(framerate, frame_rate_string());
   
   /* Update the time text */
-  ui_rectangle* victory_rect = ui_elem_get("victory_rect");
-  if (!victory_rect->active) {
+  ui_button* victory = ui_elem_get("victory");
+  if (!victory->active) {
     level_time += frame_time();
-    ui_text* time_text = ui_elem_get("time_text");
-    sprintf(time_text->string, "Time %06i", (int)level_time);
-    ui_text_update_properties(time_text);
+    ui_button* time = ui_elem_get("time");
+    sprintf(time->label->string, "Time %06i", (int)level_time);
+    ui_text_update_properties(time->label);
   }
   
 }

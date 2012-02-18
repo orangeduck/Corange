@@ -614,28 +614,6 @@ static float best_collision_time(float t0, float t1, float timestep) {
   return time;
 }
 
-/*
-  First, add object radius to target radius.
-  We now consider object as a ray.
-  
-  Shift target to origin (also shifting ray obviously). This simplifies things.
-  Point intersects with target when.
-  
-  p dot p = r*r
-  p = O + t * V
-  (O + t*V) dot (O + t*V) = r*r
-  
-  expands to quadratic in the form A^2 + B + C = 0 where
-  
-  A = (V dot V)
-  B = 2(V dot O)
-  C = (O dot O) - r*r
-  
-  Solutions given by: ( -B +-sqrt(B*B - 4*A*C) ) / 2A
-  
-  And if the descriminate (B*B - 4*A*C) < 0 we know as an early out that the ray has missed the sphere.
-*/
-
 void sphere_collide_sphere(collision* out, sphere object, vector3 object_velocity, sphere target, float timestep) {
   
   float r = object.radius + target.radius;
@@ -684,83 +662,24 @@ void sphere_collide_box(collision* out, sphere object, vector3 object_velocity, 
   
 
 }
-
-/*
-  Time for collision between plane and sphere
-  
-  Translate sphere to origin, and obviously also translate plane.
-  
-  PlaneDistance(p) = N dot p + P
-  
-  PlaneDistance(P0 + t * V) = r
-  N dot (P0 + t * V) + P = r
-  (N dot P0) + t * (N dot V) + P = r
-  t * (N dot V) + PlaneDistance(P0) = r
-  
-  t = (r - PlaneDistance(P0)) / N dot V
-  
-  We can get two versions of t - t0 for when r is positive and t1 for when r is negative.
-  
-  If both t are outside range 0..time_step we know there is no collision.
-  
-  Otherwise we have a collision sometime between t0..t1
-  
-  -------------------------------------------
-  
-  Once we know when/where it intersects with plane we can see if the point is in the middle of the triangle.
-  This can be done by making three planes positioned along the edges of the triangle.
-  
-  Cross product edge vector and normal to get plane normal. Plane position is just one of the verts on edge.
-  
-  If point is not inside triangle we need to test intersection for edges and verts.
-  
-  --------------------------------------------
-  
-  First test against verticies. This is easy and identical to sphere-sphere.
-  
-  We consider object as a ray.
-  
-  Shift vertex to origin (also shifting ray obviously). This simplifies things.
-  Point intersects with target when.
-  
-  p dot p = r*r
-  p = O + t * V
-  (O + t*V) dot (O + t*V) = r*r
-  
-  expands to quadratic in the form A^2 + B + C = 0 where
-  
-  A = (V dot V)
-  B = 2(V dot O)
-  C = (O dot O) - r*r
-  
-  Solutions given by: ( -B +-sqrt(B*B - 4*A*C) ) / 2A
-  
-  And if the descriminate (B*B - 4*A*C) < 0 we know as an early out that the ray has missed the sphere.
-  
-  --------------------------------------------
-  
-  Now to collide against an edge. First we collide against the infinite line.
-  If a collision occurs then we need to test if it is within the line segment.
-  
-  
-*/
-
+    
 static bool point_in_triangle(vector3 point, vector3 normal, vector3 v0, vector3 v1, vector3 v2) {
   
-  vector3 e0 = v3_sub(v1, v0);
-  vector3 e1 = v3_sub(v2, v1);
-  vector3 e2 = v3_sub(v0, v2);
-  
-  vector3 n0 = v3_normalize(v3_cross(e0, normal));
-  vector3 n1 = v3_normalize(v3_cross(e1, normal));
-  vector3 n2 = v3_normalize(v3_cross(e2, normal));
-  
-  if (!point_behind_plane(point, plane_new(v0, n0))) { return false; }
-  if (!point_behind_plane(point, plane_new(v1, n1))) { return false; }
-  if (!point_behind_plane(point, plane_new(v2, n2))) { return false; }
-  
-  return true;
-  
+  vector3 d0 = v3_sub(v2, v0);
+  vector3 d1 = v3_sub(v1, v0);
+  vector3 d2 = v3_sub(point, v0);
+
+  float dot00 = v3_dot(d0, d0);
+  float dot01 = v3_dot(d0, d1);
+  float dot02 = v3_dot(d0, d2);
+  float dot11 = v3_dot(d1, d1);
+  float dot12 = v3_dot(d1, d2);
+
+  float inv_dom = 1.0f / (dot00 * dot11 - dot01 * dot01);
+  float u = (dot11 * dot02 - dot01 * dot12) * inv_dom;
+  float v = (dot00 * dot12 - dot01 * dot02) * inv_dom;
+
+  return (u >= 0.0f) && (v >= 0.0f) && (u + v < 1.0f);
 }
 
 static void sphere_collide_vertex(collision* out, sphere object, vector3 object_velocity, vector3 vertex, float timestep) {
@@ -869,10 +788,10 @@ static int sphere_plane_location(sphere object, vector3 object_velocity, plane p
   float t0 = ( object.radius - dist) / angle;
   float t1 = (-object.radius - dist) / angle;
   
-  if ((t0 < 0) && (t1 < 0)) {
+  if (max(t0, t1) < 0) {
     return (angle < 0) ? behind : before;
   }
-  if ((t0 > timestep) && (t1 > timestep)) {
+  if (min(t0, t1) > timestep) {
     return (angle < 0) ? before : behind;
   }
   
@@ -926,38 +845,36 @@ void sphere_collide_mesh(collision* out, sphere object, vector3 object_velocity,
     float t0 = ( object.radius - dist) / angle;
     float t1 = (-object.radius - dist) / angle;
     
-    if (((t0 < 0) || (t0 > timestep)) &&
-        ((t1 < 0) || (t1 > timestep))) {
-      goto sweep_test;
-    }
+    if (((t0 > 0) && (t0 < timestep)) ||
+        ((t1 > 0) && (t1 < timestep))) {
     
-    /* Test plane collision inside triangle */
+      /* Test plane collision inside triangle */
+      
+      float time = best_collision_time(t0, t1, timestep);
+      
+      vector3 collision_point = v3_add(object.center, v3_mul(object_velocity, time - 0.001));
+      vector3 surface_point = v3_add(collision_point, v3_mul(norm, -object.radius));
+      
+      if ((time < out->time) && point_in_triangle(surface_point, norm, v0, v1, v2)) {
+        out->collided = true;
+        out->time = time;
+        out->object_position = collision_point;
+        out->surface_normal = norm;
+        out->surface_position = surface_point;
+        continue;
+      }
     
-    float time = best_collision_time(t0, t1, timestep);
-    
-    vector3 collision_point = v3_add(object.center, v3_mul(object_velocity, time - 0.001));
-    vector3 surface_point = v3_add(collision_point, v3_mul(norm, -object.radius));
-    
-    if ((time < out->time) && point_in_triangle(surface_point, norm, v0, v1, v2)) {
-      out->collided = true;
-      out->time = time;
-      out->object_position = collision_point;
-      out->surface_normal = norm;
-      out->surface_position = surface_point;
-      continue;
     }
     
     /* Sweep test */
     
-    sweep_test:
+    sphere_collide_edge(out, object, object_velocity, v0, v1, timestep);
+    sphere_collide_edge(out, object, object_velocity, v1, v2, timestep);
+    sphere_collide_edge(out, object, object_velocity, v2, v0, timestep);
     
     sphere_collide_vertex(out, object, object_velocity, v0, timestep);
     sphere_collide_vertex(out, object, object_velocity, v1, timestep);
     sphere_collide_vertex(out, object, object_velocity, v2, timestep);
-    
-    sphere_collide_edge(out, object, object_velocity, v0, v1, timestep);
-    sphere_collide_edge(out, object, object_velocity, v1, v2, timestep);
-    sphere_collide_edge(out, object, object_velocity, v2, v0, timestep);
     
   }
   

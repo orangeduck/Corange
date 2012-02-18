@@ -59,5 +59,5 @@ void main() {
   color = mix(color, gradient_lookup(g_two, first.x * 0.5), second.y * 2.0);
   color = mix(color, gradient_lookup(g_second, first.y * 1.0), second.x * second.y);
   
-  gl_FragColor = vec4(color * 2, 1.0) * mix(pow(total, 2), 0.5, 0.1);
+  gl_FragColor = vec4(color * 3, 1.0) * mix(pow(total, 2), 0.5, 0.0);
 }

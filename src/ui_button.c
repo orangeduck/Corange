@@ -56,6 +56,12 @@ void ui_button_move(ui_button* b, vector2 pos) {
   ui_text_update_properties(b->label);
 }
 
+void ui_button_resize(ui_button* b, vector2 size) {
+  
+  b->bottom_right = v2_add(b->top_left, size);
+  
+}
+
 void ui_button_set_label(ui_button* b, char* label) {
   
   ui_text_update_string(b->label, label);
@@ -140,6 +146,14 @@ void ui_button_render(ui_button* b) {
 
 void ui_button_set_texture(ui_button* b, texture* t) {
   b->texture = t;
+}
+
+void ui_button_disable(ui_button* b) {
+  b->enabled = false;
+}
+
+void ui_button_enable(ui_button* b) {
+  b->enabled = true;
 }
 
 bool ui_button_contains_position(ui_button* b, vector2 pos) {

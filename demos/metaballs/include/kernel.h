@@ -20,7 +20,9 @@ void kernel_program_delete(kernel_program* k);
 kernel kernel_program_get_kernel(kernel_program* kp, char* kernel_name);
 
 void kernel_set_argument(kernel k, int arg_num, int arg_type_size, void* value);
+
 void kernel_run(kernel k, int worker_count);
+
 void kernel_delete(kernel k);
 
 kernel_memory kernel_memory_allocate(int size);

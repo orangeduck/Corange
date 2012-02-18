@@ -7,34 +7,6 @@ static int mouse_y;
 static int mouse_down;
 static int mouse_right_down;
 
-static bool wireframe = false;
-
-static bool wireframe_button_pressed = false;
-static void switch_wireframe(ui_rectangle* rect, SDL_Event event) {
-  
-  if (event.type == SDL_MOUSEBUTTONDOWN) {
-    
-    if (ui_rectangle_contains_position(rect, v2(event.motion.x, event.motion.y))) {
-      wireframe_button_pressed = true;
-      rect->color = v4(0.5, 0.5, 0.5, 1);
-    }
-  
-  } else if (event.type == SDL_MOUSEBUTTONUP) {
-    
-    if (wireframe_button_pressed) {
-      wireframe_button_pressed = false;
-      rect->color = v4_black();
-      
-      if (wireframe == true) {
-        wireframe = false;
-      } else if (wireframe == false) {
-        wireframe = true;
-      }
-      
-    }
-  }
-}
-
 void sea_init() {
   
   viewport_set_dimensions(1280, 720);
@@ -46,11 +18,19 @@ void sea_init() {
   
   light* sun = entity_new("sun", light);
   light_set_type(sun, light_type_spot);
-  sun->position = v3(20,30,-20);
+  sun->position = v3(20,23,16);
   sun->ambient_color = v3(0.5, 0.5, 0.5);
-  sun->diffuse_color = v3(0.75, 0.75, 0.75);
-  sun->power = 1.25;
-  sun->falloff = 0;
+  sun->diffuse_color = v3(1.0,  0.894, 0.811);
+  sun->specular_color = v3_mul(v3(1.0,  0.894, 0.811), 4);
+  sun->power = 5;
+  
+  light* backlight = entity_new("backlight", light);
+  light_set_type(backlight, light_type_point);
+  backlight->position = v3(-22,10,-13);
+  backlight->ambient_color = v3(0.2, 0.2, 0.2);
+  backlight->diffuse_color = v3(0.729, 0.729, 1.0);
+  backlight->specular_color = v3_mul(v3(0.729, 0.729, 1.0), 1);
+  backlight->power = 2;
   
   shadow_mapper_init(sun);  
   
@@ -59,6 +39,7 @@ void sea_init() {
   forward_renderer_set_shadow_light(sun);
   forward_renderer_set_shadow_texture( shadow_mapper_depth_texture() );
   forward_renderer_add_light(sun);
+  forward_renderer_add_light(backlight);
   
   load_folder("./resources/");
    
@@ -106,19 +87,11 @@ void sea_init() {
   center_sphere->renderable = asset_get("./resources/ball.obj");
   center_sphere->collision_body = collision_body_new_sphere(sphere_new(v3_zero(), 1.0f));
   
-  ui_rectangle* wireframe_rect = ui_elem_new("wireframe_rect", ui_rectangle);
-  wireframe_rect->top_left = v2(10,10);
-  wireframe_rect->bottom_right = v2(100, 35);
-  wireframe_rect->color = v4_black();
-  wireframe_rect->border_color = v4_white();
-  wireframe_rect->border_size = 1;
-  
-  ui_elem_add_event("wireframe_rect", switch_wireframe);
-  
-  ui_text* wireframe_text = ui_elem_new("wireframe_text", ui_text);
-  wireframe_text->position = v2(20, 15);
-  wireframe_text->color = v4_white();
-  ui_text_update_string(wireframe_text, "Wireframe");
+  ui_button* framerate = ui_elem_new("framerate", ui_button);
+  ui_button_move(framerate, v2(10,10));
+  ui_button_resize(framerate, v2(30,25));
+  ui_button_set_label(framerate, "FRAMERATE");
+  ui_button_disable(framerate);
   
 }
 
@@ -131,10 +104,10 @@ void sea_update() {
   
   wave_time += frame_time();
   static_object* corvette = entity_get("corvette");
-  corvette->position.y = (sin(wave_time) + 1) / 2;
-  corvette->rotation = v4_quaternion_pitch(sin(wave_time * 1.123) / 50);
-  corvette->rotation = v4_quaternion_mul(corvette->rotation, v4_quaternion_yaw(sin(wave_time * 1.254) / 25));
-  corvette->rotation = v4_quaternion_mul(corvette->rotation, v4_quaternion_roll(sin(wave_time * 1.355) / 100));
+  //corvette->position.y = (sin(wave_time) + 1) / 2;
+  //corvette->rotation = v4_quaternion_pitch(sin(wave_time * 1.123) / 50);
+  //corvette->rotation = v4_quaternion_mul(corvette->rotation, v4_quaternion_yaw(sin(wave_time * 1.254) / 25));
+  //corvette->rotation = v4_quaternion_mul(corvette->rotation, v4_quaternion_roll(sin(wave_time * 1.355) / 100));
   
   static_object* center_sphere = entity_get("center_sphere");
   
@@ -171,6 +144,9 @@ void sea_update() {
   mouse_x = 0;
   mouse_y = 0;
   
+  ui_button* framerate = ui_elem_get("framerate");
+  ui_button_set_label(framerate, frame_rate_string());
+  
 }
 
 void sea_render() {
@@ -178,6 +154,7 @@ void sea_render() {
   static_object* s_seaplane = entity_get("seaplane");
   static_object* s_corvette = entity_get("corvette");
   light* sun = entity_get("sun");
+  light* backlight = entity_get("backlight");
   
   shadow_mapper_begin();
   shadow_mapper_render_static(s_corvette);
@@ -186,14 +163,7 @@ void sea_render() {
   forward_renderer_begin();
   
   forward_renderer_render_static(s_corvette);
-  
-  if(wireframe) {
-    glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-  }  
   forward_renderer_render_static(s_seaplane);
-  if(wireframe) {
-    glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-  }
   
   physics_object* balls[100];
   int num_balls;
@@ -206,6 +176,7 @@ void sea_render() {
   forward_renderer_render_static(center_sphere);
   
   forward_renderer_render_light(sun);
+  forward_renderer_render_light(backlight);
   
   forward_renderer_end();
   
@@ -219,7 +190,6 @@ void sea_event(SDL_Event event) {
 
   switch(event.type){
   case SDL_KEYUP:
-    if (event.key.keysym.sym == SDLK_w) { if(wireframe == 1){wireframe = 0;} else { wireframe = 1;} }
   
     if (event.key.keysym.sym == SDLK_SPACE) {
       
@@ -248,10 +218,8 @@ void sea_event(SDL_Event event) {
   break;
   
   case SDL_MOUSEMOTION:
-    if (!wireframe_button_pressed) {
-      mouse_x = event.motion.xrel;
-      mouse_y = event.motion.yrel;
-    }
+    mouse_x = event.motion.xrel;
+    mouse_y = event.motion.yrel;
   break;
   }
 

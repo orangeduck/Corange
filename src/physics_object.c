@@ -66,21 +66,21 @@ void physics_object_collide_static(physics_object* po, static_object* so, float 
     error("Cannot collide objects. One or more has no collision body - First: %p Second: %p).", po_col, so_col);
   }
   
+  matrix_4x4 po_world = m44_world(po->position, po->scale, po->rotation);
+  matrix_4x4 so_world = m44_world(so->position, so->scale, so->rotation);
+  
+  sphere po_sphere = sphere_transform(po_col->collision_sphere, po_world);
+  sphere so_sphere = sphere_transform(so_col->collision_sphere, so_world);
+  
+  box po_box = box_transform(po_col->collision_box, po_world);
+  box so_box = box_transform(so_col->collision_box, so_world);
+  
   collision c;
   int col_count = 0;
-  while(col_count < 5) {
+  while(col_count < 2) {
     
-    c.collided = false; c.time = timestep;
-    
-    
-    matrix_4x4 po_world = m44_world(po->position, po->scale, po->rotation);
-    matrix_4x4 so_world = m44_world(so->position, so->scale, so->rotation);
-    
-    sphere po_sphere = sphere_transform(po_col->collision_sphere, po_world);
-    sphere so_sphere = sphere_transform(so_col->collision_sphere, so_world);
-    
-    box po_box = box_transform(po_col->collision_box, po_world);
-    box so_box = box_transform(so_col->collision_box, so_world);
+    c.collided = false;
+    c.time = timestep;
     
     if (!sphere_contains_sphere(so_sphere, po_sphere)) break;
     

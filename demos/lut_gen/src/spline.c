@@ -266,9 +266,6 @@ color_curves* acv_load_file(char* filename) {
   int version = contents[0] | contents[1];
   int count = contents[2] | contents[3];
   
-  debug("Version: %i", version);
-  debug("Count: %i", count);
-  
   if (count != 5) {
     error("acv file %s. Doesn't contain 5 curves.", filename);
   }

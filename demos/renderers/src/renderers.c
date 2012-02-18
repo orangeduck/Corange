@@ -151,54 +151,54 @@ void renderers_init() {
   
   ui_button* framerate = ui_elem_new("framerate", ui_button);
   ui_button_move(framerate, v2(10,10));
+  ui_button_resize(framerate, v2(30,25));
   ui_button_set_label(framerate, "FRAMERATE");
-  framerate->bottom_right.x = 40;
-  framerate->enabled = false;
+  ui_button_disable(framerate);
   
   ui_button* renderer = ui_elem_new("renderer", ui_button);
   ui_button_move(renderer, v2(10, viewport_height() - 35));
+  ui_button_resize(renderer, v2(75,25));
   ui_button_set_label(renderer, "Renderer");
-  renderer->enabled = false;
-  renderer->bottom_right.x = 85;
+  ui_button_disable(renderer);
   
   ui_button* forward_renderer = ui_elem_new("forward_renderer", ui_button);
   ui_button_move(forward_renderer, v2(95, viewport_height() - 35));
+  ui_button_resize(forward_renderer, v2(65,25));
   ui_button_set_label(forward_renderer, "Forward");
-  forward_renderer->bottom_right.x = 160;
   
   ui_button* deferred_renderer = ui_elem_new("deferred_renderer", ui_button);
   ui_button_move(deferred_renderer, v2(170, viewport_height() - 35));
+  ui_button_resize(deferred_renderer, v2(75,25));
   ui_button_set_label(deferred_renderer, "Deferred");
-  deferred_renderer->bottom_right.x = 245;
-  
-  ui_button* object = ui_elem_new("object", ui_button);
-  ui_button_move(object, v2(10, viewport_height() - 70));
-  ui_button_set_label(object, "Object");
-  object->enabled = false;
-  object->bottom_right.x = 70;
-  
-  ui_button* piano = ui_elem_new("piano", ui_button);
-  ui_button_move(piano, v2(80, viewport_height() - 70));
-  ui_button_set_label(piano, "Piano");
-  piano->bottom_right.x = 130;
-  
-  ui_button* cello = ui_elem_new("cello", ui_button);
-  ui_button_move(cello, v2(140, viewport_height() - 70));
-  ui_button_set_label(cello, "Cello");
-  cello->bottom_right.x = 190;
-  
-  ui_button* imrod = ui_elem_new("imrod", ui_button);
-  ui_button_move(imrod, v2(200, viewport_height() - 70));
-  ui_button_set_label(imrod, "Imrod");
-  imrod->bottom_right.x = 250;
-  
-  ui_button* dino = ui_elem_new("dino", ui_button);
-  ui_button_move(dino, v2(260, viewport_height() - 70));
-  ui_button_set_label(dino, "Dino");
-  dino->bottom_right.x = 300;
   
   ui_elem_add_event("forward_renderer", switch_renderer_event);
   ui_elem_add_event("deferred_renderer", switch_renderer_event);
+  
+  ui_button* object = ui_elem_new("object", ui_button);
+  ui_button_move(object, v2(10, viewport_height() - 70));
+  ui_button_resize(object, v2(60,25));
+  ui_button_set_label(object, "Object");
+  ui_button_disable(object);
+  
+  ui_button* piano = ui_elem_new("piano", ui_button);
+  ui_button_move(piano, v2(80, viewport_height() - 70));
+  ui_button_resize(piano, v2(50,25));
+  ui_button_set_label(piano, "Piano");
+  
+  ui_button* cello = ui_elem_new("cello", ui_button);
+  ui_button_move(cello, v2(140, viewport_height() - 70));
+  ui_button_resize(cello, v2(50,25));
+  ui_button_set_label(cello, "Cello");
+  
+  ui_button* imrod = ui_elem_new("imrod", ui_button);
+  ui_button_move(imrod, v2(200, viewport_height() - 70));
+  ui_button_resize(imrod, v2(50,25));
+  ui_button_set_label(imrod, "Imrod");
+  
+  ui_button* dino = ui_elem_new("dino", ui_button);
+  ui_button_move(dino, v2(260, viewport_height() - 70));
+  ui_button_resize(dino, v2(40,25));
+  ui_button_set_label(dino, "Dino");
   
   ui_elem_add_event("piano", switch_object_event);
   ui_elem_add_event("cello", switch_object_event);
@@ -278,8 +278,6 @@ static bool t_down = false;
 
 void renderers_event(SDL_Event event) {
   
-  ui_event(event);
-  
   camera* cam = entity_get("camera");
   light* sun = entity_get("sun");
   static_object* s_cello = entity_get("cello");
@@ -323,8 +321,6 @@ void renderers_event(SDL_Event event) {
 }
 
 void renderers_update() {
-  
-  ui_update();
   
   camera* cam = entity_get("camera");
   light* sun = entity_get("sun");
@@ -482,9 +478,11 @@ int main(int argc, char **argv) {
         break;
       }
       renderers_event(event);
+      ui_event(event);
     }
     
     renderers_update();
+    ui_update();
     
     renderers_render();
     ui_render();

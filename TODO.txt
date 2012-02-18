@@ -1,6 +1,5 @@
 -- To Finish Demos --
 
-Replace Buttons
 Sea Game - Add depth pass and foam effects? Walk around on moving deck? Proper Skybox. Bigger waterplane.
 
 -- Tweaks/Cleanup --
@@ -10,6 +9,7 @@ const stuff where needed (including asset stuff)
 Convert skeleton stuff to quaternions - though not sure if I trust my quaternion code. Slerp them nicely.
 Reorganize shaders into component specific and general sections. Make them unload and load correctly on init/finish of components.
 Remove all fixed function stuff inc builtins from all shaders.
+Remove dereferencing from textures and shader programs. Add "handle" function.
 
 -- In the Future --
 
