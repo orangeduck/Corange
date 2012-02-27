@@ -5,7 +5,7 @@ INCS= -I ./include
 CFLAGS= $(INCS) -std=gnu99 -Wall -Werror -Wno-unused -O3 -g
 CFLAGS_LINUX= $(INCS) -std=gnu99 -Wall -Werror -Wno-unused -O3 -g -fPIC
 
-LFLAGS= -g -L ./lib -lmingw32 -lopengl32 -lSDLmain -lSDL -lcomdlg32 -shared
+LFLAGS= -g -L ./lib -lmingw32 -lopengl32 -lSDLmain -lSDL -shared
 LFLAGS_LINUX= -lGL -lSDLmain -lSDL
 
 C_FILES= $(wildcard src/*.c)

@@ -37,10 +37,10 @@ void light_set_type(light* l, int type) {
     l->power = 1;
     l->falloff = 0;
     
-    l->enabled = 1;
-    l->cast_shadows = 0;
+    l->enabled = true;
+    l->cast_shadows = false;
     
-    l->orthographic = 1;
+    l->orthographic = true;
     l->ortho_width = -1;
     l->ortho_height = -1;
     
@@ -58,10 +58,10 @@ void light_set_type(light* l, int type) {
     l->power = 5;
     l->falloff = 0.5;
     
-    l->enabled = 1;
-    l->cast_shadows = 0;
+    l->enabled = true;
+    l->cast_shadows = false;
     
-    l->orthographic = 0;
+    l->orthographic = false;
     l->ortho_width = -1;
     l->ortho_height = -1;
     
@@ -76,13 +76,19 @@ void light_set_type(light* l, int type) {
     
     l->type = light_type_sun;
     
-    l->power = 1;
+    l->position = v3(0,512,0);
+    l->target = v3(512, 0, 512);
+    l->ambient_color = v3_mul(v3(0.8, 0.93, 1.0), 0.6);
+    l->diffuse_color = v3(1.0,  0.937, 0.8);
+    l->specular_color = v3(1.0,  0.894, 0.811);
+    
+    l->power = 1.5;
     l->falloff = 0;
     
-    l->enabled = 1;
-    l->cast_shadows = 1;
+    l->enabled = true;
+    l->cast_shadows = true;
     
-    l->orthographic = 1;
+    l->orthographic = true;
     l->ortho_width = 1024;
     l->ortho_height = 1024;
     
@@ -90,8 +96,8 @@ void light_set_type(light* l, int type) {
     l->aspect_ratio = -1;
     
     l->shadow_color = v3_zero();
-    l->shadow_map_width = 1024;
-    l->shadow_map_height = 1024;
+    l->shadow_map_width = 512;
+    l->shadow_map_height = 512;
   
   } else if (type == light_type_spot) {
     
@@ -100,14 +106,14 @@ void light_set_type(light* l, int type) {
     l->power = 5;
     l->falloff = 0.5;
     
-    l->enabled = 1;
-    l->cast_shadows = 1;
+    l->enabled = true;
+    l->cast_shadows = true;
     
-    l->orthographic = 0;
+    l->orthographic = false;
     l->ortho_width = -1;
     l->ortho_height = -1;
     
-    l->fov = 0.785398163;
+    l->fov = DEFAULT_FOV;
     l->aspect_ratio = 1.0;
     
     l->shadow_color = v3_zero();

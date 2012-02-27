@@ -1,6 +1,7 @@
 #ifndef light_h
 #define light_h
 
+#include "bool.h"
 #include "vector.h"
 #include "matrix.h"
 
@@ -18,11 +19,10 @@ typedef struct {
   
   int type;
   
-  int enabled;
+  bool enabled;
+  bool cast_shadows;
   
-  int cast_shadows;
-  
-  int orthographic;
+  bool orthographic;
   float ortho_width;
   float ortho_height;
   

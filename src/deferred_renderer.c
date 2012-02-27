@@ -443,10 +443,14 @@ void deferred_renderer_begin() {
   glUseProgram(0);
   
   glEnable(GL_DEPTH_TEST);
+  glEnable(GL_CULL_FACE);
   
 }
 
 void deferred_renderer_end() {
+  
+  glDisable(GL_DEPTH_TEST);
+  glDisable(GL_CULL_FACE);
   
   /* Render out ssao */
   
@@ -504,7 +508,6 @@ void deferred_renderer_end() {
   glBindFramebuffer(GL_FRAMEBUFFER, hdr_fbo);
   
   glViewport(0, 0, viewport_width(), viewport_height());
-  glDisable(GL_DEPTH_TEST);
   
   glUseProgram(*SCREEN_PROGRAM);
   
@@ -765,97 +768,57 @@ void deferred_renderer_set_exposure(float exposure) {
   EXPOSURE = exposure;
 }
 
-void deferred_renderer_render_static(static_object* s) {
+void deferred_renderer_render_static(static_object* so) {
 
-  matrix_4x4 r_world_matrix = m44_world( s->position, s->scale, s->rotation );
+  matrix_4x4 r_world_matrix = m44_world( so->position, so->scale, so->rotation );
   m44_to_array(r_world_matrix, WORLD_MATRIX);
   
-  renderable* r = s->renderable;
+  renderable* r = so->renderable;
   
   for(int i=0; i < r->num_surfaces; i++) {
     
     renderable_surface* s = r->surfaces[i];
     if(s->is_rigged) {
-      
-      glUseProgram(*PROGRAM);
-      
-      deferred_renderer_use_material(s->base, PROGRAM);
-      
-      GLsizei stride = sizeof(float) * 24;
-      
-      glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
-          
-      glVertexPointer(3, GL_FLOAT, stride, (void*)0);
-      glEnableClientState(GL_VERTEX_ARRAY);
-      
-      glVertexAttribPointer(NORMAL, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 3));
-      glEnableVertexAttribArray(NORMAL);
-      
-      glVertexAttribPointer(TANGENT, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 6));
-      glEnableVertexAttribArray(TANGENT);
-      
-      glVertexAttribPointer(BINORMAL, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 9));
-      glEnableVertexAttribArray(BINORMAL);
-      
-      glTexCoordPointer(2, GL_FLOAT, stride, (void*)(sizeof(float) * 12));
-      glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-      
-      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
-      glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
-      
-      glDisableClientState(GL_VERTEX_ARRAY);
-      glDisableClientState(GL_TEXTURE_COORD_ARRAY);  
-      
-      glDisableVertexAttribArray(NORMAL);
-      glDisableVertexAttribArray(TANGENT);
-      glDisableVertexAttribArray(BINORMAL);
-      
-      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-      glBindBuffer(GL_ARRAY_BUFFER, 0);
-      
-      glUseProgram(0);
-      
-    } else {
-    
-      glUseProgram(*PROGRAM);
-      
-      deferred_renderer_use_material(s->base, PROGRAM);
-      
-      GLsizei stride = sizeof(float) * 18;
-      
-      glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
-          
-      glVertexPointer(3, GL_FLOAT, stride, (void*)0);
-      glEnableClientState(GL_VERTEX_ARRAY);
-      
-      glVertexAttribPointer(NORMAL, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 3));
-      glEnableVertexAttribArray(NORMAL);
-      
-      glVertexAttribPointer(TANGENT, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 6));
-      glEnableVertexAttribArray(TANGENT);
-      
-      glVertexAttribPointer(BINORMAL, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 9));
-      glEnableVertexAttribArray(BINORMAL);
-      
-      glTexCoordPointer(2, GL_FLOAT, stride, (void*)(sizeof(float) * 12));
-      glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-      
-      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
-      glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
-      
-      glDisableClientState(GL_VERTEX_ARRAY);
-      glDisableClientState(GL_TEXTURE_COORD_ARRAY);  
-      
-      glDisableVertexAttribArray(NORMAL);
-      glDisableVertexAttribArray(TANGENT);
-      glDisableVertexAttribArray(BINORMAL);
-      
-      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-      glBindBuffer(GL_ARRAY_BUFFER, 0);
-      
-      glUseProgram(0);
-    
+      error("Renderable for static object is rigged!");
     }
+    
+    glUseProgram(*PROGRAM);
+    
+    deferred_renderer_use_material(s->base, PROGRAM);
+    
+    GLsizei stride = sizeof(float) * 18;
+    
+    glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
+        
+    glVertexPointer(3, GL_FLOAT, stride, (void*)0);
+    glEnableClientState(GL_VERTEX_ARRAY);
+    
+    glVertexAttribPointer(NORMAL, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 3));
+    glEnableVertexAttribArray(NORMAL);
+    
+    glVertexAttribPointer(TANGENT, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 6));
+    glEnableVertexAttribArray(TANGENT);
+    
+    glVertexAttribPointer(BINORMAL, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 9));
+    glEnableVertexAttribArray(BINORMAL);
+    
+    glTexCoordPointer(2, GL_FLOAT, stride, (void*)(sizeof(float) * 12));
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+    
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
+      glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
+    
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);  
+    
+    glDisableVertexAttribArray(NORMAL);
+    glDisableVertexAttribArray(TANGENT);
+    glDisableVertexAttribArray(BINORMAL);
+    
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    
+    glUseProgram(0);
 
   }
   

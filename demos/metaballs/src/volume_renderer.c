@@ -109,14 +109,12 @@ void volume_renderer_init() {
   glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, blank_byte_texture);
-  SDL_CheckOpenGLError("glTexImage2D");
   
   glGenTextures(1, &stencil_texture);
   glBindTexture(GL_TEXTURE_2D, stencil_texture);
   glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width, height, 0, GL_RED, GL_UNSIGNED_BYTE, blank_stencil_texture);
-  SDL_CheckOpenGLError("glTexImage2D");
   
   k_proj_texture = kernel_memory_from_gltexture2D(proj_texture);
   k_stencil_texture = kernel_memory_from_gltexture2D(stencil_texture);

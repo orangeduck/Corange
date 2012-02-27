@@ -11,27 +11,25 @@ float shadow_amount_soft_pcf25(vec4 light_pos, sampler2D light_depth, float hard
 
 /* End */
 
-const float shadow_bias = 0.0002;
+const float shadow_bias = 0.0001;
 
 float shadow_amount(vec4 light_pos, sampler2D light_depth) {
-
-  float shadow = 1.0;
   
-  light_pos = vec4(light_pos.xyz / light_pos.w, 1);
+  light_pos = light_pos / light_pos.w;
   
   if ((abs(light_pos.x) > 1) || (abs(light_pos.y) > 1) || (abs(light_pos.z) > 1)) {
     return 1.0;
   }
   
-  vec4 shadow_coord = light_pos / 2.0 + 0.5;
-  float our_depth = shadow_coord.z;
-  float shadow_depth = texture2D( light_depth, shadow_coord.xy ).r;
+  light_pos = (light_pos / 2.0) + 0.5;
+  float our_depth = light_pos.z;
+  float shadow_depth = texture2D(light_depth, light_pos.xy).r;
   
   if (our_depth >= shadow_depth + shadow_bias) {
-    shadow = 0.1;
+    return 0.1;
+  } else {
+    return 1.0;
   }
-  
-  return shadow;
 
 }
 

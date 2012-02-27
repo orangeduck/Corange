@@ -70,7 +70,7 @@ renderable_surface* renderable_surface_new(mesh* m) {
   glGenBuffers(1, &s->vertex_vbo);
   glGenBuffers(1, &s->triangle_vbo);
   
-  s->is_rigged = 0;
+  s->is_rigged = false;
   s->num_verticies = m->num_verts;
   s->num_triangles = m->num_triangles;
   
@@ -767,8 +767,10 @@ renderable* smd_load_file(char* filename) {
     smd_mesh->verticies[i] = vertex_list_get(vert_list, i);
   }
   
-  for(int i = 0; i < smd_mesh->num_triangles_3; i++) {
-    smd_mesh->triangles[i] = int_list_get(tri_list, i);
+  for(int i = 0; i < smd_mesh->num_triangles_3; i+=3) {
+    smd_mesh->triangles[i] = int_list_get(tri_list, i+2);
+    smd_mesh->triangles[i+1] = int_list_get(tri_list, i+1);
+    smd_mesh->triangles[i+2] = int_list_get(tri_list, i);
   }
   
   mesh_generate_tangents(smd_mesh);

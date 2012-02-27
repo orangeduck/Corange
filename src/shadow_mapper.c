@@ -5,6 +5,7 @@
 #include "SDL/SDL_local.h"
 
 #include "shader.h"
+#include "camera.h"
 #include "renderable.h"
 #include "viewport.h"
 #include "asset_manager.h"
@@ -21,8 +22,6 @@ static GLuint depth_buffer;
 static GLuint depth_texture;
 
 static light* LIGHT;
-
-static texture* texture_ptr;
 
 static float proj_matrix[16];
 static float view_matrix[16];
@@ -44,18 +43,17 @@ void shadow_mapper_init(light* l) {
   glGenFramebuffers(1, &fbo);
   glBindFramebuffer(GL_FRAMEBUFFER, fbo);
   
-  glGenRenderbuffers(1, &depth_buffer);
-  
   int width = l->shadow_map_width;
   int height = l->shadow_map_height;
   
+  glGenRenderbuffers(1, &depth_buffer);
   glBindRenderbuffer(GL_RENDERBUFFER, depth_buffer);
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width, height);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_buffer);  
   
   glGenTextures(1, &depth_texture);
   glBindTexture(GL_TEXTURE_2D, depth_texture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
@@ -70,7 +68,9 @@ void shadow_mapper_init(light* l) {
 }
 
 void shadow_mapper_finish() {
-
+  
+  texture_delete(texture_ptr);
+  
   glDeleteFramebuffers(1, &fbo);
   
   glDeleteRenderbuffers(1, &depth_buffer);
@@ -78,25 +78,7 @@ void shadow_mapper_finish() {
   
 }
 
-void shadow_mapper_begin() {
-
-  glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-  
-  glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-  glClearDepth(1.0f);
-  glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-  
-  glViewport( 0, 0, LIGHT->shadow_map_width, LIGHT->shadow_map_height);
-  
-  shadow_mapper_setup_camera();
-  
-  glEnable(GL_DEPTH_TEST);
-  glEnable(GL_CULL_FACE);
-  glCullFace(GL_FRONT);
-  
-}
-
-void shadow_mapper_setup_camera() {
+static void shadow_mapper_setup_camera() {
   
   matrix_4x4 viewm = light_view_matrix(LIGHT);
   matrix_4x4 projm = light_proj_matrix(LIGHT);
@@ -108,7 +90,24 @@ void shadow_mapper_setup_camera() {
   glLoadMatrixf(view_matrix);
   
   glMatrixMode(GL_PROJECTION);
-  glLoadMatrixf(proj_matrix);    
+  glLoadMatrixf(proj_matrix);
+  
+}
+
+void shadow_mapper_begin() {
+  
+  glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+  
+  glClearDepth(1.0f);
+  glClear(GL_DEPTH_BUFFER_BIT);
+  
+  glViewport( 0, 0, LIGHT->shadow_map_width, LIGHT->shadow_map_height);
+  
+  shadow_mapper_setup_camera();
+  
+  glEnable(GL_DEPTH_TEST);
+  glEnable(GL_CULL_FACE);
+  glCullFace(GL_FRONT);
   
 }
 
@@ -153,6 +152,10 @@ void shadow_mapper_render_static(static_object* s) {
     
     renderable_surface* s = r->surfaces[i];
     
+    if(s->is_rigged) {
+      error("Static Object is rigged!");
+    }
+    
     float* alpha_test = dictionary_get(s->base->properties, "alpha_test");
     if (alpha_test != NULL) {
       glUniform1f(alpha_test_u, *alpha_test);
@@ -167,40 +170,21 @@ void shadow_mapper_render_static(static_object* s) {
       glBindTexture(GL_TEXTURE_2D, *diffuse_texture);
       glEnable(GL_TEXTURE_2D);
     }
+  
+    GLsizei stride = sizeof(float) * 18;
     
-    if(s->is_rigged) {
+    glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
+        
+    glVertexPointer(3, GL_FLOAT, stride, (void*)0);
+    glEnableClientState(GL_VERTEX_ARRAY);
     
-      GLsizei stride = sizeof(float) * 24;
-      
-      glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
-          
-      glVertexPointer(3, GL_FLOAT, stride, (void*)0);
-      glEnableClientState(GL_VERTEX_ARRAY);
-      
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
-        glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
-      
-      glDisableClientState(GL_VERTEX_ARRAY);
-      
-      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-      glBindBuffer(GL_ARRAY_BUFFER, 0);
-      
-    } else {
-      GLsizei stride = sizeof(float) * 18;
-      
-      glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
-          
-      glVertexPointer(3, GL_FLOAT, stride, (void*)0);
-      glEnableClientState(GL_VERTEX_ARRAY);
-      
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
-        glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
-      
-      glDisableClientState(GL_VERTEX_ARRAY);
-      
-      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-      glBindBuffer(GL_ARRAY_BUFFER, 0);
-    }
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
+      glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
+    
+    glDisableClientState(GL_VERTEX_ARRAY);
+    
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
     
     if (diffuse_texture != NULL) {
       glActiveTexture(GL_TEXTURE0 + 0);
@@ -290,6 +274,51 @@ void shadow_mapper_render_animated(animated_object* ao) {
   
   glUseProgram(0);
   
+}
+
+void shadow_mapper_render_landscape(landscape* ls) {
+  
+  matrix_4x4 r_world_matrix = m44_world( ls->position, ls->scale, ls->rotation );
+  m44_to_array(r_world_matrix, world_matrix);
+  
+  glUseProgram(*depth_shader);
+  
+  GLint world_matrix_u = glGetUniformLocation(*depth_shader, "world_matrix");
+  glUniformMatrix4fv(world_matrix_u, 1, 0, world_matrix);
+  
+  GLint proj_matrix_u = glGetUniformLocation(*depth_shader, "proj_matrix");
+  glUniformMatrix4fv(proj_matrix_u, 1, 0, proj_matrix);
+  
+  GLint view_matrix_u = glGetUniformLocation(*depth_shader, "view_matrix");
+  glUniformMatrix4fv(view_matrix_u, 1, 0, view_matrix);
+  
+  GLint alpha_test_u = glGetUniformLocation(*depth_shader, "alpha_test");
+  glUniform1f(alpha_test_u, 0.0);
+  
+  for(int i = 0; i < ls->terrain->num_chunks; i++) {
+    
+    terrain_chunk* tc = ls->terrain->chunks[i];
+    
+    GLsizei stride = sizeof(float) * 6;
+    
+    glBindBuffer(GL_ARRAY_BUFFER, tc->vertex_buffer);
+  
+    glVertexPointer(3, GL_FLOAT, stride, (void*)0);
+    glEnableClientState(GL_VERTEX_ARRAY);
+    
+    glNormalPointer(GL_FLOAT, stride, (void*)(sizeof(float) * 3));
+    glEnableClientState(GL_NORMAL_ARRAY);
+      
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tc->index_buffers[NUM_TERRAIN_BUFFERS-1]);
+      glDrawElements(GL_TRIANGLES, tc->num_indicies[NUM_TERRAIN_BUFFERS-1], GL_UNSIGNED_INT, (void*)0);
+    
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_NORMAL_ARRAY);
+    
+  }
+  
+  glUseProgram(0);
+
 }
 
 texture* shadow_mapper_depth_texture() {

@@ -260,6 +260,7 @@ void forward_renderer_begin() {
   forward_renderer_setup_camera();
   
   glEnable(GL_DEPTH_TEST);
+  glEnable(GL_CULL_FACE);
   
 }
 
@@ -303,6 +304,7 @@ void forward_renderer_end() {
   glBlitFramebuffer(0, 0, viewport_width(), viewport_height(), 0, 0, viewport_width(), viewport_height(), GL_COLOR_BUFFER_BIT, GL_LINEAR);
   
   glDisable(GL_DEPTH_TEST);
+  glDisable(GL_CULL_FACE);
   
   /* Render HDR to LDR buffer */
   
@@ -373,7 +375,8 @@ void forward_renderer_end() {
   
   float average = (float)(color[0] + color[1] + color[2]) / (3.0 * 255.0);
   
-  EXPOSURE += (EXPOSURE_TARGET - average) * EXPOSURE_SPEED;
+  //EXPOSURE += (EXPOSURE_TARGET - average) * EXPOSURE_SPEED;
+  EXPOSURE = 5.0;
   
   /* Render final frame */
   
@@ -465,7 +468,9 @@ static void forward_renderer_use_material(material* mat) {
   BONE_WEIGHTS = glGetAttribLocation(*prog, "bone_weights");
 
   GLint camera_position = glGetUniformLocation(*prog, "camera_position");
-  glUniform3f(camera_position, CAMERA->position.x, CAMERA->position.y, CAMERA->position.z);
+  if (camera_position != -1) {
+    glUniform3f(camera_position, CAMERA->position.x, CAMERA->position.y, CAMERA->position.z);
+  }
   
   for(int i = 0; i < num_lights; i++) {
     light_power[i] = lights[i]->power;
@@ -508,10 +513,14 @@ static void forward_renderer_use_material(material* mat) {
   glUniformMatrix4fv(view_matrix_u, 1, 0, view_matrix);
   
   GLint lproj_matrix_u = glGetUniformLocation(*prog, "light_proj");
-  glUniformMatrix4fv(lproj_matrix_u, 1, 0, lproj_matrix);
+  if (lproj_matrix_u != -1) {
+    glUniformMatrix4fv(lproj_matrix_u, 1, 0, lproj_matrix);
+  }
   
   GLint lview_matrix_u = glGetUniformLocation(*prog, "light_view");
-  glUniformMatrix4fv(lview_matrix_u, 1, 0, lview_matrix);
+  if (lproj_matrix_u != -1) {
+    glUniformMatrix4fv(lview_matrix_u, 1, 0, lview_matrix);
+  }
   
   /* Set material parameters */
   
@@ -562,9 +571,8 @@ static void forward_renderer_use_material(material* mat) {
      
   }
   
-  if ( use_shadows ) {
-  
-    GLint shadow_map = glGetUniformLocation(*prog, "shadow_map");
+  GLint shadow_map = glGetUniformLocation(*prog, "shadow_map");
+  if ( use_shadows && (shadow_map != -1) ) {
     glUniform1i(shadow_map, tex_counter);
     glActiveTexture(GL_TEXTURE0 + tex_counter);
     glBindTexture(GL_TEXTURE_2D, *SHADOW_TEX);
@@ -651,98 +659,62 @@ void forward_renderer_render_static(static_object* so) {
     
     renderable_surface* s = r->surfaces[i];
     if(s->is_rigged) {
-      
-      forward_renderer_use_material(s->base);
-      
-      shader_program* prog = dictionary_get(s->base->properties, "program");
-      GLint recieve_shadows = glGetUniformLocation(*prog, "recieve_shadows");
-      glUniform1i(recieve_shadows, so->recieve_shadows);
-      
-      GLsizei stride = sizeof(float) * 24;
-      
-      glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
-      
-      glVertexPointer(3, GL_FLOAT, stride, (void*)0);
-      glEnableClientState(GL_VERTEX_ARRAY);
-      
-      glNormalPointer(GL_FLOAT, stride, (void*)(sizeof(float) * 3));
-      glEnableClientState(GL_NORMAL_ARRAY);
-      
-      glVertexAttribPointer(TANGENT, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 6));
-      glEnableVertexAttribArray(TANGENT);
-      
-      glVertexAttribPointer(BINORMAL, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 9));
-      glEnableVertexAttribArray(BINORMAL);
-      
-      glTexCoordPointer(2, GL_FLOAT, stride, (void*)(sizeof(float) * 12));
-      glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-      
-      glColorPointer(4, GL_FLOAT, stride, (void*)(sizeof(float) * 14));
-      glEnableClientState(GL_COLOR_ARRAY);
-      
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
-        glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
-      
-      glDisableClientState(GL_VERTEX_ARRAY);
-      glDisableClientState(GL_NORMAL_ARRAY);
-      glDisableClientState(GL_TEXTURE_COORD_ARRAY);  
-      glDisableClientState(GL_COLOR_ARRAY);  
-      
-      glDisableVertexAttribArray(TANGENT);
-      glDisableVertexAttribArray(BINORMAL); 
-      
-      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-      glBindBuffer(GL_ARRAY_BUFFER, 0);
-      
-      forward_renderer_disuse_material();
-    
-    } else {
-    
-      forward_renderer_use_material(s->base);
-      
-      shader_program* prog = dictionary_get(s->base->properties, "program");
-      GLint recieve_shadows = glGetUniformLocation(*prog, "recieve_shadows");
-      glUniform1i(recieve_shadows, so->recieve_shadows);
-      
-      GLsizei stride = sizeof(float) * 18;
-      
-      glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
-          
-      glVertexPointer(3, GL_FLOAT, stride, (void*)0);
-      glEnableClientState(GL_VERTEX_ARRAY);
-      
-      glNormalPointer(GL_FLOAT, stride, (void*)(sizeof(float) * 3));
-      glEnableClientState(GL_NORMAL_ARRAY);
-      
-      glVertexAttribPointer(TANGENT, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 6));
-      glEnableVertexAttribArray(TANGENT);
-      
-      glVertexAttribPointer(BINORMAL, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 9));
-      glEnableVertexAttribArray(BINORMAL);
-      
-      glTexCoordPointer(2, GL_FLOAT, stride, (void*)(sizeof(float) * 12));
-      glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-      
-      glColorPointer(4, GL_FLOAT, stride, (void*)(sizeof(float) * 14));
-      glEnableClientState(GL_COLOR_ARRAY);
-      
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
-        glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
-      
-      glDisableClientState(GL_VERTEX_ARRAY);
-      glDisableClientState(GL_NORMAL_ARRAY);
-      glDisableClientState(GL_TEXTURE_COORD_ARRAY);  
-      glDisableClientState(GL_COLOR_ARRAY);  
-      
-      glDisableVertexAttribArray(TANGENT);
-      glDisableVertexAttribArray(BINORMAL);
-      
-      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-      glBindBuffer(GL_ARRAY_BUFFER, 0);
-      
-      forward_renderer_disuse_material();
-    
+      error("Renderable for static object is rigged!");
     }
+    
+    forward_renderer_use_material(s->base);
+    
+    shader_program* prog = dictionary_get(s->base->properties, "program");
+    GLint recieve_shadows = glGetUniformLocation(*prog, "recieve_shadows");
+    if (recieve_shadows != -1) {
+      glUniform1i(recieve_shadows, so->recieve_shadows);
+    }
+    
+    GLsizei stride = sizeof(float) * 18;
+    
+    glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
+    
+    glVertexPointer(3, GL_FLOAT, stride, (void*)0);
+    glEnableClientState(GL_VERTEX_ARRAY);
+    
+    glNormalPointer(GL_FLOAT, stride, (void*)(sizeof(float) * 3));
+    glEnableClientState(GL_NORMAL_ARRAY);
+    
+    if (TANGENT != -1) {
+      glVertexAttribPointer(TANGENT, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 6));
+      glEnableVertexAttribArray(TANGENT);
+    }
+    
+    if (BINORMAL != -1) {
+      glVertexAttribPointer(BINORMAL, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 9));
+      glEnableVertexAttribArray(BINORMAL);
+    }
+    
+    glTexCoordPointer(2, GL_FLOAT, stride, (void*)(sizeof(float) * 12));
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+    
+    glColorPointer(4, GL_FLOAT, stride, (void*)(sizeof(float) * 14));
+    glEnableClientState(GL_COLOR_ARRAY);
+    
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
+      glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
+    
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_NORMAL_ARRAY);
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);  
+    glDisableClientState(GL_COLOR_ARRAY);  
+    
+    if (TANGENT != -1) {
+      glDisableVertexAttribArray(TANGENT);
+    }
+    if (BINORMAL != -1) {
+      glDisableVertexAttribArray(BINORMAL); 
+    }
+    
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    
+    forward_renderer_disuse_material();
 
   }
   
@@ -766,98 +738,54 @@ void forward_renderer_render_physics(physics_object* po) {
     
     renderable_surface* s = r->surfaces[i];
     if(s->is_rigged) {
-
-      forward_renderer_use_material(s->base);
       
-      shader_program* prog = dictionary_get(s->base->properties, "program");
-      GLint recieve_shadows = glGetUniformLocation(*prog, "recieve_shadows");
-      glUniform1i(recieve_shadows, po->recieve_shadows);
+      error("Physics object is rigged!")
       
-      GLsizei stride = sizeof(float) * 24;
-      
-      glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
-          
-      glVertexPointer(3, GL_FLOAT, stride, (void*)0);
-      glEnableClientState(GL_VERTEX_ARRAY);
-      
-      glNormalPointer(GL_FLOAT, stride, (void*)(sizeof(float) * 3));
-      glEnableClientState(GL_NORMAL_ARRAY);
-      
-      glVertexAttribPointer(TANGENT, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 6));
-      glEnableVertexAttribArray(TANGENT);
-      
-      glVertexAttribPointer(BINORMAL, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 9));
-      glEnableVertexAttribArray(BINORMAL);
-      
-      glTexCoordPointer(2, GL_FLOAT, stride, (void*)(sizeof(float) * 12));
-      glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-      
-      glColorPointer(4, GL_FLOAT, stride, (void*)(sizeof(float) * 14));
-      glEnableClientState(GL_COLOR_ARRAY);
-      
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
-        glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
-      
-      glDisableClientState(GL_VERTEX_ARRAY);
-      glDisableClientState(GL_VERTEX_ARRAY);
-      glDisableClientState(GL_NORMAL_ARRAY);
-      glDisableClientState(GL_COLOR_ARRAY);  
-      
-      glDisableVertexAttribArray(TANGENT);
-      glDisableVertexAttribArray(BINORMAL);
-      
-      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-      glBindBuffer(GL_ARRAY_BUFFER, 0);
-      
-      forward_renderer_disuse_material();
+    } 
     
-    } else {
+    forward_renderer_use_material(s->base);
     
-      forward_renderer_use_material(s->base);
-      
-      shader_program* prog = dictionary_get(s->base->properties, "program");
-      GLint recieve_shadows = glGetUniformLocation(*prog, "recieve_shadows");
-      glUniform1i(recieve_shadows, po->recieve_shadows);
-      
-      GLsizei stride = sizeof(float) * 18;
-      
-      glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
-          
-      glVertexPointer(3, GL_FLOAT, stride, (void*)0);
-      glEnableClientState(GL_VERTEX_ARRAY);
-      
-      glNormalPointer(GL_FLOAT, stride, (void*)(sizeof(float) * 3));
-      glEnableClientState(GL_NORMAL_ARRAY);
-      
-      glVertexAttribPointer(TANGENT, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 6));
-      glEnableVertexAttribArray(TANGENT);
-      
-      glVertexAttribPointer(BINORMAL, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 9));
-      glEnableVertexAttribArray(BINORMAL);
-      
-      glTexCoordPointer(2, GL_FLOAT, stride, (void*)(sizeof(float) * 12));
-      glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-      
-      glColorPointer(4, GL_FLOAT, stride, (void*)(sizeof(float) * 14));
-      glEnableClientState(GL_COLOR_ARRAY);
-      
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
-        glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
-      
-      glDisableClientState(GL_VERTEX_ARRAY);
-      glDisableClientState(GL_NORMAL_ARRAY);
-      glDisableClientState(GL_TEXTURE_COORD_ARRAY);  
-      glDisableClientState(GL_COLOR_ARRAY);  
-      
-      glDisableVertexAttribArray(TANGENT);
-      glDisableVertexAttribArray(BINORMAL);
-      
-      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-      glBindBuffer(GL_ARRAY_BUFFER, 0);
-      
-      forward_renderer_disuse_material();
+    shader_program* prog = dictionary_get(s->base->properties, "program");
+    GLint recieve_shadows = glGetUniformLocation(*prog, "recieve_shadows");
+    glUniform1i(recieve_shadows, po->recieve_shadows);
     
-    }
+    GLsizei stride = sizeof(float) * 18;
+    
+    glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
+        
+    glVertexPointer(3, GL_FLOAT, stride, (void*)0);
+    glEnableClientState(GL_VERTEX_ARRAY);
+    
+    glNormalPointer(GL_FLOAT, stride, (void*)(sizeof(float) * 3));
+    glEnableClientState(GL_NORMAL_ARRAY);
+    
+    glVertexAttribPointer(TANGENT, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 6));
+    glEnableVertexAttribArray(TANGENT);
+    
+    glVertexAttribPointer(BINORMAL, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 9));
+    glEnableVertexAttribArray(BINORMAL);
+    
+    glTexCoordPointer(2, GL_FLOAT, stride, (void*)(sizeof(float) * 12));
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+    
+    glColorPointer(4, GL_FLOAT, stride, (void*)(sizeof(float) * 14));
+    glEnableClientState(GL_COLOR_ARRAY);
+    
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
+      glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
+    
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_NORMAL_ARRAY);
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);  
+    glDisableClientState(GL_COLOR_ARRAY);  
+    
+    glDisableVertexAttribArray(TANGENT);
+    glDisableVertexAttribArray(BINORMAL);
+    
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    
+    forward_renderer_disuse_material();
 
   }
   
@@ -1074,9 +1002,9 @@ void forward_renderer_render_light(light* l) {
   
 	glBegin(GL_QUADS);
 		glTexCoord2f(0.0f, 0.0f); glVertex3f(left, top, -light_pos.z);
-		glTexCoord2f(1.0f, 0.0f); glVertex3f(right, top, -light_pos.z);
+    glTexCoord2f(0.0f, 1.0f); glVertex3f(left,  bot, -light_pos.z);
 		glTexCoord2f(1.0f, 1.0f); glVertex3f(right,  bot, -light_pos.z);
-		glTexCoord2f(0.0f, 1.0f); glVertex3f(left,  bot, -light_pos.z);
+		glTexCoord2f(1.0f, 0.0f); glVertex3f(right, top, -light_pos.z);
 	glEnd();
   
   glActiveTexture(GL_TEXTURE0 + 0 );
@@ -1090,6 +1018,155 @@ void forward_renderer_render_light(light* l) {
 
   glMatrixMode(GL_MODELVIEW);
   glPopMatrix();
+  
+}
+
+void forward_renderer_render_landscape(landscape* ls) {
+  
+  matrix_4x4 r_world_matrix = m44_world(ls->position, ls->scale, ls->rotation);
+  m44_to_array(r_world_matrix, world_matrix);
+  
+  shader_program* terrain = asset_load_get("$SHADERS/terrain.prog");
+  glUseProgram(*terrain);
+  
+  GLint world_matrix_u = glGetUniformLocation(*terrain, "world_matrix");
+  glUniformMatrix4fv(world_matrix_u, 1, 0, world_matrix);
+  
+  GLint proj_matrix_u = glGetUniformLocation(*terrain, "proj_matrix");
+  glUniformMatrix4fv(proj_matrix_u, 1, 0, proj_matrix);
+  
+  GLint view_matrix_u = glGetUniformLocation(*terrain, "view_matrix");
+  glUniformMatrix4fv(view_matrix_u, 1, 0, view_matrix);
+  
+  GLint lproj_matrix_u = glGetUniformLocation(*terrain, "light_proj");
+  glUniformMatrix4fv(lproj_matrix_u, 1, 0, lproj_matrix);
+  
+  GLint lview_matrix_u = glGetUniformLocation(*terrain, "light_view");
+  glUniformMatrix4fv(lview_matrix_u, 1, 0, lview_matrix);
+  
+  GLint camera_position = glGetUniformLocation(*terrain, "camera_position");
+  glUniform3f(camera_position, CAMERA->position.x, CAMERA->position.y, CAMERA->position.z);
+  
+  for(int i = 0; i < num_lights; i++) {
+    light_power[i] = lights[i]->power;
+    light_falloff[i] = lights[i]->falloff;
+    light_position[i] = lights[i]->position;
+    light_target[i] = lights[i]->target;
+    light_diffuse[i] = lights[i]->diffuse_color;
+    light_ambient[i] = lights[i]->ambient_color;
+    light_specular[i] = lights[i]->specular_color;
+  }
+  
+  glUniform1i(glGetUniformLocation(*terrain, "num_lights"), num_lights);
+  
+  GLint light_power_u = glGetUniformLocation(*terrain, "light_power");
+  GLint light_falloff_u = glGetUniformLocation(*terrain, "light_falloff");
+  GLint light_position_u = glGetUniformLocation(*terrain, "light_position");
+  GLint light_target_u = glGetUniformLocation(*terrain, "light_target");
+  GLint light_diffuse_u = glGetUniformLocation(*terrain, "light_diffuse");
+  GLint light_ambient_u = glGetUniformLocation(*terrain, "light_ambient");
+  GLint light_specular_u = glGetUniformLocation(*terrain, "light_specular");
+  
+  glUniform1fv(light_power_u, num_lights, (const GLfloat*)light_power);
+  glUniform1fv(light_falloff_u, num_lights, (const GLfloat*)light_falloff);
+  glUniform3fv(light_position_u, num_lights, (const GLfloat*)light_position);
+  glUniform3fv(light_target_u, num_lights, (const GLfloat*)light_target);
+  glUniform3fv(light_diffuse_u, num_lights, (const GLfloat*)light_diffuse);
+  glUniform3fv(light_ambient_u, num_lights, (const GLfloat*)light_ambient);
+  glUniform3fv(light_specular_u, num_lights, (const GLfloat*)light_specular);
+  
+  texture* terrain_texture = ls->surface_types[0].near_texture;
+  texture* terrain_texture_nm = ls->surface_types[0].near_texture_nm;
+  texture* terrain_far_texture = ls->surface_types[0].far_texture;
+  texture* terrain_far_texture_nm = ls->surface_types[0].far_texture_nm;
+  
+  glActiveTexture(GL_TEXTURE0 + 0 );
+  glBindTexture(GL_TEXTURE_2D, *ls->normalmap);
+  glEnable(GL_TEXTURE_2D);
+  glUniform1i(glGetUniformLocation(*terrain, "normals"), 0);
+  
+  glActiveTexture(GL_TEXTURE0 + 1 );
+  glBindTexture(GL_TEXTURE_2D, *ls->colormap);
+  glEnable(GL_TEXTURE_2D);
+  glUniform1i(glGetUniformLocation(*terrain, "color"), 1);
+  
+  glActiveTexture(GL_TEXTURE0 + 2 );
+  glBindTexture(GL_TEXTURE_2D, *terrain_texture);
+  glEnable(GL_TEXTURE_2D);
+  glUniform1i(glGetUniformLocation(*terrain, "ground"), 2);
+  
+  glActiveTexture(GL_TEXTURE0 + 3 );
+  glBindTexture(GL_TEXTURE_2D, *terrain_texture_nm);
+  glEnable(GL_TEXTURE_2D);
+  glUniform1i(glGetUniformLocation(*terrain, "ground_normals"), 3);
+  
+  glActiveTexture(GL_TEXTURE0 + 4 );
+  glBindTexture(GL_TEXTURE_2D, *terrain_far_texture);
+  glEnable(GL_TEXTURE_2D);
+  glUniform1i(glGetUniformLocation(*terrain, "ground_far"), 4);
+  
+  glActiveTexture(GL_TEXTURE0 + 5 );
+  glBindTexture(GL_TEXTURE_2D, *terrain_far_texture_nm);
+  glEnable(GL_TEXTURE_2D);
+  glUniform1i(glGetUniformLocation(*terrain, "ground_far_normals"), 5);
+  
+  glActiveTexture(GL_TEXTURE0 + 6 );
+  glBindTexture(GL_TEXTURE_2D, *SHADOW_TEX);
+  glEnable(GL_TEXTURE_2D);
+  glUniform1i(glGetUniformLocation(*terrain, "shadow_map"), 6);
+    
+  for(int i = 0; i < ls->terrain->num_chunks; i++) {
+    
+    terrain_chunk* tc = ls->terrain->chunks[i];
+    
+    vector3 position = v3_add(v3(tc->x * ls->terrain->chunk_width, 0, tc->y * ls->terrain->chunk_height), ls->position);
+    int index_id = clamp( 0.01 * v3_dist(position, CAMERA->position), 0, NUM_TERRAIN_BUFFERS-1);
+    
+    glUniform1i(glGetUniformLocation(*terrain, "lod_index"), index_id);
+    
+    GLsizei stride = sizeof(float) * 6;
+    
+    glBindBuffer(GL_ARRAY_BUFFER, tc->vertex_buffer);
+  
+    glVertexPointer(3, GL_FLOAT, stride, (void*)0);
+    glEnableClientState(GL_VERTEX_ARRAY);
+    
+    glNormalPointer(GL_FLOAT, stride, (void*)(sizeof(float) * 3));
+    glEnableClientState(GL_NORMAL_ARRAY);
+      
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tc->index_buffers[index_id]);
+      glDrawElements(GL_TRIANGLES, tc->num_indicies[index_id], GL_UNSIGNED_INT, (void*)0);
+    
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_NORMAL_ARRAY);
+    
+  }
+  
+  glActiveTexture(GL_TEXTURE0 + 6 );
+  glDisable(GL_TEXTURE_2D);
+  
+  glActiveTexture(GL_TEXTURE0 + 5 );
+  glDisable(GL_TEXTURE_2D);
+  
+  glActiveTexture(GL_TEXTURE0 + 4 );
+  glDisable(GL_TEXTURE_2D);
+  
+  glActiveTexture(GL_TEXTURE0 + 3 );
+  glDisable(GL_TEXTURE_2D);
+  
+  glActiveTexture(GL_TEXTURE0 + 2 );
+  glDisable(GL_TEXTURE_2D);
+  
+  glActiveTexture(GL_TEXTURE0 + 1 );
+  glDisable(GL_TEXTURE_2D);
+  
+  glActiveTexture(GL_TEXTURE0 + 0 );
+  glDisable(GL_TEXTURE_2D);
+  
+  glUseProgram(0);
+  
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
   
 }
 

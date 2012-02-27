@@ -43,7 +43,6 @@ float shadow_amount_soft_pcf25(vec4 light_pos, sampler2D light_depth, float hard
 vec3 to_gamma(vec3 color);
 vec3 from_gamma(vec3 color);
 vec3 swap_red_green_inv(vec3 color);
-vec3 color_correction(vec3 color, sampler3D lut, int lut_size);
 
 /* End */
 

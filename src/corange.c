@@ -50,6 +50,7 @@ void corange_init(char* core_assets_path) {
   asset_manager_handler("skl", skl_load_file, skeleton_delete);
   asset_manager_handler("ani", ani_load_file, animation_delete);
   asset_manager_handler("col", col_load_file, collision_body_delete);
+  asset_manager_handler("raw", raw_load_file, terrain_delete);
   
   asset_manager_handler("bmp", bmp_load_file, image_delete);
   asset_manager_handler("tga", tga_load_file, image_delete);
@@ -77,6 +78,7 @@ void corange_init(char* core_assets_path) {
   entity_manager_handler(physics_object, physics_object_new, physics_object_delete);
   entity_manager_handler(camera, camera_new, camera_delete);
   entity_manager_handler(light, light_new, light_delete);
+  entity_manager_handler(landscape, landscape_new, landscape_delete);
   
   /* UI Manager */
   

@@ -1,5 +1,6 @@
 #include "asset_manager.h"
 #include "vector.h"
+#include "viewport.h"
 #include "error.h"
 #include "bool.h"
 
@@ -32,17 +33,43 @@ void texture_set_image(texture* t, image* i) {
 
 image* texture_get_image(texture* t) {
   
-  int w, h;
+  int width, height, format;
   
   glBindTexture(GL_TEXTURE_2D, *t);
-  glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &w);
-  glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &h);
+  glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
+  glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
+  glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_INTERNAL_FORMAT, &format);
   
-  unsigned char* data = malloc(w * h * 4);
+  if ((width == 0) || (height == 0)) {
+    error("Texture has zero size width/height: (%i, %i)", width, height);
+  }
   
-  glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+  unsigned char* data = malloc(width * height * 4);
   
-  image* i = image_new(w, h, data);
+  if (format == GL_RGBA) {
+    glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+  } else if (format == GL_DEPTH_COMPONENT) {
+    
+    unsigned int* depth_data = malloc(sizeof(unsigned int) * width * height);
+    glGetTexImage(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, depth_data);
+    
+    for(int x = 0; x < width; x++)
+    for(int y = 0; y < height; y++) {
+      
+      unsigned int depth = depth_data[(y*width) + x];
+      
+      data[(y*4*width) + (x*4) + 0] = (unsigned char)depth;
+      data[(y*4*width) + (x*4) + 1] = (unsigned char)depth;
+      data[(y*4*width) + (x*4) + 2] = (unsigned char)depth;
+      data[(y*4*width) + (x*4) + 3] = (unsigned char)depth;
+    }
+    
+    free(depth_data);
+  } else {
+    error("Can't save that particular texture format to file.");
+  }
+  
+  image* i = image_new(width, height, data);
   
   free(data);
   

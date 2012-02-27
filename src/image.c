@@ -888,8 +888,12 @@ void tga_save_file(image* i, char* filename) {
   unsigned char header[18]={0,0,2,0,0,0,0,0,0,0,0,0,(char)xa,(char)xb,(char)ya,(char)yb,32,0};
   
   SDL_RWops* file = SDL_RWFromFile(filename, "wb");
+  if (file == NULL) {
+    error("Could not write to file %s", filename);
+  }
+  
   SDL_RWwrite(file, header, sizeof(header), 1);
-  SDL_RWwrite(file, i->data, i->width * i->height * 4, 1 );
+  SDL_RWwrite(file, i->data, i->width * i->height * 4, 1);
   SDL_RWclose(file);
 
   image_bgr_to_rgb(i);

@@ -3,6 +3,8 @@
 
 #include "static_object.h"
 #include "animated_object.h"
+#include "landscape.h"
+
 #include "light.h"
 #include "texture.h"
 
@@ -11,9 +13,9 @@ void shadow_mapper_finish();
 
 void shadow_mapper_begin();
 void shadow_mapper_end();
-void shadow_mapper_setup_camera();
 void shadow_mapper_render_static(static_object* s);
 void shadow_mapper_render_animated(animated_object* ao);
+void shadow_mapper_render_landscape(landscape* ls);
 
 texture* shadow_mapper_depth_texture();
 
