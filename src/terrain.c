@@ -36,7 +36,7 @@ terrain* raw_load_file(char* filename) {
   int width = sqrt(num_pixels);
   int height = width;
   
-  const int CHUNK_SIZE = 16;
+  const int CHUNK_SIZE = 32;
   
   terrain* ter = malloc(sizeof(terrain));
   ter->width = width;

@@ -366,6 +366,8 @@ void forward_renderer_end() {
     
     if (level > 50) { error("Unable to find lowest mip level. Perhaps mipmaps were not generated"); }
     
+    debug("Width: %i Height: %i", width, height);
+    
   } while ((width > 1) || (height > 1));
   
   glGetTexImage(GL_TEXTURE_2D, level, GL_RGBA, GL_UNSIGNED_BYTE, color);
@@ -1115,16 +1117,16 @@ void forward_renderer_render_landscape(landscape* ls) {
   glEnable(GL_TEXTURE_2D);
   glUniform1i(glGetUniformLocation(*terrain, "shadow_map"), 6);
     
+  GLsizei stride = sizeof(float) * 6;
+    
   for(int i = 0; i < ls->terrain->num_chunks; i++) {
     
     terrain_chunk* tc = ls->terrain->chunks[i];
     
     vector3 position = v3_add(v3(tc->x * ls->terrain->chunk_width, 0, tc->y * ls->terrain->chunk_height), ls->position);
-    int index_id = clamp( 0.01 * v3_dist(position, CAMERA->position), 0, NUM_TERRAIN_BUFFERS-1);
+    int index_id = min(0.01 * v3_dist_manhattan(position, CAMERA->position), NUM_TERRAIN_BUFFERS-1);
     
     glUniform1i(glGetUniformLocation(*terrain, "lod_index"), index_id);
-    
-    GLsizei stride = sizeof(float) * 6;
     
     glBindBuffer(GL_ARRAY_BUFFER, tc->vertex_buffer);
   

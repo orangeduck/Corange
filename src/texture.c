@@ -47,7 +47,9 @@ image* texture_get_image(texture* t) {
   unsigned char* data = malloc(width * height * 4);
   
   if (format == GL_RGBA) {
+  
     glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    
   } else if (format == GL_DEPTH_COMPONENT) {
     
     unsigned int* depth_data = malloc(sizeof(unsigned int) * width * height);
@@ -58,10 +60,10 @@ image* texture_get_image(texture* t) {
       
       unsigned int depth = depth_data[(y*width) + x];
       
-      data[(y*4*width) + (x*4) + 0] = (unsigned char)depth;
-      data[(y*4*width) + (x*4) + 1] = (unsigned char)depth;
-      data[(y*4*width) + (x*4) + 2] = (unsigned char)depth;
-      data[(y*4*width) + (x*4) + 3] = (unsigned char)depth;
+      data[(y*4*width) + (x*4) + 0] = depth;
+      data[(y*4*width) + (x*4) + 1] = depth;
+      data[(y*4*width) + (x*4) + 2] = depth;
+      data[(y*4*width) + (x*4) + 3] = depth;
     }
     
     free(depth_data);

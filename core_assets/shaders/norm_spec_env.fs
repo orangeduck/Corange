@@ -44,6 +44,8 @@ vec3 to_gamma(vec3 color);
 vec3 from_gamma(vec3 color);
 vec3 swap_red_green_inv(vec3 color);
 
+vec3 apply_fog_blue(vec3 pixel, vec3 position, vec3 camera_position);
+
 /* End */
 
 void main() {
@@ -107,6 +109,9 @@ void main() {
   float env_amount = (1.0 - dot(camera_vector, normal)) * spec.r * env_amount;
   diffuse = mix(diffuse, env, env_amount);
   
-  gl_FragColor.rgb = to_gamma(diffuse + ambient + specular);
+  vec3 final = to_gamma(diffuse + ambient + specular);
+  final = apply_fog_blue(final, position, camera_position);
+  
+  gl_FragColor.rgb = final;
   gl_FragColor.a = diffuse_a.a;
 }

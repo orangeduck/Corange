@@ -28,8 +28,11 @@ uniform mat4 light_proj;
 
 float ssao_depth(vec2 texcoords, sampler2D depth_texture, sampler2D random_texture);
 float shadow_amount_soft_pcf25(vec4 light_pos, sampler2D light_depth, float hardness);
+
 vec3 to_gamma(vec3 color);
 vec3 from_gamma(vec3 color);
+
+vec3 apply_fog_blue(vec3 pixel, vec3 position, vec3 camera_position);
 
 /* End */
 
@@ -100,9 +103,10 @@ void main() {
     diffuse = mix(diffuse, env, env_amount);
   } 
   
-  vec3 total = to_gamma(diffuse + ambient + specular);
+  vec3 final = to_gamma(diffuse + ambient + specular);
+  final = apply_fog_blue(final, position, camera_position);
   
-	gl_FragColor.rgb = total;
+  gl_FragColor.rgb = final;
 	gl_FragColor.a = 1.0;
 	
 } 

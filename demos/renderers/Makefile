@@ -21,6 +21,9 @@ obj/%.o: src/%.c
 clean:
 	rm $(OBJ_FILES)	
 
+corange:
+	cp ../../corange.dll ./corange.dll
+	
 # Linux
 
 linux: $(OBJ_FILES)

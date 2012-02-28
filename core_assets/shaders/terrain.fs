@@ -39,6 +39,8 @@ vec3 swap_red_green_inv(vec3 color);
 float shadow_amount(vec4 light_pos, sampler2D light_depth);
 float shadow_amount_pcf25(vec4 light_pos, sampler2D light_depth, float kernel);
 
+vec3 apply_fog_blue(vec3 pixel, vec3 position, vec3 camera_position);
+
 /* End */
 
 void main() {
@@ -56,7 +58,6 @@ void main() {
   vec3 near_albedo = ground_color * from_gamma(texture2D(ground, local_uvs).rgb);
   
   vec3 albedo = mix(near_albedo, far_albedo, dist_func);
-  
   
   vec3 norm_near = normal;
   vec3 norm_far = texture2D(normals, world_uvs).rgb;
@@ -104,7 +105,11 @@ void main() {
   float n_dot_f = shadow * pow(clamp(1.0 - dot(camera_vector, normal), 0, 1), glossiness); 
   vec3 fresnel = light_ambient[0] * fres_amount * n_dot_f;
   
-  gl_FragColor.rgb = to_gamma(diffuse + ambient + fresnel);
+  vec3 final = to_gamma(diffuse + ambient + fresnel);
+  
+  final = apply_fog_blue(final, position, camera_position);
+  
+  gl_FragColor.rgb = final;
   //gl_FragColor.rgb = vec3(shadow, shadow, shadow);
   gl_FragColor.a = 1.0;
 }

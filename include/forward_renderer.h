@@ -17,6 +17,7 @@ void forward_renderer_finish();
 void forward_renderer_set_camera(camera* c);
 void forward_renderer_set_shadow_light(light* l);
 void forward_renderer_set_shadow_texture(texture* t);
+void forward_renderer_set_depth_texture(texture* t);
 void forward_renderer_set_color_correction(texture* t);
 
 void forward_renderer_add_light(light* l);

@@ -59,7 +59,6 @@ void corange_finish();
 #include "viewport.h"
 #include "forward_renderer.h"
 #include "deferred_renderer.h"
-#include "depth_mapper.h"
 #include "shadow_mapper.h"
 
 /* Audio */

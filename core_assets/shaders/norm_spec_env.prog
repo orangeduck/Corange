@@ -2,3 +2,4 @@ vertex_shader : $CORANGE/shaders/norm_spec_env.vs
 fragment_shader : $CORANGE/shaders/norm_spec_env.fs
 fragment_shader : $CORANGE/shaders/shadows.fs
 fragment_shader : $CORANGE/shaders/colors.fs
+fragment_shader : $CORANGE/shaders/fog.fs

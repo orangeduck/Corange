@@ -256,6 +256,10 @@ float v2_dist(vector2 v1, vector2 v2) {
   return sqrt(v2_dist_sqrd(v1, v2));
 }
 
+float v2_dist_manhattan(vector2 v1, vector2 v2) {
+  return fabs(v1.x - v2.x) + fabs(v1.y - v2.y);
+}
+
 vector2 v2_normalize(vector2 v) {
   float len = v2_length(v);
   return v2_div(v, len);
@@ -507,6 +511,10 @@ float v3_dist(vector3 v1, vector3 v2) {
   return sqrt(v3_dist_sqrd(v1, v2));
 }
 
+float v3_dist_manhattan(vector3 v1, vector3 v2) {
+  return fabs(v1.x - v2.x) + fabs(v1.y - v2.y) + fabs(v1.z - v2.z);
+}
+
 vector3 v3_normalize(vector3 v) {
   float len = v3_length(v);
   if (len == 0.0) {
@@ -750,6 +758,10 @@ float v4_dist_sqrd(vector4 v1, vector4 v2) {
 
 float v4_dist(vector4 v1, vector4 v2) {
   return sqrt(v4_dist_sqrd(v1, v2));
+}
+
+float v4_dist_manhattan(vector4 v1, vector4 v2) {
+  return fabs(v1.x - v2.x) + fabs(v1.y - v2.y) + fabs(v1.z - v2.z) + fabs(v1.w - v2.w);
 }
 
 vector4 v4_normalize(vector4 v) {
