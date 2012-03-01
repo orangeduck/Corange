@@ -20,6 +20,8 @@ bone* bone_new(int id, char* name);
 void bone_delete(bone* b);
 matrix_4x4 bone_transform(bone* b);
 
+void inverse_kinematics_solve(bone* base, bone* end, vector3 target);
+
 typedef struct {
 
   int num_bones;
@@ -34,6 +36,7 @@ skeleton* skeleton_copy(skeleton* s);
 void skeleton_delete(skeleton* s);
 
 bone* skeleton_bone_id(skeleton* s, int id);
+bone* skeleton_bone_name(skeleton* s, char* name);
 void skeleton_add_bone(skeleton* s, char* name, int id, int parent_id);
 
 void skeleton_gen_transforms(skeleton* s);

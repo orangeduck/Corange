@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <math.h>
 
 #include "renderers.h"
 
@@ -320,6 +321,7 @@ void renderers_event(SDL_Event event) {
     
 }
 
+static float imrod_movement = 0.0;
 void renderers_update() {
   
   camera* cam = entity_get("camera");
@@ -361,7 +363,25 @@ void renderers_update() {
   ui_button_set_label(framerate, frame_rate_string());
   
   animated_object* imrod = entity_get("imrod");
+  imrod_movement += frame_time();
+  imrod->position.y = sin(imrod_movement)/2-0.5;
   animated_object_update(imrod, 0.1);
+  
+  bone* thigh_r = skeleton_bone_name(imrod->pose, "thigh_r");
+  bone* foot_r = skeleton_bone_name(imrod->pose, "foot_r");
+  bone* thigh_l = skeleton_bone_name(imrod->pose, "thigh_l");
+  bone* foot_l = skeleton_bone_name(imrod->pose, "foot_l");
+  
+  vector3 foot_r_pos = v3(1.5, 0.5, -1.8);
+  vector3 foot_l_pos = v3(1.5, 0.5, 1.8);
+  
+  matrix_4x4 inv_world = m44_inverse(m44_world(imrod->position, imrod->scale, imrod->rotation));
+  foot_r_pos = m44_mul_v3(inv_world, foot_r_pos);
+  foot_l_pos = m44_mul_v3(inv_world, foot_l_pos);
+  
+  inverse_kinematics_solve(thigh_r, foot_r, foot_r_pos);
+  inverse_kinematics_solve(thigh_l, foot_l, foot_l_pos);
+  
 }
 
 void renderers_render() {

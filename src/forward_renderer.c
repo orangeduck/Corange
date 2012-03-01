@@ -366,8 +366,6 @@ void forward_renderer_end() {
     
     if (level > 50) { error("Unable to find lowest mip level. Perhaps mipmaps were not generated"); }
     
-    debug("Width: %i Height: %i", width, height);
-    
   } while ((width > 1) || (height > 1));
   
   glGetTexImage(GL_TEXTURE_2D, level, GL_RGBA, GL_UNSIGNED_BYTE, color);

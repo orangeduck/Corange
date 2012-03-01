@@ -99,6 +99,7 @@ matrix_4x4 m44_scale(vector3 v);
 matrix_4x4 m44_rotation_x(float a);
 matrix_4x4 m44_rotation_y(float a);
 matrix_4x4 m44_rotation_z(float a);
+matrix_4x4 m44_rotation_axis_angle(vector3 axis, float angle);
 
 matrix_4x4 m44_rotation_euler(float x, float y, float z);
 matrix_4x4 m44_rotation_quaternion(vector4 q);

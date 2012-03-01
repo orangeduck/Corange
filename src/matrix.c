@@ -771,6 +771,30 @@ matrix_4x4 m44_rotation_z(float a) {
   
 }
 
+matrix_4x4 m44_rotation_axis_angle(vector3 v, float angle) {
+
+  matrix_4x4 m = m44_id();
+
+  float c = cos(angle);
+  float s = sin(angle);
+  float nc = 1 - c;
+  
+  m.xx = v.x * v.x * nc + c;
+  m.xy = v.x * v.y * nc - v.z * s;
+  m.xz = v.x * v.z * nc + v.y * s;
+  
+  m.yx = v.y * v.x * nc + v.z * s;
+  m.yy = v.y * v.y * nc + c;
+  m.yz = v.y * v.z * nc - v.x * s;
+  
+  m.zx = v.z * v.x * nc - v.y * s;
+  m.zy = v.z * v.y * nc + v.x * s;
+  m.zz = v.z * v.z * nc + c;
+  
+  return m;
+
+}
+
 matrix_4x4 m44_rotation_euler(float x, float y, float z) {
 
   matrix_4x4 m = m44_zero();
