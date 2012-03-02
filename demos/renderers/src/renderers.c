@@ -477,7 +477,6 @@ void renderers_render() {
       forward_renderer_render_static(s_piano);
     } else if (object_id == 2) {
       forward_renderer_render_animated(a_imrod);
-      //forward_renderer_render_skeleton(a_imrod->pose);
       
       matrix_4x4 foot_pos = bone_transform(skeleton_bone_name(a_imrod->pose, "foot_r"));
       

@@ -1,0 +1,4 @@
+string name = skydome
+program prog = $SHADERS/skydome.prog
+texture diffuse = ./resources/terrain/sky.dds
+int mat_id = 1

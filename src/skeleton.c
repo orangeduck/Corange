@@ -193,11 +193,6 @@ void inverse_kinematics_solve(bone* base, bone* end, vector3 target) {
   mid_pos = m44_mul_v3(inv_trans, mid_pos);
   tar_pos = m44_mul_v3(inv_trans, tar_pos);
   
-  vector3 base_tar = v3_sub(tar_pos, base_pos);
-  float angle_x = v3_dot(base_tar, v3(1,0,0));
-  float angle_y = v3_dot(base_tar, v3(0,1,0));
-  float angle_z = v3_dot(base_tar, v3(0,0,1));
-  
   vector3 rot_axis = v3_normalize(v3_cross(v3_sub(tar_pos, base_pos), v3_sub(end_pos, base_pos)));
   matrix_4x4 plane_view = m44_view_look_at(v3_zero(), rot_axis, v3(0,1,0));
   
@@ -237,22 +232,32 @@ void inverse_kinematics_solve(bone* base, bone* end, vector3 target) {
   float r1_frac = r1_top/r1_bot;
   float r1 = atan(r1_frac);
   
-  if (r1_frac > 0) {
-    r1 = r1 + 3.14;
-  }
-  
-  /* I suspect that this will work better only using the angle variables not the fractional ones */
-  if ((r1_frac <= 0) && (r2_frac <= 0) && (angle_x < 0)) {
-    r1 = r1 + 3.14;
-  }
-  
   /* Apply Rotations */
   
-  matrix_4x4 base_rotation = m44_rotation_axis_angle(rot_axis, r1);
   matrix_4x4 mid_rotation = m44_rotation_axis_angle(rot_axis, r2);
-  
-  base->rotation = m44_mul_m44(base->rotation, base_rotation);
   mid->rotation = mid_rotation;
+  
+  /*
+    There are quite a few different quadrants which invert it.
+    Easier than working out the pattern is just trying both.
+    See which one fits best.
+  */
+  
+  matrix_4x4 base_rotation0 = base->rotation;
+  matrix_4x4 base_rotation1 = m44_rotation_axis_angle(rot_axis, r1);
+  matrix_4x4 base_rotation2 = m44_rotation_axis_angle(rot_axis, r1 + 3.14);
+  
+  base->rotation = m44_mul_m44(base_rotation0, base_rotation1);
+  vector3 end_position1 = m44_mul_v3(bone_transform(end), v3_zero());
+  
+  base->rotation = m44_mul_m44(base_rotation0, base_rotation2);
+  vector3 end_position2 = m44_mul_v3(bone_transform(end), v3_zero());
+  
+  if (v3_dist_sqrd(end_position1, target) < v3_dist_sqrd(end_position2, target)) {
+    base->rotation = m44_mul_m44(base_rotation0, base_rotation1);
+  } else {
+    base->rotation = m44_mul_m44(base_rotation0, base_rotation2);
+  }
   
 }
 

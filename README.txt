@@ -40,6 +40,7 @@
 		noise 		~ Feedback based noise pattern on screen using shader. Can generate tileable perlin noise in software.
 		platformer 	~ Basic platforming game. Fairly well commented.
 		sea 		~ Renders a sea-like surface, a ship, and some collision detection.
+		scotland 	~ Demonstraits terrain system.
 		
 	
 	:: FAQ ::
