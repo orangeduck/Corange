@@ -102,6 +102,8 @@ static void switch_object_event(ui_button* b, SDL_Event event) {
   
 }
 
+static vector3 ik_target;
+
 void renderers_init() {
   
   viewport_set_dimensions(1280, 720);
@@ -234,7 +236,9 @@ void renderers_init() {
   
   use_deferred = 1;
   swap_renderer();
-
+  
+  ik_target = v3(0.0, 0.5, -2.8);
+  
 }
 
 light* selected_light = NULL;
@@ -276,6 +280,10 @@ static void select_light(int x, int y) {
 
 static bool g_down = false;
 static bool t_down = false;
+static bool w_down = false;
+static bool a_down = false;
+static bool s_down = false;
+static bool d_down = false;
 
 void renderers_event(SDL_Event event) {
   
@@ -287,11 +295,19 @@ void renderers_event(SDL_Event event) {
   case SDL_KEYDOWN:
     if (event.key.keysym.sym == SDLK_g) g_down = true;
     if (event.key.keysym.sym == SDLK_t) t_down = true;
+    if (event.key.keysym.sym == SDLK_w) w_down = true;
+    if (event.key.keysym.sym == SDLK_a) a_down = true;
+    if (event.key.keysym.sym == SDLK_s) s_down = true;
+    if (event.key.keysym.sym == SDLK_d) d_down = true;
   break;
   
   case SDL_KEYUP:
     if (event.key.keysym.sym == SDLK_g) g_down = false;
     if (event.key.keysym.sym == SDLK_t) t_down = false;
+    if (event.key.keysym.sym == SDLK_w) w_down = false;
+    if (event.key.keysym.sym == SDLK_a) a_down = false;
+    if (event.key.keysym.sym == SDLK_s) s_down = false;
+    if (event.key.keysym.sym == SDLK_d) d_down = false;
   break;
 
   case SDL_MOUSEBUTTONDOWN:
@@ -363,17 +379,18 @@ void renderers_update() {
   ui_button_set_label(framerate, frame_rate_string());
   
   animated_object* imrod = entity_get("imrod");
-  imrod_movement += frame_time();
-  imrod->position.y = sin(imrod_movement)/2-0.5;
+  //imrod_movement += frame_time() * 2;
+  //imrod->position.y = 1.5*sin(imrod_movement)+0.5;
   animated_object_update(imrod, 0.1);
   
+  /*
   bone* thigh_r = skeleton_bone_name(imrod->pose, "thigh_r");
   bone* foot_r = skeleton_bone_name(imrod->pose, "foot_r");
   bone* thigh_l = skeleton_bone_name(imrod->pose, "thigh_l");
   bone* foot_l = skeleton_bone_name(imrod->pose, "foot_l");
   
-  vector3 foot_r_pos = v3(1.5, 0.5, -1.8);
-  vector3 foot_l_pos = v3(1.5, 0.5, 1.8);
+  vector3 foot_r_pos = v3(0.0, 0.5, -2.8);
+  vector3 foot_l_pos = v3(0.0, 0.5, 2.8);
   
   matrix_4x4 inv_world = m44_inverse(m44_world(imrod->position, imrod->scale, imrod->rotation));
   foot_r_pos = m44_mul_v3(inv_world, foot_r_pos);
@@ -381,6 +398,21 @@ void renderers_update() {
   
   inverse_kinematics_solve(thigh_r, foot_r, foot_r_pos);
   inverse_kinematics_solve(thigh_l, foot_l, foot_l_pos);
+  */
+  
+  bone* thigh_r = skeleton_bone_name(imrod->pose, "thigh_r");
+  bone* foot_r = skeleton_bone_name(imrod->pose, "foot_r");
+  matrix_4x4 inv_world = m44_inverse(m44_world(imrod->position, imrod->scale, imrod->rotation));
+  
+  if (w_down) { ik_target.y += 0.1; }
+  if (a_down) { ik_target.x += 0.1; }
+  if (s_down) { ik_target.y -= 0.1; }
+  if (d_down) { ik_target.x -= 0.1; }
+  
+  
+  vector3 local_target = m44_mul_v3(inv_world, ik_target);
+  
+  inverse_kinematics_solve(thigh_r, foot_r, local_target);
   
 }
 
@@ -445,6 +477,25 @@ void renderers_render() {
       forward_renderer_render_static(s_piano);
     } else if (object_id == 2) {
       forward_renderer_render_animated(a_imrod);
+      //forward_renderer_render_skeleton(a_imrod->pose);
+      
+      matrix_4x4 foot_pos = bone_transform(skeleton_bone_name(a_imrod->pose, "foot_r"));
+      
+      vector3 pos = m44_mul_v3(foot_pos, v3_zero());
+      pos = m44_mul_v3(m44_world(a_imrod->position, a_imrod->scale, a_imrod->rotation), pos);
+      
+      glDisable(GL_DEPTH_TEST);
+      glPointSize(5.0);
+      glBegin(GL_POINTS);
+        glColor3f(0,0,1);
+        glVertex3f(pos.x, pos.y, pos.z);
+        glColor3f(0,1,0);
+        glVertex3f(ik_target.x, ik_target.y, ik_target.z);
+      glEnd();
+      glColor3f(1,1,1);
+      glPointSize(1.0);
+      glEnable(GL_DEPTH_TEST);
+      
     } else if (object_id == 3) {
       forward_renderer_render_static(s_dino);
     }

@@ -178,15 +178,28 @@ void inverse_kinematics_solve(bone* base, bone* end, vector3 target) {
   vector3 mid_pos = m44_mul_v3(bone_transform(mid), v3_zero());
   vector3 tar_pos = target;
   
-  /* Translate so base at origin */
-  vector3 trans = base_pos;
-  base_pos = v3_sub(base_pos, trans);
-  end_pos = v3_sub(end_pos, trans);
-  mid_pos = v3_sub(mid_pos, trans);
-  tar_pos = v3_sub(tar_pos, trans); 
+  float base_target_dist = v3_dist(base_pos, target);
+  float base_mid_dist = v3_dist(base_pos, mid_pos);
+  float mid_end_dist = v3_dist(mid_pos, end_pos);
+  
+  if (base_target_dist >= base_mid_dist + mid_end_dist - 0.01) {
+    vector3 target_dir = v3_normalize(v3_sub(target, base_pos));
+    tar_pos = v3_add(base_pos, v3_mul(target_dir, base_mid_dist + mid_end_dist - 0.01));
+  }
+  
+  matrix_4x4 inv_trans = m44_inverse(bone_transform(base));
+  base_pos = m44_mul_v3(inv_trans, base_pos);
+  end_pos = m44_mul_v3(inv_trans, end_pos);
+  mid_pos = m44_mul_v3(inv_trans, mid_pos);
+  tar_pos = m44_mul_v3(inv_trans, tar_pos);
+  
+  vector3 base_tar = v3_sub(tar_pos, base_pos);
+  float angle_x = v3_dot(base_tar, v3(1,0,0));
+  float angle_y = v3_dot(base_tar, v3(0,1,0));
+  float angle_z = v3_dot(base_tar, v3(0,0,1));
   
   vector3 rot_axis = v3_normalize(v3_cross(v3_sub(tar_pos, base_pos), v3_sub(end_pos, base_pos)));
-  matrix_4x4 plane_view = m44_view_look_at(v3_zero(), rot_axis, trans);
+  matrix_4x4 plane_view = m44_view_look_at(v3_zero(), rot_axis, v3(0,1,0));
   
   /* Project onto rotation plane and convert to 2D */
   base_pos = m44_mul_v3(plane_view, base_pos);
@@ -208,24 +221,35 @@ void inverse_kinematics_solve(bone* base, bone* end, vector3 target) {
   
   float r2_frac = (px*px + py*py - l1*l1 - l2*l2) / (2*l1*l2);
   
-  /* Would be good to, in this situation strech legs out toward point */
-  if (r2_frac < -1) return;
-  if (r2_frac > 1) return;
+  if (r2_frac < -1) {
+    warning("Could not solve IK, somehow out of range!");
+    return;
+  }
+  if (r2_frac > 1) {
+    warning("Could not solve IK, somehow out of range!");
+    return;
+  }
   
   float r2 = acos(r2_frac);
   
   float r1_top = -(l2*sin(r2))*px + (l1 + l2*cos(r2))*py;
   float r1_bot =  (l2*sin(r2))*py + (l1 + l2*cos(r2))*px;
-  float r1 = atan(r1_top/r1_bot);
+  float r1_frac = r1_top/r1_bot;
+  float r1 = atan(r1_frac);
+  
+  if (r1_frac > 0) {
+    r1 = r1 + 3.14;
+  }
+  
+  /* I suspect that this will work better only using the angle variables not the fractional ones */
+  if ((r1_frac <= 0) && (r2_frac <= 0) && (angle_x < 0)) {
+    r1 = r1 + 3.14;
+  }
   
   /* Apply Rotations */
-  matrix_4x4 base_trans = m44_inverse(bone_transform(base));
-  base_trans.xw = 0.0; base_trans.yw = 0.0; base_trans.zw = 0.0;
-  vector3 local_axis = m44_mul_v3(base_trans, rot_axis);
   
-  /* Due to the way we construct the view matrix have to subtract 90 degrees here */
-  matrix_4x4 base_rotation = m44_rotation_axis_angle(local_axis, r1 - 1.57);
-  matrix_4x4 mid_rotation = m44_rotation_axis_angle(local_axis, r2);
+  matrix_4x4 base_rotation = m44_rotation_axis_angle(rot_axis, r1);
+  matrix_4x4 mid_rotation = m44_rotation_axis_angle(rot_axis, r2);
   
   base->rotation = m44_mul_m44(base->rotation, base_rotation);
   mid->rotation = mid_rotation;

@@ -31,7 +31,6 @@ void animated_object_delete(animated_object* ao) {
   free(ao);
 }
 
-static double sin_rollover = 0.0;
 void animated_object_update(animated_object* ao, float timestep) {
   
   ao->animation_time += timestep;

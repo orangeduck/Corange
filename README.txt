@@ -25,7 +25,7 @@
 		$ make linux
 		
 		
-	:: Features ::
+	:: Overview ::
 		
 		* Small, Simple, Powerful, Cross platform
 		* Clean and easy Asset, UI, Entity management
@@ -36,12 +36,33 @@
 		
 		renderers 	~ Shows off the various renderers with shaders, shadows, animation etc.
 		lut_gen 	~ Tool for generating color correction LUTs from a photoshop curves file.
-		metaballs 	~ Uses OpenCL/OpenGL stuff to do Metaball rendering.
+		metaballs 	~ Uses OpenCL/OpenGL interop to do Metaball rendering.
 		noise 		~ Feedback based noise pattern on screen using shader. Can generate tileable perlin noise in software.
 		platformer 	~ Basic platforming game. Fairly well commented.
-		sea 		~ Renders a sea-like surface, a pretty ship, and some collision detection.
+		sea 		~ Renders a sea-like surface, a ship, and some collision detection.
 		
+	
+	:: FAQ ::
 		
+		* Why not C++?
+			
+			There are plenty of C++ engines which do what I've done here and better. Pure C game engines on the other hand are much rarer. Corange provided me an outlet to practice my C skills and Data Oriented Design. And I wouldn't underestimate the benefits of that. Of course if you are just linking to it you can still program your game/executable using C++.
+			
+		* What stuff does it do?
+		
+			I've used it as a platform for trying out all sorts of techniques and effects. These features are not out-of-the-box or plug-in-and-play, but if you are a developer who has knowledge of what they are, you should be able to utilize what I have written. Ones marked * are WIP or rough around the edges.
+			
+			Forward / Deferred / UI / Text Rendering. Multiple Lights. Post effects. SSAO. Shadow Mapping. Color Correction. Skeletal Animation. Inverse Kinematics*. Collision Detection*. OpenCL support. Audio Mixing. Asset / Entity / UI Management. Terrain. File loaders including .dds, .wav, .bmp, .obj, .smd. Maths and Geometry. And More...
+			
+		* Can I use this for 2D stuff?
+			
+			Certainly. Though corange doesn't provide a 2D renderer for you. That you can write yourself. Believe it or not, making a generalized 2D renderer can be exceedingly complicated when you have to optimise for different sprites, tile sets, dynamic objects and all sorts of other effects. You're better off writing the rendering code application specific.
+			
+		* Can I contact you about something?
+		
+			Yes - contact@theorangeduck.com
+			
+			
 	:: Using / Contributing ::
 	
 		This is still mainly a personal project and so there are going to be lots of bugs, unfinished features and messy bits of code. The engine is heavily WIP and subject to sweeping changes. It isn't really viable to use without also being part of the project development and in communication with me. Rather than a full game engine like Unity, Corange is more of a framework and gives you access to features at about the same level as XNA.
@@ -54,12 +75,10 @@
 			
 			* Corange doesn't hide anything from you. OpenGL and SDL calls are in the namespace so you've got access to the basics. The corange_init and corange_finish functions are fairly short so it is even possible to not call them and only use the components you want.
 			
-			* Structs are typedefed without their pointer. This means if a function returns you a pointer to something you probably are responsible for deleting it. The reason for this is a personal choice but there are also quite a few data types which are passed by value on the stack (vectors, matrices, spheres, boxes). I didn't want the notion of these to get confused.
+			* Structs are typedefed without their pointer. The reason for this is a personal choice but there are also quite a few data types which are passed by value on the stack (vectors, matrices, spheres, boxes). I didn't want the notion of these to get confused.
 			
 			* Some important parts of the engine are the asset, UI and entity managers. These basically let you access and store assets (models, textures - objects in the file system) and entities (lights, cameras, engine objects) and UI elements. They clean up memory on destruction and let you get pointers from all parts of the code.
 			
 			* Corange mangles the namespace pretty badly, taking names such as "error", "warning", "v2" and "image". It isn't a general purpose library. But I've still tried to decouple stuff so it should be possible to extract certain code if you need it.
 			
 			* More coming...
-			
-			
