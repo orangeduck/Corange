@@ -1114,12 +1114,12 @@ void forward_renderer_render_landscape(landscape* ls) {
   glBindTexture(GL_TEXTURE_2D, *SHADOW_TEX);
   glEnable(GL_TEXTURE_2D);
   glUniform1i(glGetUniformLocation(*terrain, "shadow_map"), 6);
-    
+  
   for(int i = 0; i < ls->terrain->num_chunks; i++) {
     
     terrain_chunk* tc = ls->terrain->chunks[i];
     
-    vector3 position = v3_add(v3(tc->x * ls->terrain->chunk_width, 0, tc->y * ls->terrain->chunk_height), ls->position);
+    vector3 position = v3_add(v3((tc->x+0.5) * ls->terrain->chunk_width, 0, (tc->y+0.5) * ls->terrain->chunk_height), ls->position);
     int index_id = min(0.01 * v3_dist_manhattan(position, CAMERA->position), NUM_TERRAIN_BUFFERS-1);
     
     glUniform1i(glGetUniformLocation(*terrain, "lod_index"), index_id);

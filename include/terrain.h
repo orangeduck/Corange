@@ -7,6 +7,7 @@
 #include "error.h"
 #include "texture.h"
 
+#define NUM_TERRAIN_SUBDIVISIONS 0
 #define NUM_TERRAIN_BUFFERS 4
 
 struct terrain_chunk {
@@ -19,20 +20,17 @@ struct terrain_chunk {
   struct terrain_chunk* top;
   struct terrain_chunk* bottom;
   
-  int num_indicies[NUM_TERRAIN_BUFFERS];
-  GLuint index_buffers[NUM_TERRAIN_BUFFERS];
-  
   int num_verts;
   GLuint vertex_buffer;
   
-  texture* offset_map;
-	
+  int num_indicies[NUM_TERRAIN_BUFFERS];
+  GLuint index_buffers[NUM_TERRAIN_BUFFERS];
+  
 };
 
 struct terrain_chunk;
 typedef struct terrain_chunk terrain_chunk;
 
-terrain_chunk* chnk_load_file(char* filename);
 void terrain_chunk_delete(terrain_chunk* tc);
 
 typedef struct {
