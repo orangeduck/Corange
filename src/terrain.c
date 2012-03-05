@@ -64,50 +64,100 @@ terrain* raw_load_file(char* filename) {
     tc->y = i / ter->num_cols;
     tc->width = ter->chunk_width;
     tc->height = ter->chunk_height;
-    tc->num_verts = (ter->chunk_width + 1) * (ter->chunk_height + 1);
-    
-    
+    tc->num_verts = (tc->width+1) * (tc->height+1) + (tc->width+1) * 2 + (tc->height+1) * 2;
     
     /* Buffer format: vec3 position, vec3 normal */
-    float* vertex_buffer = malloc(sizeof(float) * 6 * tc->num_verts);
+    float* vertex_buffer = malloc(sizeof(float) * 3 * tc->num_verts);
     int index = 0;
     for(int x = 0; x < tc->width+1; x++)
     for(int y = 0; y < tc->height+1; y++) {
       int gx = tc->x * ter->chunk_width + x;
       int gy = tc->y * ter->chunk_height + y;
       
-      int gxh = min(ter->width-3, gx);
-      int gyh = min(ter->height-3, gy);
+      int gxh = min(ter->width-1, gx);
+      int gyh = min(ter->height-1, gy);
       
       float offset = ter->heightmap[gxh + gyh * ter->width];
-      float offset_r = ter->heightmap[(gxh+1) + gyh * ter->width];
-      float offset_d = ter->heightmap[gxh + (gyh+1) * ter->width];
       
       vector3 pos = v3(gx, offset, gy);
-      vector3 pos_r = v3_sub(v3(gx+1, offset_r, gy), pos);
-      vector3 pos_d = v3_sub(v3(gx, offset_d, gy+1), pos);
-      
-      vector3 normal = v3_neg(v3_normalize(v3_cross(pos_r, pos_d)));
       
       vertex_buffer[index] = pos.x; index++;
-      vertex_buffer[index] = offset; index++;
+      vertex_buffer[index] = pos.y; index++;
       vertex_buffer[index] = pos.z; index++;
+    }
+    
+    const float FIN_SIZE = 5.0;
+    
+    for(int y = 0; y < tc->height+1; y++) {
+      int gx = tc->x * ter->chunk_width + 0;
+      int gy = tc->y * ter->chunk_height + y;
+    
+      int gxh = min(ter->width-1, gx);
+      int gyh = min(ter->height-1, gy);
       
-      vertex_buffer[index] = normal.x; index++;
-      vertex_buffer[index] = normal.y; index++;
-      vertex_buffer[index] = normal.z; index++;
+      float offset = ter->heightmap[gxh + gyh * ter->width] - FIN_SIZE;
+      vector3 pos = v3(gx, offset, gy);
+      
+      vertex_buffer[index] = pos.x; index++;
+      vertex_buffer[index] = pos.y; index++;
+      vertex_buffer[index] = pos.z; index++;
+    }
+    
+    for(int y = 0; y < tc->height+1; y++) {
+      int gx = tc->x * ter->chunk_width + ter->chunk_width;
+      int gy = tc->y * ter->chunk_height + y;
+    
+      int gxh = min(ter->width-1, gx);
+      int gyh = min(ter->height-1, gy);
+      
+      float offset = ter->heightmap[gxh + gyh * ter->width] - FIN_SIZE;
+      vector3 pos = v3(gx, offset, gy);
+      
+      vertex_buffer[index] = pos.x; index++;
+      vertex_buffer[index] = pos.y; index++;
+      vertex_buffer[index] = pos.z; index++;
+    }
+    
+    for(int x = 0; x < tc->width+1; x++) {
+      int  gx = tc->x * ter->chunk_width + x;
+      int  gy = tc->y * ter->chunk_height + 0;
+      
+      int gxh = min(ter->width-1, gx);
+      int gyh = min(ter->height-1, gy);
+      
+      float offset = ter->heightmap[gxh + gyh * ter->width] - FIN_SIZE;
+      vector3 pos = v3(gx, offset, gy);
+      
+      vertex_buffer[index] = pos.x; index++;
+      vertex_buffer[index] = pos.y; index++;
+      vertex_buffer[index] = pos.z; index++;
+    }
+    
+    for(int x = 0; x < tc->width+1; x++) {
+      int  gx = tc->x * ter->chunk_width + x;
+      int  gy = tc->y * ter->chunk_height + ter->chunk_height;
+      
+      int gxh = min(ter->width-1, gx);
+      int gyh = min(ter->height-1, gy);
+      
+      float offset = ter->heightmap[gxh + gyh * ter->width] - FIN_SIZE;
+      vector3 pos = v3(gx, offset, gy);
+      
+      vertex_buffer[index] = pos.x; index++;
+      vertex_buffer[index] = pos.y; index++;
+      vertex_buffer[index] = pos.z; index++;
     }
     
     glGenBuffers(1, &tc->vertex_buffer);
     glBindBuffer(GL_ARRAY_BUFFER, tc->vertex_buffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * tc->num_verts, vertex_buffer, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 3 * tc->num_verts, vertex_buffer, GL_DYNAMIC_DRAW);
     free(vertex_buffer);
     
     glGenBuffers(NUM_TERRAIN_BUFFERS, tc->index_buffers);
     for(int j = 0; j < NUM_TERRAIN_BUFFERS; j++) {
     
       int off = pow(2, j);
-      tc->num_indicies[j] = (ter->chunk_width / off) * (ter->chunk_height / off) * 6;
+      tc->num_indicies[j] = (ter->chunk_width / off) * (ter->chunk_height / off) * 6 + (ter->chunk_width / off) * 12 + (ter->chunk_height / off) * 12;
       
       int* index_buffer = malloc(sizeof(int) * tc->num_indicies[j]);
       index = 0;
@@ -120,6 +170,50 @@ terrain* raw_load_file(char* filename) {
         index_buffer[index] = (x+off) + (y+off) * (tc->width+1); index++;
         index_buffer[index] =  x + (y+off) * (tc->width+1); index++;
       }
+      
+      int x_base = (tc->width + 1) * (tc->height + 1);
+      int y_base = (tc->width + 1) * (tc->height + 1) + (tc->width + 1) * 2;
+      
+      for(int x = 0; x < tc->width; x+=off) {
+        index_buffer[index] = x + 0 * (tc->width+1); index++;
+        index_buffer[index] =  x_base + x; index++;
+        index_buffer[index] = (x+off) + 0 * (tc->width+1); index++;
+        
+        index_buffer[index] = (x+off) + 0 * (tc->width+1); index++;
+        index_buffer[index] = x_base + x; index++;
+        index_buffer[index] = x_base + x+off; index++;
+      }
+      
+      for(int x = 0; x < tc->width; x+=off) {
+        index_buffer[index] = x + tc->height * (tc->width+1); index++;
+        index_buffer[index] = (x+off) + tc->height * (tc->width+1); index++;
+        index_buffer[index] =  x_base + tc->height+1 + x; index++;
+        
+        index_buffer[index] = (x+off) + tc->height * (tc->width+1); index++;
+        index_buffer[index] = x_base + tc->width+1 + x+off; index++;
+        index_buffer[index] = x_base + tc->width+1 + x; index++;
+      }
+      
+      for(int y = 0; y < tc->height; y+=off) {
+        index_buffer[index] = 0 + y * (tc->width+1); index++;
+        index_buffer[index] = 0 + (y+off) * (tc->width+1); index++;
+        index_buffer[index] = y_base + y; index++;
+        
+        index_buffer[index] = 0 + (y+off) * (tc->width+1); index++;
+        index_buffer[index] = y_base + y+off; index++;
+        index_buffer[index] = y_base + y; index++;
+      }
+      
+      for(int y = 0; y < tc->height; y+=off) {
+        index_buffer[index] = tc->width + y * (tc->width+1); index++;
+        index_buffer[index] = y_base + tc->height+1 + y; index++;
+        index_buffer[index] = tc->width + (y+off) * (tc->width+1); index++;
+        
+        index_buffer[index] = tc->width + (y+off) * (tc->width+1); index++;
+        index_buffer[index] = y_base + tc->height+1 + y; index++;
+        index_buffer[index] = y_base + tc->height+1 + y+off; index++;
+      }
+      
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tc->index_buffers[j]);
       glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * tc->num_indicies[j], index_buffer, GL_DYNAMIC_DRAW);
       free(index_buffer);

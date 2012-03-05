@@ -299,21 +299,15 @@ void shadow_mapper_render_landscape(landscape* ls) {
     
     terrain_chunk* tc = ls->terrain->chunks[i];
     
-    GLsizei stride = sizeof(float) * 6;
-    
     glBindBuffer(GL_ARRAY_BUFFER, tc->vertex_buffer);
   
-    glVertexPointer(3, GL_FLOAT, stride, (void*)0);
+    glVertexPointer(3, GL_FLOAT, 0, (void*)0);
     glEnableClientState(GL_VERTEX_ARRAY);
-    
-    glNormalPointer(GL_FLOAT, stride, (void*)(sizeof(float) * 3));
-    glEnableClientState(GL_NORMAL_ARRAY);
       
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tc->index_buffers[NUM_TERRAIN_BUFFERS-1]);
       glDrawElements(GL_TRIANGLES, tc->num_indicies[NUM_TERRAIN_BUFFERS-1], GL_UNSIGNED_INT, (void*)0);
     
     glDisableClientState(GL_VERTEX_ARRAY);
-    glDisableClientState(GL_NORMAL_ARRAY);
     
   }
   

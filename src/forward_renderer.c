@@ -1115,8 +1115,6 @@ void forward_renderer_render_landscape(landscape* ls) {
   glEnable(GL_TEXTURE_2D);
   glUniform1i(glGetUniformLocation(*terrain, "shadow_map"), 6);
     
-  GLsizei stride = sizeof(float) * 6;
-    
   for(int i = 0; i < ls->terrain->num_chunks; i++) {
     
     terrain_chunk* tc = ls->terrain->chunks[i];
@@ -1128,17 +1126,17 @@ void forward_renderer_render_landscape(landscape* ls) {
     
     glBindBuffer(GL_ARRAY_BUFFER, tc->vertex_buffer);
   
-    glVertexPointer(3, GL_FLOAT, stride, (void*)0);
+    glVertexPointer(3, GL_FLOAT, 0, (void*)0);
     glEnableClientState(GL_VERTEX_ARRAY);
-    
-    glNormalPointer(GL_FLOAT, stride, (void*)(sizeof(float) * 3));
-    glEnableClientState(GL_NORMAL_ARRAY);
       
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tc->index_buffers[index_id]);
       glDrawElements(GL_TRIANGLES, tc->num_indicies[index_id], GL_UNSIGNED_INT, (void*)0);
+      
+      //glPointSize(3.0);
+      //glDrawArrays(GL_POINTS, 0, tc->num_verts);
+      //glPointSize(1.0);
     
     glDisableClientState(GL_VERTEX_ARRAY);
-    glDisableClientState(GL_NORMAL_ARRAY);
     
   }
   

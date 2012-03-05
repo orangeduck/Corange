@@ -194,6 +194,7 @@ void inverse_kinematics_solve(bone* base, bone* end, vector3 target) {
   tar_pos = m44_mul_v3(inv_trans, tar_pos);
   
   vector3 rot_axis = v3_normalize(v3_cross(v3_sub(tar_pos, base_pos), v3_sub(end_pos, base_pos)));
+  
   matrix_4x4 plane_view = m44_view_look_at(v3_zero(), rot_axis, v3(0,1,0));
   
   /* Project onto rotation plane and convert to 2D */

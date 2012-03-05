@@ -28,7 +28,6 @@ uniform vec3 light_ambient[MAX_LIGHTS];
 uniform vec3 light_specular[MAX_LIGHTS];
 
 varying vec3 position;
-varying vec3 normal;
 
 /* Headers */
 
@@ -59,7 +58,6 @@ void main() {
   
   vec3 albedo = mix(near_albedo, far_albedo, dist_func);
   
-  vec3 norm_near = normal;
   vec3 norm_far = texture2D(normals, world_uvs).rgb;
   norm_far.g = 1-norm_far.g;
   norm_far = (norm_far * 2.0) - 1.0;
@@ -102,7 +100,7 @@ void main() {
   float fres_amount = 0.05;
   float glossiness = 5.0;
   
-  float n_dot_f = shadow * pow(clamp(1.0 - dot(camera_vector, normal), 0, 1), glossiness); 
+  float n_dot_f = shadow * pow(clamp(1.0 - dot(camera_vector, norm), 0, 1), glossiness); 
   vec3 fresnel = light_ambient[0] * fres_amount * n_dot_f;
   
   vec3 final = to_gamma(diffuse + ambient + fresnel);

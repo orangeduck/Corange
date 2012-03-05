@@ -295,19 +295,11 @@ void renderers_event(SDL_Event event) {
   case SDL_KEYDOWN:
     if (event.key.keysym.sym == SDLK_g) g_down = true;
     if (event.key.keysym.sym == SDLK_t) t_down = true;
-    if (event.key.keysym.sym == SDLK_w) w_down = true;
-    if (event.key.keysym.sym == SDLK_a) a_down = true;
-    if (event.key.keysym.sym == SDLK_s) s_down = true;
-    if (event.key.keysym.sym == SDLK_d) d_down = true;
   break;
   
   case SDL_KEYUP:
     if (event.key.keysym.sym == SDLK_g) g_down = false;
     if (event.key.keysym.sym == SDLK_t) t_down = false;
-    if (event.key.keysym.sym == SDLK_w) w_down = false;
-    if (event.key.keysym.sym == SDLK_a) a_down = false;
-    if (event.key.keysym.sym == SDLK_s) s_down = false;
-    if (event.key.keysym.sym == SDLK_d) d_down = false;
   break;
 
   case SDL_MOUSEBUTTONDOWN:
@@ -344,7 +336,7 @@ void renderers_update() {
   light* sun = entity_get("sun");
 
   Uint8 keystate = SDL_GetMouseState(NULL, NULL);
-  if(keystate & SDL_BUTTON(1)){
+  if (keystate & SDL_BUTTON(1)) {
   
     float a1 = -(float)mouse_x * 0.005;
     float a2 = (float)mouse_y * 0.005;
@@ -355,7 +347,28 @@ void renderers_update() {
     
     cam->position = m33_mul_v3(m33_rotation_axis_angle(rotation_axis, a2 ), cam->position );
   }
-
+  
+  if (keystate & SDL_BUTTON(3)) {
+    
+    matrix_4x4 view = camera_view_matrix(cam);
+    matrix_4x4 proj = camera_proj_matrix(cam, viewport_ratio());
+    matrix_4x4 inv_view = m44_inverse(view);
+    matrix_4x4 inv_proj = m44_inverse(proj);
+    
+    vector3 ik_screen = ik_target;
+    ik_screen = m44_mul_v3(view, ik_screen);
+    ik_screen = m44_mul_v3(proj, ik_screen);
+    
+    ik_screen.x +=  (float)mouse_x * 0.001;
+    ik_screen.y += -(float)mouse_y * 0.001;
+    
+    vector3 ik_world = ik_screen;
+    ik_world = m44_mul_v3(inv_proj, ik_world);
+    ik_world = m44_mul_v3(inv_view, ik_world);
+    
+    ik_target = ik_world;
+  }
+  
   if (g_down && selected_light) {
     vector3 move_dir = v3_sub(cam->target, cam->position); move_dir.y = 0;
     
@@ -403,11 +416,6 @@ void renderers_update() {
   bone* thigh_r = skeleton_bone_name(imrod->pose, "thigh_r");
   bone* foot_r = skeleton_bone_name(imrod->pose, "foot_r");
   matrix_4x4 inv_world = m44_inverse(m44_world(imrod->position, imrod->scale, imrod->rotation));
-  
-  if (w_down) { ik_target.y += 0.1; }
-  if (a_down) { ik_target.x += 0.1; }
-  if (s_down) { ik_target.y -= 0.1; }
-  if (d_down) { ik_target.x -= 0.1; }
   
   
   vector3 local_target = m44_mul_v3(inv_world, ik_target);
