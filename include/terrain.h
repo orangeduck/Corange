@@ -56,5 +56,6 @@ void terrain_delete(terrain* ter);
 terrain_chunk* terrain_get_chunk(terrain* ter, int x, int y);
 
 float terrain_height(terrain* ter, vector2 position);
+vector3 terrain_normal(terrain* ter, vector2 position);
 
 #endif

@@ -11,7 +11,7 @@ float shadow_amount_soft_pcf25(vec4 light_pos, sampler2D light_depth, float hard
 
 /* End */
 
-const float shadow_bias = 0.0001;
+const float shadow_bias = 0.000001;
 
 float shadow_amount(vec4 light_pos, sampler2D light_depth) {
   
@@ -251,12 +251,11 @@ float shadow_amount_soft_pcf25(vec4 light_pos, sampler2D light_depth, float hard
     float sample_depth = texture2D( light_depth, shadow_coord.xy + offset ).r;
     blocked_depth += min(sample_depth, our_depth);
   }
-  
   blocked_depth = blocked_depth / 25;
   
-  float prenumbra = max((our_depth - blocked_depth) * hardness * 0.25, 0.0) / blocked_depth;
+  float prenumbra = max((our_depth - blocked_depth) / blocked_depth, 0.0);
   
-  float kernel = prenumbra * 1000.0 + 0.00025;
+  float kernel = prenumbra * hardness * 3000.0 + 0.00025;
   
   vec2 samples[25] = vec2[25]( vec2(-2.0*kernel, -2.0*kernel),
                        vec2(-2.0*kernel,  -kernel),

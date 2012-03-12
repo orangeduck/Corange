@@ -1,0 +1,2 @@
+string name = basic_instanced
+program prog = $CORANGE/shaders/basic_instanced.prog

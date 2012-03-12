@@ -8,7 +8,7 @@
 
 #include "renderable.h"
 
-static void renderable_add_mesh(renderable* r, mesh* m) {
+void renderable_add_mesh(renderable* r, mesh* m) {
   
   renderable_surface* surface = renderable_surface_new(m);
   
@@ -18,7 +18,7 @@ static void renderable_add_mesh(renderable* r, mesh* m) {
   
 }
 
-static void renderable_add_model(renderable* r, model* m) {
+void renderable_add_model(renderable* r, model* m) {
 
   for(int i = 0; i < m->num_meshes; i++) {
     renderable_add_mesh(r, m->meshes[i]);
@@ -61,6 +61,79 @@ void renderable_set_multi_material(renderable* r, multi_material* mmat) {
     renderable_surface_set_material(r->surfaces[i], mmat->materials[i]);
   }
   
+}
+
+model* renderable_to_model(renderable* r) {
+  
+  model* m = model_new();
+  
+  m->num_meshes = r->num_surfaces;
+  m->meshes = realloc(m->meshes, sizeof(mesh*) * m->num_meshes);
+  
+  for(int i = 0; i < r->num_surfaces; i++) {
+    
+    renderable_surface* s = r->surfaces[i];
+    
+    if (s->is_rigged) {
+      error("Cannot convert rigged renderable to model");
+    }
+    
+    float* vb_data = malloc(sizeof(float) * s->num_verticies * 18);
+    int* ib_data = malloc(sizeof(int) * s->num_triangles * 3);
+    
+    glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
+    glGetBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * s->num_verticies * 18, vb_data);
+    
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
+    glGetBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeof(int) * s->num_triangles * 3, ib_data);
+    
+    m->meshes[i] = mesh_new();
+    
+    mesh* me = m->meshes[i];
+    
+    me->num_verts = s->num_verticies;
+    me->num_triangles = s->num_triangles;
+    me->num_triangles_3 = s->num_triangles * 3;
+    
+    me->verticies = realloc(me->verticies, sizeof(vertex) * me->num_verts);
+    me->triangles = realloc(me->triangles, sizeof(int) * me->num_triangles_3);
+    
+    for(int j = 0; j < me->num_verts; j++) {
+      me->verticies[j].position.x = vb_data[(j*18)+0];
+      me->verticies[j].position.y = vb_data[(j*18)+1];
+      me->verticies[j].position.z = vb_data[(j*18)+2];
+      
+      me->verticies[j].normal.x = vb_data[(j*18)+3];
+      me->verticies[j].normal.y = vb_data[(j*18)+4];
+      me->verticies[j].normal.z = vb_data[(j*18)+5];
+      
+      me->verticies[j].tangent.x = vb_data[(j*18)+6];
+      me->verticies[j].tangent.y = vb_data[(j*18)+7];
+      me->verticies[j].tangent.z = vb_data[(j*18)+8];
+      
+      me->verticies[j].binormal.x = vb_data[(j*18)+9];
+      me->verticies[j].binormal.y = vb_data[(j*18)+10];
+      me->verticies[j].binormal.z = vb_data[(j*18)+11];
+      
+      me->verticies[j].uvs.x = vb_data[(j*18)+12];
+      me->verticies[j].uvs.y = vb_data[(j*18)+13];
+      
+      me->verticies[j].color.r = vb_data[(j*18)+14];
+      me->verticies[j].color.g = vb_data[(j*18)+15];
+      me->verticies[j].color.b = vb_data[(j*18)+16];
+      me->verticies[j].color.a = vb_data[(j*18)+17];
+    }
+    
+    for(int j = 0; j < me->num_triangles_3; j++) {
+      me->triangles[j] = ib_data[j];
+    }
+    
+    free(vb_data);
+    free(ib_data);
+  
+  }
+  
+  return m;
 }
 
 renderable_surface* renderable_surface_new(mesh* m) {
@@ -106,10 +179,10 @@ renderable_surface* renderable_surface_new(mesh* m) {
     vb_data[(i*18)+12] = uvs.x;
     vb_data[(i*18)+13] = uvs.y;
     
-    vb_data[(i*18)+14] = col.w;
-    vb_data[(i*18)+15] = col.x;
-    vb_data[(i*18)+16] = col.y;
-    vb_data[(i*18)+17] = col.z;
+    vb_data[(i*18)+14] = col.r;
+    vb_data[(i*18)+15] = col.g;
+    vb_data[(i*18)+16] = col.b;
+    vb_data[(i*18)+17] = col.a;
   
   }
   
@@ -129,7 +202,6 @@ renderable_surface* renderable_surface_new(mesh* m) {
   if( asset_loaded(m->material) ) {
     s->base = asset_get(m->material);
   } else {
-    
     s->base = asset_load_get("$CORANGE/resources/basic.mat");
   }
   

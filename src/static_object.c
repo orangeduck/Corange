@@ -2,7 +2,7 @@
 
 #include "static_object.h"
 
-static_object* static_object_new(renderable* r) {
+static_object* static_object_new() {
   static_object* s = malloc(sizeof(static_object));
   
   s->position = v3_zero();
@@ -13,7 +13,7 @@ static_object* static_object_new(renderable* r) {
   s->recieve_shadows = true;
   s->cast_shadows = true;
   
-  s->renderable = r;
+  s->renderable = NULL;
   s->collision_body = NULL;
   
   return s;

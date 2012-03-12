@@ -3,8 +3,8 @@
 
 #include "light.h"
 
-#define DEFAULT_LIGHT_NEAR_CLIP 4.0
-#define DEFAULT_LIGHT_FAR_CLIP 4096.0
+#define DEFAULT_LIGHT_NEAR_CLIP 0.1
+#define DEFAULT_LIGHT_FAR_CLIP 8192.0
 #define DEFAULT_FOV 0.785398163
 
 light* light_new(vector3 position) {
@@ -89,15 +89,15 @@ void light_set_type(light* l, int type) {
     l->cast_shadows = true;
     
     l->orthographic = true;
-    l->ortho_width = 1024;
-    l->ortho_height = 1024;
+    l->ortho_width = 128;
+    l->ortho_height = 128;
     
     l->fov = -1;
     l->aspect_ratio = -1;
     
     l->shadow_color = v3_zero();
-    l->shadow_map_width = 512;
-    l->shadow_map_height = 512;
+    l->shadow_map_width = 2048;
+    l->shadow_map_height = 2048;
   
   } else if (type == light_type_spot) {
     

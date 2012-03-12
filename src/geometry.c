@@ -245,6 +245,26 @@ void mesh_print(mesh* m) {
   
 }
 
+mesh* mesh_new() {
+  
+  mesh* m = malloc(sizeof(mesh));
+  
+  m->name = malloc(strlen("Untitled Mesh") + 1);
+  strcpy(m->name, "Untitled Mesh");
+  
+  m->material = malloc(strlen("None") + 1);
+  strcpy(m->material, "None");
+  
+  m->num_verts = 0;
+  m->num_triangles = 0;
+  m->num_triangles_3 = 0;
+  m->verticies = malloc(sizeof(vertex) * m->num_verts);
+  m->triangles = malloc(sizeof(int) * m->num_triangles_3);
+  
+  return m;
+  
+}
+
 void mesh_delete(mesh* m) {
   
   free(m->name);
@@ -451,43 +471,76 @@ float mesh_surface_area(mesh* m) {
   
 }
 
-void model_add_mesh(model* main_model, mesh* sub_mesh) {
-          
-  /* Re fit the vertex and triangle memory sizes */ 
-  sub_mesh->verticies = realloc(sub_mesh->verticies, sizeof(vertex) * sub_mesh->num_verts);
-  sub_mesh->triangles = realloc(sub_mesh->triangles, sizeof(int) * sub_mesh->num_triangles_3);
+void mesh_translate(mesh* m, vector3 translation) {
+
+  int i = 0;
+  while(i < m->num_triangles_3) {
   
-  /* Calculate triangle count */
-  sub_mesh->num_triangles = sub_mesh->num_triangles_3 / 3;
-  
-  /* Attach to model */  
-  main_model->meshes[main_model->num_meshes] = sub_mesh;
-  main_model->num_meshes++;
-  
+    int t_i1 = m->triangles[i];
+    int t_i2 = m->triangles[i+1];
+    int t_i3 = m->triangles[i+2];
+    
+    m->verticies[t_i1].position = v3_add(m->verticies[t_i1].position, translation);
+    m->verticies[t_i2].position = v3_add(m->verticies[t_i2].position, translation);
+    m->verticies[t_i3].position = v3_add(m->verticies[t_i3].position, translation);
+    
+    i = i + 3;
+  }
+
 }
 
-void model_merge_model(model* m1, model* m2) {
+void mesh_scale(mesh* m, float scale) {
 
-  int total_num_meshes = m1->num_meshes + m2->num_meshes;
+  int i = 0;
+  while(i < m->num_triangles_3) {
   
-  /* expand mesh list to allow for m2 meshes */
-  m1->meshes = realloc(m1->meshes, sizeof(mesh*) * total_num_meshes);
-  
-  /* Copy pointers from m2 into the m1 mesh list */
-  for(int i = m1->num_meshes; i < total_num_meshes;i++) {
-    m1->meshes[i] = m2->meshes[i - m1->num_meshes];
+    int t_i1 = m->triangles[i];
+    int t_i2 = m->triangles[i+1];
+    int t_i3 = m->triangles[i+2];
+    
+    m->verticies[t_i1].position = v3_mul(m->verticies[t_i1].position, scale);
+    m->verticies[t_i2].position = v3_mul(m->verticies[t_i2].position, scale);
+    m->verticies[t_i3].position = v3_mul(m->verticies[t_i3].position, scale);
+    
+    i = i + 3;
   }
-  
-  m1->num_meshes = total_num_meshes;
 
-  free(m2->name);
-  free(m2);
+}
+
+void mesh_transform(mesh* m, matrix_4x4 transform) {
+
+  int i = 0;
+  while(i < m->num_triangles_3) {
+  
+    int t_i1 = m->triangles[i];
+    int t_i2 = m->triangles[i+1];
+    int t_i3 = m->triangles[i+2];
+    
+    m->verticies[t_i1].position = m44_mul_v3(transform, m->verticies[t_i1].position);
+    m->verticies[t_i2].position = m44_mul_v3(transform, m->verticies[t_i2].position);
+    m->verticies[t_i3].position = m44_mul_v3(transform, m->verticies[t_i3].position);
+    
+    i = i + 3;
+  }
+
 }
 
 void model_print(model* m) {
   for(int i=0; i<m->num_meshes; i++) {
     mesh_print( m->meshes[i] );
   }
+}
+
+model* model_new() {
+  model* m = malloc(sizeof(model));
+  
+  m->name = malloc(strlen("Untitled Model") + 1);
+  strcpy(m->name, "Untitled Model");
+  
+  m->num_meshes = 0;
+  m->meshes = malloc(sizeof(mesh*) * m->num_meshes);
+  
+  return m;
 }
 
 void model_delete(model* m) {
@@ -541,6 +594,30 @@ float model_surface_area(model* m) {
   }
   
   return total;
+}
+
+void model_translate(model* m, vector3 translation) {
+
+  for(int i = 0; i < m->num_meshes; i++) {
+    mesh_translate(m->meshes[i], translation);
+  }
+
+}
+
+void model_scale(model* m, float scale) {
+
+  for(int i = 0; i < m->num_meshes; i++) {
+    mesh_scale(m->meshes[i], scale);
+  }
+
+}
+
+void model_transform(model* m, matrix_4x4 transform) {
+
+  for(int i = 0; i < m->num_meshes; i++) {
+    mesh_transform(m->meshes[i], transform);
+  }
+
 }
 
 vector3 triangle_tangent(vertex vert1, vertex vert2, vertex vert3) {

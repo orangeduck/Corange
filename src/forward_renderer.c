@@ -39,6 +39,8 @@ static float world_matrix[16];
 static float lview_matrix[16];
 static float lproj_matrix[16];
 
+static float world_matricies[16*MAX_INSTANCES];
+
 static float timer = 0.0;
 
 static int TANGENT;
@@ -472,6 +474,12 @@ static void forward_renderer_use_material(material* mat) {
     glUniform3f(camera_position, CAMERA->position.x, CAMERA->position.y, CAMERA->position.z);
   }
   
+  GLint camera_direction = glGetUniformLocation(*prog, "camera_direction");
+  if (camera_direction != -1) {
+    vector3 direction = v3_normalize(v3_sub(CAMERA->target, CAMERA->position));
+    glUniform3f(camera_direction, direction.x, direction.y, direction.z);
+  }
+  
   for(int i = 0; i < num_lights; i++) {
     light_power[i] = lights[i]->power;
     light_falloff[i] = lights[i]->falloff;
@@ -520,6 +528,11 @@ static void forward_renderer_use_material(material* mat) {
   GLint lview_matrix_u = glGetUniformLocation(*prog, "light_view");
   if (lproj_matrix_u != -1) {
     glUniformMatrix4fv(lview_matrix_u, 1, 0, lview_matrix);
+  }
+  
+  GLint world_matricies_u = glGetUniformLocation(*prog, "world_matricies");
+  if (world_matricies_u != -1) {
+    glUniformMatrix4fv(world_matricies_u, MAX_INSTANCES, 0, world_matricies);
   }
   
   /* Set material parameters */
@@ -727,6 +740,83 @@ void forward_renderer_render_static(static_object* so) {
   
 }
 
+void forward_renderer_render_instance(instance_object* io) {
+  
+  matrix_4x4 r_world_matrix = m44_world(io->instances[0].position, io->instances[0].scale, io->instances[0].rotation);
+  m44_to_array(r_world_matrix, world_matrix);
+  
+  for(int i = 0; i < io->num_instances; i++) {
+    matrix_4x4 r_world_matrix = m44_world(io->instances[i].position, io->instances[i].scale, io->instances[i].rotation);
+    m44_to_array(r_world_matrix, world_matricies+(i*16));
+  }
+  
+  renderable* r = io->renderable;
+  
+  for(int i=0; i < r->num_surfaces; i++) {
+    
+    renderable_surface* s = r->surfaces[i];
+    if(s->is_rigged) {
+      error("Renderable for static object is rigged!");
+    }
+    
+    forward_renderer_use_material(s->base);
+    
+    shader_program* prog = dictionary_get(s->base->properties, "program");
+    GLint recieve_shadows = glGetUniformLocation(*prog, "recieve_shadows");
+    if (recieve_shadows != -1) {
+      glUniform1i(recieve_shadows, io->recieve_shadows);
+    }
+    
+    GLsizei stride = sizeof(float) * 18;
+    
+    glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
+    
+    glVertexPointer(3, GL_FLOAT, stride, (void*)0);
+    glEnableClientState(GL_VERTEX_ARRAY);
+    
+    glNormalPointer(GL_FLOAT, stride, (void*)(sizeof(float) * 3));
+    glEnableClientState(GL_NORMAL_ARRAY);
+    
+    if (TANGENT != -1) {
+      glVertexAttribPointer(TANGENT, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 6));
+      glEnableVertexAttribArray(TANGENT);
+    }
+    
+    if (BINORMAL != -1) {
+      glVertexAttribPointer(BINORMAL, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 9));
+      glEnableVertexAttribArray(BINORMAL);
+    }
+    
+    glTexCoordPointer(2, GL_FLOAT, stride, (void*)(sizeof(float) * 12));
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+    
+    glColorPointer(4, GL_FLOAT, stride, (void*)(sizeof(float) * 14));
+    glEnableClientState(GL_COLOR_ARRAY);
+    
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
+      glDrawElementsInstanced(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0, io->num_instances);
+    
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_NORMAL_ARRAY);
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);  
+    glDisableClientState(GL_COLOR_ARRAY);  
+    
+    if (TANGENT != -1) {
+      glDisableVertexAttribArray(TANGENT);
+    }
+    if (BINORMAL != -1) {
+      glDisableVertexAttribArray(BINORMAL); 
+    }
+    
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    
+    forward_renderer_disuse_material();
+
+  }
+
+}
+
 void forward_renderer_render_physics(physics_object* po) {
 
   matrix_4x4 r_world_matrix = m44_world( po->position, po->scale, po->rotation );
@@ -738,9 +828,7 @@ void forward_renderer_render_physics(physics_object* po) {
     
     renderable_surface* s = r->surfaces[i];
     if(s->is_rigged) {
-      
       error("Physics object is rigged!")
-      
     } 
     
     forward_renderer_use_material(s->base);
@@ -1038,14 +1126,12 @@ void forward_renderer_render_landscape(landscape* ls) {
   GLint view_matrix_u = glGetUniformLocation(*terrain, "view_matrix");
   glUniformMatrix4fv(view_matrix_u, 1, 0, view_matrix);
   
-  GLint lproj_matrix_u = glGetUniformLocation(*terrain, "light_proj");
-  glUniformMatrix4fv(lproj_matrix_u, 1, 0, lproj_matrix);
-  
-  GLint lview_matrix_u = glGetUniformLocation(*terrain, "light_view");
-  glUniformMatrix4fv(lview_matrix_u, 1, 0, lview_matrix);
-  
   GLint camera_position = glGetUniformLocation(*terrain, "camera_position");
   glUniform3f(camera_position, CAMERA->position.x, CAMERA->position.y, CAMERA->position.z);
+  
+  GLint camera_direction = glGetUniformLocation(*terrain, "camera_direction");
+  vector3 direction = v3_normalize(v3_sub(CAMERA->target, CAMERA->position));
+  glUniform3f(camera_direction, direction.x, direction.y, direction.z);
   
   for(int i = 0; i < num_lights; i++) {
     light_power[i] = lights[i]->power;
@@ -1075,11 +1161,6 @@ void forward_renderer_render_landscape(landscape* ls) {
   glUniform3fv(light_ambient_u, num_lights, (const GLfloat*)light_ambient);
   glUniform3fv(light_specular_u, num_lights, (const GLfloat*)light_specular);
   
-  texture* terrain_texture = ls->surface_types[0].near_texture;
-  texture* terrain_texture_nm = ls->surface_types[0].near_texture_nm;
-  texture* terrain_far_texture = ls->surface_types[0].far_texture;
-  texture* terrain_far_texture_nm = ls->surface_types[0].far_texture_nm;
-  
   glActiveTexture(GL_TEXTURE0 + 0 );
   glBindTexture(GL_TEXTURE_2D, *ls->normalmap);
   glEnable(GL_TEXTURE_2D);
@@ -1091,35 +1172,67 @@ void forward_renderer_render_landscape(landscape* ls) {
   glUniform1i(glGetUniformLocation(*terrain, "color"), 1);
   
   glActiveTexture(GL_TEXTURE0 + 2 );
-  glBindTexture(GL_TEXTURE_2D, *terrain_texture);
+  glBindTexture(GL_TEXTURE_2D, *ls->attributemap);
   glEnable(GL_TEXTURE_2D);
-  glUniform1i(glGetUniformLocation(*terrain, "ground"), 2);
+  glUniform1i(glGetUniformLocation(*terrain, "attribs"), 2);
   
-  glActiveTexture(GL_TEXTURE0 + 3 );
-  glBindTexture(GL_TEXTURE_2D, *terrain_texture_nm);
-  glEnable(GL_TEXTURE_2D);
-  glUniform1i(glGetUniformLocation(*terrain, "ground_normals"), 3);
+  char diffuse_name[512];
+  char normals_name[512];
+  char diffuse_far_name[512];
+  char normals_far_name[512];
   
-  glActiveTexture(GL_TEXTURE0 + 4 );
-  glBindTexture(GL_TEXTURE_2D, *terrain_far_texture);
-  glEnable(GL_TEXTURE_2D);
-  glUniform1i(glGetUniformLocation(*terrain, "ground_far"), 4);
-  
-  glActiveTexture(GL_TEXTURE0 + 5 );
-  glBindTexture(GL_TEXTURE_2D, *terrain_far_texture_nm);
-  glEnable(GL_TEXTURE_2D);
-  glUniform1i(glGetUniformLocation(*terrain, "ground_far_normals"), 5);
-  
-  glActiveTexture(GL_TEXTURE0 + 6 );
-  glBindTexture(GL_TEXTURE_2D, *SHADOW_TEX);
-  glEnable(GL_TEXTURE_2D);
-  glUniform1i(glGetUniformLocation(*terrain, "shadow_map"), 6);
+  int tex_counter = 3;
+  for(int i = 0; i < 4; i++) {
+    
+    texture* diffuse = ls->surface_types[i].near_texture;
+    texture* diffuse_nm = ls->surface_types[i].near_texture_nm;
+    texture* diffuse_far = ls->surface_types[i].far_texture;
+    texture* diffuse_far_nm = ls->surface_types[i].far_texture_nm;
+    
+    if (diffuse == NULL) continue;
+    
+    sprintf(diffuse_name, "surface_diffuse%i", i);
+    sprintf(normals_name, "surface_normals%i", i);
+    sprintf(diffuse_far_name, "surface_diffuse_far%i", i);
+    sprintf(normals_far_name, "surface_normals_far%i", i);
+    
+    glActiveTexture(GL_TEXTURE0 + tex_counter );
+    glBindTexture(GL_TEXTURE_2D, *diffuse);
+    glEnable(GL_TEXTURE_2D);
+    glUniform1i(glGetUniformLocation(*terrain, diffuse_name), tex_counter);
+    tex_counter++;
+    
+    glActiveTexture(GL_TEXTURE0 + tex_counter );
+    glBindTexture(GL_TEXTURE_2D, *diffuse_nm);
+    glEnable(GL_TEXTURE_2D);
+    glUniform1i(glGetUniformLocation(*terrain, normals_name), tex_counter);
+    tex_counter++;
+    
+    glActiveTexture(GL_TEXTURE0 + tex_counter );
+    glBindTexture(GL_TEXTURE_2D, *diffuse_far);
+    glEnable(GL_TEXTURE_2D);
+    glUniform1i(glGetUniformLocation(*terrain, diffuse_far_name), tex_counter);
+    tex_counter++;
+    
+    glActiveTexture(GL_TEXTURE0 + tex_counter );
+    glBindTexture(GL_TEXTURE_2D, *diffuse_far_nm);
+    glEnable(GL_TEXTURE_2D);
+    glUniform1i(glGetUniformLocation(*terrain, normals_far_name), tex_counter);
+    tex_counter++;
+  }
   
   for(int i = 0; i < ls->terrain->num_chunks; i++) {
     
     terrain_chunk* tc = ls->terrain->chunks[i];
     
     vector3 position = v3_add(v3((tc->x+0.5) * ls->terrain->chunk_width, 0, (tc->y+0.5) * ls->terrain->chunk_height), ls->position);
+    
+    vector3 camera_pos = v3_normalize(v3_sub(position, CAMERA->position));
+    vector3 camera_dir = v3_normalize(v3_sub(CAMERA->target, CAMERA->position));
+    float angle = v3_dot(camera_pos, camera_dir);
+    
+    if (angle < -CAMERA->fov) continue;
+    
     int index_id = min(0.01 * v3_dist_manhattan(position, CAMERA->position), NUM_TERRAIN_BUFFERS-1);
     
     glUniform1i(glGetUniformLocation(*terrain, "lod_index"), index_id);
@@ -1140,26 +1253,12 @@ void forward_renderer_render_landscape(landscape* ls) {
     
   }
   
-  glActiveTexture(GL_TEXTURE0 + 6 );
-  glDisable(GL_TEXTURE_2D);
-  
-  glActiveTexture(GL_TEXTURE0 + 5 );
-  glDisable(GL_TEXTURE_2D);
-  
-  glActiveTexture(GL_TEXTURE0 + 4 );
-  glDisable(GL_TEXTURE_2D);
-  
-  glActiveTexture(GL_TEXTURE0 + 3 );
-  glDisable(GL_TEXTURE_2D);
-  
-  glActiveTexture(GL_TEXTURE0 + 2 );
-  glDisable(GL_TEXTURE_2D);
-  
-  glActiveTexture(GL_TEXTURE0 + 1 );
-  glDisable(GL_TEXTURE_2D);
-  
-  glActiveTexture(GL_TEXTURE0 + 0 );
-  glDisable(GL_TEXTURE_2D);
+  tex_counter--;
+  while(tex_counter >= 0) {
+    glActiveTexture(GL_TEXTURE0 + tex_counter );
+    glDisable(GL_TEXTURE_2D);
+    tex_counter--;
+  }
   
   glUseProgram(0);
   

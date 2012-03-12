@@ -304,8 +304,8 @@ void shadow_mapper_render_landscape(landscape* ls) {
     glVertexPointer(3, GL_FLOAT, 0, (void*)0);
     glEnableClientState(GL_VERTEX_ARRAY);
       
-      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tc->index_buffers[NUM_TERRAIN_BUFFERS-1]);
-      glDrawElements(GL_TRIANGLES, tc->num_indicies[NUM_TERRAIN_BUFFERS-1], GL_UNSIGNED_INT, (void*)0);
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tc->index_buffers[NUM_TERRAIN_BUFFERS-2]);
+      glDrawElements(GL_TRIANGLES, tc->num_indicies[NUM_TERRAIN_BUFFERS-2], GL_UNSIGNED_INT, (void*)0);
     
     glDisableClientState(GL_VERTEX_ARRAY);
     

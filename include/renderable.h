@@ -5,6 +5,7 @@
 #include "SDL/SDL_opengl.h"
 #include "SDL/SDL_local.h"
 
+#include "bool.h"
 #include "vector.h"
 #include "material.h"
 #include "geometry.h"
@@ -19,7 +20,7 @@ typedef struct {
   
   material* base;
   
-  int is_rigged;
+  bool is_rigged;
 	
 } renderable_surface;
 
@@ -37,6 +38,11 @@ void renderable_delete(renderable* r);
 
 void renderable_set_material(renderable* r, material* m);
 void renderable_set_multi_material(renderable* r, multi_material* mmat);
+
+void renderable_add_mesh(renderable* r, mesh* m);
+void renderable_add_model(renderable* r, model* m);
+
+model* renderable_to_model(renderable* r);
 
 /* Renderable Surface */
 

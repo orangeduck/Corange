@@ -31,9 +31,10 @@ void metaballs_init() {
   
   renderable* r_podium = asset_get("./resources/podium/podium.obj");
   renderable_set_material(r_podium, asset_get("./resources/podium/podium.mat"));
-  static_object* s_podium = static_object_new(r_podium);
+  
+  static_object* s_podium = entity_new("podium", static_object);
+  s_podium->renderable = r_podium;
   s_podium->position = v3(32, 10, 32);
-  entity_add("podium", static_object, s_podium);
   
   camera* cam = entity_new("camera", camera);
   cam->position = v3(50, 50, 50);

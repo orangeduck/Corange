@@ -193,7 +193,9 @@ void inverse_kinematics_solve(bone* base, bone* end, vector3 target) {
   mid_pos = m44_mul_v3(inv_trans, mid_pos);
   tar_pos = m44_mul_v3(inv_trans, tar_pos);
   
-  vector3 rot_axis = v3_normalize(v3_cross(v3_sub(tar_pos, base_pos), v3_sub(end_pos, base_pos)));
+  vector3 base_tar = v3_normalize(v3_sub(tar_pos, base_pos));
+  vector3 base_end = v3_normalize(v3_sub(end_pos, base_pos));
+  vector3 rot_axis =  v3_normalize(v3_cross(base_tar, base_end));
   
   matrix_4x4 plane_view = m44_view_look_at(v3_zero(), rot_axis, v3(0,1,0));
   
@@ -243,8 +245,9 @@ void inverse_kinematics_solve(bone* base, bone* end, vector3 target) {
     Easier than working out the pattern is just trying both.
     See which one fits best.
   */
+  float base_rotation = 0;
   
-  matrix_4x4 base_rotation0 = base->rotation;
+  matrix_4x4 base_rotation0 = m44_mul_m44(base->rotation, m44_rotation_axis_angle(base_tar, base_rotation));
   matrix_4x4 base_rotation1 = m44_rotation_axis_angle(rot_axis, r1);
   matrix_4x4 base_rotation2 = m44_rotation_axis_angle(rot_axis, r1 + 3.14);
   

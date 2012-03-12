@@ -69,18 +69,20 @@ void sea_init() {
   
   renderable* r_seaplane = asset_get("./resources/seaplane.obj");
   renderable_set_material(r_seaplane, seaplane_mat);
-  entity_add("seaplane", static_object, static_object_new(r_seaplane));
+  static_object* s_seaplane = entity_new("seaplane", static_object);
+  s_seaplane->renderable = r_seaplane;
   
   load_folder("./resources/corvette/");
   
   renderable* r_corvette = asset_get("./resources/corvette/corvette.obj");
   multi_material* m_corvette = asset_get("./resources/corvette/corvette.mmat");
   renderable_set_multi_material(r_corvette, m_corvette);
-  static_object* s_corvette = static_object_new(r_corvette);
+  
+  static_object* s_corvette = entity_new("corvette", static_object);
+  s_corvette->renderable = r_corvette;
   s_corvette->collision_body = collision_body_new_mesh(asset_get("./resources/corvette/corvette.col"));
   s_corvette->scale = v3(1.5, 1.5, 1.5);
   s_corvette->position = v3(0, 0.5, 0);
-  entity_add("corvette", static_object, s_corvette);
   
   static_object* center_sphere = entity_new("center_sphere", static_object);
   center_sphere->position = v3(0, 5, 0);

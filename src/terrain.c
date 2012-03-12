@@ -286,3 +286,17 @@ float terrain_height(terrain* ter, vector2 position) {
   return bilinear_interpolation(s1, s0, s3, s2, amount.x, amount.y);
   
 }
+
+vector3 terrain_normal(terrain* ter, vector2 position) {
+  
+  float base = terrain_height(ter, position);
+  float base_x = terrain_height(ter, v2_add(position, v2(1,0)));
+  float base_y = terrain_height(ter, v2_add(position, v2(0,-1)));
+  
+  vector3 basev = v3(position.x, base, position.y);
+  vector3 base_xv = v3(position.x+1, base_x, position.y);
+  vector3 base_yv = v3(position.x, base_y, position.y+1);
+  
+  return v3_normalize(v3_cross(v3_sub(base_yv, basev), v3_sub(base_xv, basev)));
+  
+}

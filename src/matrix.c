@@ -687,24 +687,17 @@ matrix_4x4 m44_perspective(float fov, float near_clip, float far_clip, float rat
   return proj_matrix;
 }
 
-/*
-  Yeah I have no idea how these managed to get defined.
-  Inspecting them they are also defined as just the emptystring.
-  So I have no idea what the hell is going on. Just undef them and put it through the compiler.
-*/
-#undef near
-#undef far
-matrix_4x4 m44_orthographic(float left, float right, float bottom, float top, float near, float far) {
+matrix_4x4 m44_orthographic(float left, float right, float bottom, float top, float near_clip, float far_clip) {
 
   matrix_4x4 m = m44_id();
   
   m.xx = 2 / (right - left);
   m.yy = 2 / (top - bottom);
-  m.zz = -2 / (far - near);
+  m.zz = -2 / (far_clip - near_clip);
   
   m.xw = -(right + left) / (right - left);
   m.yw = -(top + bottom) / (top - bottom);
-  m.zw = -(far + near) / (far - near);
+  m.zw = -(far_clip + near_clip) / (far_clip - near_clip);
   
   return m;
 

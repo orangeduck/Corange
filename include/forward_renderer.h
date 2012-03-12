@@ -10,6 +10,7 @@
 #include "static_object.h"
 #include "physics_object.h"
 #include "animated_object.h"
+#include "instance_object.h"
 
 void forward_renderer_init();
 void forward_renderer_finish();
@@ -28,7 +29,8 @@ void forward_renderer_setup_camera();
 void forward_renderer_begin();
 void forward_renderer_end();
 
-void forward_renderer_render_static(static_object* s);
+void forward_renderer_render_static(static_object* so);
+void forward_renderer_render_instance(instance_object* io);
 void forward_renderer_render_physics(physics_object* po);
 void forward_renderer_render_animated(animated_object* ao);
 void forward_renderer_render_skeleton(skeleton* s);

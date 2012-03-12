@@ -88,6 +88,7 @@ typedef void (APIENTRY * GLDELETERENDERBUFFERSFN)( GLsizei n, const GLuint* buff
 typedef void (APIENTRY * GLBINDBUFFERFN)( GLenum target, GLuint buffer );
 typedef void (APIENTRY * GLBINDRENDERBUFFERFN)( GLenum target, GLuint buffer );
 typedef void (APIENTRY * GLBUFFERDATAFN)( GLenum target, GLsizeiptr size, const GLvoid* data, GLenum usage );
+typedef void (APIENTRY * GLGETBUFFERSUBDATAFN)( GLenum target, GLintptr offset, GLsizeiptr size, const GLvoid* data);
 typedef void (APIENTRY * GLFRAMEBUFFERRENDERBUFFERFN)( GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer );
 typedef GLint (APIENTRY * GLGETATTRIBLOCATIONFN)( GLuint program, const GLchar* name );
 typedef void (APIENTRY * GLRENDERBUFFERSTORAGEFN)( GLenum target, GLenum format, GLsizei width, GLsizei height);
@@ -96,6 +97,7 @@ typedef void (APIENTRY * GLDRAWBUFFERSFN)(GLsizei n, const GLenum* buffers);
 typedef void (APIENTRY * GLGENERATEMIPMAPFN)(GLenum target);
 typedef void (APIENTRY * GLCOMPRESSEDTEXIMAGE2DFN)(GLenum target, GLint level, GLenum format, GLsizei width, GLsizei height, GLint border, GLsizei imagesize, const GLvoid* data);
 typedef void (APIENTRY * GLTEXIMAGE3DFN)(GLenum target, GLint level, GLint internalFormat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLenum format, GLenum type, const GLvoid* data);
+typedef void (APIENTRY * GLDRAWELEMENTSINSTANCEDFN)(GLenum mode, GLsizei count, GLenum type, const void* indicies, GLsizei primcount);
 
 #ifndef __linux__
   extern GLACTIVETEXTUREFN glActiveTexture;
@@ -143,12 +145,14 @@ extern GLDELETERENDERBUFFERSFN glDeleteRenderbuffers;
 extern GLBINDBUFFERFN glBindBuffer;
 extern GLBINDRENDERBUFFERFN glBindRenderbuffer;
 extern GLBUFFERDATAFN glBufferData;
+extern GLGETBUFFERSUBDATAFN glGetBufferSubData;
 extern GLFRAMEBUFFERRENDERBUFFERFN glFramebufferRenderbuffer;
 extern GLGETATTRIBLOCATIONFN glGetAttribLocation;
 extern GLRENDERBUFFERSTORAGEFN glRenderbufferStorage;
 extern GLRENDERBUFFERSTORAGEMULTISAMPLEFN glRenderbufferStorageMultisample;
 extern GLDRAWBUFFERSFN glDrawBuffers;
 extern GLGENERATEMIPMAPFN glGenerateMipmap;
+extern GLDRAWELEMENTSINSTANCEDFN glDrawElementsInstanced;
 
 /* Extension Constants - Found these from glew and Google */
 

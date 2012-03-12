@@ -116,27 +116,32 @@ void renderers_init() {
   
   renderable* r_podium = asset_get("./resources/podium/podium.obj");
   renderable_set_material(r_podium, asset_get("./resources/podium/podium.mat"));
-  entity_add("podium", static_object, static_object_new(r_podium));
+  
+  static_object* s_podium = entity_new("podium", static_object);
+  s_podium->renderable = r_podium;
   
   renderable* r_cello = asset_get("./resources/cello/cello.obj");
   renderable_set_material(r_cello, asset_get("./resources/cello/cello.mat"));
-  static_object* s_cello = static_object_new(r_cello);
+  
+  static_object* s_cello = entity_new("cello", static_object);
+  s_cello->renderable = r_cello;
   s_cello->position = v3(0, 3, 0);
   s_cello->rotation = v4_quaternion_mul(s_cello->rotation, v4_quaternion_yaw(-1.7));
   s_cello->scale = v3(0.6, 0.6, 0.6);
-  entity_add("cello", static_object, s_cello);
   
   renderable* r_piano = asset_get("./resources/piano/piano.obj");
   renderable_set_material(r_piano, asset_get("./resources/piano/piano.mat"));
-  static_object* s_piano = static_object_new(r_piano);
+  
+  static_object* s_piano = entity_new("piano", static_object);
+  s_piano->renderable = r_piano;
   s_piano->position = v3(1, 5, 0);
-  entity_add("piano", static_object, s_piano);
   
   renderable* r_dino = asset_get("./resources/dino/dino.obj");
   renderable_set_multi_material(r_dino, asset_get("./resources/dino/dino.mmat"));
-  static_object* s_dino = static_object_new(r_dino);
+  
+  static_object* s_dino = entity_new("dino", static_object);
+  s_dino->renderable = r_dino;
   s_dino->scale = v3(4,4,4);
-  entity_add("dino", static_object, s_dino);
   
   renderable* r_imrod = asset_get("./resources/imrod/imrod.smd");
   material* mat_imrod = asset_get("./resources/imrod/imrod_animated.mat");  
@@ -145,10 +150,11 @@ void renderers_init() {
   skeleton* skel_imrod = asset_get("./resources/imrod/imrod.skl");
   animation* ani_imrod = asset_get("./resources/imrod/imrod.ani");
   
-  animated_object* a_imrod = animated_object_new(r_imrod, skel_imrod);
+  animated_object* a_imrod = entity_new("imrod", animated_object);
+  animated_object_load_skeleton(a_imrod, skel_imrod);
+  a_imrod->renderable = r_imrod;
   a_imrod->animation = ani_imrod;
   a_imrod->rotation = v4_quaternion_mul(a_imrod->rotation, v4_quaternion_roll(1.57));
-  entity_add("imrod", animated_object, a_imrod);
   
   /* Put some text on the screen */
   

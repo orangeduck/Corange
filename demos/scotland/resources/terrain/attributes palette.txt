@@ -1,7 +1,0 @@
-R, G, B, Climate, Land type
-140, 185, 70, "Temperate (coastal)", "Steep grass",
-170, 190, 80, "Temperate (coastal)", "Dry grass",
-170, 180, 70, "Temperate (coastal)", "Steep dry grass",
-150, 180, 80, "Temperate (coastal)", "Steep dry grass (2)",
-120, 120, 120, "Temperate (coastal)", "Cliff face",
-80, 80, 80, "Temperate (coastal)", "Steep cliffs",

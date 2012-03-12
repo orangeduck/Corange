@@ -60,12 +60,14 @@ GLDELETERENDERBUFFERSFN glDeleteRenderbuffers;
 GLBINDBUFFERFN glBindBuffer;
 GLBINDRENDERBUFFERFN glBindRenderbuffer;
 GLBUFFERDATAFN glBufferData;
+GLGETBUFFERSUBDATAFN glGetBufferSubData;
 GLFRAMEBUFFERRENDERBUFFERFN glFramebufferRenderbuffer;
 GLGETATTRIBLOCATIONFN glGetAttribLocation;
 GLRENDERBUFFERSTORAGEFN glRenderbufferStorage;
 GLRENDERBUFFERSTORAGEMULTISAMPLEFN glRenderbufferStorageMultisample;
 GLDRAWBUFFERSFN glDrawBuffers;
 GLGENERATEMIPMAPFN glGenerateMipmap;
+GLDRAWELEMENTSINSTANCEDFN glDrawElementsInstanced;
 
 #ifdef _WIN32
 
@@ -307,6 +309,7 @@ void SDL_LoadOpenGLExtensions() {
 	glGenBuffers               = (GLGENBUFFERSFN)SDL_GL_GetProcAddress( "glGenBuffers" ); SDL_CheckOpenGLExtension("glGenBuffers", glGenBuffers);
 	glBindBuffer               = (GLBINDBUFFERFN)SDL_GL_GetProcAddress( "glBindBuffer" ); SDL_CheckOpenGLExtension("glBindBuffer", glBindBuffer);
 	glBufferData               = (GLBUFFERDATAFN)SDL_GL_GetProcAddress( "glBufferData" ); SDL_CheckOpenGLExtension("glBufferData", glBufferData);
+	glGetBufferSubData         = (GLGETBUFFERSUBDATAFN)SDL_GL_GetProcAddress( "glGetBufferSubData" ); SDL_CheckOpenGLExtension("glGetBufferSubData", glGetBufferSubData);
 	glDeleteBuffers            = (GLDELETEBUFFERSFN)SDL_GL_GetProcAddress( "glDeleteBuffers" ); SDL_CheckOpenGLExtension("glDeleteBuffers", glDeleteBuffers);
   glDrawBuffers              = (GLDRAWBUFFERSFN)SDL_GL_GetProcAddress( "glDrawBuffers" ); SDL_CheckOpenGLExtension("glDrawBuffers", glDrawBuffers);
 
@@ -324,6 +327,10 @@ void SDL_LoadOpenGLExtensions() {
 	glDeleteFramebuffers       = (GLDELETEFRAMEBUFFERSFN)SDL_GL_GetProcAddress( "glDeleteFramebuffers" ); SDL_CheckOpenGLExtension("glDeleteFramebuffers", glDeleteFramebuffers);
 	glCheckFramebufferStatus   = (GLCHECKFRAMEBUFFERSTATUSFN)SDL_GL_GetProcAddress( "glCheckFramebufferStatus" ); SDL_CheckOpenGLExtension("glCheckFramebufferStatus", glCheckFramebufferStatus);
   glFramebufferRenderbuffer  = (GLFRAMEBUFFERRENDERBUFFERFN)SDL_GL_GetProcAddress( "glFramebufferRenderbuffer" ); SDL_CheckOpenGLExtension("glFramebufferRenderbuffer", glFramebufferRenderbuffer);
+  
+  /* Misc */
+  
+  glDrawElementsInstanced = (GLDRAWELEMENTSINSTANCEDFN)SDL_GL_GetProcAddress( "glDrawElementsInstanced" ); SDL_CheckOpenGLExtension("glDrawElementsInstanced", glDrawElementsInstanced);
   
 }
 

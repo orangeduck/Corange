@@ -4,7 +4,7 @@
 
 #include "animated_object.h"
 
-animated_object* animated_object_new(renderable* r, skeleton* s) {
+animated_object* animated_object_new() {
 
   animated_object* ao = malloc(sizeof(animated_object));
   ao->position = v3_zero();
@@ -15,13 +15,13 @@ animated_object* animated_object_new(renderable* r, skeleton* s) {
   ao->recieve_shadows = true;
   ao->cast_shadows = true;
   
-  ao->renderable = r;
-  ao->skeleton = s;
+  ao->renderable = NULL;
+  ao->skeleton = NULL;
   
   ao->animation = NULL;
   ao->animation_time = 0;
   
-  ao->pose = skeleton_copy(ao->skeleton);
+  ao->pose = NULL;
   
   return ao;
 }
@@ -31,6 +31,14 @@ void animated_object_delete(animated_object* ao) {
   free(ao);
 }
 
+void animated_object_load_skeleton(animated_object* ao, skeleton* s) {
+  if(ao->pose != NULL) {
+    skeleton_delete(ao->pose);
+  }
+  ao->skeleton = s;
+  ao->pose = skeleton_copy(s);
+}
+
 void animated_object_update(animated_object* ao, float timestep) {
   
   ao->animation_time += timestep;
@@ -38,6 +46,9 @@ void animated_object_update(animated_object* ao, float timestep) {
   
   if (animation == NULL) {
     return;
+  }
+  if (ao->pose == NULL || ao->skeleton == NULL) {
+    error("Animated object needs skeleton loaded with animated_object_load_skeleton.");
   }
   
   float time_diff = animation->end_time - animation->start_time;

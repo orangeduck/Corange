@@ -1,0 +1,6 @@
+string name = grass
+program prog = ./resources/vegetation/grass.prog
+texture diffuse = ./resources/vegetation/grass.dds
+texture terrain_color = ./resources/terrain/colormap.dds
+texture terrain_normals = ./resources/terrain/normalsmap.dds
+

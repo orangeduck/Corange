@@ -1,0 +1,3 @@
+vertex_shader : ./resources/vegetation/grass.vs
+fragment_shader : ./resources/vegetation/grass.fs
+fragment_shader : $CORANGE/shaders/colors.fs

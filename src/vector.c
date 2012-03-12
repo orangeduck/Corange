@@ -912,6 +912,19 @@ vector4 v4_quaternion_angle_axis(float angle, vector3 axis) {
   return quat;
 }
 
+vector4 v4_quaternion_rot(vector3 from, vector3 to) {
+  
+  vector3 h = v3_normalize(v3_add(from, to));
+  
+  vector4 q;
+  q.w = v3_dot(from, h);
+  q.x = from.y * h.z - from.z * h.y;
+  q.y = from.z * h.x - from.x * h.z;
+  q.z = from.x * h.y - from.y * h.x;
+  
+  return q;
+}
+
 vector4 v4_quaternion_roll(float a) {
   return v4( 0, 0, sin(a/2), cos(a/2) );
 }

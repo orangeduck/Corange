@@ -76,6 +76,7 @@ typedef struct {
   
 } mesh;
 
+mesh* mesh_new();
 void mesh_delete(mesh* m);
 
 void mesh_generate_normals(mesh* m);
@@ -86,6 +87,10 @@ void mesh_generate_texcoords_cylinder(mesh* m);
 void mesh_print(mesh* m);
 float mesh_surface_area(mesh* m);
 
+void mesh_transform(mesh* m, matrix_4x4 transform);
+void mesh_translate(mesh* m, vector3 translation);
+void mesh_scale(mesh* m, float scale);
+
 typedef struct {
   
   char* name;
@@ -95,6 +100,7 @@ typedef struct {
   
 } model;
 
+model* model_new();
 void model_delete(model* m);
 
 void model_generate_normals(model* m);
@@ -102,12 +108,12 @@ void model_generate_tangents(model* m);
 void model_generate_orthagonal_tangents(model* m);
 void model_generate_texcoords_cylinder(model* m);
 
-void model_add_mesh(model* main_model, mesh* sub_mesh);
-void model_merge_model(model* m1, model* m2);
-
 void model_print(model* m);
 float model_surface_area(model* m);
 
+void model_transform(model* m, matrix_4x4 transform);
+void model_translate(model* m, vector3 translation);
+void model_scale(model* m, float scale);
 
 vector3 triangle_tangent(vertex v1, vertex v2, vertex v3);
 vector3 triangle_binormal(vertex v1, vertex v2, vertex v3);

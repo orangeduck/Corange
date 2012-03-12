@@ -1,5 +1,6 @@
 #include <stdio.h>
 
+#include "vegetation.h"
 #include "scotland.h"
 
 static int mouse_x;
@@ -59,6 +60,7 @@ void scotland_init() {
   viewport_set_dimensions(1280, 720);
   
   load_folder("./resources/terrain/");
+  load_folder("./resources/vegetation/");
   
   ui_button* framerate = ui_elem_new("framerate", ui_button);
   ui_button_move(framerate, v2(10,10));
@@ -88,22 +90,50 @@ void scotland_init() {
   
   light* sun = entity_new("sun", light);
   light_set_type(sun, light_type_sun);
+  sun->position = v3(0, 512, 0);
+  sun->target = v3(512, 0, 512);
   
   static_object* skydome = entity_new("skydome", static_object);
   skydome->renderable = asset_get("./resources/terrain/skydome.obj");
   renderable_set_material(skydome->renderable, asset_get("./resources/terrain/skydome.mat"));
+  skydome->position = v3(512, 0, 512);
   
   landscape* world = entity_new("world", landscape);
   world->terrain = asset_get("./resources/terrain/heightmap.raw");
   world->normalmap = asset_get("./resources/terrain/normalsmap.dds");
   world->colormap = asset_get("./resources/terrain/colormap.dds");
-  landscape_add_surface(world, asset_get("./resources/terrain/texture.dds"), 
-                               asset_get("./resources/terrain/texture_nm.dds"), 
-                               asset_get("./resources/terrain/texture_far.dds"), 
-                               asset_get("./resources/terrain/texture_far_nm.dds"));
+  world->attributemap = asset_get("./resources/terrain/attributemap.dds");
+
+  landscape_set_surface(world, 0, asset_get("./resources/terrain/grass.dds"), 
+                                  asset_get("./resources/terrain/grass_nm.dds"), 
+                                  asset_get("./resources/terrain/grass_far.dds"), 
+                                  asset_get("./resources/terrain/grass_far_nm.dds"));
+  
+  landscape_set_surface(world, 1, asset_get("./resources/terrain/grass2.dds"), 
+                                  asset_get("./resources/terrain/grass2_nm.dds"), 
+                                  asset_get("./resources/terrain/grass_far.dds"), 
+                                  asset_get("./resources/terrain/grass_far_nm.dds"));
+  
+  landscape_set_surface(world, 2, asset_get("./resources/terrain/earth.dds"), 
+                                  asset_get("./resources/terrain/earth_nm.dds"), 
+                                  asset_get("./resources/terrain/earth_far.dds"), 
+                                  asset_get("./resources/terrain/earth_far_nm.dds"));
+  
+  landscape_set_surface(world, 3, asset_get("./resources/terrain/rock.dds"), 
+                                  asset_get("./resources/terrain/rock_nm.dds"), 
+                                  asset_get("./resources/terrain/rock_far.dds"), 
+                                  asset_get("./resources/terrain/rock_far_nm.dds"));
   
   float height = terrain_height(world->terrain, v2(cam->position.x, cam->position.z));
   cam->position.y = height + 1;
+  
+  static_object* grass = entity_new("grass", static_object);
+  grass->renderable = asset_get("./resources/vegetation/grass.obj");
+  grass->position = v3(512, 0, 512);
+  grass->position.y = terrain_height(world->terrain, v2(512, 512));
+  
+  load_file("$CORANGE/resources/basic_instanced.mat");
+  renderable_set_material(asset_get("./resources/vegetation/grass.obj"), asset_get("$CORANGE/resources/basic_instanced.mat"));
   
   /* Renderer Setup */
   
@@ -114,6 +144,11 @@ void scotland_init() {
   forward_renderer_set_shadow_light(sun);
   forward_renderer_set_shadow_texture( shadow_mapper_depth_texture() );
   forward_renderer_add_light(sun);
+  
+  vegetation_init();
+  vegetation_add_type(asset_get("./resources/terrain/heightmap.raw"), 
+                      asset_get("./resources/vegetation/grass.obj"), 
+                      4.0);
   
 }
 
@@ -163,21 +198,11 @@ void scotland_update() {
   static_object* skydome = entity_get("skydome");
   landscape* world = entity_get("world");
   
-  skydome->position.x = cam->position.x;
-  skydome->position.y = 0;
-  skydome->position.z = cam->position.z;
-  
-  sun->position.x = 512;
-  sun->position.y = 1024;
-  sun->position.z = 512;
-  
-  sun->target = v3_add(sun->position, v3(1,-2,1));
-  
   if (w_held || s_held) {
     
     vector3 cam_dir = v3_normalize(v3_sub(cam->target, cam->position));
     float speed = 0.5;
-    if (!freecam) speed = 0.1;
+    if (!freecam) speed = 0.05;
     if (w_held) {
       cam->position = v3_add(cam->position, v3_mul(cam_dir, speed));
     }
@@ -222,13 +247,17 @@ void scotland_render() {
   camera* cam = entity_get("camera");
   landscape* world = entity_get("world");
   static_object* skydome = entity_get("skydome");
+  static_object* grass = entity_get("grass");
   
   shadow_mapper_begin();
   shadow_mapper_render_landscape(world);
   shadow_mapper_end();
-
+  
+  //texture_write_to_file(shadow_mapper_depth_texture(), "shadow_depth.tga");
+  
   forward_renderer_begin();
   forward_renderer_render_static(skydome);
+  forward_renderer_render_static(grass);
   forward_renderer_render_light(sun);
   
   if (wireframe) {
@@ -239,6 +268,8 @@ void scotland_render() {
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
   }
   
+  vegetation_render();
+  
   forward_renderer_end();
   
 }
@@ -247,7 +278,9 @@ void scotland_finish() {
 
   forward_renderer_finish();
   shadow_mapper_finish();
-  
+    
+  vegetation_finish();
+    
 }
 
 int main(int argc, char **argv) {

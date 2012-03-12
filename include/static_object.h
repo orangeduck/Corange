@@ -20,7 +20,7 @@ typedef struct {
 
 } static_object;
 
-static_object* static_object_new(renderable* r);
+static_object* static_object_new();
 void static_object_delete(static_object* s);
 
 #endif

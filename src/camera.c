@@ -7,7 +7,7 @@
 #include "camera.h"
 
 #define DEFAULT_NEAR_CLIP 0.1
-#define DEFAULT_FAR_CLIP 10000.0
+#define DEFAULT_FAR_CLIP 8192.0
 
 #define DEFAULT_FOV 0.785398163
 
