@@ -2,6 +2,8 @@ uniform mat4 world_matrix;
 uniform mat4 proj_matrix;
 uniform mat4 view_matrix;
 
+uniform float time;
+
 uniform vec3 camera_position;
 
 uniform sampler2D terrain_color;
@@ -42,13 +44,19 @@ void main() {
   
   uvs = vec2(gl_MultiTexCoord0.x, 1-gl_MultiTexCoord0.y);
   
-  vec4 world_position = world_matrix * gl_Vertex;
-  vec3 position = world_position.xyz / world_position.w;
+  vec4 amplitude = gl_Color.r * vec4(0.025, 0, 0.025, 0);
+  vec4 speed = vec4(2, 0, 2.73, 0);
+  vec4 frequency = vec4(10, 0, 12, 0);
+  
+  vec4 offset = amplitude * sin(time * speed + frequency * gl_Vertex);
+  
+  vec4 world_position = world_matrix * (gl_Vertex + offset);
+  vec3 position = world_position.xyz;
   gl_Position = proj_matrix * view_matrix * world_position;
   
   alpha_test = clamp(distance(camera_position, position) / 45, 0.1, 1.1);
   
-  vec2 global_uvs = position.xz / 1024;
+  vec2 global_uvs = vec2(position.x, position.z) / 1024.0;
   vec3 albedo = from_gamma(texture2D(terrain_color, global_uvs));
   vec3 normal = texture2D(terrain_normals, global_uvs);
   

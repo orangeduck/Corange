@@ -208,7 +208,7 @@ terrain* raw_load_file(char* filename) {
   ter->num_chunks = ter->num_cols * ter->num_rows;
   ter->heightmap = malloc(sizeof(float) * width * height);
   
-  const float MAX_HEIGHT = 175;
+  const float MAX_HEIGHT = 128;
   
   for(int i = 0; i < width * height; i++) {
     ter->heightmap[i] = (double)pixels[i] / (65536.0 / MAX_HEIGHT);

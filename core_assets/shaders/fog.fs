@@ -27,5 +27,5 @@ vec3 apply_fog(vec3 pixel, vec3 position, vec3 camera_position,
 }
 
 vec3 apply_fog_blue(vec3 pixel, vec3 position, vec3 camera_position) {
-  return apply_fog(pixel, position, camera_position, 750, 200, vec3(0.5098,0.6501,0.7529), vec3(0.066,0.2,0.450), 500);
+  return apply_fog(pixel, position, camera_position, 500, 200, vec3(0.5098,0.6501,0.7529), vec3(0.066,0.2,0.450), 500);
 }

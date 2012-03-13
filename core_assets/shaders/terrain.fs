@@ -71,7 +71,7 @@ void main() {
   vec2 far_uvs = vec2(position.x, position.z) / 100.0;
   
   float total_dist = distance(camera_position, position);
-  float dist_func = clamp(total_dist / 300.0, 0.25, 1.0);
+  float dist_func = clamp(total_dist / 300.0, 0.0, 1.0);
   
   vec3 ground_color = texture2D(color, world_uvs).rgb;
   vec4 ground_attribs = texture2D(attribs, world_uvs);

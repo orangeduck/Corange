@@ -123,11 +123,29 @@ static void block_part_add_template(model* blockpart, model* template, int index
   
 }
 
+static void paint_vegetation(model* m) {
+  
+  for(int i = 0; i < m->num_meshes; i++) {
+  
+    mesh* me = m->meshes[i];
+    for(int j = 0; j < me->num_verts; j++) {
+      if (me->verticies[j].position.y < 0) {
+        me->verticies[j].color = v4_black();
+      } else {
+        me->verticies[j].color = v4_white();
+      }
+    }
+    
+  }
+  
+}
+
 void vegetation_add_type(terrain* t, renderable* r, float density) {
   
   model* template = renderable_to_model(r);
-  model_print(template);
-  model_scale(template, 2.0);
+  model_scale(template, 1.5);
+  
+  paint_vegetation(template);
   
   srand(time(NULL));
   
