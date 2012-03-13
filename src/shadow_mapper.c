@@ -4,11 +4,12 @@
 #include "SDL/SDL_opengl.h"
 #include "SDL/SDL_local.h"
 
+#include "graphics_manager.h"
+#include "asset_manager.h"
+
 #include "shader.h"
 #include "camera.h"
 #include "renderable.h"
-#include "viewport.h"
-#include "asset_manager.h"
 #include "error.h"
 
 #include "shadow_mapper.h"
@@ -34,8 +35,8 @@ void shadow_mapper_init(light* l) {
 
   LIGHT = l;
   
-  depth_shader = asset_load_get("$SHADERS/depth.prog");
-  depth_shader_animated = asset_load_get("$SHADERS/depth_animated.prog");
+  depth_shader = asset_load_get("$CORANGE/shaders/depth.prog");
+  depth_shader_animated = asset_load_get("$CORANGE/shaders/depth_animated.prog");
   
   BONE_INDICIES = glGetAttribLocation(*depth_shader_animated, "bone_indicies");
   BONE_WEIGHTS = glGetAttribLocation(*depth_shader_animated, "bone_weights");
@@ -117,7 +118,7 @@ void shadow_mapper_end() {
   glDisable(GL_CULL_FACE);
   glDisable(GL_DEPTH_TEST);
   
-  glViewport( 0, 0, viewport_width(), viewport_height());
+  glViewport( 0, 0, graphics_viewport_width(), graphics_viewport_height());
   
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   

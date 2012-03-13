@@ -95,8 +95,8 @@ void volume_renderer_set_light(light* new_light) {
 
 void volume_renderer_init() {
   
-  width = viewport_width() / 2;
-  height = viewport_height() / 2;
+  width = graphics_viewport_width() / 2;
+  height = graphics_viewport_height() / 2;
   depth = 512;
   
   char* blank_byte_volume = calloc(width * height * depth * 4, sizeof(char));
@@ -268,7 +268,7 @@ void volume_renderer_render_point(vector3 point, vector3 color) {
   kernel_memory_gl_aquire(k_stencil_texture);
   
   matrix_4x4 viewm = camera_view_matrix(cam);
-  matrix_4x4 projm = camera_proj_matrix(cam, viewport_ratio());  
+  matrix_4x4 projm = camera_proj_matrix(cam, graphics_viewport_ratio());  
   
     vector4 k_point = v4(point.x, point.y, point.z, 1);
     vector4 k_color = v4(color.x, color.y, color.z, 1);

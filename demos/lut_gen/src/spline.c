@@ -202,7 +202,7 @@ void spline_render(spline* s, vector2 position, vector2 size, int increments) {
 	glMatrixMode(GL_PROJECTION);
   glPushMatrix();
 	glLoadIdentity();
-	glOrtho(0, viewport_width(), viewport_height(), 0, -1, 1);
+	glOrtho(0, graphics_viewport_width(), graphics_viewport_height(), 0, -1, 1);
   
 	glMatrixMode(GL_MODELVIEW);
   glPushMatrix();

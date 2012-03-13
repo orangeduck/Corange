@@ -3,6 +3,7 @@
 
 #include "SDL/SDL.h"
 #include "SDL/SDL_opengl.h"
+#include "SDL/SDL_thread.h"
 
 #include "bool.h"
 
@@ -16,13 +17,6 @@
   #endif
 #endif
 
-#ifndef GLchar
-  #define GLchar char
-#endif
-#ifndef GLsizeiptr
-  #define GLsizeiptr int
-#endif
-
 void SDL_PathFullName(char* dst, char* path);
 void SDL_PathFileName(char* dst, char* path);
 void SDL_PathFileExtension(char* dst, char* path);
@@ -34,17 +28,30 @@ void SDL_SetWorkingDir(char* dir);
 void SDL_RWsize(SDL_RWops* file, int* size);
 int SDL_RWreadline(SDL_RWops* file, char* buffer, int buffersize);
 
-void SDL_PrintOpenGLInfo();
-void SDL_PrintOpenGLExtensions();
+void SDL_GL_PrintInfo();
+void SDL_GL_PrintExtensions();
 
-bool SDL_OpenGLSupportsShaderLinkage();
-bool SDL_OpenGLSupportsVsync();
+bool SDL_GL_SupportsShaderLinkage();
+bool SDL_GL_SupportsVsync();
 
-void SDL_LoadOpenGLExtensions();
-void SDL_CheckOpenGLExtension(const char* name, void* function_pointer);
-void SDL_CheckOpenGLError(const char* name);
+void SDL_GL_ThreadingInit();
+void SDL_GL_ThreadingFinish();
+
+void SDL_GL_AquireContext();
+void SDL_GL_ReleaseContext();
+
+void SDL_GL_CheckError(const char* name);
+void SDL_GL_LoadExtensions();
+void SDL_GL_CheckExtension(const char* name, void* function_pointer);
 
 void SDL_PrintStackTrace();
+
+#ifndef GLchar
+  #define GLchar char
+#endif
+#ifndef GLsizeiptr
+  #define GLsizeiptr int
+#endif
 
 typedef GLuint (APIENTRY * GLCREATESHADERFN)( GLenum type );
 typedef GLuint (APIENTRY * GLCREATEPROGRAMFN)( void );

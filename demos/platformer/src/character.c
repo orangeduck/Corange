@@ -32,10 +32,10 @@ void character_render(character* c, vector2 camera_position) {
 	glMatrixMode(GL_PROJECTION);
   glPushMatrix();
 	glLoadIdentity();
-	glOrtho(camera_position.x - viewport_width() / 2, 
-          camera_position.x + viewport_width() / 2,
-          -camera_position.y + viewport_height() / 2,
-          -camera_position.y - viewport_height() / 2
+	glOrtho(camera_position.x - graphics_viewport_width() / 2, 
+          camera_position.x + graphics_viewport_width() / 2,
+          -camera_position.y + graphics_viewport_height() / 2,
+          -camera_position.y - graphics_viewport_height() / 2
           , -1, 1);
   
 	glMatrixMode(GL_MODELVIEW);

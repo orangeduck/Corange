@@ -126,6 +126,7 @@ model* renderable_to_model(renderable* r) {
     
     for(int j = 0; j < me->num_triangles_3; j++) {
       me->triangles[j] = ib_data[j];
+      debug("Data: %i", ib_data[j]);
     }
     
     free(vb_data);

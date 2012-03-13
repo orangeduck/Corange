@@ -5,10 +5,10 @@
 #include "SDL/SDL_local.h"
 
 #include "font.h"
-#include "viewport.h"
 #include "texture.h"
 #include "matrix.h"
 
+#include "graphics_manager.h"
 #include "asset_manager.h"
 
 #include "ui_text.h"
@@ -331,7 +331,7 @@ void ui_text_render(ui_text* text) {
 	glMatrixMode(GL_PROJECTION);
   glPushMatrix();
 	glLoadIdentity();
-	glOrtho(0, viewport_width(), viewport_height(), 0, -1, 1);
+	glOrtho(0, graphics_viewport_width(), graphics_viewport_height(), 0, -1, 1);
   
 	glMatrixMode(GL_MODELVIEW);
   glPushMatrix();

@@ -1,2 +1,0 @@
-vertex_shader : $SHADERS/depth_animated.vs
-fragment_shader : $SHADERS/depth.fs

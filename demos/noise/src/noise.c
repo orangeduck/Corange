@@ -108,7 +108,7 @@ int main(int argc, char **argv) {
   
   corange_init("../../core_assets");
   
-  viewport_set_dimensions(1280, 720);
+  graphics_viewport_set_dimensions(1280, 720);
   
   load_folder("./shaders/");
   load_file("$CORANGE/resources/random.dds");
@@ -166,7 +166,7 @@ int main(int argc, char **argv) {
       case SDL_KEYDOWN:
       case SDL_KEYUP:
         if (event.key.keysym.sym == SDLK_ESCAPE) { running = 0; }
-        if (event.key.keysym.sym == SDLK_PRINT) { viewport_screenshot(); }
+        if (event.key.keysym.sym == SDLK_PRINT) { graphics_viewport_screenshot(); }
         break;
       case SDL_QUIT:
         running = 0;

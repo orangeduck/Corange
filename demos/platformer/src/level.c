@@ -221,7 +221,7 @@ void level_render_background(level* l) {
 	glMatrixMode(GL_PROJECTION);
   glPushMatrix();
 	glLoadIdentity();
-	glOrtho(0, viewport_width(), 0, viewport_height(), -1, 1);
+	glOrtho(0, graphics_viewport_width(), 0, graphics_viewport_height(), -1, 1);
   
 	glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
@@ -234,11 +234,11 @@ void level_render_background(level* l) {
   
   glBegin(GL_QUADS);
     
-    glVertex3f(0, viewport_height(), 0.0);
+    glVertex3f(0, graphics_viewport_height(), 0.0);
     glTexCoord2f(1, 0);
-    glVertex3f(viewport_width(), viewport_height(), 0.0);
+    glVertex3f(graphics_viewport_width(), graphics_viewport_height(), 0.0);
     glTexCoord2f(1, 1);
-    glVertex3f(viewport_width(), 0, 0.0);
+    glVertex3f(graphics_viewport_width(), 0, 0.0);
     glTexCoord2f(0, 1);
     glVertex3f(0, 0, 0.0);
     glTexCoord2f(0, 0);
@@ -262,10 +262,10 @@ void level_render_tiles(level* l, vector2 camera_position) {
 	glMatrixMode(GL_PROJECTION);
   glPushMatrix();
 	glLoadIdentity();
-	glOrtho(camera_position.x - viewport_width() / 2, 
-          camera_position.x + viewport_width() / 2,
-          -camera_position.y + viewport_height() / 2,
-          -camera_position.y - viewport_height() / 2
+	glOrtho(camera_position.x - graphics_viewport_width() / 2, 
+          camera_position.x + graphics_viewport_width() / 2,
+          -camera_position.y + graphics_viewport_height() / 2,
+          -camera_position.y - graphics_viewport_height() / 2
           , -1, 1);
   
 	glMatrixMode(GL_MODELVIEW);

@@ -1,7 +1,7 @@
 #include "ui_button.h"
 
 #include "error.h"
-#include "viewport.h"
+#include "graphics_manager.h"
 
 ui_button* ui_button_new() {
 
@@ -77,7 +77,7 @@ void ui_button_render(ui_button* b) {
 	glMatrixMode(GL_PROJECTION);
   glPushMatrix();
 	glLoadIdentity();
-	glOrtho(0, viewport_width(), viewport_height(), 0, -1, 1);
+	glOrtho(0, graphics_viewport_width(), graphics_viewport_height(), 0, -1, 1);
   
 	glMatrixMode(GL_MODELVIEW);
   glPushMatrix();

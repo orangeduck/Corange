@@ -198,7 +198,7 @@ int SDL_RWreadline(SDL_RWops* file, char* buffer, int buffersize) {
   
 }
 
-void SDL_PrintOpenGLInfo() {
+void SDL_GL_PrintInfo() {
   debug("OpenGL Info");
   const char* vendor = (const char*)glGetString(GL_VENDOR);
   debug("Vendor: %s", vendor);
@@ -210,12 +210,12 @@ void SDL_PrintOpenGLInfo() {
   debug("Shader Version: %s", shader_version);
 }
 
-void SDL_PrintOpenGLExtensions() {
+void SDL_GL_PrintExtensions() {
   const char* extensions = (const char*)glGetString(GL_EXTENSIONS);
   debug("OpenGL Extensions: %s\n", extensions);
 }
 
-bool SDL_OpenGLSupportsShaderLinkage() {
+bool SDL_GL_SupportsShaderLinkage() {
   
   const char* renderer = (const char*)glGetString(GL_RENDERER);
   if (strstr("ATI Mobility Radeon HD 5650", renderer)) {
@@ -225,7 +225,7 @@ bool SDL_OpenGLSupportsShaderLinkage() {
   return true;
 }
 
-bool SDL_OpenGLSupportsVsync() {
+bool SDL_GL_SupportsVsync() {
 
   const char* renderer = (const char*)glGetString(GL_RENDERER);
   if (strstr("ATI Mobility Radeon HD 5650", renderer)) {
@@ -236,7 +236,7 @@ bool SDL_OpenGLSupportsVsync() {
 }
 
 
-void SDL_CheckOpenGLError(const char* name) {
+void SDL_GL_CheckError(const char* name) {
   switch (glGetError()) {
     case GL_INVALID_ENUM:
       error("OpenGL Error on function %s: Invalid Enum", name);
@@ -257,84 +257,119 @@ void SDL_CheckOpenGLError(const char* name) {
   }
 }
 
-void SDL_LoadOpenGLExtensions() {
+static SDL_mutex* gl_lock = NULL;
+
+#ifdef _WIN32
+static HDC gl_device = 0;
+static HGLRC gl_context = 0;
+#endif
+
+void SDL_GL_ThreadingInit() {
+  gl_lock = SDL_CreateMutex();
+  #ifdef _WIN32
+    gl_device = wglGetCurrentDC();
+    gl_context = wglGetCurrentContext();
+  #endif
+}
+
+void SDL_GL_ThreadingFinish() {
+  SDL_DestroyMutex(gl_lock);
+}
+
+void SDL_GL_Aquire() {
+  SDL_LockMutex(gl_lock);
+  int err = 1;
+  #ifdef _WIN32
+    err = wglMakeCurrent(gl_device, gl_context);
+  #endif
+  
+  if (!err) {
+    error("Couldn't aquire OpenGL context for current thread");
+  }
+}
+
+void SDL_GL_Release() {
+  SDL_UnlockMutex(gl_lock);
+}
+
+void SDL_GL_LoadExtensions() {
 
   debug("Loading OpenGL Extensions...");
 
   /* Shaders */
   
-	glCreateProgram            = (GLCREATEPROGRAMFN)SDL_GL_GetProcAddress( "glCreateProgram" ); SDL_CheckOpenGLExtension("glCreateProgram", glCreateProgram);
-	glLinkProgram              = (GLLINKPROGRAMFN)SDL_GL_GetProcAddress( "glLinkProgram" ); SDL_CheckOpenGLExtension("glLinkProgram", glLinkProgram);
-	glDeleteProgram            = (GLDELETEPROGRAMFN)SDL_GL_GetProcAddress( "glDeleteProgram" ); SDL_CheckOpenGLExtension("glDeleteProgram", glDeleteProgram);
-	glGetProgramInfoLog        = (GLGETPROGRAMINFOLOGFN)SDL_GL_GetProcAddress( "glGetProgramInfoLog" ); SDL_CheckOpenGLExtension("glGetProgramInfoLog", glGetProgramInfoLog);
-	glUseProgram               = (GLUSEPROGRAMFN)SDL_GL_GetProcAddress( "glUseProgram" ); SDL_CheckOpenGLExtension("glUseProgram", glUseProgram);
-	glGetProgramiv             = (GLGETPROGRAMIVFN)SDL_GL_GetProcAddress( "glGetProgramiv" ); SDL_CheckOpenGLExtension("glGetProgramiv", glGetProgramiv);
+	glCreateProgram            = (GLCREATEPROGRAMFN)SDL_GL_GetProcAddress( "glCreateProgram" ); SDL_GL_CheckExtension("glCreateProgram", glCreateProgram);
+	glLinkProgram              = (GLLINKPROGRAMFN)SDL_GL_GetProcAddress( "glLinkProgram" ); SDL_GL_CheckExtension("glLinkProgram", glLinkProgram);
+	glDeleteProgram            = (GLDELETEPROGRAMFN)SDL_GL_GetProcAddress( "glDeleteProgram" ); SDL_GL_CheckExtension("glDeleteProgram", glDeleteProgram);
+	glGetProgramInfoLog        = (GLGETPROGRAMINFOLOGFN)SDL_GL_GetProcAddress( "glGetProgramInfoLog" ); SDL_GL_CheckExtension("glGetProgramInfoLog", glGetProgramInfoLog);
+	glUseProgram               = (GLUSEPROGRAMFN)SDL_GL_GetProcAddress( "glUseProgram" ); SDL_GL_CheckExtension("glUseProgram", glUseProgram);
+	glGetProgramiv             = (GLGETPROGRAMIVFN)SDL_GL_GetProcAddress( "glGetProgramiv" ); SDL_GL_CheckExtension("glGetProgramiv", glGetProgramiv);
   
-	glCreateShader             = (GLCREATESHADERFN)SDL_GL_GetProcAddress( "glCreateShader" ); SDL_CheckOpenGLExtension("glCreateShader", glCreateShader);
-	glShaderSource             = (GLSHADERSOURCEFN)SDL_GL_GetProcAddress( "glShaderSource" ); SDL_CheckOpenGLExtension("glShaderSource", glShaderSource);
-	glCompileShader            = (GLCOMPILESHADERFN)SDL_GL_GetProcAddress( "glCompileShader" ); SDL_CheckOpenGLExtension("glCompileShader", glCompileShader);
-	glGetShaderInfoLog         = (GLGETSHADERINFOLOGFN)SDL_GL_GetProcAddress( "glGetShaderInfoLog" ); SDL_CheckOpenGLExtension("glGetShaderInfoLog", glGetShaderInfoLog);
-	glAttachShader             = (GLATTACHSHADERFN)SDL_GL_GetProcAddress( "glAttachShader" ); SDL_CheckOpenGLExtension("glAttachShader", glAttachShader);
- 	glDeleteShader             = (GLDELETESHADERFN)SDL_GL_GetProcAddress( "glDeleteShader" ); SDL_CheckOpenGLExtension("glDeleteShader", glDeleteShader);
-	glGetShaderiv              = (GLGETSHADERIVFN)SDL_GL_GetProcAddress( "glGetShaderiv" ); SDL_CheckOpenGLExtension("glGetShaderiv", glGetShaderiv);
+	glCreateShader             = (GLCREATESHADERFN)SDL_GL_GetProcAddress( "glCreateShader" ); SDL_GL_CheckExtension("glCreateShader", glCreateShader);
+	glShaderSource             = (GLSHADERSOURCEFN)SDL_GL_GetProcAddress( "glShaderSource" ); SDL_GL_CheckExtension("glShaderSource", glShaderSource);
+	glCompileShader            = (GLCOMPILESHADERFN)SDL_GL_GetProcAddress( "glCompileShader" ); SDL_GL_CheckExtension("glCompileShader", glCompileShader);
+	glGetShaderInfoLog         = (GLGETSHADERINFOLOGFN)SDL_GL_GetProcAddress( "glGetShaderInfoLog" ); SDL_GL_CheckExtension("glGetShaderInfoLog", glGetShaderInfoLog);
+	glAttachShader             = (GLATTACHSHADERFN)SDL_GL_GetProcAddress( "glAttachShader" ); SDL_GL_CheckExtension("glAttachShader", glAttachShader);
+ 	glDeleteShader             = (GLDELETESHADERFN)SDL_GL_GetProcAddress( "glDeleteShader" ); SDL_GL_CheckExtension("glDeleteShader", glDeleteShader);
+	glGetShaderiv              = (GLGETSHADERIVFN)SDL_GL_GetProcAddress( "glGetShaderiv" ); SDL_GL_CheckExtension("glGetShaderiv", glGetShaderiv);
   
-  glGetUniformLocation       = (GLGETUNIFORMLOCATIONFN)SDL_GL_GetProcAddress( "glGetUniformLocation" ); SDL_CheckOpenGLExtension("glGetUniformLocation", glGetUniformLocation);
-	glUniform1f                = (GLUNIFORM1FFN)SDL_GL_GetProcAddress( "glUniform1f" ); SDL_CheckOpenGLExtension("glUniform1f", glUniform1f);
-	glUniform1i                = (GLUNIFORM1IFN)SDL_GL_GetProcAddress( "glUniform1i" ); SDL_CheckOpenGLExtension("glUniform1i", glUniform1i);
-	glUniform2f                = (GLUNIFORM2FFN)SDL_GL_GetProcAddress( "glUniform2f" ); SDL_CheckOpenGLExtension("glUniform2f", glUniform2f);
-	glUniform3f                = (GLUNIFORM3FFN)SDL_GL_GetProcAddress( "glUniform3f" ); SDL_CheckOpenGLExtension("glUniform3f", glUniform3f);
-	glUniform4f                = (GLUNIFORM4FFN)SDL_GL_GetProcAddress( "glUniform4f" ); SDL_CheckOpenGLExtension("glUniform4f", glUniform4f);
-	glUniform1fv               = (GLUNIFORM1FVFN)SDL_GL_GetProcAddress( "glUniform1fv" ); SDL_CheckOpenGLExtension("glUniform1fv", glUniform1fv);
-	glUniform2fv               = (GLUNIFORM2FVFN)SDL_GL_GetProcAddress( "glUniform2fv" ); SDL_CheckOpenGLExtension("glUniform2fv", glUniform2fv);
-	glUniform3fv               = (GLUNIFORM3FVFN)SDL_GL_GetProcAddress( "glUniform3fv" ); SDL_CheckOpenGLExtension("glUniform3fv", glUniform3fv);
-	glUniformMatrix4fv         = (GLUNIFORMMATRIX4FVFN)SDL_GL_GetProcAddress( "glUniformMatrix4fv" ); SDL_CheckOpenGLExtension("glUniformMatrix4fv", glUniformMatrix4fv);
+  glGetUniformLocation       = (GLGETUNIFORMLOCATIONFN)SDL_GL_GetProcAddress( "glGetUniformLocation" ); SDL_GL_CheckExtension("glGetUniformLocation", glGetUniformLocation);
+	glUniform1f                = (GLUNIFORM1FFN)SDL_GL_GetProcAddress( "glUniform1f" ); SDL_GL_CheckExtension("glUniform1f", glUniform1f);
+	glUniform1i                = (GLUNIFORM1IFN)SDL_GL_GetProcAddress( "glUniform1i" ); SDL_GL_CheckExtension("glUniform1i", glUniform1i);
+	glUniform2f                = (GLUNIFORM2FFN)SDL_GL_GetProcAddress( "glUniform2f" ); SDL_GL_CheckExtension("glUniform2f", glUniform2f);
+	glUniform3f                = (GLUNIFORM3FFN)SDL_GL_GetProcAddress( "glUniform3f" ); SDL_GL_CheckExtension("glUniform3f", glUniform3f);
+	glUniform4f                = (GLUNIFORM4FFN)SDL_GL_GetProcAddress( "glUniform4f" ); SDL_GL_CheckExtension("glUniform4f", glUniform4f);
+	glUniform1fv               = (GLUNIFORM1FVFN)SDL_GL_GetProcAddress( "glUniform1fv" ); SDL_GL_CheckExtension("glUniform1fv", glUniform1fv);
+	glUniform2fv               = (GLUNIFORM2FVFN)SDL_GL_GetProcAddress( "glUniform2fv" ); SDL_GL_CheckExtension("glUniform2fv", glUniform2fv);
+	glUniform3fv               = (GLUNIFORM3FVFN)SDL_GL_GetProcAddress( "glUniform3fv" ); SDL_GL_CheckExtension("glUniform3fv", glUniform3fv);
+	glUniformMatrix4fv         = (GLUNIFORMMATRIX4FVFN)SDL_GL_GetProcAddress( "glUniformMatrix4fv" ); SDL_GL_CheckExtension("glUniformMatrix4fv", glUniformMatrix4fv);
   
-  glGetAttribLocation        = (GLGETATTRIBLOCATIONFN)SDL_GL_GetProcAddress( "glGetAttribLocation" ); SDL_CheckOpenGLExtension("glGetAttribLocation", glGetAttribLocation);
-	glVertexAttribPointer      = (GLVERTEXATTRIBPOINTERFN)SDL_GL_GetProcAddress( "glVertexAttribPointer" ); SDL_CheckOpenGLExtension("glVertexAttribPointer", glVertexAttribPointer);
-	glEnableVertexAttribArray  = (GLENABLEVERTEXATTRIBARRAYFN)SDL_GL_GetProcAddress( "glEnableVertexAttribArray" ); SDL_CheckOpenGLExtension("glEnableVertexAttribArray", glEnableVertexAttribArray);
-	glDisableVertexAttribArray = (GLDISABLEVERTEXATTRIBARRAYFN)SDL_GL_GetProcAddress( "glDisableVertexAttribArray" ); SDL_CheckOpenGLExtension("glDisableVertexAttribArray", glDisableVertexAttribArray);
-	glBindAttribLocation       = (GLBINDATTRIBLOCATIONFN)SDL_GL_GetProcAddress( "glBindAttribLocation" ); SDL_CheckOpenGLExtension("glBindAttribLocation", glBindAttribLocation);
+  glGetAttribLocation        = (GLGETATTRIBLOCATIONFN)SDL_GL_GetProcAddress( "glGetAttribLocation" ); SDL_GL_CheckExtension("glGetAttribLocation", glGetAttribLocation);
+	glVertexAttribPointer      = (GLVERTEXATTRIBPOINTERFN)SDL_GL_GetProcAddress( "glVertexAttribPointer" ); SDL_GL_CheckExtension("glVertexAttribPointer", glVertexAttribPointer);
+	glEnableVertexAttribArray  = (GLENABLEVERTEXATTRIBARRAYFN)SDL_GL_GetProcAddress( "glEnableVertexAttribArray" ); SDL_GL_CheckExtension("glEnableVertexAttribArray", glEnableVertexAttribArray);
+	glDisableVertexAttribArray = (GLDISABLEVERTEXATTRIBARRAYFN)SDL_GL_GetProcAddress( "glDisableVertexAttribArray" ); SDL_GL_CheckExtension("glDisableVertexAttribArray", glDisableVertexAttribArray);
+	glBindAttribLocation       = (GLBINDATTRIBLOCATIONFN)SDL_GL_GetProcAddress( "glBindAttribLocation" ); SDL_GL_CheckExtension("glBindAttribLocation", glBindAttribLocation);
   
   /* Textures */
   
-  glGenerateMipmap           = (GLGENERATEMIPMAPFN)SDL_GL_GetProcAddress( "glGenerateMipmap" ); SDL_CheckOpenGLExtension("glGenerateMipmap", glGenerateMipmap);
+  glGenerateMipmap           = (GLGENERATEMIPMAPFN)SDL_GL_GetProcAddress( "glGenerateMipmap" ); SDL_GL_CheckExtension("glGenerateMipmap", glGenerateMipmap);
   #ifndef __linux__
-  glActiveTexture            = (GLACTIVETEXTUREFN)SDL_GL_GetProcAddress( "glActiveTexture" ); SDL_CheckOpenGLExtension("glActiveTexture", glActiveTexture);
-  glCompressedTexImage2D     = (GLCOMPRESSEDTEXIMAGE2DFN)SDL_GL_GetProcAddress( "glCompressedTexImage2D" ); SDL_CheckOpenGLExtension("glCompressedTexImage2D", glCompressedTexImage2D);
-  glTexImage3D               = (GLTEXIMAGE3DFN)SDL_GL_GetProcAddress( "glTexImage3D" ); SDL_CheckOpenGLExtension("glTexImage3D", glTexImage3D);
+  glActiveTexture            = (GLACTIVETEXTUREFN)SDL_GL_GetProcAddress( "glActiveTexture" ); SDL_GL_CheckExtension("glActiveTexture", glActiveTexture);
+  glCompressedTexImage2D     = (GLCOMPRESSEDTEXIMAGE2DFN)SDL_GL_GetProcAddress( "glCompressedTexImage2D" ); SDL_GL_CheckExtension("glCompressedTexImage2D", glCompressedTexImage2D);
+  glTexImage3D               = (GLTEXIMAGE3DFN)SDL_GL_GetProcAddress( "glTexImage3D" ); SDL_GL_CheckExtension("glTexImage3D", glTexImage3D);
   #endif
   
   /* Buffers */
   
-	glGenBuffers               = (GLGENBUFFERSFN)SDL_GL_GetProcAddress( "glGenBuffers" ); SDL_CheckOpenGLExtension("glGenBuffers", glGenBuffers);
-	glBindBuffer               = (GLBINDBUFFERFN)SDL_GL_GetProcAddress( "glBindBuffer" ); SDL_CheckOpenGLExtension("glBindBuffer", glBindBuffer);
-	glBufferData               = (GLBUFFERDATAFN)SDL_GL_GetProcAddress( "glBufferData" ); SDL_CheckOpenGLExtension("glBufferData", glBufferData);
-	glGetBufferSubData         = (GLGETBUFFERSUBDATAFN)SDL_GL_GetProcAddress( "glGetBufferSubData" ); SDL_CheckOpenGLExtension("glGetBufferSubData", glGetBufferSubData);
-	glDeleteBuffers            = (GLDELETEBUFFERSFN)SDL_GL_GetProcAddress( "glDeleteBuffers" ); SDL_CheckOpenGLExtension("glDeleteBuffers", glDeleteBuffers);
-  glDrawBuffers              = (GLDRAWBUFFERSFN)SDL_GL_GetProcAddress( "glDrawBuffers" ); SDL_CheckOpenGLExtension("glDrawBuffers", glDrawBuffers);
+	glGenBuffers               = (GLGENBUFFERSFN)SDL_GL_GetProcAddress( "glGenBuffers" ); SDL_GL_CheckExtension("glGenBuffers", glGenBuffers);
+	glBindBuffer               = (GLBINDBUFFERFN)SDL_GL_GetProcAddress( "glBindBuffer" ); SDL_GL_CheckExtension("glBindBuffer", glBindBuffer);
+	glBufferData               = (GLBUFFERDATAFN)SDL_GL_GetProcAddress( "glBufferData" ); SDL_GL_CheckExtension("glBufferData", glBufferData);
+	glGetBufferSubData         = (GLGETBUFFERSUBDATAFN)SDL_GL_GetProcAddress( "glGetBufferSubData" ); SDL_GL_CheckExtension("glGetBufferSubData", glGetBufferSubData);
+	glDeleteBuffers            = (GLDELETEBUFFERSFN)SDL_GL_GetProcAddress( "glDeleteBuffers" ); SDL_GL_CheckExtension("glDeleteBuffers", glDeleteBuffers);
+  glDrawBuffers              = (GLDRAWBUFFERSFN)SDL_GL_GetProcAddress( "glDrawBuffers" ); SDL_GL_CheckExtension("glDrawBuffers", glDrawBuffers);
 
-  glGenRenderbuffers                = (GLGENRENDERBUFFERSFN)SDL_GL_GetProcAddress( "glGenRenderbuffers" ); SDL_CheckOpenGLExtension("glGenRenderbuffers", glGenRenderbuffers);
-  glBindRenderbuffer                = (GLBINDRENDERBUFFERFN)SDL_GL_GetProcAddress( "glBindRenderbuffer" ); SDL_CheckOpenGLExtension("glBindRenderbuffer", glBindRenderbuffer);
-  glRenderbufferStorage             = (GLRENDERBUFFERSTORAGEFN)SDL_GL_GetProcAddress( "glRenderbufferStorage" ); SDL_CheckOpenGLExtension("glRenderbufferStorage", glRenderbufferStorage);
-  glRenderbufferStorageMultisample             = (GLRENDERBUFFERSTORAGEMULTISAMPLEFN)SDL_GL_GetProcAddress( "glRenderbufferStorageMultisample" ); SDL_CheckOpenGLExtension("glRenderbufferStorageMultisample", glRenderbufferStorageMultisample);
-	glDeleteRenderbuffers             = (GLDELETERENDERBUFFERSFN)SDL_GL_GetProcAddress( "glDeleteRenderbuffers" ); SDL_CheckOpenGLExtension("glDeleteRenderbuffers", glDeleteRenderbuffers);
+  glGenRenderbuffers                = (GLGENRENDERBUFFERSFN)SDL_GL_GetProcAddress( "glGenRenderbuffers" ); SDL_GL_CheckExtension("glGenRenderbuffers", glGenRenderbuffers);
+  glBindRenderbuffer                = (GLBINDRENDERBUFFERFN)SDL_GL_GetProcAddress( "glBindRenderbuffer" ); SDL_GL_CheckExtension("glBindRenderbuffer", glBindRenderbuffer);
+  glRenderbufferStorage             = (GLRENDERBUFFERSTORAGEFN)SDL_GL_GetProcAddress( "glRenderbufferStorage" ); SDL_GL_CheckExtension("glRenderbufferStorage", glRenderbufferStorage);
+  glRenderbufferStorageMultisample             = (GLRENDERBUFFERSTORAGEMULTISAMPLEFN)SDL_GL_GetProcAddress( "glRenderbufferStorageMultisample" ); SDL_GL_CheckExtension("glRenderbufferStorageMultisample", glRenderbufferStorageMultisample);
+	glDeleteRenderbuffers             = (GLDELETERENDERBUFFERSFN)SDL_GL_GetProcAddress( "glDeleteRenderbuffers" ); SDL_GL_CheckExtension("glDeleteRenderbuffers", glDeleteRenderbuffers);
   
-	glGenFramebuffers          = (GLGENFRAMEBUFFERSFN)SDL_GL_GetProcAddress( "glGenFramebuffers" ); SDL_CheckOpenGLExtension("glGenFramebuffers", glGenFramebuffers);
-	glBindFramebuffer          = (GLBINDFRAMEBUFFERFN)SDL_GL_GetProcAddress( "glBindFramebuffer" ); SDL_CheckOpenGLExtension("glBindFramebuffer", glBindFramebuffer);
-	glBlitFramebuffer          = (GLBLITFRAMEBUFFERFN)SDL_GL_GetProcAddress( "glBlitFramebuffer" ); SDL_CheckOpenGLExtension("glBlitFramebuffer", glBlitFramebuffer);
-	glFramebufferTexture     = (GLFRAMEBUFFERTEXTUREFN)SDL_GL_GetProcAddress( "glFramebufferTexture" ); SDL_CheckOpenGLExtension("glFramebufferTexture", glFramebufferTexture);
-	glFramebufferTexture2D     = (GLFRAMEBUFFERTEXTURE2DFN)SDL_GL_GetProcAddress( "glFramebufferTexture2D" ); SDL_CheckOpenGLExtension("glFramebufferTexture2D", glFramebufferTexture2D);
-	glDeleteFramebuffers       = (GLDELETEFRAMEBUFFERSFN)SDL_GL_GetProcAddress( "glDeleteFramebuffers" ); SDL_CheckOpenGLExtension("glDeleteFramebuffers", glDeleteFramebuffers);
-	glCheckFramebufferStatus   = (GLCHECKFRAMEBUFFERSTATUSFN)SDL_GL_GetProcAddress( "glCheckFramebufferStatus" ); SDL_CheckOpenGLExtension("glCheckFramebufferStatus", glCheckFramebufferStatus);
-  glFramebufferRenderbuffer  = (GLFRAMEBUFFERRENDERBUFFERFN)SDL_GL_GetProcAddress( "glFramebufferRenderbuffer" ); SDL_CheckOpenGLExtension("glFramebufferRenderbuffer", glFramebufferRenderbuffer);
+	glGenFramebuffers          = (GLGENFRAMEBUFFERSFN)SDL_GL_GetProcAddress( "glGenFramebuffers" ); SDL_GL_CheckExtension("glGenFramebuffers", glGenFramebuffers);
+	glBindFramebuffer          = (GLBINDFRAMEBUFFERFN)SDL_GL_GetProcAddress( "glBindFramebuffer" ); SDL_GL_CheckExtension("glBindFramebuffer", glBindFramebuffer);
+	glBlitFramebuffer          = (GLBLITFRAMEBUFFERFN)SDL_GL_GetProcAddress( "glBlitFramebuffer" ); SDL_GL_CheckExtension("glBlitFramebuffer", glBlitFramebuffer);
+	glFramebufferTexture     = (GLFRAMEBUFFERTEXTUREFN)SDL_GL_GetProcAddress( "glFramebufferTexture" ); SDL_GL_CheckExtension("glFramebufferTexture", glFramebufferTexture);
+	glFramebufferTexture2D     = (GLFRAMEBUFFERTEXTURE2DFN)SDL_GL_GetProcAddress( "glFramebufferTexture2D" ); SDL_GL_CheckExtension("glFramebufferTexture2D", glFramebufferTexture2D);
+	glDeleteFramebuffers       = (GLDELETEFRAMEBUFFERSFN)SDL_GL_GetProcAddress( "glDeleteFramebuffers" ); SDL_GL_CheckExtension("glDeleteFramebuffers", glDeleteFramebuffers);
+	glCheckFramebufferStatus   = (GLCHECKFRAMEBUFFERSTATUSFN)SDL_GL_GetProcAddress( "glCheckFramebufferStatus" ); SDL_GL_CheckExtension("glCheckFramebufferStatus", glCheckFramebufferStatus);
+  glFramebufferRenderbuffer  = (GLFRAMEBUFFERRENDERBUFFERFN)SDL_GL_GetProcAddress( "glFramebufferRenderbuffer" ); SDL_GL_CheckExtension("glFramebufferRenderbuffer", glFramebufferRenderbuffer);
   
   /* Misc */
   
-  glDrawElementsInstanced = (GLDRAWELEMENTSINSTANCEDFN)SDL_GL_GetProcAddress( "glDrawElementsInstanced" ); SDL_CheckOpenGLExtension("glDrawElementsInstanced", glDrawElementsInstanced);
+  glDrawElementsInstanced = (GLDRAWELEMENTSINSTANCEDFN)SDL_GL_GetProcAddress( "glDrawElementsInstanced" ); SDL_GL_CheckExtension("glDrawElementsInstanced", glDrawElementsInstanced);
   
 }
 
-void SDL_CheckOpenGLExtension(const char* name, void* function_pointer) {
+void SDL_GL_CheckExtension(const char* name, void* function_pointer) {
   if (function_pointer == NULL) {
     error("Failed to load OpenGL extension %s", name);
   }  

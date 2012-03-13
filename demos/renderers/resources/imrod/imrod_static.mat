@@ -1,5 +1,5 @@
 string name = imrod
-program prog = $SHADERS/norm_spec_env.prog
+program prog = $CORANGE/shaders/norm_spec_env.prog
 texture diffuse_map = ./resources/imrod/imrod.dds
 texture bump_map = ./resources/imrod/imrod_nm.dds
 texture spec_map = ./resources/imrod/imrod_s.dds

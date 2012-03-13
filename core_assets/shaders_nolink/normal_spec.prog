@@ -1,2 +1,0 @@
-vertex_shader : $SHADERS/normal_spec.vs
-fragment_shader : $SHADERS/normal_spec.fs

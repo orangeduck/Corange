@@ -18,6 +18,11 @@ void corange_finish();
 #include "error.h"
 #include "timing.h"
 
+/* Audio and Graphics */
+
+#include "graphics_manager.h"
+#include "audio_manager.h"
+
 /* Entities */
 
 #include "entity_manager.h"
@@ -57,14 +62,9 @@ void corange_finish();
 
 /* Rendering */
 
-#include "viewport.h"
 #include "forward_renderer.h"
 #include "deferred_renderer.h"
 #include "shadow_mapper.h"
-
-/* Audio */
-
-#include "audio_mixer.h"
 
 /* Data Structures */
 

@@ -106,7 +106,7 @@ static vector3 ik_target;
 
 void renderers_init() {
   
-  viewport_set_dimensions(1280, 720);
+  graphics_viewport_set_dimensions(1280, 720);
 
   load_folder("./resources/podium/");
   load_folder("./resources/cello/");
@@ -165,18 +165,18 @@ void renderers_init() {
   ui_button_disable(framerate);
   
   ui_button* renderer = ui_elem_new("renderer", ui_button);
-  ui_button_move(renderer, v2(10, viewport_height() - 35));
+  ui_button_move(renderer, v2(10, graphics_viewport_height() - 35));
   ui_button_resize(renderer, v2(75,25));
   ui_button_set_label(renderer, "Renderer");
   ui_button_disable(renderer);
   
   ui_button* forward_renderer = ui_elem_new("forward_renderer", ui_button);
-  ui_button_move(forward_renderer, v2(95, viewport_height() - 35));
+  ui_button_move(forward_renderer, v2(95, graphics_viewport_height() - 35));
   ui_button_resize(forward_renderer, v2(65,25));
   ui_button_set_label(forward_renderer, "Forward");
   
   ui_button* deferred_renderer = ui_elem_new("deferred_renderer", ui_button);
-  ui_button_move(deferred_renderer, v2(170, viewport_height() - 35));
+  ui_button_move(deferred_renderer, v2(170, graphics_viewport_height() - 35));
   ui_button_resize(deferred_renderer, v2(75,25));
   ui_button_set_label(deferred_renderer, "Deferred");
   
@@ -184,28 +184,28 @@ void renderers_init() {
   ui_elem_add_event("deferred_renderer", switch_renderer_event);
   
   ui_button* object = ui_elem_new("object", ui_button);
-  ui_button_move(object, v2(10, viewport_height() - 70));
+  ui_button_move(object, v2(10, graphics_viewport_height() - 70));
   ui_button_resize(object, v2(60,25));
   ui_button_set_label(object, "Object");
   ui_button_disable(object);
   
   ui_button* piano = ui_elem_new("piano", ui_button);
-  ui_button_move(piano, v2(80, viewport_height() - 70));
+  ui_button_move(piano, v2(80, graphics_viewport_height() - 70));
   ui_button_resize(piano, v2(50,25));
   ui_button_set_label(piano, "Piano");
   
   ui_button* cello = ui_elem_new("cello", ui_button);
-  ui_button_move(cello, v2(140, viewport_height() - 70));
+  ui_button_move(cello, v2(140, graphics_viewport_height() - 70));
   ui_button_resize(cello, v2(50,25));
   ui_button_set_label(cello, "Cello");
   
   ui_button* imrod = ui_elem_new("imrod", ui_button);
-  ui_button_move(imrod, v2(200, viewport_height() - 70));
+  ui_button_move(imrod, v2(200, graphics_viewport_height() - 70));
   ui_button_resize(imrod, v2(50,25));
   ui_button_set_label(imrod, "Imrod");
   
   ui_button* dino = ui_elem_new("dino", ui_button);
-  ui_button_move(dino, v2(260, viewport_height() - 70));
+  ui_button_move(dino, v2(260, graphics_viewport_height() - 70));
   ui_button_resize(dino, v2(40,25));
   ui_button_set_label(dino, "Dino");
   
@@ -250,8 +250,8 @@ void renderers_init() {
 light* selected_light = NULL;
 static void select_light(int x, int y) {
   
-  float x_clip =  ((float)x / viewport_width()) * 2 - 1;
-  float y_clip = -(((float)y / viewport_height()) * 2 - 1);
+  float x_clip =  ((float)x / graphics_viewport_width()) * 2 - 1;
+  float y_clip = -(((float)y / graphics_viewport_height()) * 2 - 1);
   
   light* light_ents[10];
   int num_light_ents;
@@ -259,7 +259,7 @@ static void select_light(int x, int y) {
   
   camera* cam = entity_get("camera");
   matrix_4x4 viewm = camera_view_matrix(cam);
-  matrix_4x4 projm = camera_proj_matrix(cam, viewport_ratio() );
+  matrix_4x4 projm = camera_proj_matrix(cam, graphics_viewport_ratio() );
   
   selected_light = NULL;
   float range = 0.1;
@@ -357,7 +357,7 @@ void renderers_update() {
   if (keystate & SDL_BUTTON(3)) {
     
     matrix_4x4 view = camera_view_matrix(cam);
-    matrix_4x4 proj = camera_proj_matrix(cam, viewport_ratio());
+    matrix_4x4 proj = camera_proj_matrix(cam, graphics_viewport_ratio());
     matrix_4x4 inv_view = m44_inverse(view);
     matrix_4x4 inv_proj = m44_inverse(proj);
     
@@ -555,7 +555,7 @@ int main(int argc, char **argv) {
       case SDL_KEYDOWN:
       case SDL_KEYUP:
         if (event.key.keysym.sym == SDLK_ESCAPE) { running = 0; }
-        if (event.key.keysym.sym == SDLK_PRINT) { viewport_screenshot(); }
+        if (event.key.keysym.sym == SDLK_PRINT) { graphics_viewport_screenshot(); }
         break;
       case SDL_QUIT:
         running = 0;

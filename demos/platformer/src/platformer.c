@@ -75,11 +75,11 @@ static void disable_audio(ui_button* b, SDL_Event event) {
     if (b->pressed) {
       b->pressed = false;
       
-      if (audio_mixer_enabled()) {
-        audio_mixer_disable();
+      if (audio_enabled()) {
+        audio_disable();
         ui_button_set_label(b, "Enable Audio");
       } else {
-        audio_mixer_enable();
+        audio_enable();
         ui_button_set_label(b, "Disable Audio");
       }
       
@@ -163,7 +163,7 @@ void platformer_init() {
   ui_elem_add_event("new_game", new_game);
   
   /* Set volume to something more reasonable */
-  audio_mixer_set_volume(0.1);
+  audio_set_volume(0.1);
   
   /* Reset all the game variables */
   reset_game();
@@ -305,7 +305,7 @@ static void collision_detection_coins() {
       entity_delete(coin_name);
       
       /* Play a nice twinkle sound */
-      audio_mixer_play_sound(asset_get_as("./sounds/coin.wav", sound));
+      audio_manager_play_sound(asset_get_as("./sounds/coin.wav", sound));
       
       /* Add some score! */
       level_score += 10;
@@ -421,7 +421,7 @@ int main(int argc, char **argv) {
       case SDL_KEYUP:
         /* Exit on ESCAPE and Screenshot on print screen */
         if (event.key.keysym.sym == SDLK_ESCAPE) { running = false; }
-        if (event.key.keysym.sym == SDLK_PRINT) { viewport_screenshot(); }
+        if (event.key.keysym.sym == SDLK_PRINT) { graphics_viewport_screenshot(); }
         break;
       case SDL_QUIT:
         /* A quitting event such as pressing cross in top right corner */

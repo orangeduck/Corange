@@ -1,2 +1,0 @@
-vertex_shader : $SHADERS/deferred_tonemap.vs
-fragment_shader : $SHADERS/deferred_tonemap.fs

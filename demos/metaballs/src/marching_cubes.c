@@ -375,7 +375,7 @@ void marching_cubes_render_shadows(light* l) {
   
   m44_to_array(m44_id(), world_matrix);
   
-  shader_program* depth_shader = asset_load_get("$SHADERS/depth.prog");
+  shader_program* depth_shader = asset_load_get("$CORANGE/shaders/depth.prog");
   glUseProgram(*depth_shader);
   
   GLint world_matrix_u = glGetUniformLocation(*depth_shader, "world_matrix");

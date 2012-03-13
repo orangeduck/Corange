@@ -18,32 +18,20 @@ void corange_init(char* core_assets_path) {
   
   /* Init OpenGL and Viewport */
   
-  debug("Starting Graphics...");
-  viewport_init();
+  debug("Creating Graphics Manager...");
   
-  debug("Starting Audio...");
-  audio_mixer_init();
+  graphics_manager_init();
+  
+  debug("Creating Audio Manager...");
+  
+  audio_manager_init();
   
   /* Asset Manager */
   
   debug("Creating Asset Manager...");
   
   asset_manager_init();
-  
   asset_manager_add_path_variable("$CORANGE", core_assets_path);
-  
-  char* shaders_path = malloc(strlen(core_assets_path) + strlen("/shaders_nolink") + 1);
-  strcpy(shaders_path, core_assets_path);
-  
-  if ( SDL_OpenGLSupportsShaderLinkage() ) {
-    strcat(shaders_path, "/shaders");
-    asset_manager_add_path_variable("$SHADERS", shaders_path);
-  } else {
-    strcat(shaders_path, "/shaders_nolink");
-    asset_manager_add_path_variable("$SHADERS", shaders_path);
-  }
-  
-  free(shaders_path);
   
   asset_manager_handler("obj", obj_load_file, renderable_delete);
   asset_manager_handler("smd", smd_load_file, renderable_delete);
@@ -103,9 +91,8 @@ void corange_finish() {
   entity_manager_finish();
   asset_manager_finish();
   
-  audio_mixer_finish();
-  
-  viewport_finish();
+  audio_manager_finish();
+  graphics_manager_finish();
   
   SDL_Quit();
 

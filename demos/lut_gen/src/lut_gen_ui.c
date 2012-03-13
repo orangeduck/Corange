@@ -176,7 +176,7 @@ static void lut_gen_render_preview() {
 	glMatrixMode(GL_PROJECTION);
   glPushMatrix();
 	glLoadIdentity();
-	glOrtho(0, viewport_width(), viewport_height(), 0, -1, 1);
+	glOrtho(0, graphics_viewport_width(), graphics_viewport_height(), 0, -1, 1);
   
 	glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
@@ -197,10 +197,10 @@ static void lut_gen_render_preview() {
   glEnable(GL_TEXTURE_3D);
   
   glBegin(GL_QUADS);
-    glTexCoord2f(0, 0); glVertex3f(viewport_width() - 390, 11, 0);
-    glTexCoord2f(1, 0); glVertex3f(viewport_width() - 11, 11, 0);
-    glTexCoord2f(1, 1); glVertex3f(viewport_width() - 11, 290, 0);
-    glTexCoord2f(0, 1); glVertex3f(viewport_width() - 390, 290, 0);
+    glTexCoord2f(0, 0); glVertex3f(graphics_viewport_width() - 390, 11, 0);
+    glTexCoord2f(1, 0); glVertex3f(graphics_viewport_width() - 11, 11, 0);
+    glTexCoord2f(1, 1); glVertex3f(graphics_viewport_width() - 11, 290, 0);
+    glTexCoord2f(0, 1); glVertex3f(graphics_viewport_width() - 390, 290, 0);
   glEnd();
   
   glActiveTexture(GL_TEXTURE0 + 0 );
@@ -225,7 +225,7 @@ static void lut_gen_render_cube() {
   
   camera* cam = entity_get("camera");
   matrix_4x4 viewm = camera_view_matrix(cam);
-  matrix_4x4 projm = camera_proj_matrix(cam, viewport_ratio() );
+  matrix_4x4 projm = camera_proj_matrix(cam, graphics_viewport_ratio() );
   
   m44_to_array(viewm, view_matrix);
   m44_to_array(projm, proj_matrix);
@@ -274,7 +274,7 @@ static void lut_gen_render_cube() {
   
   glColor3f(1.0, 1.0, 1.0);
 
-  glViewport(0, 0, viewport_width(), viewport_height());
+  glViewport(0, 0, graphics_viewport_width(), graphics_viewport_height());
   
 }
 
@@ -316,7 +316,7 @@ static void lut_gen_render_curves() {
 	glMatrixMode(GL_PROJECTION);
   glPushMatrix();
 	glLoadIdentity();
-	glOrtho(0, viewport_width(), viewport_height(), 0, -1, 1);
+	glOrtho(0, graphics_viewport_width(), graphics_viewport_height(), 0, -1, 1);
   
 	glMatrixMode(GL_MODELVIEW);
   glPushMatrix();

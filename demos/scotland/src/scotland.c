@@ -55,9 +55,17 @@ static void toggle_freecam(ui_button* b, SDL_Event event) {
   }
 }
 
+static bool loading_resources = false;
+
+static int load_resources(void* unused) {
+  
+  loading_resources = false;
+  return 1;
+}
+
 void scotland_init() {
   
-  viewport_set_dimensions(1280, 720);
+  graphics_viewport_set_dimensions(1280, 720);
   
   load_folder("./resources/terrain/");
   load_folder("./resources/vegetation/");
@@ -144,11 +152,15 @@ void scotland_init() {
   forward_renderer_set_shadow_light(sun);
   forward_renderer_set_shadow_texture( shadow_mapper_depth_texture() );
   forward_renderer_add_light(sun);
-  
+
   vegetation_init();
   vegetation_add_type(asset_get("./resources/terrain/heightmap.raw"), 
                       asset_get("./resources/vegetation/grass.obj"), 
                       4.0);
+  
+  loading_resources = true;
+  SDL_Thread* load_thread = SDL_CreateThread(load_resources, NULL);
+  SDL_WaitThread(load_thread, NULL);
   
 }
 
@@ -301,20 +313,20 @@ int main(int argc, char **argv) {
       case SDL_KEYDOWN:
       case SDL_KEYUP:
         if (event.key.keysym.sym == SDLK_ESCAPE) { running = 0; }
-        if (event.key.keysym.sym == SDLK_PRINT) { viewport_screenshot(); }
+        if (event.key.keysym.sym == SDLK_PRINT) { graphics_viewport_screenshot(); }
         break;
       case SDL_QUIT:
         running = 0;
         break;
       }
-      scotland_event(event);
+      if (!loading_resources) scotland_event(event);
       ui_event(event);
     }
     
-    scotland_update();
+    if (!loading_resources) scotland_update();
     ui_update();
     
-    scotland_render();
+    if (!loading_resources) scotland_render();
     ui_render();
     
     SDL_GL_SwapBuffers(); 

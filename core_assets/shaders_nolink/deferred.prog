@@ -1,2 +1,0 @@
-vertex_shader : $SHADERS/deferred.vs
-fragment_shader : $SHADERS/deferred.fs

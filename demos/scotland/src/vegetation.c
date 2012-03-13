@@ -126,6 +126,7 @@ static void block_part_add_template(model* blockpart, model* template, int index
 void vegetation_add_type(terrain* t, renderable* r, float density) {
   
   model* template = renderable_to_model(r);
+  model_print(template);
   model_scale(template, 2.0);
   
   srand(time(NULL));

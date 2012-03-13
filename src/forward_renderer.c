@@ -7,7 +7,7 @@
 
 #include "error.h"
 
-#include "viewport.h"
+#include "graphics_manager.h"
 #include "asset_manager.h"
 
 #include "renderable.h"
@@ -91,9 +91,9 @@ void forward_renderer_init() {
   
   COLOR_CORRECTION = asset_load_get("$CORANGE/resources/identity.lut");
   VIGNETTING = asset_load_get("$CORANGE/resources/vignetting.dds");
-  GRADIENT = asset_load_get("$SHADERS/gradient.prog");
-  SCREEN_TONEMAP = asset_load_get("$SHADERS/deferred_tonemap.prog");
-  SCREEN_POST = asset_load_get("$SHADERS/deferred_post.prog");
+  GRADIENT = asset_load_get("$CORANGE/shaders/gradient.prog");
+  SCREEN_TONEMAP = asset_load_get("$CORANGE/shaders/deferred_tonemap.prog");
+  SCREEN_POST = asset_load_get("$CORANGE/shaders/deferred_post.prog");
   
   glClearColor(0.2, 0.2, 0.2, 1.0f);
   glClearDepth(1.0f);
@@ -103,12 +103,12 @@ void forward_renderer_init() {
   
   glGenRenderbuffers(1, &hdr_buffer);
   glBindRenderbuffer(GL_RENDERBUFFER, hdr_buffer);
-  glRenderbufferStorageMultisample(GL_RENDERBUFFER, MULTISAMPLES, GL_RGBA16F, viewport_width(), viewport_height());
+  glRenderbufferStorageMultisample(GL_RENDERBUFFER, MULTISAMPLES, GL_RGBA16F, graphics_viewport_width(), graphics_viewport_height());
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, hdr_buffer);   
   
   glGenRenderbuffers(1, &hdr_depth_buffer);
   glBindRenderbuffer(GL_RENDERBUFFER, hdr_depth_buffer);
-  glRenderbufferStorageMultisample(GL_RENDERBUFFER, MULTISAMPLES, GL_DEPTH_COMPONENT24, viewport_width(), viewport_height());
+  glRenderbufferStorageMultisample(GL_RENDERBUFFER, MULTISAMPLES, GL_DEPTH_COMPONENT24, graphics_viewport_width(), graphics_viewport_height());
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, hdr_depth_buffer);  
 
   glGenFramebuffers(1, &hdr_res_fbo);
@@ -116,7 +116,7 @@ void forward_renderer_init() {
   
   glGenTextures(1, &hdr_res_texture);
   glBindTexture(GL_TEXTURE_2D, hdr_res_texture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, viewport_width(), viewport_height(), 0, GL_RGBA, GL_FLOAT, NULL);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, graphics_viewport_width(), graphics_viewport_height(), 0, GL_RGBA, GL_FLOAT, NULL);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -128,12 +128,12 @@ void forward_renderer_init() {
   
   glGenRenderbuffers(1, &ldr_buffer);
   glBindRenderbuffer(GL_RENDERBUFFER, ldr_buffer);
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, viewport_width(), viewport_height());
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, graphics_viewport_width(), graphics_viewport_height());
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, ldr_buffer);   
   
   glGenTextures(1, &ldr_texture);
   glBindTexture(GL_TEXTURE_2D, ldr_texture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, viewport_width(), viewport_height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, graphics_viewport_width(), graphics_viewport_height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -276,7 +276,7 @@ void forward_renderer_setup_camera() {
   }
 
   matrix_4x4 viewm = camera_view_matrix(CAMERA);
-  matrix_4x4 projm = camera_proj_matrix(CAMERA, viewport_ratio() );
+  matrix_4x4 projm = camera_proj_matrix(CAMERA, graphics_viewport_ratio() );
   
   m44_to_array(viewm, view_matrix);
   m44_to_array(projm, proj_matrix);
@@ -303,7 +303,7 @@ void forward_renderer_end() {
   
   glBindFramebuffer(GL_READ_FRAMEBUFFER, hdr_fbo);
   glBindFramebuffer(GL_DRAW_FRAMEBUFFER, hdr_res_fbo);
-  glBlitFramebuffer(0, 0, viewport_width(), viewport_height(), 0, 0, viewport_width(), viewport_height(), GL_COLOR_BUFFER_BIT, GL_LINEAR);
+  glBlitFramebuffer(0, 0, graphics_viewport_width(), graphics_viewport_height(), 0, 0, graphics_viewport_width(), graphics_viewport_height(), GL_COLOR_BUFFER_BIT, GL_LINEAR);
   
   glDisable(GL_DEPTH_TEST);
   glDisable(GL_CULL_FACE);
@@ -412,8 +412,8 @@ void forward_renderer_end() {
   glEnable(GL_TEXTURE_3D);
   glUniform1i(glGetUniformLocation(*SCREEN_POST, "lut"), 2);
   
-  glUniform1i(glGetUniformLocation(*SCREEN_POST, "width"), viewport_width());
-  glUniform1i(glGetUniformLocation(*SCREEN_POST, "height"), viewport_height());
+  glUniform1i(glGetUniformLocation(*SCREEN_POST, "width"), graphics_viewport_width());
+  glUniform1i(glGetUniformLocation(*SCREEN_POST, "height"), graphics_viewport_height());
   
   if (MULTISAMPLES == 0) {
     glUniform1i(glGetUniformLocation(*SCREEN_POST, "aa_type"), 1);
@@ -611,7 +611,7 @@ static void render_collision_mesh(collision_mesh* cm) {
   
   if (cm->is_leaf) {
     
-    shader_program* collision_prog = asset_load_get("$SHADERS/collision_mesh.prog");
+    shader_program* collision_prog = asset_load_get("$CORANGE/shaders/collision_mesh.prog");
     glUseProgram(*collision_prog);
     
     GLint color = glGetUniformLocation(*collision_prog, "color");
@@ -1055,7 +1055,7 @@ void forward_renderer_render_axis(matrix_4x4 world) {
 void forward_renderer_render_light(light* l) {
   
   matrix_4x4 viewm = camera_view_matrix(CAMERA);
-  matrix_4x4 projm = camera_proj_matrix(CAMERA, viewport_ratio() );
+  matrix_4x4 projm = camera_proj_matrix(CAMERA, graphics_viewport_ratio() );
   
   vector4 light_pos = v4(l->position.x, l->position.y, l->position.z, 1);
   light_pos = m44_mul_v4(viewm, light_pos);
@@ -1066,16 +1066,16 @@ void forward_renderer_render_light(light* l) {
 	glMatrixMode(GL_PROJECTION);
   glPushMatrix();
 	glLoadIdentity();
-	glOrtho(0, viewport_width(), viewport_height(), 0, -1, 1);
+	glOrtho(0, graphics_viewport_width(), graphics_viewport_height(), 0, -1, 1);
   
 	glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
 	glLoadIdentity();
   
-  float top = ((-light_pos.y + 1) / 2) * viewport_height() - 8;
-  float bot = ((-light_pos.y + 1) / 2) * viewport_height() + 8;
-  float left = ((light_pos.x + 1) / 2) * viewport_width() - 8;
-  float right = ((light_pos.x + 1) / 2) * viewport_width() + 8;
+  float top = ((-light_pos.y + 1) / 2) * graphics_viewport_height() - 8;
+  float bot = ((-light_pos.y + 1) / 2) * graphics_viewport_height() + 8;
+  float left = ((light_pos.x + 1) / 2) * graphics_viewport_width() - 8;
+  float right = ((light_pos.x + 1) / 2) * graphics_viewport_width() + 8;
   
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -1114,7 +1114,7 @@ void forward_renderer_render_landscape(landscape* ls) {
   matrix_4x4 r_world_matrix = m44_world(ls->position, ls->scale, ls->rotation);
   m44_to_array(r_world_matrix, world_matrix);
   
-  shader_program* terrain = asset_load_get("$SHADERS/terrain.prog");
+  shader_program* terrain = asset_load_get("$CORANGE/shaders/terrain.prog");
   glUseProgram(*terrain);
   
   GLint world_matrix_u = glGetUniformLocation(*terrain, "world_matrix");
