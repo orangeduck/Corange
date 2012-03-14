@@ -59,47 +59,8 @@ static bool loading_resources = false;
 
 static int load_resources(void* unused) {
   
-  loading_resources = false;
-  return 1;
-}
-
-void scotland_init() {
-  
-  graphics_viewport_set_dimensions(1280, 720);
-  
   load_folder("./resources/terrain/");
   load_folder("./resources/vegetation/");
-  
-  ui_button* framerate = ui_elem_new("framerate", ui_button);
-  ui_button_move(framerate, v2(10,10));
-  ui_button_resize(framerate, v2(30,25));
-  ui_button_set_label(framerate, "FRAMERATE");
-  ui_button_disable(framerate);
-  
-  ui_button* wireframe = ui_elem_new("wireframe", ui_button);
-  ui_button_move(wireframe, v2(50,10));
-  ui_button_resize(wireframe, v2(80,25));
-  ui_button_set_label(wireframe, "wireframe");
-  
-  ui_elem_add_event("wireframe", toggle_wireframe);
-  
-  ui_button* freecam = ui_elem_new("freecam", ui_button);
-  ui_button_move(freecam, v2(140,10));
-  ui_button_resize(freecam, v2(65,25));
-  ui_button_set_label(freecam, "freecam");
-  
-  ui_elem_add_event("freecam", toggle_freecam);
-  
-  /* New Camera and light */
-  
-  camera* cam = entity_new("camera", camera);
-  cam->position = v3(512.0, 200.0, 512.0);
-  cam->target =  v3(0.0, 0.0, 0.0);
-  
-  light* sun = entity_new("sun", light);
-  light_set_type(sun, light_type_sun);
-  sun->position = v3(0, 512, 0);
-  sun->target = v3(512, 0, 512);
   
   static_object* skydome = entity_new("skydome", static_object);
   skydome->renderable = asset_get("./resources/terrain/skydome.obj");
@@ -132,9 +93,6 @@ void scotland_init() {
                                   asset_get("./resources/terrain/rock_far.dds"), 
                                   asset_get("./resources/terrain/rock_far_nm.dds"));
   
-  float height = terrain_height(world->terrain, v2(cam->position.x, cam->position.z));
-  cam->position.y = height + 1;
-  
   static_object* grass = entity_new("grass", static_object);
   grass->renderable = asset_get("./resources/vegetation/grass.obj");
   grass->position = v3(512, 0, 512);
@@ -142,6 +100,78 @@ void scotland_init() {
   
   load_file("$CORANGE/resources/basic_instanced.mat");
   renderable_set_material(asset_get("./resources/vegetation/grass.obj"), asset_get("$CORANGE/resources/basic_instanced.mat"));
+  
+  vegetation_init();
+  vegetation_add_type(asset_get("./resources/terrain/heightmap.raw"), 
+                      asset_get("./resources/vegetation/grass.obj"), 
+                      4.0);
+  
+  ui_button* loading = ui_elem_get("loading");
+  ui_spinner* load_spinner = ui_elem_get("load_spinner");
+  ui_button* framerate = ui_elem_get("framerate");
+  ui_button* wireframe = ui_elem_get("wireframe");
+  ui_button* freecam = ui_elem_get("freecam");
+  loading->active = false;
+  load_spinner->active = false;
+  framerate->active = true;
+  wireframe->active = true;
+  freecam->active = true;
+  
+  loading_resources = false;
+  return 1;
+}
+
+void scotland_init() {
+  
+  graphics_viewport_set_dimensions(1280, 720);
+  
+  ui_button* loading = ui_elem_new("loading", ui_button);
+  ui_button_move(loading, v2(graphics_viewport_width() / 2 - 40,graphics_viewport_height() / 2 - 13));
+  ui_button_resize(loading, v2(80,25));
+  ui_button_set_label(loading, "Loading...");
+  ui_button_disable(loading);
+  
+  ui_spinner* load_spinner = ui_elem_new("load_spinner", ui_spinner);
+  load_spinner->color = v4(1,1,1,1);
+  load_spinner->top_left = v2(graphics_viewport_width() / 2 + 50, graphics_viewport_height() / 2 - 13);
+  load_spinner->bottom_right = v2_add(load_spinner->top_left, v2(24,24));
+  
+  ui_button* framerate = ui_elem_new("framerate", ui_button);
+  ui_button_move(framerate, v2(10,10));
+  ui_button_resize(framerate, v2(30,25));
+  ui_button_set_label(framerate, "FRAMERATE");
+  ui_button_disable(framerate);
+  framerate->active = false;
+  
+  ui_button* wireframe = ui_elem_new("wireframe", ui_button);
+  ui_button_move(wireframe, v2(50,10));
+  ui_button_resize(wireframe, v2(80,25));
+  ui_button_set_label(wireframe, "wireframe");
+  wireframe->active = false;
+  
+  ui_elem_add_event("wireframe", toggle_wireframe);
+  
+  ui_button* freecam = ui_elem_new("freecam", ui_button);
+  ui_button_move(freecam, v2(140,10));
+  ui_button_resize(freecam, v2(65,25));
+  ui_button_set_label(freecam, "freecam");
+  freecam->active = false;
+  
+  ui_elem_add_event("freecam", toggle_freecam);
+  
+  loading_resources = true;
+  SDL_Thread* load_thread = SDL_GL_CreateThread(load_resources, NULL);
+  
+  /* New Camera and light */
+  
+  camera* cam = entity_new("camera", camera);
+  cam->position = v3(512.0, 200.0, 512.0);
+  cam->target =  v3(0.0, 0.0, 0.0);
+  
+  light* sun = entity_new("sun", light);
+  light_set_type(sun, light_type_sun);
+  sun->position = v3(0, 512, 0);
+  sun->target = v3(512, 0, 512);
   
   /* Renderer Setup */
   
@@ -152,15 +182,6 @@ void scotland_init() {
   forward_renderer_set_shadow_light(sun);
   forward_renderer_set_shadow_texture( shadow_mapper_depth_texture() );
   forward_renderer_add_light(sun);
-
-  vegetation_init();
-  vegetation_add_type(asset_get("./resources/terrain/heightmap.raw"), 
-                      asset_get("./resources/vegetation/grass.obj"), 
-                      4.0);
-  
-  loading_resources = true;
-  SDL_Thread* load_thread = SDL_CreateThread(load_resources, NULL);
-  SDL_WaitThread(load_thread, NULL);
   
 }
 
@@ -319,15 +340,31 @@ int main(int argc, char **argv) {
         running = 0;
         break;
       }
-      if (!loading_resources) scotland_event(event);
-      ui_event(event);
+      if (loading_resources) {
+        ui_event(event);
+      } else {
+        scotland_event(event);
+        ui_event(event);
+      }
+      
     }
     
-    if (!loading_resources) scotland_update();
-    ui_update();
+    if (loading_resources) {
+      ui_update();
+    } else {
+      scotland_update();
+      ui_update();
+    }
     
-    if (!loading_resources) scotland_render();
-    ui_render();
+    
+    if (loading_resources) {
+      glClearColor(0.0, 0.0, 0.0, 0.0);
+      glClear(GL_COLOR_BUFFER_BIT);
+      ui_render();
+    } else {
+      scotland_render();
+      ui_render();
+    }
     
     SDL_GL_SwapBuffers(); 
     

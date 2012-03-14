@@ -34,11 +34,7 @@ void SDL_GL_PrintExtensions();
 bool SDL_GL_SupportsShaderLinkage();
 bool SDL_GL_SupportsVsync();
 
-void SDL_GL_ThreadingInit();
-void SDL_GL_ThreadingFinish();
-
-void SDL_GL_AquireContext();
-void SDL_GL_ReleaseContext();
+SDL_Thread* SDL_GL_CreateThread(int (*fn)(void *), void *data);
 
 void SDL_GL_CheckError(const char* name);
 void SDL_GL_LoadExtensions();

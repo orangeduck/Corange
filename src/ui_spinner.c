@@ -28,7 +28,9 @@ void ui_spinner_update(ui_spinner* s) {
 
 
 void ui_spinner_render(ui_spinner* s) {
-
+  
+  if (!s->active) return;
+  
   vector2 top_left = s->top_left;
   vector2 top_right = v2(s->bottom_right.x, s->top_left.y);
   vector2 bot_left = v2(s->top_left.x, s->bottom_right.y);

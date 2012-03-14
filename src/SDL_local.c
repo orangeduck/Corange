@@ -5,6 +5,10 @@
 #include "SDL/SDL_rwops.h"
 #include "SDL/SDL_local.h"
 
+#ifdef _WIN32
+  #include "SDL/SDL_syswm.h"
+#endif
+
 #ifdef __linux__
   #include <execinfo.h>
 #endif
@@ -257,40 +261,64 @@ void SDL_GL_CheckError(const char* name) {
   }
 }
 
-static SDL_mutex* gl_lock = NULL;
-
 #ifdef _WIN32
-static HDC gl_device = 0;
-static HGLRC gl_context = 0;
-#endif
 
-void SDL_GL_ThreadingInit() {
-  gl_lock = SDL_CreateMutex();
-  #ifdef _WIN32
-    gl_device = wglGetCurrentDC();
-    gl_context = wglGetCurrentContext();
-  #endif
-}
+static HDC gl_thread_device = NULL;
+static HGLRC gl_thread_context = NULL;
+static void* gl_thread_data = NULL;
+static int (*gl_thread_func)(void*) = NULL; 
 
-void SDL_GL_ThreadingFinish() {
-  SDL_DestroyMutex(gl_lock);
-}
-
-void SDL_GL_Aquire() {
-  SDL_LockMutex(gl_lock);
-  int err = 1;
-  #ifdef _WIN32
-    err = wglMakeCurrent(gl_device, gl_context);
-  #endif
+static int gl_thread_create(void* unused) {
   
-  if (!err) {
-    error("Couldn't aquire OpenGL context for current thread");
+  BOOL err = wglMakeCurrent(gl_thread_device, gl_thread_context);
+  if (err == 0) {
+    error("Could not make context current");
   }
+  
+  int status = gl_thread_func(gl_thread_data);
+  
+  HGLRC context = wglGetCurrentContext();
+  if (context == NULL) {
+    error("Could not get current context");
+  }
+  
+  err = wglDeleteContext(context);
+  if (err == 0) {
+    error("Could not delete context");
+  }
+  
+  return status;
 }
 
-void SDL_GL_Release() {
-  SDL_UnlockMutex(gl_lock);
+SDL_Thread* SDL_GL_CreateThread(int (*fn)(void *), void *data) {
+
+  SDL_SysWMinfo info;
+  SDL_VERSION(&info.version);
+  if (SDL_GetWMInfo(&info) == -1) {
+    error("Could not get SDL version info.");
+  }
+  
+  gl_thread_device = GetDC(info.window);
+
+  gl_thread_context = wglCreateContext(gl_thread_device);
+  if (gl_thread_context == NULL) {
+    error("Could not create new OpenGL context");
+  }
+  
+  BOOL err = wglShareLists(info.hglrc, gl_thread_context);
+  if (err == 0) {
+    int code = GetLastError();
+    error("Could not get OpenGL share lists: %i", code);
+  }
+  
+  gl_thread_func = fn;
+  gl_thread_data = data;
+  
+  return SDL_CreateThread(gl_thread_create, NULL);
+
 }
+
+#endif
 
 void SDL_GL_LoadExtensions() {
 
