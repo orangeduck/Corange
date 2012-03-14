@@ -29,17 +29,36 @@ vec3 normal_from_depth(sampler2D depth_texture, vec2 texcoords) {
 
 vec3 sample_sphere[32] = vec3[32](vec3(-0.00, 0.02, -0.03), vec3(0.35, 0.04, 0.31), vec3(0.66, 0.32, 0.53), vec3(-0.04, 0.04, 0.01), vec3(0.24, 0.22, 0.89), vec3(-0.09, 0.10, -0.54), vec3(0.24, 0.04, 0.01), vec3(0.37, 0.88, 0.05), vec3(0.02, 0.11, -0.19), vec3(-0.04, 0.83, -0.01), vec3(0.33, 0.11, -0.44), vec3(0.21, 0.17, 0.28), vec3(0.48, 0.30, 0.34), vec3(0.39, 0.72, 0.43), vec3(0.19, 0.20, 0.03), vec3(0.35, 0.04, -0.01), vec3(-0.00, 0.02, -0.25), vec3(-0.07, 0.12, -0.04), vec3(0.00, 0.01, -0.40), vec3(-0.27, 0.41, -0.44), vec3(0.13, 0.26, -0.14), vec3(0.15, 0.19, -0.26), vec3(-0.32, 0.29, 0.56), vec3(-0.00, 0.00, 0.13), vec3(-0.36, 0.18, 0.07), vec3(0.70, 0.21, 0.39), vec3(-0.36, 0.17, 0.91), vec3(-0.11, 0.12, 0.26), vec3(-0.59, 0.67, 0.14), vec3(-0.24, 0.75, 0.27), vec3(0.18, 0.04, -0.58), vec3(-0.16, 0.11, -0.26));
 
-                          
+
+float smoothstep_map(float x) {
+  return x*x*(3 - 2*x);
+}
+
+float difference_occlusion(float difference) {
+  
+  difference = max(difference, 0);
+  
+  /* This is the depth difference at which the maximum occlusion happens */
+  const float target = 0.0002;
+  
+  /* This is the length of the falloff after maximum depth difference is reached */
+  const float falloff = 5;
+  
+  float dist = (1/target) * abs(difference - target);
+  if (difference > target) {
+    dist *= (1/falloff);
+  }
+  
+  dist = clamp(dist, 0, 1);
+  
+  return smoothstep_map(1-dist);
+  
+}
+
 float ssao_depth(vec2 texcoords, sampler2D depth_texture, sampler2D random_texture, float seed) {
   
-  const float total_strength = 0.75;
+  const float total_strength = 1.0;
   const float base = 0.0;
-  
-  /* Area basically refers to how "detailed" the SSAO is. Higher the less detailed */
-  const float area = 0.0005;
-  
-  /* Falloff must be less than area and erm, doesn't seem to do much */
-  const float falloff = 0.00009;
   
   const float radius = 0.025;
   
@@ -65,9 +84,7 @@ float ssao_depth(vec2 texcoords, sampler2D depth_texture, sampler2D random_textu
     float occ_depth = texture2D(depth_texture, clamp(projected.xy,0.0,1.0)).r;
     float difference = depth - occ_depth;
     
-    float step;
-    if (difference >= falloff) { step = 1.0; } else { step = 0.0; }
-    occlusion += step * smoothstep(falloff, area, difference);
+    occlusion += difference_occlusion(difference);
   }
   
   float ao = 1.0 - total_strength * occlusion * (1.0 / float(samples));
