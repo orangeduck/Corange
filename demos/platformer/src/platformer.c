@@ -107,6 +107,9 @@ static void new_game(ui_button* b, SDL_Event event) {
 
 void platformer_init() {
   
+  /* Set the viewport title */
+  graphics_viewport_set_title("Platformer");
+  
   /* Register functions for loading/unloading files with the extension .level */
   asset_manager_handler("level", level_load_file, level_delete);
   

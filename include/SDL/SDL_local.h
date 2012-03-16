@@ -28,6 +28,9 @@ void SDL_SetWorkingDir(char* dir);
 void SDL_RWsize(SDL_RWops* file, int* size);
 int SDL_RWreadline(SDL_RWops* file, char* buffer, int buffersize);
 
+void SDL_WM_UseResourceIcon();
+void SDL_WM_DeleteResourceIcon();
+
 void SDL_GL_PrintInfo();
 void SDL_GL_PrintExtensions();
 

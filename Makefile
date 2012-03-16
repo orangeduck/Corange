@@ -15,13 +15,16 @@ OBJ_FILES_LINUX= $(addprefix obj/,$(notdir $(C_FILES:.c=.ol)))
 
 # Windows
 
-corange.dll: $(OBJ_FILES)
-	$(CC) $(OBJ_FILES) $(LFLAGS) -o $@
+corange.dll: $(OBJ_FILES) corange.res
+	$(CC) $(OBJ_FILES) corange.res $(LFLAGS) -o $@
 
 obj/%.o: src/%.c
 	$(CC) $< -c $(CFLAGS) -o $@
 	
 windows: corange.dll
+	
+corange.res: corange.rc
+	windres $< -O coff -o $@
 	
 clean:
 	rm $(OBJ_FILES)

@@ -1,4 +1,4 @@
-#include "./games/metaballs/kernels/volume.cl"
+#include "./kernels/volume.cl"
 
 __kernel void clear_texture(int width, int height, __write_only image2d_t texture, float4 value) {
 

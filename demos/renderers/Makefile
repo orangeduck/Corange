@@ -4,7 +4,7 @@ INCS= -I ./include -I ../../include
 
 CFLAGS= $(INCS) -std=gnu99 -Wall -Werror -Wno-unused -O3 -g
 
-LFLAGS= -L./ -L../../lib -lcorange -lmingw32 -lSDLmain -lSDL -lopengl32
+LFLAGS= ../../corange.res -L./ -L../../lib -lcorange -lmingw32 -lSDLmain -lSDL -lopengl32
 LFLAGS_LINUX= -L./lib -lcorange -lGL -lSDLmain -lSDL
 
 C_FILES= $(wildcard src/*.c)

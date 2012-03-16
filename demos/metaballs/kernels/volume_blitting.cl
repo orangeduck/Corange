@@ -1,4 +1,4 @@
-#include "./games/metaballs/kernels/volume.cl"
+#include "./kernels/volume.cl"
 
 typedef struct {
   float4 r1;

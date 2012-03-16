@@ -107,6 +107,7 @@ static vector3 ik_target;
 void renderers_init() {
   
   graphics_viewport_set_dimensions(1280, 720);
+  graphics_viewport_set_title("Renderers");
 
   load_folder("./resources/podium/");
   load_folder("./resources/cello/");

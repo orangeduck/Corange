@@ -1,6 +1,6 @@
-	~~~~~~~~~~~~~~~~~~~~~~~~~
+	-------------------------
 	|  Corange game engine  |
-	~~~~~~~~~~~~~~~~~~~~~~~~~
+	-------------------------
 	
 	Version 0.5.1
 	
@@ -47,7 +47,7 @@
 		
 		* Why not C++?
 			
-			There are plenty of C++ engines which do what I've done here and better. Pure C game engines on the other hand are much rarer. Corange provided me an outlet to practice my C skills and Data Oriented Design. And I wouldn't underestimate the benefits of that. Of course if you are just linking to it you can still program your game/executable using C++.
+			There are plenty of C++ engines which do what I've done here and better. Pure C game engines on the other hand are much rarer. Corange provided me an outlet to practice my C skills and Data Oriented Design. Of course if you are just linking to it you can still program your game/executable using C++.
 			
 		* What stuff does it do?
 		

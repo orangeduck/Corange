@@ -4,7 +4,7 @@ INCS= -I ./include -I ../../include
 
 CFLAGS= $(INCS) -std=gnu99 -Wall -Werror -Wno-unused -g
 
-LFLAGS= -L./ -L./lib -L../../lib -lcorange -lmingw32 -lSDLmain -lSDL -lopengl32 -lopencl32
+LFLAGS= ../../corange.res -L./ -L./lib -L../../lib -lcorange -lmingw32 -lSDLmain -lSDL -lopengl32 -lopencl32
 LFLAGS_LINUX= -L./ -lcorange -lGL -lSDLmain -lSDL -lOpenCL
 
 C_FILES= $(wildcard src/*.c)
@@ -17,6 +17,9 @@ metaballs.exe: $(OBJ_FILES)
 
 obj/%.o: src/%.c
 	$(CC) $< -c $(CFLAGS) -o $@
+	
+corange:
+	cp ../../corange.dll ./corange.dll
 	
 clean:
 	rm $(OBJ_FILES)	

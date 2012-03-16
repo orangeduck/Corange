@@ -19,7 +19,7 @@ int graphics_get_multisamples();
 bool graphics_get_fullscreen();
 
 void graphics_viewport_restart();
-void graphics_viewport_set_title(char* title, char* icon_title);
+void graphics_viewport_set_title(char* title);
 void graphics_viewport_set_height(int height);
 void graphics_viewport_set_width(int width);
 void graphics_viewport_set_dimensions(int width, int height);

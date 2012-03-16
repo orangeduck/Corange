@@ -4,7 +4,7 @@ INCS= -I ./include -I ../../include
 
 CFLAGS= $(INCS) -std=gnu99 -Wall -Werror -Wno-unused -O3 -g
 
-LFLAGS= -g -L./ -L../../lib -lcorange -lmingw32 -lSDLmain -lSDL -lopengl32 
+LFLAGS= ../../corange.res -L./ -L../../lib -lcorange -lmingw32 -lSDLmain -lSDL -lopengl32 
 LFLAGS_LINUX= -L../../lib -L./lib -lcorange -lGL -lSDLmain -lSDL
 
 C_FILES= $(wildcard src/*.c)
@@ -17,6 +17,9 @@ sea.exe: $(OBJ_FILES)
 
 obj/%.o: src/%.c
 	$(CC) $< -c $(CFLAGS) -o $@
+	
+corange:
+	cp ../../corange.dll ./corange.dll
 	
 clean:
 	rm $(OBJ_FILES)	

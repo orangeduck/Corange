@@ -202,6 +202,41 @@ int SDL_RWreadline(SDL_RWops* file, char* buffer, int buffersize) {
   
 }
 
+#ifdef _WIN32
+
+static HICON icon;
+
+void SDL_WM_UseResourceIcon() {
+
+  HINSTANCE handle = GetModuleHandle(NULL);
+  icon = LoadIcon(handle, "icon");
+  
+  SDL_SysWMinfo wminfo;
+  SDL_VERSION(&wminfo.version)
+  if (SDL_GetWMInfo(&wminfo) != 1) {
+    error("Incorrect SDL version!");
+  }
+
+  SetClassLong(wminfo.window, GCL_HICON, (LONG)icon);
+  
+}
+
+void SDL_WM_DeleteResourceIcon() {
+  DestroyIcon(icon);
+}
+
+#else
+
+void SDL_WM_UseResourceIcon() {
+
+}
+
+void SDL_WM_DeleteResourceIcon() {
+
+}
+
+#endif
+
 void SDL_GL_PrintInfo() {
   debug("OpenGL Info");
   const char* vendor = (const char*)glGetString(GL_VENDOR);

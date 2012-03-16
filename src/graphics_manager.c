@@ -13,7 +13,6 @@
 #define DEFAULT_HEIGHT 600
 
 static SDL_Surface* screen;
-static SDL_Surface* window_icon;
 
 static int window_width;
 static int window_height;
@@ -50,7 +49,9 @@ void graphics_manager_init() {
   window_multisamples = 16;
   window_vsync = 1;
   
-  graphics_viewport_set_title("corange", "corange");
+  SDL_WM_UseResourceIcon();
+  
+  graphics_viewport_set_title("Corange");
   graphics_viewport_start();
   
   SDL_GL_LoadExtensions();
@@ -59,8 +60,9 @@ void graphics_manager_init() {
 }
 
 void graphics_manager_finish() {
-
-  SDL_FreeSurface(window_icon);
+  
+  SDL_WM_DeleteResourceIcon();
+  
   SDL_FreeSurface(screen);
 
 }
@@ -116,8 +118,8 @@ void graphics_viewport_restart() {
   
 }
 
-void graphics_viewport_set_title(char* title, char* icon_title) {
-  SDL_WM_SetCaption(title, icon_title);    
+void graphics_viewport_set_title(char* title) {
+  SDL_WM_SetCaption(title, title);    
 }
 
 void graphics_set_vsync(bool vsync) {

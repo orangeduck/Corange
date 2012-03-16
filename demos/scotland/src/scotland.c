@@ -93,14 +93,6 @@ static int load_resources(void* unused) {
                                   asset_get("./resources/terrain/rock_far.dds"), 
                                   asset_get("./resources/terrain/rock_far_nm.dds"));
   
-  static_object* grass = entity_new("grass", static_object);
-  grass->renderable = asset_get("./resources/vegetation/grass.obj");
-  grass->position = v3(512, 0, 512);
-  grass->position.y = terrain_height(world->terrain, v2(512, 512));
-  
-  load_file("$CORANGE/resources/basic_instanced.mat");
-  renderable_set_material(asset_get("./resources/vegetation/grass.obj"), asset_get("$CORANGE/resources/basic_instanced.mat"));
-  
   vegetation_init();
   vegetation_add_type(asset_get("./resources/terrain/heightmap.raw"), 
                       asset_get("./resources/vegetation/grass.obj"), 
@@ -124,6 +116,7 @@ static int load_resources(void* unused) {
 void scotland_init() {
   
   graphics_viewport_set_dimensions(1280, 720);
+  graphics_viewport_set_title("Scotland Demo");
   
   ui_button* loading = ui_elem_new("loading", ui_button);
   ui_button_move(loading, v2(graphics_viewport_width() / 2 - 40,graphics_viewport_height() / 2 - 13));
@@ -280,7 +273,6 @@ void scotland_render() {
   camera* cam = entity_get("camera");
   landscape* world = entity_get("world");
   static_object* skydome = entity_get("skydome");
-  static_object* grass = entity_get("grass");
   
   shadow_mapper_begin();
   shadow_mapper_render_landscape(world);
@@ -289,19 +281,18 @@ void scotland_render() {
   //texture_write_to_file(shadow_mapper_depth_texture(), "shadow_depth.tga");
   
   forward_renderer_begin();
+
   forward_renderer_render_static(skydome);
-  forward_renderer_render_static(grass);
   forward_renderer_render_light(sun);
   
   if (wireframe) {
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   }
   forward_renderer_render_landscape(world);
+  vegetation_render();
   if (wireframe) {
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
   }
-  
-  vegetation_render();
   
   forward_renderer_end();
   

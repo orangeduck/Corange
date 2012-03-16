@@ -1,0 +1,24 @@
+icon ICON DISCARDABLE "./corange.ico"
+1 VERSIONINFO
+FILEVERSION     0,5,1,0
+PRODUCTVERSION  0,5,1,0
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+    BLOCK "080904E4"
+    BEGIN
+      VALUE "CompanyName", "Daniel Holden"
+      VALUE "FileDescription", "Corange Library"
+      VALUE "FileVersion", "0.5.1"
+      VALUE "InternalName", "corange.dll"
+      VALUE "LegalCopyright", "Daniel Holden"
+      VALUE "ProductName", "Corange Library"
+      VALUE "ProductVersion", "0.5.1"
+    END
+  END
+
+  BLOCK "VarFileInfo"
+  BEGIN
+    VALUE "Translation", 0x809, 1252
+  END
+END

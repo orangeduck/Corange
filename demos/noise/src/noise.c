@@ -109,6 +109,7 @@ int main(int argc, char **argv) {
   corange_init("../../core_assets");
   
   graphics_viewport_set_dimensions(1280, 720);
+  graphics_viewport_set_title("Noise");
   
   load_folder("./shaders/");
   load_file("$CORANGE/resources/random.dds");

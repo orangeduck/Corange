@@ -10,6 +10,7 @@ static int mouse_right_down;
 void sea_init() {
   
   graphics_viewport_set_dimensions(1280, 720);
+  graphics_viewport_set_title("Sea");
 
   camera* cam = entity_new("camera", camera);
   cam->position = v3(50.0, 50.0, 50.0);
