@@ -1,6 +1,6 @@
 #include "./kernels/volume.cl"
 
-__kernel void clear_texture(int width, int height, __write_only image2d_t texture, float4 value) {
+kernel void clear_texture(int width, int height, write_only image2d_t texture, float4 value) {
 
   int id = get_global_id(0);
   int2 coords = (int2)(id % width, id / width);
@@ -9,7 +9,7 @@ __kernel void clear_texture(int width, int height, __write_only image2d_t textur
   
 }
 
-__kernel void clear_volume(int width, int height, int depth, volume v, float4 value) {
+kernel void clear_volume(int width, int height, int depth, volume v, float4 value) {
   
   int id = get_global_id(0);
   int3 coords = (int3)( id % width, (id / (width)) % height, id / (width * height) );
@@ -19,9 +19,9 @@ __kernel void clear_volume(int width, int height, int depth, volume v, float4 va
 
 const sampler_t smp = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP | CLK_FILTER_NEAREST;
 
-__kernel void volume_flatten(int width, int height, int depth, float threshold,
-							 __write_only image2d_t projection_texture,
-               __read_only image2d_t stencil_texture,
+kernel void volume_flatten(int width, int height, int depth, float threshold,
+							 write_only image2d_t projection_texture,
+               read_only image2d_t stencil_texture,
                
                volume color_volume,
                volume normals_volume,

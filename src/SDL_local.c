@@ -455,6 +455,8 @@ void SDL_PrintStackTrace() {
   }
 
   free(strings);
+  
+  fflush(stdout);
 }
 
 #elif _WIN32
@@ -484,13 +486,13 @@ void SDL_PrintStackTrace() {
   
   /* For some reason this is giving the incorrect symbol names */
   
-  typedef USHORT (WINAPI *CaptureStackBackTraceType)(ULONG,ULONG,PVOID*,PULONG);
-  typedef BOOL (WINAPI *SymInitializeType)(HANDLE,PCTSTR,BOOL);
-  typedef BOOL (WINAPI *SymFromAddrType)(HANDLE,DWORD64,PDWORD64,PSYMBOL_INFO);
+  typedef USHORT (WINAPI *CaptureStackBackTraceFn)(ULONG,ULONG,PVOID*,PULONG);
+  typedef BOOL (WINAPI *SymInitializeFn)(HANDLE,PCTSTR,BOOL);
+  typedef BOOL (WINAPI *SymFromAddrFn)(HANDLE,DWORD64,PDWORD64,PSYMBOL_INFO);
   
-  CaptureStackBackTraceType CaptureStackBackTrace = (CaptureStackBackTraceType)(GetProcAddress(LoadLibrary("kernel32.dll"), "RtlCaptureStackBackTrace"));
-  SymInitializeType SymInitialize = (SymInitializeType)(GetProcAddress(LoadLibrary("Dbghelp.dll"), "SymInitialize"));
-  SymFromAddrType SymFromAddr = (SymFromAddrType)(GetProcAddress(LoadLibrary("Dbghelp.dll"), "SymFromAddr"));
+  CaptureStackBackTraceFn CaptureStackBackTrace = (CaptureStackBackTraceFn)(GetProcAddress(LoadLibrary("kernel32.dll"), "RtlCaptureStackBackTrace"));
+  SymInitializeFn SymInitialize = (SymInitializeFn)(GetProcAddress(LoadLibrary("Dbghelp.dll"), "SymInitialize"));
+  SymFromAddrFn SymFromAddr = (SymFromAddrFn)(GetProcAddress(LoadLibrary("Dbghelp.dll"), "SymFromAddr"));
   
   if ((CaptureStackBackTrace == NULL) || 
       (SymInitialize == NULL) ||
@@ -499,39 +501,43 @@ void SDL_PrintStackTrace() {
     return;
   }
   
-  void* stack[62];
-  
   HANDLE process = GetCurrentProcess();
-  if (!SymInitialize(process, NULL, TRUE)) {
-    printf("[STACK] Could not retrieve functions for stack trace\n");
+  if (process == 0) {
+    printf("[STACK] Could not retrieve current process\n");
+    return;
   }
-   
-  int max_frames = CaptureStackBackTrace( 0, 62, stack, NULL );
-  SYMBOL_INFO* symbol = calloc(sizeof(SYMBOL_INFO) + 256, 1);
-  symbol->MaxNameLen   = 255;
-  symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
   
-  DWORD64 displacement = 0;
+  if (SymInitialize(process, NULL, TRUE) == 0) {
+    printf("[STACK] Could not ilitialize symbols for process\n");
+    return;
+  }
   
   if (sizeof(void*) != sizeof(DWORD64)) {
     printf("[STACK] Cannot retrive stack symbols on 32-bit binary\n");
     return;
   }
-  for(int i = 0; i < max_frames; i++ ){
+  
+  SYMBOL_INFO* symbol = calloc(sizeof(SYMBOL_INFO) + 256, 1);
+  symbol->MaxNameLen = 255;
+  symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
+  
+  void* stack[32];
+  int frames = CaptureStackBackTrace(0, 32, stack, NULL);
+  
+  printf ("[STACK] (%i frames)\n", frames);
+  for(int i = 0; i < frames; i++ ){
     
-    DWORD64 address = 0;
-    address = PtrToUlong(stack[i]);
-    if (SymFromAddr(process, address, &displacement, symbol)) {
-      printf("  %i: %s - %08X\n", max_frames-i-1, symbol->Name, (unsigned int)symbol->Address );
+    DWORD64 address = PtrToUlong(stack[i]);
+    if (SymFromAddr(process, address, 0, symbol)) {
+      printf("  %i: %s - %08X\n", frames-i-1, symbol->Name, (unsigned int)symbol->Address );
     } else {
       DWORD error = GetLastError();
-      printf("  %i: SymFromAddr returned error %d\n", max_frames-i-1, (int)error);
+      printf("  %i: SymFromAddr returned error %d\n", frames-i-1, (int)error);
     }
     
   }
-
-  free(symbol);
   
+  free(symbol);
 }
 
 #else

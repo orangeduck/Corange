@@ -61,29 +61,29 @@
     
 */
 
-int width;
-int height;
-int depth;
+static int width;
+static int height;
+static int depth;
 
-float threshold = 0.75;
+static float threshold = 0.75;
 
-GLuint proj_texture;
-GLuint stencil_texture;
+static GLuint proj_texture;
+static GLuint stencil_texture;
 
-kernel_memory k_proj_texture;
-kernel_memory k_stencil_texture;
+static kernel_memory k_proj_texture;
+static kernel_memory k_stencil_texture;
 
-kernel_memory k_color_volume;
-kernel_memory k_normals_volume;
+static kernel_memory k_color_volume;
+static kernel_memory k_normals_volume;
 
-kernel k_flatten;
-kernel k_clear_texture;
-kernel k_clear_volume;
-kernel k_blit_point;
-kernel k_blit_metaball;
+static kernel k_flatten;
+static kernel k_clear_texture;
+static kernel k_clear_volume;
+static kernel k_blit_point;
+static kernel k_blit_metaball;
 
-camera* cam = NULL;
-light* sun = NULL;
+static camera* cam = NULL;
+static light* sun = NULL;
 
 void volume_renderer_set_camera(camera* new_cam) {
   cam = new_cam;
@@ -182,6 +182,7 @@ void volume_renderer_finish() {
 void volume_renderer_begin() {
   
   vector4 zero = v4_zero();
+  vector4 grey = v4_grey();
   vector4 norm = v4(0.5, 0.5, 0.5, 0);
   
   kernel_set_argument(k_clear_volume, 3, sizeof(kernel_memory), &k_color_volume);
@@ -200,7 +201,7 @@ void volume_renderer_begin() {
     kernel_run(k_clear_texture, width * height);
     
     kernel_set_argument(k_clear_texture, 2, sizeof(kernel_memory), &k_proj_texture);
-    kernel_set_argument(k_clear_texture, 3, sizeof(vector4), &zero);
+    kernel_set_argument(k_clear_texture, 3, sizeof(vector4), &grey);
     kernel_run(k_clear_texture, width * height);
   
   kernel_memory_gl_release(k_proj_texture);
@@ -209,7 +210,7 @@ void volume_renderer_begin() {
 }
 
 void volume_renderer_end() {
-
+  
   kernel_memory_gl_aquire(k_proj_texture);
   kernel_memory_gl_aquire(k_stencil_texture);
   
@@ -231,7 +232,6 @@ void volume_renderer_end() {
   glPushMatrix();
 	glLoadIdentity();
   
-  glDepthMask(GL_FALSE);
   glDisable(GL_DEPTH_TEST);
   
   glEnable(GL_BLEND);
@@ -257,7 +257,6 @@ void volume_renderer_end() {
   glMatrixMode(GL_MODELVIEW);
   glPopMatrix();
   
-  glDepthMask(GL_TRUE);
   glEnable(GL_DEPTH_TEST);
   glDisable(GL_BLEND);
   
@@ -354,9 +353,10 @@ void volume_renderer_render_metaball(vector3 position, vector3 color) {
     kernel_set_argument(k_blit_metaball, 4, sizeof(cl_int3), &offset);
     kernel_set_argument(k_blit_metaball, 5, sizeof(cl_int3), &size);
     kernel_set_argument(k_blit_metaball, 6, sizeof(cl_int3), &total_size);
-    int total_num = multiple_two(x_size + 2*padding) * multiple_two(y_size + 2*padding) * multiple_two(z_size + 2*padding);
+    int total_num = multiple_two(x_size + 2*padding) * 
+                    multiple_two(y_size + 2*padding) * 
+                    multiple_two(z_size + 2*padding);
     kernel_run(k_blit_metaball, total_num);
   
   kernel_memory_gl_release(k_stencil_texture);
 }
-

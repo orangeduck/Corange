@@ -6,7 +6,7 @@
 #include "particles.h"
 #include "kernel.h"
 
-#define particle_count 25
+#define particle_count 32
 
 GLuint positions_buffer;
 GLuint velocities_buffer;
@@ -140,4 +140,10 @@ GLuint particle_positions_buffer() {
 
 GLuint particle_velocities_buffer() {
   return velocities_buffer;
+}
+
+void particle_positions(vector4* out) {
+  kernel_memory_gl_aquire(k_particle_positions);
+    kernel_memory_read(k_particle_positions, sizeof(vector4) * particle_count, out);
+  kernel_memory_gl_release(k_particle_positions);
 }

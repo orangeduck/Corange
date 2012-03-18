@@ -1,13 +1,15 @@
 uniform vec3 light_direction;
 
-varying vec3 light;
 varying vec3 direction;
+varying vec3 m_color;
+varying vec3 r_color;
+varying vec3 debug;
 
-vec3 rayleigh_phase(float cos2a) {
-  return (3/4) * (1 + cos2a);
+float rayleigh_phase(float cos2a) {
+  return 0.75 + 0.75*cos2a;
 }
 
-vec3 mei_phase(float cosa, float cos2a) {
+float mei_phase(float cosa, float cos2a) {
   return (1.3125 / 5.125) * ((1 + cos2a) / pow(1.5625 + 1.4*cosa, 3/2));
 }
 
@@ -16,13 +18,8 @@ void main() {
   float cosa = dot(light_direction, direction) / length(direction);
   float cos2a = cosa * cosa;
   
-  /* TODO: Fill in wavelengths */
-  vec3 k_ray = (4 * 3.141) / pow(vec3(1,1,1), 4.00);
-  vec3 k_mei = (4 * 3.141) / pow(vec3(1,1,1), 0.84);
-  vec3 k_sun = vec3(1,1,1) * 1024;
+	gl_FragColor.rgb = rayleigh_phase(cos2a) * r_color + 
+                     mei_phase(cosa, cos2a) * m_color;
   
-  vec3 color = light * k_sun * k_ray * rayleigh_phase(cosa) + 
-               light * k_sun * k_mei * mei_phase(cosa, cos2a);
-  
-  gl_FragColor = vec4(color,1);
+	gl_FragColor.a = 1.0;
 }

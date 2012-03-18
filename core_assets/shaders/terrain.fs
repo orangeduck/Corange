@@ -1,6 +1,7 @@
 uniform sampler2D normals;
 uniform sampler2D color;
 uniform sampler2D attribs;
+uniform sampler2D random;
 
 uniform sampler2D surface_diffuse0;
 uniform sampler2D surface_normals0;
@@ -66,12 +67,14 @@ vec3 normal_scale(vec3 n) {
 
 void main() {
   
-  vec2 world_uvs = vec2(position.x, position.z) / 1024.0;
+  vec2 random_off = texture2D(random, vec2(position.x, position.z) / 512.0).xy - 0.5;
+  
+  vec2 world_uvs = vec2(position.x, position.z) / 1024.0 + random_off * 0.0025;
   vec2 local_uvs = vec2(position.x, position.z) / 3;
   vec2 far_uvs = vec2(position.x, position.z) / 100.0;
   
   float total_dist = distance(camera_position, position);
-  float dist_func = clamp(total_dist / 300.0, 0.0, 1.0);
+  float dist_func = clamp(total_dist / 200.0, 0.0, 1.0);
   
   vec3 ground_color = texture2D(color, world_uvs).rgb;
   vec4 ground_attribs = texture2D(attribs, world_uvs);

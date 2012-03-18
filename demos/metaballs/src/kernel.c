@@ -250,6 +250,11 @@ void kernel_memory_read(kernel_memory km, int size, void* dst) {
   kernels_check_error("clEnqueueReadBuffer");
 }
 
+void kernel_run_flush() {
+  error = clFlush(queue);
+  kernels_check_error("clFlush");
+}
+
 void kernel_run_finish() {
   error = clFinish(queue);
   kernels_check_error("clFinish");

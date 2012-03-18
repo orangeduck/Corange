@@ -7,6 +7,7 @@ void volume_renderer_init();
 void volume_renderer_finish();
 
 void volume_renderer_set_camera(camera* cam);
+void volume_renderer_set_light(light* sun);
 
 void volume_renderer_begin();
 void volume_renderer_end();

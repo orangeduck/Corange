@@ -1176,12 +1176,19 @@ void forward_renderer_render_landscape(landscape* ls) {
   glEnable(GL_TEXTURE_2D);
   glUniform1i(glGetUniformLocation(*terrain, "attribs"), 2);
   
+  texture* random = asset_load_get("$CORANGE/resources/random.dds");
+  
+  glActiveTexture(GL_TEXTURE0 + 3 );
+  glBindTexture(GL_TEXTURE_2D, *random);
+  glEnable(GL_TEXTURE_2D);
+  glUniform1i(glGetUniformLocation(*terrain, "random"), 3);
+  
   char diffuse_name[512];
   char normals_name[512];
   char diffuse_far_name[512];
   char normals_far_name[512];
   
-  int tex_counter = 3;
+  int tex_counter = 4;
   for(int i = 0; i < 4; i++) {
     
     texture* diffuse = ls->surface_types[i].near_texture;

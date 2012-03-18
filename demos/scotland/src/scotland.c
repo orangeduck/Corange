@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <math.h>
 
 #include "vegetation.h"
 #include "scotland.h"
@@ -66,6 +67,7 @@ static int load_resources(void* unused) {
   skydome->renderable = asset_get("./resources/terrain/skydome.obj");
   renderable_set_material(skydome->renderable, asset_get("./resources/terrain/skydome.mat"));
   skydome->position = v3(512, 0, 512);
+  skydome->scale = v3(1024, 1024, 1024);
   
   landscape* world = entity_new("world", landscape);
   world->terrain = asset_get("./resources/terrain/heightmap.raw");
@@ -116,7 +118,7 @@ static int load_resources(void* unused) {
 void scotland_init() {
   
   graphics_viewport_set_dimensions(1280, 720);
-  graphics_viewport_set_title("Scotland Demo");
+  graphics_viewport_set_title("Scotland");
   
   ui_button* loading = ui_elem_new("loading", ui_button);
   ui_button_move(loading, v2(graphics_viewport_width() / 2 - 40,graphics_viewport_height() / 2 - 13));
@@ -217,12 +219,21 @@ void scotland_event(SDL_Event event) {
     
 }
 
+static float sun_orbit = 0;
+
 void scotland_update() {
   
   camera* cam = entity_get("camera");
   light* sun = entity_get("sun");
   static_object* skydome = entity_get("skydome");
   landscape* world = entity_get("world");
+  
+  sun_orbit += frame_time() * 0.1;
+  
+  sun->position.x = 512 + sin(sun_orbit) * 512;
+  sun->position.y = cos(sun_orbit) * 512;
+  sun->position.z = 512;
+  sun->target = v3(512, 0, 512);
   
   if (w_held || s_held) {
     
@@ -282,17 +293,19 @@ void scotland_render() {
   
   forward_renderer_begin();
 
-  forward_renderer_render_static(skydome);
-  forward_renderer_render_light(sun);
-  
   if (wireframe) {
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   }
+  
+  forward_renderer_render_static(skydome);
+  
   forward_renderer_render_landscape(world);
   vegetation_render();
   if (wireframe) {
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
   }
+  
+  forward_renderer_render_light(sun);
   
   forward_renderer_end();
   

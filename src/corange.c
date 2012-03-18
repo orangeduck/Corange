@@ -1,33 +1,48 @@
 #include <stdlib.h>
+#include <signal.h>
 
 #include "corange.h"
+
+static void corange_signal(int sig) {
+  switch(sig) {
+    case SIGABRT: error("Program Aborted");
+    case SIGFPE: error("Division by Zero");
+    case SIGILL: error("Illegal Instruction");
+    case SIGINT: error("Program Interrupted");
+    case SIGSEGV: error("Segmentation fault");
+    case SIGTERM: error("Program Terminated");
+  }
+}
 
 void corange_init(char* core_assets_path) {
   
   /* Stop stdout redirect on windows */
-  
   #ifdef _WIN32
     FILE* ctt = fopen("CON", "w" );
     FILE* fout = freopen( "CON", "w", stdout );
     FILE* ferr = freopen( "CON", "w", stderr );
   #endif
   
-  /* Starting Corange */
+  /* Attach signal handlers */
+  signal(SIGABRT, corange_signal);
+  signal(SIGFPE, corange_signal);
+  signal(SIGILL, corange_signal);
+  signal(SIGINT, corange_signal);
+  signal(SIGSEGV, corange_signal);
+  signal(SIGTERM, corange_signal);
   
+  /* Starting Corange */
   debug("Starting Corange...");
   
-  /* Init OpenGL and Viewport */
-  
+  /* Graphics Manager */
   debug("Creating Graphics Manager...");
-  
   graphics_manager_init();
   
+  /* Audio Manager */
   debug("Creating Audio Manager...");
-  
   audio_manager_init();
   
   /* Asset Manager */
-  
   debug("Creating Asset Manager...");
   
   asset_manager_init();
@@ -56,7 +71,6 @@ void corange_init(char* core_assets_path) {
   asset_manager_handler("wav", wav_load_file, sound_delete);
   
   /* Entity Manager */
-  
   debug("Creating Entity Manager...");
   
   entity_manager_init();
@@ -71,7 +85,6 @@ void corange_init(char* core_assets_path) {
   entity_manager_handler(landscape, landscape_new, landscape_delete);
   
   /* UI Manager */
-  
   debug("Creating UI Manager...");
   
   ui_manager_init();
@@ -81,8 +94,7 @@ void corange_init(char* core_assets_path) {
   ui_manager_handler(ui_spinner, ui_spinner_new, ui_spinner_delete, ui_spinner_update, ui_spinner_render);
   ui_manager_handler(ui_button, ui_button_new, ui_button_delete, ui_button_update, ui_button_render);
   
-  debug("Finished");
-  
+  debug("Finished!");
 }
 
 void corange_finish() {

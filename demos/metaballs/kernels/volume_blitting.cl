@@ -9,9 +9,9 @@ typedef struct {
 
 const sampler_t smp = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP | CLK_FILTER_NEAREST;
 
-__kernel void blit_point(float4 point, float4 color, matrix_4x4 view_matrix, matrix_4x4 proj_matrix,
+kernel void blit_point(float4 point, float4 color, matrix_4x4 view_matrix, matrix_4x4 proj_matrix,
                           int width, int height, int depth,
-                          __write_only image2d_t stencil_texture,
+                          write_only image2d_t stencil_texture,
                           volume color_volume,
                           volume normals_volume) {
   
@@ -64,10 +64,10 @@ float metaball(float p1, float p2, float amount) {
 
 
 
-__kernel void blit_metaball(float4 center, float4 color,
+kernel void blit_metaball(float4 center, float4 color,
                           matrix_4x4 inv_view_matrix, matrix_4x4 inv_proj_matrix,
                           int3 offset, int3 size, int3 total_size,
-                          __write_only image2d_t stencil_texture,
+                          write_only image2d_t stencil_texture,
                           volume color_volume,
                           volume normals_volume) {
 

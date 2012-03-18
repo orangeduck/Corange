@@ -5,18 +5,17 @@
 
 #include "metaballs.h"
 
+#define MARCHING_CUBES
+
 static int mouse_x;
 static int mouse_y;
 static int mouse_down;
 static int mouse_right_down;
 
-GLuint billboard_positions;
-GLuint billboard_uvs;
-const int max_particles = 1024;
+#define MAX_PARTICLES 1024
 
 void metaballs_init() {
   
-  graphics_set_vsync(false);
   graphics_viewport_set_title("Metaballs");
   
   kernels_init_with_opengl();
@@ -56,38 +55,6 @@ void metaballs_init() {
   forward_renderer_set_shadow_texture( shadow_mapper_depth_texture() );
   forward_renderer_add_light(sun);
   
-  vector3* temp_pos = malloc(sizeof(vector3) * 4 * max_particles);
-  int i = 0;
-  while (i < 4 * max_particles) {
-    temp_pos[i]   = v3(-1, -1, 0);
-    temp_pos[i+1] = v3(-1,  1, 0);
-    temp_pos[i+2] = v3( 1,  1, 0);
-    temp_pos[i+3] = v3( 1, -1, 0);
-    i += 4;
-  }
-  
-  glGenBuffers(1, &billboard_positions);
-  glBindBuffer(GL_ARRAY_BUFFER, billboard_positions);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vector3) * 4 * max_particles, temp_pos, GL_DYNAMIC_COPY);
-  
-  free(temp_pos);
-  
-  vector2* temp_uvs = malloc(sizeof(vector2) * 4 * max_particles);
-  i = 0;
-  while (i < 4 * max_particles) {
-    temp_uvs[i]   = v2(0, 0);
-    temp_uvs[i+1] = v2(0, 1);
-    temp_uvs[i+2] = v2(1, 1);
-    temp_uvs[i+3] = v2(1, 0);
-    i += 4;
-  }
-  
-  glGenBuffers(1, &billboard_uvs);
-  glBindBuffer(GL_ARRAY_BUFFER, billboard_uvs);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vector2) * 4 * max_particles, temp_uvs, GL_DYNAMIC_COPY);
-  
-  free(temp_uvs);
-  
   ui_rectangle* ui_box = ui_elem_new("ui_box", ui_rectangle);
   ui_box->top_left = v2(15, 15);
   ui_box->bottom_right = v2(40, 40);
@@ -101,14 +68,15 @@ void metaballs_init() {
   ui_framerate->color = v4(1,1,1,1);
   ui_text_update_string(ui_framerate, "framerate");
   
-  //volume_renderer_init();
-  //volume_renderer_set_camera(cam);
-  //volume_renderer_set_light(sun);
-  
-  //pos1 = v3(0, 10, 0);
-  //pos2 = v3(0, 5, 0);
-  
+#ifdef VOLUME_RENDERER
+  volume_renderer_init();
+  volume_renderer_set_camera(cam);
+  volume_renderer_set_light(sun);
+#endif
+ 
+#ifdef MARCHING_CUBES 
   marching_cubes_init();
+#endif
   
 }
 
@@ -145,9 +113,11 @@ void metaballs_update() {
   ui_text* ui_framerate = ui_elem_get("ui_framerate");
   ui_text_update_string(ui_framerate, frame_rate_string());
   
+#ifdef MARCHING_CUBES
   marching_cubes_metaball_data( particle_positions_memory(), particles_count() );
   marching_cubes_clear();
   marching_cubes_update();
+#endif
   
 }
 
@@ -156,17 +126,35 @@ static float view_matrix[16];
 
 static bool wireframe = false;
 
+#ifdef VOLUME_RENDERER
+static vector4 part_positions[MAX_PARTICLES];
+#endif
+
 void metaballs_render() {
 
   static_object* s_podium = entity_get("podium");
   camera* cam = entity_get("camera");
   light* sun = entity_get("sun");
 
+#ifdef VOLUME_RENDERER
+
+  particle_positions(part_positions);
+
+  volume_renderer_begin();
+  volume_renderer_render_point( sun->position, v3_one() );
+  for(int i = 0; i < particles_count(); i++) {
+    vector3 pos = v3(part_positions[i].x, part_positions[i].y, part_positions[i].z);
+    //volume_renderer_render_point( pos, v3_red() );
+    volume_renderer_render_metaball( pos, v3_red() );
+  }
+  volume_renderer_end();
+#endif
+  
+#ifdef MARCHING_CUBES
   shadow_mapper_begin();
   shadow_mapper_render_static(s_podium);
   marching_cubes_render_shadows(sun);
   shadow_mapper_end();
-
   
   forward_renderer_begin();
     
@@ -176,6 +164,7 @@ void metaballs_render() {
     marching_cubes_render(wireframe, cam, sun);
   
   forward_renderer_end();
+#endif
   
   ui_render();
   
@@ -236,12 +225,14 @@ void metaballs_finish() {
   shadow_mapper_finish();
   
   particles_finish();
-
-  glDeleteBuffers(1, &billboard_positions);
-  glDeleteBuffers(1, &billboard_uvs);
   
-  //volume_renderer_finish();
+#ifdef VOLUME_RENDERER
+  volume_renderer_finish();
+#endif
+  
+#ifdef MARCHING_CUBES
   marching_cubes_finish();
+#endif
   
   kernels_finish();
 }
