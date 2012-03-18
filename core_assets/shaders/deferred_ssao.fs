@@ -11,6 +11,6 @@ float ssao_depth(vec2 texcoords, sampler2D depth_texture, sampler2D random_textu
 void main() {
 	
   float ssao = ssao_depth(gl_TexCoord[0].xy, depth_texture, random_texture, seed);
-	gl_FragColor.rgb = vec4(ssao, ssao, ssao, 1.0);
+  gl_FragColor = vec4(ssao, ssao, ssao, 1.0);
 	
 } 

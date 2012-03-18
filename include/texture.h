@@ -12,6 +12,8 @@ typedef GLuint texture;
 texture* texture_new();
 void texture_delete(texture* t);
 
+GLuint texture_handle(texture* t);
+
 void texture_set_image(texture* t, image* i);
 image* texture_get_image(texture* t);
 

@@ -23,26 +23,26 @@ vec3 fxaa_unsharp(sampler2D screen, vec2 pos, int width, int height) {
   float yoff = kernel / float(height);
 
   vec3 rgb_ne = texture2D(screen, pos + vec2(-xoff,yoff)).rgb;
-  vec3 rgb_n = texture2D(screen, pos + vec2(0,yoff)).rgb;
+  vec3 rgb_n = texture2D(screen, pos + vec2(0.0,yoff)).rgb;
   vec3 rgb_nw = texture2D(screen, pos + vec2(xoff,yoff)).rgb;
-  vec3 rgb_w = texture2D(screen, pos + vec2(xoff,0)).rgb;
-  vec3 rgb_o = texture2D(screen, pos + vec2(0,0)).rgb;
-  vec3 rgb_e = texture2D(screen, pos + vec2(-xoff,0)).rgb;
+  vec3 rgb_w = texture2D(screen, pos + vec2(xoff,0.0)).rgb;
+  vec3 rgb_o = texture2D(screen, pos + vec2(0.0,0.0)).rgb;
+  vec3 rgb_e = texture2D(screen, pos + vec2(-xoff,0.0)).rgb;
   vec3 rgb_sw = texture2D(screen, pos + vec2(-xoff,-yoff)).rgb;
-  vec3 rgb_s = texture2D(screen, pos + vec2(0,-yoff)).rgb;
+  vec3 rgb_s = texture2D(screen, pos + vec2(0.0,-yoff)).rgb;
   vec3 rgb_se = texture2D(screen, pos + vec2(xoff,-yoff)).rgb;
   
-  vec3 average = (rgb_ne + rgb_n + rgb_nw + rgb_w + rgb_e + rgb_sw + rgb_s + rgb_se) / 8;
+  vec3 average = (rgb_ne + rgb_n + rgb_nw + rgb_w + rgb_e + rgb_sw + rgb_s + rgb_se) / 8.0;
   vec3 difference = rgb_o - average;
   
   rgb_o = rgb_o + (difference * sharpen);
   difference = rgb_o - average;
   
-  float fdiff = abs(dot(vec3(1,1,1), difference));
+  float fdiff = abs(dot(vec3(1.0,1.0,1.0), difference));
   
   if (fdiff > boundry) {
     
-    float alias_amount = clamp(fdiff * 2, 0.0, 0.75);
+    float alias_amount = clamp(fdiff * 2.0, 0.0, 0.75);
     //return mix(vec3(0,1,0), vec3(1,0,0), alias_amount);
     return mix(rgb_o, average, alias_amount);
     
@@ -74,11 +74,11 @@ vec3 fxaa(sampler2D screen, vec2 pos, int width, int height) {
   float xoff = 1.0 / float(width);
   float yoff = 1.0 / float(height);
   
-  vec3 rgb_n = texture2D(screen, pos + vec2(0,yoff)).rgb;
-  vec3 rgb_w = texture2D(screen, pos + vec2(xoff,0)).rgb;
-  vec3 rgb_o = texture2D(screen, pos + vec2(0,0)).rgb;
-  vec3 rgb_e = texture2D(screen, pos + vec2(-xoff,0)).rgb;
-  vec3 rgb_s = texture2D(screen, pos + vec2(0,-yoff)).rgb;
+  vec3 rgb_n = texture2D(screen, pos + vec2(0.0,yoff)).rgb;
+  vec3 rgb_w = texture2D(screen, pos + vec2(xoff,0.0)).rgb;
+  vec3 rgb_o = texture2D(screen, pos + vec2(0.0,0.0)).rgb;
+  vec3 rgb_e = texture2D(screen, pos + vec2(-xoff,0.0)).rgb;
+  vec3 rgb_s = texture2D(screen, pos + vec2(0.0,-yoff)).rgb;
 
   float lum_n = fxaa_lum(rgb_n);
   float lum_w = fxaa_lum(rgb_w);
@@ -124,15 +124,15 @@ vec3 fxaa(sampler2D screen, vec2 pos, int width, int height) {
     
     vec2 off_np;
     if (edge_h >= edge_v) {
-      off_np = vec2(1,0);
+      off_np = vec2(1.0,0.0);
     } else {
-      off_np = vec2(0,1);
+      off_np = vec2(0.0,1.0);
     }
     
     if (edge_h >= edge_v) {
-      return vec3(1,0,0);
+      return vec3(1.0,0.0,0.0);
     } else {
-      return vec3(0,1,0);
+      return vec3(0.0,1.0,0.0);
     }
     
     /*

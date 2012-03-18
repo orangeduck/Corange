@@ -17,9 +17,17 @@ vec3 chromatic_aberration(sampler2D input, vec2 coords, float offset);
 
 /* End */
 
-#define BLOOM_SIZE 4
-#define BLOOM_AMOUNT 5
-#define BLOOM_COLOR 3
+#define BLOOM_SIZE 4.0
+#define BLOOM_AMOUNT 5.0
+#define BLOOM_COLOR 3.0
+
+vec3 pow3(vec3 col, float exponent) {
+  vec3 ret;
+  ret.r = pow(col.r, exponent);
+  ret.g = pow(col.g, exponent);
+  ret.b = pow(col.b, exponent);
+  return ret;
+}
 
 void main() {
   
@@ -35,9 +43,9 @@ void main() {
 	vec3 vignetting = texture2D(vignetting_texture, gl_TexCoord[0].xy).rgb;
   
   vec4 bloom_s = texture2DLod(ldr_texture, gl_TexCoord[0].xy, BLOOM_SIZE);
-  vec3 bloom = BLOOM_AMOUNT * bloom_s.a * pow(bloom_s.rgb, BLOOM_COLOR);
+  vec3 bloom = BLOOM_AMOUNT * bloom_s.a * pow3(bloom_s.rgb, BLOOM_COLOR);
   
-  color = (color + bloom) * mix(vignetting, vec3(1,1,1), 0.5);
+  color = (color + bloom) * mix(vignetting, vec3(1.0,1.0,1.0), 0.5);
   
 	gl_FragColor.rgb = color_correction(color, lut, 64);
 	gl_FragColor.a = 1.0;

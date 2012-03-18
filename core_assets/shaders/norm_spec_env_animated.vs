@@ -23,22 +23,22 @@ void main() {
   vec2 temp_uvs = vec2(gl_MultiTexCoord0);
   uvs = vec2(temp_uvs.x, -temp_uvs.y);
 
-  vec4 blendpos = vec4(0,0,0,0);
+  vec4 blendpos = vec4(0.0,0.0,0.0,0.0);
   for (int i = 0; i < 3; i++) {
     blendpos += vec4((bone_world_matrices[int(bone_indicies[i])] * gl_Vertex).xyz, 1.0) * bone_weights[i];
   }
   
-  vec3 blendnorm = vec3(0,0,0);
+  vec3 blendnorm = vec3(0.0,0.0,0.0);
   for (int i = 0; i < 3; i++) {
     blendnorm += (mat3(bone_world_matrices[int(bone_indicies[i])]) * gl_Normal) * bone_weights[i];
   }
   
-  vec3 blendtang = vec3(0,0,0);
+  vec3 blendtang = vec3(0.0,0.0,0.0);
   for (int i = 0; i < 3; i++) {
     blendtang += (mat3(bone_world_matrices[int(bone_indicies[i])]) * tangent) * bone_weights[i];
   }
   
-  vec3 blendbinorm = vec3(0,0,0);
+  vec3 blendbinorm = vec3(0.0,0.0,0.0);
   for (int i = 0; i < 3; i++) {
     blendbinorm += (mat3(bone_world_matrices[int(bone_indicies[i])]) * binormal) * bone_weights[i];
   }

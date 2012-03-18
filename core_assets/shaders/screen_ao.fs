@@ -31,27 +31,27 @@ vec3 sample_sphere[32] = vec3[32](vec3(-0.00, 0.02, -0.03), vec3(0.35, 0.04, 0.3
 
 
 float smoothstep_map(float x) {
-  return x*x*(3 - 2*x);
+  return x*x*(3.0 - 2.0*x);
 }
 
 float difference_occlusion(float difference) {
   
-  difference = max(difference, 0);
+  difference = max(difference, 0.0);
   
   /* This is the depth difference at which the maximum occlusion happens */
   const float target = 0.0002;
   
   /* This is the length of the falloff after maximum depth difference is reached */
-  const float falloff = 5;
+  const float falloff = 5.0;
   
-  float dist = (1/target) * abs(difference - target);
+  float dist = (1.0/target) * abs(difference - target);
   if (difference > target) {
-    dist *= (1/falloff);
+    dist *= (1.0/falloff);
   }
   
-  dist = clamp(dist, 0, 1);
+  dist = clamp(dist, 0.0, 1.0);
   
-  return smoothstep_map(1-dist);
+  return smoothstep_map(1.0-dist);
   
 }
 
@@ -65,7 +65,7 @@ float ssao_depth(vec2 texcoords, sampler2D depth_texture, sampler2D random_textu
   const int samples = 8;
   
   /* A Higher value will reduce noise but increase banding */
-  const float noise_reduce = 100;
+  const float noise_reduce = 100.0;
   
   vec3 random = normalize( texture2D(random_texture, noise_reduce * (texcoords + vec2(seed*1.21, -seed*1.311))).rgb * 2.0 - 1.0 );
   

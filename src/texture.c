@@ -23,6 +23,14 @@ void texture_delete(texture* t) {
   free(t);
 }
 
+GLuint texture_handle(texture* t) {
+  if (t == NULL) {
+    error("Cannot get handle for NULL texture");
+  }
+  
+  return *t;
+}
+
 void texture_set_image(texture* t, image* i) {
 
   glBindTexture(GL_TEXTURE_2D, *t);

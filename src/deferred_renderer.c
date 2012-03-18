@@ -114,15 +114,15 @@ void deferred_renderer_init() {
   SCREEN_PROGRAM = asset_load_get("$CORANGE/shaders/deferred_screen.prog");
   SCREEN_POST = asset_load_get("$CORANGE/shaders/deferred_post.prog");
   
-  NORMAL = glGetAttribLocation(*PROGRAM, "normal");
-  TANGENT = glGetAttribLocation(*PROGRAM, "tangent");
-  BINORMAL = glGetAttribLocation(*PROGRAM, "binormal");  
+  NORMAL = glGetAttribLocation(shader_program_handle(PROGRAM), "normal");
+  TANGENT = glGetAttribLocation(shader_program_handle(PROGRAM), "tangent");
+  BINORMAL = glGetAttribLocation(shader_program_handle(PROGRAM), "binormal");  
   
-  NORMAL_ANIMATED = glGetAttribLocation(*PROGRAM_ANIMATED, "normal");
-  TANGENT_ANIMATED = glGetAttribLocation(*PROGRAM_ANIMATED, "tangent");
-  BINORMAL_ANIMATED = glGetAttribLocation(*PROGRAM_ANIMATED, "binormal");  
-  BONE_INDICIES = glGetAttribLocation(*PROGRAM_ANIMATED, "bone_indicies");
-  BONE_WEIGHTS = glGetAttribLocation(*PROGRAM_ANIMATED, "bone_weights"); 
+  NORMAL_ANIMATED = glGetAttribLocation(shader_program_handle(PROGRAM_ANIMATED), "normal");
+  TANGENT_ANIMATED = glGetAttribLocation(shader_program_handle(PROGRAM_ANIMATED), "tangent");
+  BINORMAL_ANIMATED = glGetAttribLocation(shader_program_handle(PROGRAM_ANIMATED), "binormal");  
+  BONE_INDICIES = glGetAttribLocation(shader_program_handle(PROGRAM_ANIMATED), "bone_indicies");
+  BONE_WEIGHTS = glGetAttribLocation(shader_program_handle(PROGRAM_ANIMATED), "bone_weights"); 
   
   int viewport_width = graphics_viewport_width();
   int viewport_height = graphics_viewport_height();
@@ -330,22 +330,22 @@ static void deferred_renderer_use_material(material* mat, shader_program* PROG) 
     int* type = dictionary_get(mat->types, key);
     void* property = dictionary_get(mat->properties, key);
     
-    GLint loc = glGetUniformLocation(*PROG, key);
+    GLint loc = glGetUniformLocation(shader_program_handle(PROG), key);
     
-    GLint world_matrix_u = glGetUniformLocation(*PROG, "world_matrix");
+    GLint world_matrix_u = glGetUniformLocation(shader_program_handle(PROG), "world_matrix");
     glUniformMatrix4fv(world_matrix_u, 1, 0, WORLD_MATRIX);
   
-    GLint proj_matrix_u = glGetUniformLocation(*PROG, "proj_matrix");
+    GLint proj_matrix_u = glGetUniformLocation(shader_program_handle(PROG), "proj_matrix");
     glUniformMatrix4fv(proj_matrix_u, 1, 0, PROJ_MATRIX);
     
-    GLint view_matrix_u = glGetUniformLocation(*PROG, "view_matrix");
+    GLint view_matrix_u = glGetUniformLocation(shader_program_handle(PROG), "view_matrix");
     glUniformMatrix4fv(view_matrix_u, 1, 0, VIEW_MATRIX);
     
     if (*type == mat_type_texture) {
     
       glUniform1i(loc, tex_counter);
       glActiveTexture(GL_TEXTURE0 + tex_counter);
-      glBindTexture(GL_TEXTURE_2D, *((texture*)property));
+      glBindTexture(GL_TEXTURE_2D, texture_handle(property));
       tex_counter++;
     
     } else if (*type == mat_type_int) {
@@ -461,7 +461,8 @@ void deferred_renderer_end() {
   
   glViewport(0, 0, graphics_viewport_width() / 2, graphics_viewport_height() / 2);
   
-  glUseProgram(*PROGRAM_SSAO);
+  GLuint ssao_handle = shader_program_handle(PROGRAM_SSAO);
+  glUseProgram(ssao_handle);
   
 	glMatrixMode(GL_PROJECTION);
   glPushMatrix();
@@ -475,15 +476,15 @@ void deferred_renderer_end() {
   glActiveTexture(GL_TEXTURE0 + 0 );
   glBindTexture(GL_TEXTURE_2D, depth_texture);
   glEnable(GL_TEXTURE_2D);
-  glUniform1i(glGetUniformLocation(*PROGRAM_SSAO, "depth_texture"), 0);
+  glUniform1i(glGetUniformLocation(ssao_handle, "depth_texture"), 0);
   
   glActiveTexture(GL_TEXTURE0 + 1 );
-  glBindTexture(GL_TEXTURE_2D, *RANDOM);
+  glBindTexture(GL_TEXTURE_2D, texture_handle(RANDOM));
   glEnable(GL_TEXTURE_2D);
-  glUniform1i(glGetUniformLocation(*PROGRAM_SSAO, "random_texture"), 1);
+  glUniform1i(glGetUniformLocation(ssao_handle, "random_texture"), 1);
   
   float seed = CAMERA->position.x + CAMERA->position.y + CAMERA->position.z;
-  glUniform1f(glGetUniformLocation(*PROGRAM_SSAO, "seed"), seed);
+  glUniform1f(glGetUniformLocation(ssao_handle, "seed"), seed);
   
 	glBegin(GL_QUADS);
 		glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0, -1.0,  0.0f);
@@ -512,7 +513,8 @@ void deferred_renderer_end() {
   
   glViewport(0, 0, graphics_viewport_width(), graphics_viewport_height());
   
-  glUseProgram(*SCREEN_PROGRAM);
+  GLuint screen_handle = shader_program_handle(SCREEN_PROGRAM);
+  glUseProgram(screen_handle);
   
 	glMatrixMode(GL_PROJECTION);
   glPushMatrix();
@@ -526,46 +528,46 @@ void deferred_renderer_end() {
   glActiveTexture(GL_TEXTURE0 + 0 );
   glBindTexture(GL_TEXTURE_2D, diffuse_texture);
   glEnable(GL_TEXTURE_2D);
-  glUniform1i(glGetUniformLocation(*SCREEN_PROGRAM, "diffuse_texture"), 0);
+  glUniform1i(glGetUniformLocation(screen_handle, "diffuse_texture"), 0);
   
   glActiveTexture(GL_TEXTURE0 + 1 );
   glBindTexture(GL_TEXTURE_2D, positions_texture);
   glEnable(GL_TEXTURE_2D);
-  glUniform1i(glGetUniformLocation(*SCREEN_PROGRAM, "positions_texture"), 1);
+  glUniform1i(glGetUniformLocation(screen_handle, "positions_texture"), 1);
   
   glActiveTexture(GL_TEXTURE0 + 2 );
   glBindTexture(GL_TEXTURE_2D, normals_texture);
   glEnable(GL_TEXTURE_2D);
-  glUniform1i(glGetUniformLocation(*SCREEN_PROGRAM, "normals_texture"), 2);
+  glUniform1i(glGetUniformLocation(screen_handle, "normals_texture"), 2);
   
   glActiveTexture(GL_TEXTURE0 + 3 );
   glBindTexture(GL_TEXTURE_2D, depth_texture);
   glEnable(GL_TEXTURE_2D);
-  glUniform1i(glGetUniformLocation(*SCREEN_PROGRAM, "depth_texture"), 3);
+  glUniform1i(glGetUniformLocation(screen_handle, "depth_texture"), 3);
   
   glActiveTexture(GL_TEXTURE0 + 4 );
-  glBindTexture(GL_TEXTURE_2D, *SHADOW_TEX);
+  glBindTexture(GL_TEXTURE_2D, texture_handle(SHADOW_TEX));
   glEnable(GL_TEXTURE_2D);
-  glUniform1i(glGetUniformLocation(*SCREEN_PROGRAM, "shadows_texture"), 4);
+  glUniform1i(glGetUniformLocation(screen_handle, "shadows_texture"), 4);
   
   glActiveTexture(GL_TEXTURE0 + 5 );
   glBindTexture(GL_TEXTURE_2D, ssao_texture);
   glEnable(GL_TEXTURE_2D);
   glGenerateMipmap(GL_TEXTURE_2D);
-  glUniform1i(glGetUniformLocation(*SCREEN_PROGRAM, "ssao_texture"), 5);
+  glUniform1i(glGetUniformLocation(screen_handle, "ssao_texture"), 5);
   
   glActiveTexture(GL_TEXTURE0 + 6 );
-  glBindTexture(GL_TEXTURE_2D, *ENVIRONMENT);
+  glBindTexture(GL_TEXTURE_2D, texture_handle(ENVIRONMENT));
   glEnable(GL_TEXTURE_2D);
-  glUniform1i(glGetUniformLocation(*SCREEN_PROGRAM, "env_texture"), 6);
+  glUniform1i(glGetUniformLocation(screen_handle, "env_texture"), 6);
   
-  GLint cam_position = glGetUniformLocation(*SCREEN_PROGRAM, "camera_position");
+  GLint cam_position = glGetUniformLocation(screen_handle, "camera_position");
   glUniform3f(cam_position, CAMERA->position.x, CAMERA->position.y, CAMERA->position.z);
   
-  GLint lproj_matrix_u = glGetUniformLocation(*SCREEN_PROGRAM, "light_proj");
+  GLint lproj_matrix_u = glGetUniformLocation(screen_handle, "light_proj");
   glUniformMatrix4fv(lproj_matrix_u, 1, 0, LIGHT_PROJ_MATRIX);
   
-  GLint lview_matrix_u = glGetUniformLocation(*SCREEN_PROGRAM, "light_view");
+  GLint lview_matrix_u = glGetUniformLocation(screen_handle, "light_view");
   glUniformMatrix4fv(lview_matrix_u, 1, 0, LIGHT_VIEW_MATRIX);
   
   for(int i = 0; i < num_lights; i++) {
@@ -578,15 +580,15 @@ void deferred_renderer_end() {
     light_specular[i] = lights[i]->specular_color;
   }
   
-  glUniform1i(glGetUniformLocation(*SCREEN_PROGRAM, "num_lights"), num_lights);
+  glUniform1i(glGetUniformLocation(screen_handle, "num_lights"), num_lights);
   
-  GLint light_power_u = glGetUniformLocation(*SCREEN_PROGRAM, "light_power");
-  GLint light_falloff_u = glGetUniformLocation(*SCREEN_PROGRAM, "light_falloff");
-  GLint light_position_u = glGetUniformLocation(*SCREEN_PROGRAM, "light_position");
-  GLint light_target_u = glGetUniformLocation(*SCREEN_PROGRAM, "light_target");
-  GLint light_diffuse_u = glGetUniformLocation(*SCREEN_PROGRAM, "light_diffuse");
-  GLint light_ambient_u = glGetUniformLocation(*SCREEN_PROGRAM, "light_ambient");
-  GLint light_specular_u = glGetUniformLocation(*SCREEN_PROGRAM, "light_specular");
+  GLint light_power_u = glGetUniformLocation(screen_handle, "light_power");
+  GLint light_falloff_u = glGetUniformLocation(screen_handle, "light_falloff");
+  GLint light_position_u = glGetUniformLocation(screen_handle, "light_position");
+  GLint light_target_u = glGetUniformLocation(screen_handle, "light_target");
+  GLint light_diffuse_u = glGetUniformLocation(screen_handle, "light_diffuse");
+  GLint light_ambient_u = glGetUniformLocation(screen_handle, "light_ambient");
+  GLint light_specular_u = glGetUniformLocation(screen_handle, "light_specular");
   
   glUniform1fv(light_power_u, num_lights, (const GLfloat*)light_power);
   glUniform1fv(light_falloff_u, num_lights, (const GLfloat*)light_falloff);
@@ -636,7 +638,8 @@ void deferred_renderer_end() {
   
   glBindFramebuffer(GL_FRAMEBUFFER, ldr_fbo);
   
-  glUseProgram(*SCREEN_TONEMAP);
+  GLuint screen_tonemap_handle = shader_program_handle(SCREEN_TONEMAP);
+  glUseProgram(screen_tonemap_handle);
   
 	glMatrixMode(GL_PROJECTION);
   glPushMatrix();
@@ -650,9 +653,9 @@ void deferred_renderer_end() {
   glActiveTexture(GL_TEXTURE0 + 0 );
   glBindTexture(GL_TEXTURE_2D, hdr_texture);
   glEnable(GL_TEXTURE_2D);
-  glUniform1i(glGetUniformLocation(*SCREEN_TONEMAP, "hdr_texture"), 0);
+  glUniform1i(glGetUniformLocation(screen_tonemap_handle, "hdr_texture"), 0);
 
-  glUniform1f(glGetUniformLocation(*SCREEN_TONEMAP, "exposure"), EXPOSURE);
+  glUniform1f(glGetUniformLocation(screen_tonemap_handle, "exposure"), EXPOSURE);
   
 	glBegin(GL_QUADS);
 		glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0, -1.0,  0.0f);
@@ -707,7 +710,8 @@ void deferred_renderer_end() {
   
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   
-  glUseProgram(*SCREEN_POST);
+  GLuint screen_post_handle = shader_program_handle(SCREEN_POST);
+  glUseProgram(screen_post_handle);
   
 	glMatrixMode(GL_PROJECTION);
   glPushMatrix();
@@ -721,21 +725,21 @@ void deferred_renderer_end() {
   glActiveTexture(GL_TEXTURE0 + 0 );
   glBindTexture(GL_TEXTURE_2D, ldr_texture);
   glEnable(GL_TEXTURE_2D);
-  glUniform1i(glGetUniformLocation(*SCREEN_POST, "diffuse_texture"), 0);
+  glUniform1i(glGetUniformLocation(screen_post_handle, "diffuse_texture"), 0);
   
   glActiveTexture(GL_TEXTURE0 + 1 );
-  glBindTexture(GL_TEXTURE_2D, *VIGNETTING);
+  glBindTexture(GL_TEXTURE_2D, texture_handle(VIGNETTING));
   glEnable(GL_TEXTURE_2D);
-  glUniform1i(glGetUniformLocation(*SCREEN_POST, "vignetting_texture"), 1);
+  glUniform1i(glGetUniformLocation(screen_post_handle, "vignetting_texture"), 1);
   
   glActiveTexture(GL_TEXTURE0 + 2 );
-  glBindTexture(GL_TEXTURE_3D, *COLOR_CORRECTION);
+  glBindTexture(GL_TEXTURE_3D, texture_handle(COLOR_CORRECTION));
   glEnable(GL_TEXTURE_3D);
-  glUniform1i(glGetUniformLocation(*SCREEN_POST, "lut"), 2);
+  glUniform1i(glGetUniformLocation(screen_post_handle, "lut"), 2);
   
-  glUniform1i(glGetUniformLocation(*SCREEN_POST, "width"), graphics_viewport_width());
-  glUniform1i(glGetUniformLocation(*SCREEN_POST, "height"), graphics_viewport_height());
-  glUniform1i(glGetUniformLocation(*SCREEN_POST, "aa_type"), 1);
+  glUniform1i(glGetUniformLocation(screen_post_handle, "width"), graphics_viewport_width());
+  glUniform1i(glGetUniformLocation(screen_post_handle, "height"), graphics_viewport_height());
+  glUniform1i(glGetUniformLocation(screen_post_handle, "aa_type"), 1);
   
 	glBegin(GL_QUADS);
 		glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0, -1.0,  0.0f);
@@ -785,7 +789,8 @@ void deferred_renderer_render_static(static_object* so) {
       error("Renderable for static object is rigged!");
     }
     
-    glUseProgram(*PROGRAM);
+    GLuint program_handle = shader_program_handle(PROGRAM);
+    glUseProgram(program_handle);
     
     deferred_renderer_use_material(s->base, PROGRAM);
     
@@ -858,14 +863,15 @@ void deferred_renderer_render_animated(animated_object* ao) {
     renderable_surface* s = r->surfaces[i];
     if(s->is_rigged) {
       
-      glUseProgram(*PROGRAM_ANIMATED);
+      GLuint program_animated_handle = shader_program_handle(PROGRAM_ANIMATED);
+      glUseProgram(program_animated_handle);
       
       deferred_renderer_use_material(s->base, PROGRAM_ANIMATED);
       
-      GLint bone_world_matrices_u = glGetUniformLocation(*PROGRAM_ANIMATED, "bone_world_matrices");
+      GLint bone_world_matrices_u = glGetUniformLocation(program_animated_handle, "bone_world_matrices");
       glUniformMatrix4fv(bone_world_matrices_u, ao->skeleton->num_bones, GL_FALSE, bone_matrix_data);
       
-      GLint bone_count_u = glGetUniformLocation(*PROGRAM_ANIMATED, "bone_count");
+      GLint bone_count_u = glGetUniformLocation(program_animated_handle, "bone_count");
       glUniform1i(bone_count_u, ao->skeleton->num_bones);
       
       GLsizei stride = sizeof(float) * 24;
@@ -955,7 +961,7 @@ void deferred_renderer_render_light(light* l) {
   
   texture* lightbulb = asset_load_get("$CORANGE/ui/lightbulb.dds");
   glActiveTexture(GL_TEXTURE0 + 0 );
-  glBindTexture(GL_TEXTURE_2D, *lightbulb);
+  glBindTexture(GL_TEXTURE_2D, texture_handle(lightbulb));
   glEnable(GL_TEXTURE_2D);
   
 	glBegin(GL_QUADS);

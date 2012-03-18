@@ -216,10 +216,11 @@ void forward_renderer_set_color_correction(texture* t) {
 
 static void render_gradient() {
 
-  glUseProgram(*GRADIENT);
+  GLuint gradient_handle = shader_program_handle(GRADIENT);
+  glUseProgram(gradient_handle);
   
-  GLint start = glGetUniformLocation(*GRADIENT, "start");
-  GLint end = glGetUniformLocation(*GRADIENT, "end");
+  GLint start = glGetUniformLocation(gradient_handle, "start");
+  GLint end = glGetUniformLocation(gradient_handle, "end");
   glUniform4f(start, 0.5, 0.5, 0.5, 1.0);
   glUniform4f(end, 0.0, 0.0, 0.0, 1.0);
   
@@ -312,7 +313,8 @@ void forward_renderer_end() {
   
   glBindFramebuffer(GL_FRAMEBUFFER, ldr_fbo);
   
-  glUseProgram(*SCREEN_TONEMAP);
+  GLuint tonemap_handle = shader_program_handle(SCREEN_TONEMAP);
+  glUseProgram(tonemap_handle);
   
 	glMatrixMode(GL_PROJECTION);
   glPushMatrix();
@@ -326,9 +328,9 @@ void forward_renderer_end() {
   glActiveTexture(GL_TEXTURE0 + 0 );
   glBindTexture(GL_TEXTURE_2D, hdr_res_texture);
   glEnable(GL_TEXTURE_2D);
-  glUniform1i(glGetUniformLocation(*SCREEN_TONEMAP, "hdr_texture"), 0);
+  glUniform1i(glGetUniformLocation(tonemap_handle, "hdr_texture"), 0);
 
-  glUniform1f(glGetUniformLocation(*SCREEN_TONEMAP, "exposure"), EXPOSURE);
+  glUniform1f(glGetUniformLocation(tonemap_handle, "exposure"), EXPOSURE);
   
 	glBegin(GL_QUADS);
 		glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0, -1.0,  0.0f);
@@ -382,11 +384,10 @@ void forward_renderer_end() {
   
   /* Render final frame */
   
-  /* Render final frame */
-  
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   
-  glUseProgram(*SCREEN_POST);
+  GLuint post_handle = shader_program_handle(SCREEN_POST);
+  glUseProgram(post_handle);
   
 	glMatrixMode(GL_PROJECTION);
   glPushMatrix();
@@ -400,25 +401,25 @@ void forward_renderer_end() {
   glActiveTexture(GL_TEXTURE0 + 0 );
   glBindTexture(GL_TEXTURE_2D, ldr_texture);
   glEnable(GL_TEXTURE_2D);
-  glUniform1i(glGetUniformLocation(*SCREEN_POST, "diffuse_texture"), 0);
+  glUniform1i(glGetUniformLocation(post_handle, "diffuse_texture"), 0);
   
   glActiveTexture(GL_TEXTURE0 + 1 );
-  glBindTexture(GL_TEXTURE_2D, *VIGNETTING);
+  glBindTexture(GL_TEXTURE_2D, texture_handle(VIGNETTING));
   glEnable(GL_TEXTURE_2D);
-  glUniform1i(glGetUniformLocation(*SCREEN_POST, "vignetting_texture"), 1);
+  glUniform1i(glGetUniformLocation(post_handle, "vignetting_texture"), 1);
   
   glActiveTexture(GL_TEXTURE0 + 2 );
-  glBindTexture(GL_TEXTURE_3D, *COLOR_CORRECTION);
+  glBindTexture(GL_TEXTURE_3D, texture_handle(COLOR_CORRECTION));
   glEnable(GL_TEXTURE_3D);
-  glUniform1i(glGetUniformLocation(*SCREEN_POST, "lut"), 2);
+  glUniform1i(glGetUniformLocation(post_handle, "lut"), 2);
   
-  glUniform1i(glGetUniformLocation(*SCREEN_POST, "width"), graphics_viewport_width());
-  glUniform1i(glGetUniformLocation(*SCREEN_POST, "height"), graphics_viewport_height());
+  glUniform1i(glGetUniformLocation(post_handle, "width"), graphics_viewport_width());
+  glUniform1i(glGetUniformLocation(post_handle, "height"), graphics_viewport_height());
   
   if (MULTISAMPLES == 0) {
-    glUniform1i(glGetUniformLocation(*SCREEN_POST, "aa_type"), 1);
+    glUniform1i(glGetUniformLocation(post_handle, "aa_type"), 1);
   } else {
-    glUniform1i(glGetUniformLocation(*SCREEN_POST, "aa_type"), 0);
+    glUniform1i(glGetUniformLocation(post_handle, "aa_type"), 0);
   }
   
 	glBegin(GL_QUADS);
@@ -459,22 +460,23 @@ static int tex_counter = 0;
 static void forward_renderer_use_material(material* mat) {
   
   shader_program* prog = dictionary_get(mat->properties, "program");
+  GLuint prog_handle = shader_program_handle(prog);
   
-  glUseProgram(*prog);
+  glUseProgram(prog_handle);
   
   /* Set global parameters */
   
-  TANGENT = glGetAttribLocation(*prog, "tangent");
-  BINORMAL = glGetAttribLocation(*prog, "binormal");
-  BONE_INDICIES = glGetAttribLocation(*prog, "bone_indicies");
-  BONE_WEIGHTS = glGetAttribLocation(*prog, "bone_weights");
+  TANGENT = glGetAttribLocation(prog_handle, "tangent");
+  BINORMAL = glGetAttribLocation(prog_handle, "binormal");
+  BONE_INDICIES = glGetAttribLocation(prog_handle, "bone_indicies");
+  BONE_WEIGHTS = glGetAttribLocation(prog_handle, "bone_weights");
 
-  GLint camera_position = glGetUniformLocation(*prog, "camera_position");
+  GLint camera_position = glGetUniformLocation(prog_handle, "camera_position");
   if (camera_position != -1) {
     glUniform3f(camera_position, CAMERA->position.x, CAMERA->position.y, CAMERA->position.z);
   }
   
-  GLint camera_direction = glGetUniformLocation(*prog, "camera_direction");
+  GLint camera_direction = glGetUniformLocation(prog_handle, "camera_direction");
   if (camera_direction != -1) {
     vector3 direction = v3_normalize(v3_sub(CAMERA->target, CAMERA->position));
     glUniform3f(camera_direction, direction.x, direction.y, direction.z);
@@ -490,15 +492,15 @@ static void forward_renderer_use_material(material* mat) {
     light_specular[i] = lights[i]->specular_color;
   }
   
-  glUniform1i(glGetUniformLocation(*prog, "num_lights"), num_lights);
+  glUniform1i(glGetUniformLocation(prog_handle, "num_lights"), num_lights);
   
-  GLint light_power_u = glGetUniformLocation(*prog, "light_power");
-  GLint light_falloff_u = glGetUniformLocation(*prog, "light_falloff");
-  GLint light_position_u = glGetUniformLocation(*prog, "light_position");
-  GLint light_target_u = glGetUniformLocation(*prog, "light_target");
-  GLint light_diffuse_u = glGetUniformLocation(*prog, "light_diffuse");
-  GLint light_ambient_u = glGetUniformLocation(*prog, "light_ambient");
-  GLint light_specular_u = glGetUniformLocation(*prog, "light_specular");
+  GLint light_power_u = glGetUniformLocation(prog_handle, "light_power");
+  GLint light_falloff_u = glGetUniformLocation(prog_handle, "light_falloff");
+  GLint light_position_u = glGetUniformLocation(prog_handle, "light_position");
+  GLint light_target_u = glGetUniformLocation(prog_handle, "light_target");
+  GLint light_diffuse_u = glGetUniformLocation(prog_handle, "light_diffuse");
+  GLint light_ambient_u = glGetUniformLocation(prog_handle, "light_ambient");
+  GLint light_specular_u = glGetUniformLocation(prog_handle, "light_specular");
   
   glUniform1fv(light_power_u, num_lights, (const GLfloat*)light_power);
   glUniform1fv(light_falloff_u, num_lights, (const GLfloat*)light_falloff);
@@ -508,29 +510,29 @@ static void forward_renderer_use_material(material* mat) {
   glUniform3fv(light_ambient_u, num_lights, (const GLfloat*)light_ambient);
   glUniform3fv(light_specular_u, num_lights, (const GLfloat*)light_specular);
 
-  GLint time = glGetUniformLocation(*prog, "time");
+  GLint time = glGetUniformLocation(prog_handle, "time");
   glUniform1f(time,timer);
   
-  GLint world_matrix_u = glGetUniformLocation(*prog, "world_matrix");
+  GLint world_matrix_u = glGetUniformLocation(prog_handle, "world_matrix");
   glUniformMatrix4fv(world_matrix_u, 1, 0, world_matrix);
   
-  GLint proj_matrix_u = glGetUniformLocation(*prog, "proj_matrix");
+  GLint proj_matrix_u = glGetUniformLocation(prog_handle, "proj_matrix");
   glUniformMatrix4fv(proj_matrix_u, 1, 0, proj_matrix);
   
-  GLint view_matrix_u = glGetUniformLocation(*prog, "view_matrix");
+  GLint view_matrix_u = glGetUniformLocation(prog_handle, "view_matrix");
   glUniformMatrix4fv(view_matrix_u, 1, 0, view_matrix);
   
-  GLint lproj_matrix_u = glGetUniformLocation(*prog, "light_proj");
+  GLint lproj_matrix_u = glGetUniformLocation(prog_handle, "light_proj");
   if (lproj_matrix_u != -1) {
     glUniformMatrix4fv(lproj_matrix_u, 1, 0, lproj_matrix);
   }
   
-  GLint lview_matrix_u = glGetUniformLocation(*prog, "light_view");
+  GLint lview_matrix_u = glGetUniformLocation(prog_handle, "light_view");
   if (lproj_matrix_u != -1) {
     glUniformMatrix4fv(lview_matrix_u, 1, 0, lview_matrix);
   }
   
-  GLint world_matricies_u = glGetUniformLocation(*prog, "world_matricies");
+  GLint world_matricies_u = glGetUniformLocation(prog_handle, "world_matricies");
   if (world_matricies_u != -1) {
     glUniformMatrix4fv(world_matricies_u, MAX_INSTANCES, 0, world_matricies);
   }
@@ -545,13 +547,13 @@ static void forward_renderer_use_material(material* mat) {
     int* type = dictionary_get(mat->types, key);
     void* property = dictionary_get(mat->properties, key);
     
-    GLint loc = glGetUniformLocation(*prog, key);
+    GLint loc = glGetUniformLocation(prog_handle, key);
     
     if (*type == mat_type_texture) {
     
       glUniform1i(loc, tex_counter);
       glActiveTexture(GL_TEXTURE0 + tex_counter);
-      glBindTexture(GL_TEXTURE_2D, *((texture*)property));
+      glBindTexture(GL_TEXTURE_2D, texture_handle(property));
       glEnable(GL_TEXTURE_2D);
       tex_counter++;
     
@@ -584,11 +586,11 @@ static void forward_renderer_use_material(material* mat) {
      
   }
   
-  GLint shadow_map = glGetUniformLocation(*prog, "shadow_map");
+  GLint shadow_map = glGetUniformLocation(prog_handle, "shadow_map");
   if ( use_shadows && (shadow_map != -1) ) {
     glUniform1i(shadow_map, tex_counter);
     glActiveTexture(GL_TEXTURE0 + tex_counter);
-    glBindTexture(GL_TEXTURE_2D, *SHADOW_TEX);
+    glBindTexture(GL_TEXTURE_2D, texture_handle(SHADOW_TEX));
     glEnable(GL_TEXTURE_2D);
     tex_counter++;
   }
@@ -612,18 +614,19 @@ static void render_collision_mesh(collision_mesh* cm) {
   if (cm->is_leaf) {
     
     shader_program* collision_prog = asset_load_get("$CORANGE/shaders/collision_mesh.prog");
-    glUseProgram(*collision_prog);
+    GLuint collision_handle = shader_program_handle(collision_prog);
+    glUseProgram(collision_handle);
     
-    GLint color = glGetUniformLocation(*collision_prog, "color");
+    GLint color = glGetUniformLocation(collision_handle, "color");
     glUniform3f(color, 1, 1, 1);
     
-    GLint world_matrix_u = glGetUniformLocation(*collision_prog, "world_matrix");
+    GLint world_matrix_u = glGetUniformLocation(collision_handle, "world_matrix");
     glUniformMatrix4fv(world_matrix_u, 1, 0, world_matrix);
     
-    GLint proj_matrix_u = glGetUniformLocation(*collision_prog, "proj_matrix");
+    GLint proj_matrix_u = glGetUniformLocation(collision_handle, "proj_matrix");
     glUniformMatrix4fv(proj_matrix_u, 1, 0, proj_matrix);
     
-    GLint view_matrix_u = glGetUniformLocation(*collision_prog, "view_matrix");
+    GLint view_matrix_u = glGetUniformLocation(collision_handle, "view_matrix");
     glUniformMatrix4fv(view_matrix_u, 1, 0, view_matrix);
     
     glEnable(GL_BLEND);
@@ -678,7 +681,7 @@ void forward_renderer_render_static(static_object* so) {
     forward_renderer_use_material(s->base);
     
     shader_program* prog = dictionary_get(s->base->properties, "program");
-    GLint recieve_shadows = glGetUniformLocation(*prog, "recieve_shadows");
+    GLint recieve_shadows = glGetUniformLocation(shader_program_handle(prog), "recieve_shadows");
     if (recieve_shadows != -1) {
       glUniform1i(recieve_shadows, so->recieve_shadows);
     }
@@ -762,7 +765,7 @@ void forward_renderer_render_instance(instance_object* io) {
     forward_renderer_use_material(s->base);
     
     shader_program* prog = dictionary_get(s->base->properties, "program");
-    GLint recieve_shadows = glGetUniformLocation(*prog, "recieve_shadows");
+    GLint recieve_shadows = glGetUniformLocation(shader_program_handle(prog), "recieve_shadows");
     if (recieve_shadows != -1) {
       glUniform1i(recieve_shadows, io->recieve_shadows);
     }
@@ -834,7 +837,7 @@ void forward_renderer_render_physics(physics_object* po) {
     forward_renderer_use_material(s->base);
     
     shader_program* prog = dictionary_get(s->base->properties, "program");
-    GLint recieve_shadows = glGetUniformLocation(*prog, "recieve_shadows");
+    GLint recieve_shadows = glGetUniformLocation(shader_program_handle(prog), "recieve_shadows");
     glUniform1i(recieve_shadows, po->recieve_shadows);
     
     GLsizei stride = sizeof(float) * 18;
@@ -919,13 +922,13 @@ void forward_renderer_render_animated(animated_object* ao) {
       
       shader_program* prog = dictionary_get(s->base->properties, "program");
       
-      GLint bone_world_matrices_u = glGetUniformLocation(*prog, "bone_world_matrices");
+      GLint bone_world_matrices_u = glGetUniformLocation(shader_program_handle(prog), "bone_world_matrices");
       glUniformMatrix4fv(bone_world_matrices_u, ao->skeleton->num_bones, GL_FALSE, bone_matrix_data);
       
-      GLint bone_count_u = glGetUniformLocation(*prog, "bone_count");
+      GLint bone_count_u = glGetUniformLocation(shader_program_handle(prog), "bone_count");
       glUniform1i(bone_count_u, ao->skeleton->num_bones);
       
-      GLint recieve_shadows = glGetUniformLocation(*prog, "recieve_shadows");
+      GLint recieve_shadows = glGetUniformLocation(shader_program_handle(prog), "recieve_shadows");
       glUniform1i(recieve_shadows, ao->recieve_shadows);
       
       GLsizei stride = sizeof(float) * 24;
@@ -1085,7 +1088,7 @@ void forward_renderer_render_light(light* l) {
   
   texture* lightbulb = asset_load_get("$CORANGE/ui/lightbulb.dds");
   glActiveTexture(GL_TEXTURE0 + 0 );
-  glBindTexture(GL_TEXTURE_2D, *lightbulb);
+  glBindTexture(GL_TEXTURE_2D, texture_handle(lightbulb));
   glEnable(GL_TEXTURE_2D);
   
 	glBegin(GL_QUADS);
@@ -1115,21 +1118,22 @@ void forward_renderer_render_landscape(landscape* ls) {
   m44_to_array(r_world_matrix, world_matrix);
   
   shader_program* terrain = asset_load_get("$CORANGE/shaders/terrain.prog");
-  glUseProgram(*terrain);
+  GLuint terrain_handle = shader_program_handle(terrain);
+  glUseProgram(terrain_handle);
   
-  GLint world_matrix_u = glGetUniformLocation(*terrain, "world_matrix");
+  GLint world_matrix_u = glGetUniformLocation(terrain_handle, "world_matrix");
   glUniformMatrix4fv(world_matrix_u, 1, 0, world_matrix);
   
-  GLint proj_matrix_u = glGetUniformLocation(*terrain, "proj_matrix");
+  GLint proj_matrix_u = glGetUniformLocation(terrain_handle, "proj_matrix");
   glUniformMatrix4fv(proj_matrix_u, 1, 0, proj_matrix);
   
-  GLint view_matrix_u = glGetUniformLocation(*terrain, "view_matrix");
+  GLint view_matrix_u = glGetUniformLocation(terrain_handle, "view_matrix");
   glUniformMatrix4fv(view_matrix_u, 1, 0, view_matrix);
   
-  GLint camera_position = glGetUniformLocation(*terrain, "camera_position");
+  GLint camera_position = glGetUniformLocation(terrain_handle, "camera_position");
   glUniform3f(camera_position, CAMERA->position.x, CAMERA->position.y, CAMERA->position.z);
   
-  GLint camera_direction = glGetUniformLocation(*terrain, "camera_direction");
+  GLint camera_direction = glGetUniformLocation(terrain_handle, "camera_direction");
   vector3 direction = v3_normalize(v3_sub(CAMERA->target, CAMERA->position));
   glUniform3f(camera_direction, direction.x, direction.y, direction.z);
   
@@ -1143,15 +1147,15 @@ void forward_renderer_render_landscape(landscape* ls) {
     light_specular[i] = lights[i]->specular_color;
   }
   
-  glUniform1i(glGetUniformLocation(*terrain, "num_lights"), num_lights);
+  glUniform1i(glGetUniformLocation(terrain_handle, "num_lights"), num_lights);
   
-  GLint light_power_u = glGetUniformLocation(*terrain, "light_power");
-  GLint light_falloff_u = glGetUniformLocation(*terrain, "light_falloff");
-  GLint light_position_u = glGetUniformLocation(*terrain, "light_position");
-  GLint light_target_u = glGetUniformLocation(*terrain, "light_target");
-  GLint light_diffuse_u = glGetUniformLocation(*terrain, "light_diffuse");
-  GLint light_ambient_u = glGetUniformLocation(*terrain, "light_ambient");
-  GLint light_specular_u = glGetUniformLocation(*terrain, "light_specular");
+  GLint light_power_u = glGetUniformLocation(terrain_handle, "light_power");
+  GLint light_falloff_u = glGetUniformLocation(terrain_handle, "light_falloff");
+  GLint light_position_u = glGetUniformLocation(terrain_handle, "light_position");
+  GLint light_target_u = glGetUniformLocation(terrain_handle, "light_target");
+  GLint light_diffuse_u = glGetUniformLocation(terrain_handle, "light_diffuse");
+  GLint light_ambient_u = glGetUniformLocation(terrain_handle, "light_ambient");
+  GLint light_specular_u = glGetUniformLocation(terrain_handle, "light_specular");
   
   glUniform1fv(light_power_u, num_lights, (const GLfloat*)light_power);
   glUniform1fv(light_falloff_u, num_lights, (const GLfloat*)light_falloff);
@@ -1162,26 +1166,26 @@ void forward_renderer_render_landscape(landscape* ls) {
   glUniform3fv(light_specular_u, num_lights, (const GLfloat*)light_specular);
   
   glActiveTexture(GL_TEXTURE0 + 0 );
-  glBindTexture(GL_TEXTURE_2D, *ls->normalmap);
+  glBindTexture(GL_TEXTURE_2D, texture_handle(ls->normalmap));
   glEnable(GL_TEXTURE_2D);
-  glUniform1i(glGetUniformLocation(*terrain, "normals"), 0);
+  glUniform1i(glGetUniformLocation(terrain_handle, "normals"), 0);
   
   glActiveTexture(GL_TEXTURE0 + 1 );
-  glBindTexture(GL_TEXTURE_2D, *ls->colormap);
+  glBindTexture(GL_TEXTURE_2D, texture_handle(ls->colormap));
   glEnable(GL_TEXTURE_2D);
-  glUniform1i(glGetUniformLocation(*terrain, "color"), 1);
+  glUniform1i(glGetUniformLocation(terrain_handle, "color"), 1);
   
   glActiveTexture(GL_TEXTURE0 + 2 );
-  glBindTexture(GL_TEXTURE_2D, *ls->attributemap);
+  glBindTexture(GL_TEXTURE_2D, texture_handle(ls->attributemap));
   glEnable(GL_TEXTURE_2D);
-  glUniform1i(glGetUniformLocation(*terrain, "attribs"), 2);
+  glUniform1i(glGetUniformLocation(terrain_handle, "attribs"), 2);
   
   texture* random = asset_load_get("$CORANGE/resources/random.dds");
   
   glActiveTexture(GL_TEXTURE0 + 3 );
-  glBindTexture(GL_TEXTURE_2D, *random);
+  glBindTexture(GL_TEXTURE_2D, texture_handle(random));
   glEnable(GL_TEXTURE_2D);
-  glUniform1i(glGetUniformLocation(*terrain, "random"), 3);
+  glUniform1i(glGetUniformLocation(terrain_handle, "random"), 3);
   
   char diffuse_name[512];
   char normals_name[512];
@@ -1204,27 +1208,27 @@ void forward_renderer_render_landscape(landscape* ls) {
     sprintf(normals_far_name, "surface_normals_far%i", i);
     
     glActiveTexture(GL_TEXTURE0 + tex_counter );
-    glBindTexture(GL_TEXTURE_2D, *diffuse);
+    glBindTexture(GL_TEXTURE_2D, texture_handle(diffuse));
     glEnable(GL_TEXTURE_2D);
-    glUniform1i(glGetUniformLocation(*terrain, diffuse_name), tex_counter);
+    glUniform1i(glGetUniformLocation(terrain_handle, diffuse_name), tex_counter);
     tex_counter++;
     
     glActiveTexture(GL_TEXTURE0 + tex_counter );
-    glBindTexture(GL_TEXTURE_2D, *diffuse_nm);
+    glBindTexture(GL_TEXTURE_2D, texture_handle(diffuse_nm));
     glEnable(GL_TEXTURE_2D);
-    glUniform1i(glGetUniformLocation(*terrain, normals_name), tex_counter);
+    glUniform1i(glGetUniformLocation(terrain_handle, normals_name), tex_counter);
     tex_counter++;
     
     glActiveTexture(GL_TEXTURE0 + tex_counter );
-    glBindTexture(GL_TEXTURE_2D, *diffuse_far);
+    glBindTexture(GL_TEXTURE_2D, texture_handle(diffuse_far));
     glEnable(GL_TEXTURE_2D);
-    glUniform1i(glGetUniformLocation(*terrain, diffuse_far_name), tex_counter);
+    glUniform1i(glGetUniformLocation(terrain_handle, diffuse_far_name), tex_counter);
     tex_counter++;
     
     glActiveTexture(GL_TEXTURE0 + tex_counter );
-    glBindTexture(GL_TEXTURE_2D, *diffuse_far_nm);
+    glBindTexture(GL_TEXTURE_2D, texture_handle(diffuse_far_nm));
     glEnable(GL_TEXTURE_2D);
-    glUniform1i(glGetUniformLocation(*terrain, normals_far_name), tex_counter);
+    glUniform1i(glGetUniformLocation(terrain_handle, normals_far_name), tex_counter);
     tex_counter++;
   }
   
@@ -1242,8 +1246,6 @@ void forward_renderer_render_landscape(landscape* ls) {
     
     int index_id = min(0.01 * v3_dist_manhattan(position, CAMERA->position), NUM_TERRAIN_BUFFERS-1);
     
-    glUniform1i(glGetUniformLocation(*terrain, "lod_index"), index_id);
-    
     glBindBuffer(GL_ARRAY_BUFFER, tc->vertex_buffer);
   
     glVertexPointer(3, GL_FLOAT, 0, (void*)0);
@@ -1251,10 +1253,6 @@ void forward_renderer_render_landscape(landscape* ls) {
       
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tc->index_buffers[index_id]);
       glDrawElements(GL_TRIANGLES, tc->num_indicies[index_id], GL_UNSIGNED_INT, (void*)0);
-      
-      //glPointSize(3.0);
-      //glDrawArrays(GL_POINTS, 0, tc->num_verts);
-      //glPointSize(1.0);
     
     glDisableClientState(GL_VERTEX_ARRAY);
     
@@ -1262,7 +1260,7 @@ void forward_renderer_render_landscape(landscape* ls) {
   
   tex_counter--;
   while(tex_counter >= 0) {
-    glActiveTexture(GL_TEXTURE0 + tex_counter );
+    glActiveTexture(GL_TEXTURE0 + tex_counter);
     glDisable(GL_TEXTURE_2D);
     tex_counter--;
   }

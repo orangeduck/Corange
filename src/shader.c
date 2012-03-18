@@ -92,6 +92,14 @@ shader_program* shader_program_new() {
 
 }
 
+GLuint shader_program_handle(shader_program* p) {
+  if (p == NULL) {
+    error("Cannot get handle for NULL shader");
+  }
+
+  return *p;
+}
+
 void shader_program_attach_shader(shader_program* program, shader* shader) {
   glAttachShader(*program, *shader);
 }

@@ -1,3 +1,5 @@
+#version 120
+
 attribute vec3 normal;
 attribute vec3 tangent;
 attribute vec3 binormal;

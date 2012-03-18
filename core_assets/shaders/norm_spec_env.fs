@@ -53,7 +53,7 @@ void main() {
   vec4 light_pos = light_proj * light_view * world_position;
   
   float shadow = 1.0;
-  if (recieve_shadows == 1.0) {
+  if (recieve_shadows == 1) {
     shadow = shadow_amount_soft_pcf25(light_pos, shadow_map, 0.0005);
   }
 
@@ -80,9 +80,9 @@ void main() {
   
   vec3 camera_vector = normalize(camera_position - position);
   
-  vec3 diffuse = vec3(0,0,0);
-  vec3 ambient = vec3(0,0,0);
-  vec3 specular = vec3(0,0,0);
+  vec3 diffuse = vec3(0.0,0.0,0.0);
+  vec3 ambient = vec3(0.0,0.0,0.0);
+  vec3 specular = vec3(0.0,0.0,0.0);
   
   for(int i = 0; i < num_lights; i++) {
     vec3 light_vector = light_position[i] - position;

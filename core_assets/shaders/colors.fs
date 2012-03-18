@@ -50,15 +50,15 @@ vec3 swap_red_green(vec3 color) {
 }
 
 vec3 swap_red_inv_green(vec3 color) {
-  float temp = 1-color.r;
+  float temp = 1.0-color.r;
   color.r = color.g;
   color.g = temp;
   return color;
 }
 
 vec3 swap_red_green_inv(vec3 color) {
-  float temp = 1-color.r;
-  color.r = 1-color.g;
+  float temp = 1.0-color.r;
+  color.r = 1.0-color.g;
   color.g = temp;
   return color;
 }

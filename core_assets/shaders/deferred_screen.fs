@@ -46,9 +46,9 @@ void main() {
     return;
   }
   
-  vec4 pos_light = light_proj * light_view * vec4(position.xyz,1);
+  vec4 pos_light = light_proj * light_view * vec4(position.xyz,1.0);
   float shadow = shadow_amount_soft_pcf25(pos_light, shadows_texture, 0.0005);
-	float ssao = texture2DLod(ssao_texture, gl_TexCoord[0].xy, 1).r;
+	float ssao = texture2DLod(ssao_texture, gl_TexCoord[0].xy, 1.0).r;
   
 	vec4 diffuse_a = texture2D( diffuse_texture, gl_TexCoord[0].xy );
 	vec3 albedo = diffuse_a.rgb;
@@ -58,9 +58,9 @@ void main() {
 	vec3 normal = normalize(normal_a.rgb);
   float glossiness = normal_a.a;
   
-  vec3 diffuse = vec3(0,0,0);
-  vec3 ambient = vec3(0,0,0);
-  vec3 specular = vec3(0,0,0);
+  vec3 diffuse = vec3(0.0,0.0,0.0);
+  vec3 ambient = vec3(0.0,0.0,0.0);
+  vec3 specular = vec3(0.0,0.0,0.0);
   
   vec3 eye_dir = normalize(camera_position - position.xyz);
   
@@ -91,9 +91,9 @@ void main() {
     float env_factor;
     
     if (mat_id == 3) {
-      env_factor = 2;
+      env_factor = 2.0;
     } else {
-      env_factor = 1;
+      env_factor = 1.0;
     }
   
     vec3 reflected = normalize(reflect(eye_dir, normal));
@@ -104,7 +104,7 @@ void main() {
   } 
   
   vec3 final = to_gamma(diffuse + ambient + specular);
-  final = apply_fog_blue(final, position, camera_position);
+  final = apply_fog_blue(final, position.xyz, camera_position);
   
   gl_FragColor.rgb = final;
 	gl_FragColor.a = 1.0;
