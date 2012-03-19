@@ -76,16 +76,19 @@ static void audio_mix(void* unused, char* stream, int stream_size) {
 
 void audio_manager_init() {
   
-  SDL_Init(SDL_INIT_AUDIO);
+  int error = SDL_Init(SDL_INIT_AUDIO);
+  if (error == -1) {
+    error("Cannot start SDL audio!");
+  }  
+
+  SDL_AudioSpec as;
+  as.freq = 44100;
+  as.format = AUDIO_S16SYS;
+  as.channels = 2;
+  as.samples = 1024;
+  as.callback = (void(*)(void*,Uint8*,int))audio_mix;
   
-	SDL_AudioSpec as;
-	as.freq = 44100;
-	as.format = AUDIO_S16SYS;
-	as.channels = 2;
-	as.samples = 1024;
-	as.callback = (void(*)(void*,Uint8*,int))audio_mix;
-  
-	if(SDL_OpenAudio(&as, &system_spec) < 0) {
+  if(SDL_OpenAudio(&as, &system_spec) < 0) {
     error("Cannot start audio");
   }
 

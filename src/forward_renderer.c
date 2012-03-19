@@ -80,7 +80,7 @@ static int MULTISAMPLES;
 
 void forward_renderer_init() {
   
-  MULTISAMPLES = 16;
+  MULTISAMPLES = 0;
   
   use_shadows = false;
   num_lights = 0;

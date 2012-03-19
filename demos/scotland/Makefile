@@ -24,4 +24,8 @@ corange:
 clean:
 	rm $(OBJ_FILES)
 	
+# Linux
+
+linux: $(OBJ_FILES)
+	$(CC) -g $(OBJ_FILES) $(LFLAGS_LINUX) -o scotland
 

@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stdlib.h>
 
 #include "error.h"
 
@@ -80,8 +81,6 @@ void SDL_PathFullName(char* dst, char* path) {
 }
 
 #elif __linux__
-
-#include <stdlib.h>
 
 void SDL_PathFullName(char* dst, char* path) {
   char* ret = realpath(path, dst);
@@ -317,6 +316,8 @@ static int gl_thread_create(void* unused) {
     error("Could not get current context");
   }
   
+  wglMakeCurrent(NULL, NULL);
+  
   err = wglDeleteContext(context);
   if (err == 0) {
     error("Could not delete context");
@@ -348,6 +349,83 @@ SDL_Thread* SDL_GL_CreateThread(int (*fn)(void *), void *data) {
   
   gl_thread_func = fn;
   gl_thread_data = data;
+  
+  return SDL_CreateThread(gl_thread_create, NULL);
+
+}
+
+#elif __linux__
+
+#include <GL/glx.h>
+
+static Display* gl_thread_display = NULL;
+static GLXContext gl_thread_context = NULL;
+static GLXDrawable gl_thread_drawable = None;
+static void* gl_thread_data = NULL;
+static int (*gl_thread_func)(void*) = NULL; 
+
+static int gl_thread_create(void* unused) {
+  
+  int err = glXMakeCurrent(gl_thread_display, gl_thread_drawable, gl_thread_context);
+  if (err == 0) {
+    error("Could not make context current");
+  }
+  
+  int status = gl_thread_func(gl_thread_data);
+  
+  Display* display = glXGetCurrentDisplay();
+  if (display == NULL) {
+    error("Could not get current display");
+  }
+  
+  GLXContext context = glXGetCurrentContext();
+  if (context == NULL) {
+    error("Could not get current context");
+  }
+  
+  err = glXMakeCurrent(display, None, NULL);
+  if (err == 0) {
+    error("Could not make context current");
+  }
+  
+  glXDestroyContext(display, context);
+  
+  return status;
+}
+
+SDL_Thread* SDL_GL_CreateThread(int (*fn)(void *), void *data) {
+  
+  int attribs[8] = {GLX_RGBA, GLX_RED_SIZE, 4, GLX_GREEN_SIZE, 4, GLX_BLUE_SIZE, 4, None};
+  
+  GLXContext context = glXGetCurrentContext();
+  if (context == NULL) {
+    error("Could not get current context");
+  }
+  
+  Display* display = glXGetCurrentDisplay();
+  if (display == NULL) {
+    error("Could not get current display");
+  }
+  
+  GLXDrawable drawable = glXGetCurrentDrawable();
+  if (drawable == None) {
+    error("Could not get current drawable");
+  }
+  
+  XVisualInfo* info = malloc(sizeof(XVisualInfo));
+  info = glXChooseVisual(display, 0, attribs);
+  if (info == NULL) {
+    error("Could not create thread with required visuals.");
+  }
+  
+  gl_thread_display = display;
+  gl_thread_drawable = drawable;
+  gl_thread_context = glXCreateContext(display, info, context, True);
+  
+  gl_thread_func = fn;
+  gl_thread_data = data;
+  
+  XFree(info);
   
   return SDL_CreateThread(gl_thread_create, NULL);
 

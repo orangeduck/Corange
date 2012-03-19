@@ -34,13 +34,14 @@ float perlin_noise(sampler2D noise, vec2 uvs, int octaves) {
 }
 
 void main() {
+
   vec2 offset = uvs;
 
   vec2 first, second;
 
   first.x = perlin_noise(noise_texture, offset + vec2(0.0, 0.0) * vec2(0.101,0.13) * time * 1.1, 8);
   first.y = perlin_noise(noise_texture, offset + vec2(0.1753, 0.1211) * vec2(-0.12,0.11) * time * 1.22, 8);
-
+  
   second.x = perlin_noise(noise_texture, offset + 2.0 * first + vec2(0.1111, 0.1222) * vec2(-0.14,-0.09) * time * 1.31, 9);
   second.y = perlin_noise(noise_texture, offset + 2.0 * first + vec2(0.1652, 0.2111) * vec2(0.16,-0.14) * time * 1.44, 10);
   
@@ -59,5 +60,6 @@ void main() {
   color = mix(color, gradient_lookup(g_two, first.x * 0.5), second.y * 2.0);
   color = mix(color, gradient_lookup(g_second, first.y * 1.0), second.x * second.y);
   
-  gl_FragColor = vec4(color * 3, 1.0) * mix(pow(total, 2), 0.5, 0.0);
+  gl_FragColor = vec4(color * 3.0, 1.0) * mix(pow(total, 2.0), 0.5, 0.0);
+  
 }

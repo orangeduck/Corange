@@ -18,45 +18,49 @@ static int window_width;
 static int window_height;
 
 static int window_flags;
-static int window_multisamples;
 static bool window_vsync;
+static int window_multisamples;
+static int window_multisamplesbuffs;
 
 static void graphics_viewport_start() {
-
+  
   SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
   SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, window_vsync);
   
-  if (window_multisamples > 1) {
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, window_multisamples);
-  } else {
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 0);
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 0);
-  }
+  SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, window_multisamplesbuffs);
+  SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, window_multisamples);
   
   screen = SDL_SetVideoMode(window_width, window_height, 0, window_flags);
+  if (screen == NULL) {
+    char* errorstring = SDL_GetError();
+    error("Could not create SDL window: %s", errorstring);
+  }
+
   glViewport(0, 0, window_width, window_height);
   
 }
 
 void graphics_manager_init() {
 
-  SDL_Init(SDL_INIT_VIDEO);
+  int error = SDL_Init(SDL_INIT_VIDEO);
+  if (error == -1) {
+    error("Cannot initialize SDL video!");
+  }
 
   window_width = DEFAULT_WIDTH;
   window_height = DEFAULT_HEIGHT;
   window_flags = SDL_OPENGL;
-  window_multisamples = 16;
   window_vsync = 1;
+  window_multisamples = 0;
+  window_multisamplesbuffs = 0;
   
-  SDL_WM_UseResourceIcon();
-  
-  graphics_viewport_set_title("Corange");
   graphics_viewport_start();
+  graphics_viewport_set_title("Corange");
   
-  SDL_GL_LoadExtensions();
   SDL_GL_PrintInfo();
-  
+  SDL_GL_LoadExtensions();
+
+  SDL_WM_UseResourceIcon();
 }
 
 void graphics_manager_finish() {
@@ -65,6 +69,17 @@ void graphics_manager_finish() {
   
   SDL_FreeSurface(screen);
 
+}
+
+void graphics_set_multisamples(int multisamples) {
+  window_multisamples = multisamples;
+  if (window_multisamples > 0) {
+    window_multisamplesbuffs = 1;
+  }
+}
+
+int graphics_get_multisamples() {
+  return window_multisamples;
 }
 
 void graphics_viewport_restart() {
@@ -142,24 +157,12 @@ bool graphics_get_vsync() {
   return window_vsync;
 }
 
-int graphics_get_multisamples() {
-  return window_multisamples;
-}
-
 bool graphics_get_fullscreen() {
   if (window_flags & SDL_FULLSCREEN) {
     return true;
   } else {
     return false;
   }
-}
-
-
-void graphics_set_multisamples(int samples) {
-  
-  window_multisamples = samples;
-  graphics_viewport_restart();
-  
 }
 
 void graphics_viewport_set_height(int height) {

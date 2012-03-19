@@ -447,7 +447,7 @@ int main(int argc, char **argv) {
     SDL_GL_SwapBuffers(); 
     
     /* This allows us to fix the framerate to 60 fps, even on my laptop with vsync broken */
-    frame_end_at_rate(60);
+    frame_end();
   }
   
   platformer_finish();
