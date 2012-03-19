@@ -66,7 +66,7 @@ void kernels_init_with_opengl() {
 #define CL_WGL_HDC_KHR 0x200B
 
   error = clGetPlatformIDs(1, &platform, NULL);
-  kernels_check_error("oclGetPlatformID");
+  kernels_check_error("clGetPlatformIDs");
 
   error = clGetDeviceIDs(platform, CL_DEVICE_TYPE_GPU, 1, &device, NULL);
   kernels_check_error("clGetDeviceIDs");
@@ -85,12 +85,9 @@ void kernels_init_with_opengl() {
   kernels_check_error("clCreateCommandQueue");
   
 #elif __linux__
-
-  #define CL_GL_CONTEXT_KHR 0x2008
-  #define CL_WGL_HDC_KHR 0x200B
-
+  
   error = clGetPlatformIDs(1, &platform, NULL);
-  kernels_check_error("oclGetPlatformID");
+  kernels_check_error("clGetPlatformIDs");
 
   error = clGetDeviceIDs(platform, CL_DEVICE_TYPE_GPU, 1, &device, NULL);
   kernels_check_error("clGetDeviceIDs");
@@ -124,9 +121,58 @@ void kernels_finish() {
 }
 
 void kernels_check_error(const char* name) {
-  if (error != CL_SUCCESS) {
-    error("OpenCL Error on function %s, id: %i", name, error);
+  
+  if (error == CL_SUCCESS) return;
+  
+  switch (error) {
+      case CL_DEVICE_NOT_FOUND: error("OpenCL error on %s: Device not found.", name);
+      case CL_DEVICE_NOT_AVAILABLE: error("OpenCL error on %s: Device not available", name);
+      case CL_COMPILER_NOT_AVAILABLE: error("OpenCL error on %s: Compiler not available", name);
+      case CL_MEM_OBJECT_ALLOCATION_FAILURE: error("OpenCL error on %s: Memory object allocation failure", name);
+      case CL_OUT_OF_RESOURCES: error("OpenCL error on %s: Out of resources", name);
+      case CL_OUT_OF_HOST_MEMORY: error("OpenCL error on %s: Out of host memory", name);
+      case CL_PROFILING_INFO_NOT_AVAILABLE: error("OpenCL error on %s: Profiling information not available", name);
+      case CL_MEM_COPY_OVERLAP: error("OpenCL error on %s: Memory copy overlap", name);
+      case CL_IMAGE_FORMAT_MISMATCH: error("OpenCL error on %s: Image format mismatch", name);
+      case CL_IMAGE_FORMAT_NOT_SUPPORTED: error("OpenCL error on %s: Image format not supported", name);
+      case CL_BUILD_PROGRAM_FAILURE: error("OpenCL error on %s: Program build failure", name);
+      case CL_MAP_FAILURE: error("OpenCL error on %s: Map failure", name);
+      case CL_INVALID_VALUE: error("OpenCL error on %s: Invalid value", name);
+      case CL_INVALID_DEVICE_TYPE: error("OpenCL error on %s: Invalid device type", name);
+      case CL_INVALID_PLATFORM: error("OpenCL error on %s: Invalid platform", name);
+      case CL_INVALID_DEVICE: error("OpenCL error on %s: Invalid device", name);
+      case CL_INVALID_CONTEXT: error("OpenCL error on %s: Invalid context", name);
+      case CL_INVALID_QUEUE_PROPERTIES: error("OpenCL error on %s: Invalid queue properties", name);
+      case CL_INVALID_COMMAND_QUEUE: error("OpenCL error on %s: Invalid command queue", name);
+      case CL_INVALID_HOST_PTR: error("OpenCL error on %s: Invalid host pointer", name);
+      case CL_INVALID_MEM_OBJECT: error("OpenCL error on %s: Invalid memory object", name);
+      case CL_INVALID_IMAGE_FORMAT_DESCRIPTOR: error("OpenCL error on %s: Invalid image format descriptor", name);
+      case CL_INVALID_IMAGE_SIZE: error("OpenCL error on %s: Invalid image size", name);
+      case CL_INVALID_SAMPLER: error("OpenCL error on %s: Invalid sampler", name);
+      case CL_INVALID_BINARY: error("OpenCL error on %s: Invalid binary", name);
+      case CL_INVALID_BUILD_OPTIONS: error("OpenCL error on %s: Invalid build options", name);
+      case CL_INVALID_PROGRAM: error("OpenCL error on %s: Invalid program", name);
+      case CL_INVALID_PROGRAM_EXECUTABLE: error("OpenCL error on %s: Invalid program executable", name);
+      case CL_INVALID_KERNEL_NAME: error("OpenCL error on %s: Invalid kernel name", name);
+      case CL_INVALID_KERNEL_DEFINITION: error("OpenCL error on %s: Invalid kernel definition", name);
+      case CL_INVALID_KERNEL: error("OpenCL error on %s: Invalid kernel", name);
+      case CL_INVALID_ARG_INDEX: error("OpenCL error on %s: Invalid argument index", name);
+      case CL_INVALID_ARG_VALUE: error("OpenCL error on %s: Invalid argument value", name);
+      case CL_INVALID_ARG_SIZE: error("OpenCL error on %s: Invalid argument size", name);
+      case CL_INVALID_KERNEL_ARGS: error("OpenCL error on %s: Invalid kernel arguments", name);
+      case CL_INVALID_WORK_DIMENSION: error("OpenCL error on %s: Invalid work dimension", name);
+      case CL_INVALID_WORK_GROUP_SIZE: error("OpenCL error on %s: Invalid work group size", name);
+      case CL_INVALID_WORK_ITEM_SIZE: error("OpenCL error on %s: Invalid work item size", name);
+      case CL_INVALID_GLOBAL_OFFSET: error("OpenCL error on %s: Invalid global offset", name);
+      case CL_INVALID_EVENT_WAIT_LIST: error("OpenCL error on %s: Invalid event wait list", name);
+      case CL_INVALID_EVENT: error("OpenCL error on %s: Invalid event", name);
+      case CL_INVALID_OPERATION: error("OpenCL error on %s: Invalid operation", name);
+      case CL_INVALID_GL_OBJECT: error("OpenCL error on %s: Invalid OpenGL object", name);
+      case CL_INVALID_BUFFER_SIZE: error("OpenCL error on %s: Invalid buffer size", name);
+      case CL_INVALID_MIP_LEVEL: error("OpenCL error on %s: Invalid mip-map level", name);
+      default: error("OpenCL error on %s id %i", name, error);
   }
+  
 }
 
 kernel_program* cl_load_file(char* filename) {

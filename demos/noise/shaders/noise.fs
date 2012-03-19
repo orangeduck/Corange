@@ -34,7 +34,6 @@ float perlin_noise(sampler2D noise, vec2 uvs, int octaves) {
 }
 
 void main() {
-
   vec2 offset = uvs;
 
   vec2 first, second;

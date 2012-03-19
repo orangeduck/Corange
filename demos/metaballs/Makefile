@@ -5,7 +5,7 @@ INCS= -I ./include -I ../../include
 CFLAGS= $(INCS) -std=gnu99 -Wall -Werror -Wno-unused -g
 
 LFLAGS= ../../corange.res -L./ -L./lib -L../../lib -lcorange -lmingw32 -lSDLmain -lSDL -lopengl32 -lopencl32
-LFLAGS_LINUX= -L./ -lcorange -lGL -lSDLmain -lSDL -lOpenCL
+LFLAGS_LINUX= -L./lib -lcorange -lGL -lSDLmain -lSDL -lOpenCL
 
 C_FILES= $(wildcard src/*.c)
 OBJ_FILES= $(addprefix obj/,$(notdir $(C_FILES:.c=.o)))

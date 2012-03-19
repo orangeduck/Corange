@@ -27,8 +27,8 @@ static void graphics_viewport_start() {
   SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
   SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, window_vsync);
   
-  SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, window_multisamplesbuffs);
   SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, window_multisamples);
+  SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, window_multisamplesbuffs);
   
   screen = SDL_SetVideoMode(window_width, window_height, 0, window_flags);
   if (screen == NULL) {
@@ -51,8 +51,8 @@ void graphics_manager_init() {
   window_height = DEFAULT_HEIGHT;
   window_flags = SDL_OPENGL;
   window_vsync = 1;
-  window_multisamples = 0;
-  window_multisamplesbuffs = 0;
+  window_multisamples = 4;
+  window_multisamplesbuffs = 1;
   
   graphics_viewport_start();
   graphics_viewport_set_title("Corange");
