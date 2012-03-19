@@ -110,7 +110,7 @@ void main() {
   diffuse = mix(diffuse, env, env_amount);
   
   vec3 final = to_gamma(diffuse + ambient + specular);
-  final = apply_fog_blue(final, position, camera_position);
+  //final = apply_fog_blue(final, position, camera_position);
   
   gl_FragColor.rgb = final;
   gl_FragColor.a = diffuse_a.a;

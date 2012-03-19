@@ -1,3 +1,7 @@
+uniform mat4 world_matrix;
+uniform mat4 view_matrix;
+uniform mat4 proj_matrix;
+
 uniform float time;
 
 varying vec3 normal;
@@ -22,10 +26,12 @@ void main()
 
   float time_v = time * 3.5;
   
-  difference += 0.5 * spike_wave( vec2(1,0) , gl_Vertex.xz + time_v * 1.211 , 2.3, 2.0 );
-  difference += 0.25 * spike_wave( vec2(1.0,0.62) , gl_Vertex.xz + time_v * 0.971 , 1.85, 2.0 );
-  difference += 0.33 * spike_wave( vec2(0.41,1.0) , gl_Vertex.xz + time_v * 1.314 , 2.21, 2.0 );
-  difference += 0.5 * spike_wave( vec2(0.1,0.51) , gl_Vertex.xz + time_v * 0.823 , 3.12, 2.0 );
+  vec3 vposition = gl_Vertex.xyz * 2;
+  
+  difference += 0.75 * spike_wave( vec2(1,0) , vposition.xz * 0.912 + time_v * 1.211 , 2.3, 1.0 );
+  difference += 0.5 * spike_wave( vec2(1.0,0.62) , vposition.xz * 0.932 + time_v * 0.971 , 1.85, 1.0 );
+  difference += 0.33 * spike_wave( vec2(0.41,1.0) , vposition.xz * 1.112 + time_v * 1.314 , 2.21, 1.0 );
+  difference += 0.75 * spike_wave( vec2(0.1,0.51) , vposition.xz * 1.321 + time_v * 0.823 , 3.12, 1.0 );
   
   //difference.y = sin( gl_Vertex.x + time );
   
@@ -37,5 +43,5 @@ void main()
   
   normal = normal_temp;
   position = gl_Vertex.xyz / position_temp.w;
-  gl_Position = gl_ModelViewProjectionMatrix * position_temp;
+  gl_Position = proj_matrix * view_matrix * world_matrix * position_temp;
 }
