@@ -37,6 +37,16 @@ void ui_rectangle_update(ui_rectangle* rect) {
   
 }
 
+void ui_rectangle_move(ui_rectangle* rect, vector2 pos) {
+  vector2 size = v2_sub(rect->bottom_right, rect->top_left);
+  rect->top_left = pos;
+  rect->bottom_right = v2_add(pos, size);
+}
+
+void ui_rectangle_resize(ui_rectangle* rect, vector2 size) {
+  rect->bottom_right = v2_add(rect->top_left, size);
+}
+
 void ui_rectangle_render(ui_rectangle* rect) {
   
   if(!rect->active) {
@@ -58,10 +68,7 @@ void ui_rectangle_render(ui_rectangle* rect) {
   if(rect->texture != NULL) {
     glActiveTexture(GL_TEXTURE0 + 0);
     glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, *(rect->texture) );
-  } else {
-    glActiveTexture(GL_TEXTURE0 + 0);
-    glDisable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, texture_handle(rect->texture) );
   }
   
   glColor4f(rect->color.r, rect->color.g, rect->color.b, rect->color.a);  
@@ -102,6 +109,7 @@ void ui_rectangle_render(ui_rectangle* rect) {
   glPopMatrix();
   
   if(rect->texture != NULL) {
+    glActiveTexture(GL_TEXTURE0 + 0);
     glDisable(GL_TEXTURE_2D);
   }
  

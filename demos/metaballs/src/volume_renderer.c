@@ -5,82 +5,19 @@
 
 #include "volume_renderer.h"
 
-/* Okay lets see how this is going to work.
+static int WIDTH;
+static int HEIGHT;
+static int DEPTH;
 
-  First, we have a volume in clip space.
-    - To render this to the screen we must "flatten" it.
-    - To do this we just step along the z dimension until we reach a "valid" voxel. We then return the color for this voxel on the x,y.
-    - Easy but slow.
-    
-  How do we blit to this clip space volume?
-    - Our Functions for metaballs are in world space. Will be distorted if we try to run them in Clip Space
-    - For each voxel we look at in the clip space volume.
-      * Convert to world space using inverse view proj matrix.
-      * Run through metaball density function.
-      * We have our value.
-      
-   All this is slow. How do we speed up.
-    - To render a metaball
-      * calculate a bounding box for the metaball in world space
-      * convert this into clip space using viewproj matrix on each corner
-      * Convert this into an axis aligned bounding box in clip space (Take the bounding box of this distorted bounding box)
-      * For each of the voxels in this clip-space section -
-        + Convert to world space and run through metaball function.
-        + Add intensity to existing intensity.
-        + mix color with existing (normal or other properties too).
-        + mark clip-space x,y in stencil buffer.
-    
-    - To flatten the volume
-      * We have used the stencil buffer to mark where there potentially exists a volume
-      * For each x,y pixel check the stencil buffer is active. If not discard.
-      * If active then walk along z axis until above threshold
-      * If above threshold then draw color
-      * If never above threshold then discard
+static GLuint depth_texture;
+static kernel_memory k_depth_texture;
 
+static kernel_memory k_volume;
 
-*/
+static kernel k_write_point;
+static kernel k_write_metaballs;
 
-/*
-  So as it turns out you can't write to a 3d texture in openCL. At least on nvidea cards. Bugger.
-  
-  We have a couple of options:
-  
-    - We can write to some CPU memory which we can then bind back to some OpenGL memory. This means we have shared memory across the CPU and the GPU twice (once for cl, once for gl).
-  
-    - Alternative is we set up a framebuffer and render-to-texture on the 3d volume using a pixel shader. Seems better. Though still not ideal.
-
-    I think I may have found a solution.
-    
-    Create a 3d volume in openGL.
-    Create a image object from this in openCL.
-    
-    Create a buffer in openCL.
-      Perform data manipulations on the openCL buffer.
-      Use clEnqueueCopyBufferToImage to copy the buffer to the openCL image object.
-      Done!
-    
-*/
-
-static int width;
-static int height;
-static int depth;
-
-static float threshold = 0.75;
-
-static GLuint proj_texture;
-static GLuint stencil_texture;
-
-static kernel_memory k_proj_texture;
-static kernel_memory k_stencil_texture;
-
-static kernel_memory k_color_volume;
-static kernel_memory k_normals_volume;
-
-static kernel k_flatten;
-static kernel k_clear_texture;
-static kernel k_clear_volume;
-static kernel k_blit_point;
-static kernel k_blit_metaball;
+static kernel k_trace_ray;
 
 static camera* cam = NULL;
 static light* sun = NULL;
@@ -95,268 +32,87 @@ void volume_renderer_set_light(light* new_light) {
 
 void volume_renderer_init() {
   
-  width = graphics_viewport_width() / 2;
-  height = graphics_viewport_height() / 2;
-  depth = 512;
+  WIDTH = graphics_viewport_width() / 4;
+  HEIGHT = graphics_viewport_height() / 4;
+  DEPTH = 512;
   
-  char* blank_byte_volume = calloc(width * height * depth * 4, sizeof(char));
-  char* blank_byte_texture = calloc(width * height * 4, sizeof(char));
-  char* blank_stencil_texture = calloc(width * height, sizeof(char));  
+  int screen_width = graphics_viewport_width();
+  int screen_height = graphics_viewport_height();
   
-  glEnable(GL_TEXTURE_2D);
-  glGenTextures(1, &proj_texture);
-  glBindTexture(GL_TEXTURE_2D, proj_texture);
-  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, blank_byte_texture);
+  char* screen_texture = calloc(screen_width * screen_height, 4);
   
-  glGenTextures(1, &stencil_texture);
-  glBindTexture(GL_TEXTURE_2D, stencil_texture);
-  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width, height, 0, GL_RED, GL_UNSIGNED_BYTE, blank_stencil_texture);
+  glGenTextures(1, &depth_texture);
+  glBindTexture(GL_TEXTURE_2D, depth_texture);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, screen_width,screen_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, screen_texture);
   
-  k_proj_texture = kernel_memory_from_gltexture2D(proj_texture);
-  k_stencil_texture = kernel_memory_from_gltexture2D(stencil_texture);
+  k_depth_texture = kernel_memory_from_gltexture2D(depth_texture);
   
-  k_color_volume = kernel_memory_allocate(width * height * depth * 4 * sizeof(char));
-  k_normals_volume = kernel_memory_allocate(width * height * depth * 4 * sizeof(char));
+  free(screen_texture);
   
-  kernel_memory_write(k_color_volume, width * height * depth * 4 * sizeof(char), blank_byte_volume);
-  kernel_memory_write(k_normals_volume, width * height * depth * 4 * sizeof(char), blank_byte_volume);
+  float* volume_data = calloc(WIDTH * HEIGHT * DEPTH, sizeof(float));
   
-  free(blank_byte_volume);
-  free(blank_stencil_texture);
-  free(blank_byte_texture);  
+  k_volume = kernel_memory_allocate(WIDTH * HEIGHT * DEPTH * sizeof(float));
+  kernel_memory_write(k_volume, WIDTH * HEIGHT * DEPTH * sizeof(float), volume_data);
   
-  kernel_program* rendering = asset_get("./kernels/volume_rendering.cl");
-  kernel_program* blitting = asset_get("./kernels/volume_blitting.cl");
+  free(volume_data);
   
-  k_clear_texture = kernel_program_get_kernel(rendering, "clear_texture");
-  kernel_set_argument(k_clear_texture, 0, sizeof(cl_int), &width);
-  kernel_set_argument(k_clear_texture, 1, sizeof(cl_int), &height);
+  kernel_program* volume_rendering = asset_get("./kernels/volume_rendering.cl");
+  k_write_point = kernel_program_get_kernel(volume_rendering, "write_point");
+  k_write_metaballs = kernel_program_get_kernel(volume_rendering, "write_metaballs");
   
-  k_clear_volume = kernel_program_get_kernel(rendering, "clear_volume");
-  kernel_set_argument(k_clear_volume, 0, sizeof(cl_int), &width);
-  kernel_set_argument(k_clear_volume, 1, sizeof(cl_int), &height);
-  kernel_set_argument(k_clear_volume, 2, sizeof(cl_int), &depth);
-  
-  k_flatten = kernel_program_get_kernel(rendering, "volume_flatten");
-  kernel_set_argument(k_flatten, 0, sizeof(cl_int), &width);
-  kernel_set_argument(k_flatten, 1, sizeof(cl_int), &height);
-  kernel_set_argument(k_flatten, 2, sizeof(cl_int), &depth);
-  kernel_set_argument(k_flatten, 3, sizeof(cl_float), &threshold);
-  kernel_set_argument(k_flatten, 4, sizeof(kernel_memory), &k_proj_texture);
-  kernel_set_argument(k_flatten, 5, sizeof(kernel_memory), &k_stencil_texture);
-  kernel_set_argument(k_flatten, 6, sizeof(kernel_memory), &k_color_volume);
-  kernel_set_argument(k_flatten, 7, sizeof(kernel_memory), &k_normals_volume);
-  
-  k_blit_point = kernel_program_get_kernel(blitting, "blit_point");
-  kernel_set_argument(k_blit_point, 4, sizeof(cl_int), &width);
-  kernel_set_argument(k_blit_point, 5, sizeof(cl_int), &height);
-  kernel_set_argument(k_blit_point, 6, sizeof(cl_int), &depth);
-  kernel_set_argument(k_blit_point, 7, sizeof(kernel_memory), &k_stencil_texture);
-  kernel_set_argument(k_blit_point, 8, sizeof(kernel_memory), &k_color_volume);
-  kernel_set_argument(k_blit_point, 9, sizeof(kernel_memory), &k_normals_volume);
- 
-  k_blit_metaball = kernel_program_get_kernel(blitting, "blit_metaball");
-  kernel_set_argument(k_blit_metaball, 7, sizeof(kernel_memory), &k_stencil_texture);
-  kernel_set_argument(k_blit_metaball, 8, sizeof(kernel_memory), &k_color_volume);
-  kernel_set_argument(k_blit_metaball, 9, sizeof(kernel_memory), &k_normals_volume);
 }
 
 void volume_renderer_finish() {
+  glDeleteTextures(1, &depth_texture);
+  kernel_memory_delete(k_depth_texture);
   
-  kernel_memory_delete(k_proj_texture);
-  kernel_memory_delete(k_stencil_texture);
-
-  kernel_memory_delete(k_color_volume);
-  kernel_memory_delete(k_normals_volume);
-  
-  glEnable(GL_TEXTURE_2D);
-  glDeleteTextures(1, &proj_texture);
-  glDeleteTextures(1, &stencil_texture);
-  
+  kernel_memory_delete(k_volume);
 }
 
-void volume_renderer_begin() {
-  
-  vector4 zero = v4_zero();
-  vector4 grey = v4_grey();
-  vector4 norm = v4(0.5, 0.5, 0.5, 0);
-  
-  kernel_set_argument(k_clear_volume, 3, sizeof(kernel_memory), &k_color_volume);
-  kernel_set_argument(k_clear_volume, 4, sizeof(vector4), &zero);
-  kernel_run(k_clear_volume, width * height * depth);
-  
-  kernel_set_argument(k_clear_volume, 3, sizeof(kernel_memory), &k_normals_volume);
-  kernel_set_argument(k_clear_volume, 4, sizeof(vector4), &norm);
-  kernel_run(k_clear_volume, width * height * depth);
-  
-  kernel_memory_gl_aquire(k_proj_texture);
-  kernel_memory_gl_aquire(k_stencil_texture);
-    
-    kernel_set_argument(k_clear_texture, 2, sizeof(kernel_memory), &k_stencil_texture);
-    kernel_set_argument(k_clear_texture, 3, sizeof(vector4), &zero);
-    kernel_run(k_clear_texture, width * height);
-    
-    kernel_set_argument(k_clear_texture, 2, sizeof(kernel_memory), &k_proj_texture);
-    kernel_set_argument(k_clear_texture, 3, sizeof(vector4), &grey);
-    kernel_run(k_clear_texture, width * height);
-  
-  kernel_memory_gl_release(k_proj_texture);
-  kernel_memory_gl_release(k_stencil_texture);
-  
+static kernel_memory metaball_positions;
+static int num_metaballs;
+
+void volume_renderer_metaball_data(kernel_memory positions, int num_balls) {
+  metaball_positions = positions;
+  num_metaballs = num_balls;
 }
 
-void volume_renderer_end() {
+void volume_renderer_update() {
   
-  kernel_memory_gl_aquire(k_proj_texture);
-  kernel_memory_gl_aquire(k_stencil_texture);
+  int size[3] = {WIDTH, HEIGHT, DEPTH};
   
-    vector4 light_position = v3_to_homogeneous(v3_sub(sun->position, v3_zero()));
-    vector4 camera_position = v3_to_homogeneous(cam->position);
-    kernel_set_argument(k_flatten, 8, sizeof(vector4), &light_position);
-    kernel_set_argument(k_flatten, 9, sizeof(vector4), &camera_position);
-    kernel_run(k_flatten, width * height);
+  matrix_4x4 view_matrix = camera_view_matrix(cam);
+  matrix_4x4 proj_matrix = camera_proj_matrix(cam, graphics_viewport_ratio());
   
-  kernel_memory_gl_release(k_proj_texture);
-  kernel_memory_gl_release(k_stencil_texture);
+  matrix_4x4 inv_view_matrix = m44_inverse(view_matrix);
+  matrix_4x4 inv_proj_matrix = m44_inverse(proj_matrix);
   
-	glMatrixMode(GL_PROJECTION);
-  glPushMatrix();
-	glLoadIdentity();
-	glOrtho(-1, 1, -1, 1, -1, 1);
-  
-	glMatrixMode(GL_MODELVIEW);
-  glPushMatrix();
-	glLoadIdentity();
-  
-  glDisable(GL_DEPTH_TEST);
-  
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  
-  glActiveTexture(GL_TEXTURE0 + 0 );
-  glBindTexture(GL_TEXTURE_2D, proj_texture);
-  glEnable(GL_TEXTURE_2D);
-  
-	glBegin(GL_QUADS);
-		glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0, -1.0,  0.0f);
-		glTexCoord2f(1.0f, 0.0f); glVertex3f(1.0, -1.0,  0.0f);
-		glTexCoord2f(1.0f, 1.0f); glVertex3f(1.0,  1.0,  0.0f);
-		glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0,  1.0,  0.0f);
-	glEnd();
-  
-  glActiveTexture(GL_TEXTURE0 + 0 );
-  glDisable(GL_TEXTURE_2D);
-  
-  glMatrixMode(GL_PROJECTION);
-  glPopMatrix();
-
-  glMatrixMode(GL_MODELVIEW);
-  glPopMatrix();
-  
-  glEnable(GL_DEPTH_TEST);
-  glDisable(GL_BLEND);
-  
+  kernel_set_argument(k_write_metaballs, 0, sizeof(kernel_memory), &k_volume);
+  kernel_set_argument(k_write_metaballs, 1, sizeof(cl_int3), &size);
+  kernel_set_argument(k_write_metaballs, 2, sizeof(matrix_4x4), &inv_view_matrix);
+  kernel_set_argument(k_write_metaballs, 3, sizeof(matrix_4x4), &inv_proj_matrix);
+  kernel_set_argument(k_write_metaballs, 4, sizeof(kernel_memory), &metaball_positions);
+  kernel_set_argument(k_write_metaballs, 5, sizeof(cl_int), &num_metaballs);
+  kernel_run(k_write_metaballs, WIDTH * HEIGHT * DEPTH);
 }
 
-void volume_renderer_render_point(vector3 point, vector3 color) {
+void volume_renderer_render() {
   
-  kernel_memory_gl_aquire(k_stencil_texture);
+  int size[3] = {WIDTH, HEIGHT, DEPTH};
   
-  matrix_4x4 viewm = camera_view_matrix(cam);
-  matrix_4x4 projm = camera_proj_matrix(cam, graphics_viewport_ratio());  
+  int screen_width = graphics_viewport_width();
+  int screen_height = graphics_viewport_height();
   
-    vector4 k_point = v4(point.x, point.y, point.z, 1);
-    vector4 k_color = v4(color.x, color.y, color.z, 1);
-    
-    kernel_set_argument(k_blit_point, 0, sizeof(vector4), &k_point);
-    kernel_set_argument(k_blit_point, 1, sizeof(vector4), &k_color);
-    kernel_set_argument(k_blit_point, 2, sizeof(matrix_4x4), &viewm);
-    kernel_set_argument(k_blit_point, 3, sizeof(matrix_4x4), &projm);
-    kernel_run(k_blit_point, 1);
+  int screen_size[2] = {screen_width, screen_height};
   
-  kernel_memory_gl_release(k_stencil_texture);
+  kernel_memory_gl_aquire(k_depth_texture);
   
-}
-
-static int multiple_two(int x) {
-  int mul = 0;
-  while(pow(2, mul) < x) {
-    mul++;
-  }
-  return pow(2, mul);
-}
-
-void volume_renderer_render_metaball(vector3 position, vector3 color) {
+  kernel_set_argument(k_trace_ray, 0, sizeof(kernel_memory), &k_volume);
+  kernel_set_argument(k_trace_ray, 1, sizeof(cl_int3), &size);
+  kernel_set_argument(k_trace_ray, 2, sizeof(kernel_memory), &k_depth_texture);
+  kernel_set_argument(k_trace_ray, 3, sizeof(cl_int2), &screen_size);
+  kernel_run(k_trace_ray, screen_width * screen_height);
   
-  matrix_4x4 view_m = camera_view_matrix(cam);
-  matrix_4x4 proj_m = camera_proj_matrix(cam, (float)height / (float)width); 
-  matrix_4x4 inv_view_m = m44_inverse(view_m);
-  matrix_4x4 inv_proj_m = m44_inverse(proj_m); 
+  kernel_memory_gl_release(k_depth_texture);
   
-  float b_size = 2;
-  vector4 bounding_box[8] = { v4(b_size,b_size,b_size,1),  v4(-b_size,b_size,b_size,1),
-                              v4(b_size,-b_size,b_size,1), v4(b_size,b_size,-b_size,1), 
-                              v4(-b_size,-b_size,b_size,1), v4(b_size,-b_size,-b_size,1),
-                              v4(-b_size,b_size,-b_size,1), v4(-b_size,-b_size,-b_size,1) };
-                              
-  for(int i = 0; i < 8; i++) {
-    bounding_box[i] = v4_add(bounding_box[i], v4(position.x, position.y, position.z, 0));
-    bounding_box[i] = m44_mul_v4(view_m, bounding_box[i]);
-    bounding_box[i] = m44_mul_v4(proj_m, bounding_box[i]);
-    vector3 t_position = v3(bounding_box[i].x, bounding_box[i].y, bounding_box[i].z);
-    vector3 t_proj = v3_div(t_position, bounding_box[i].w);
-    bounding_box[i] = v4(t_proj.x, t_proj.y, t_proj.z, 1);
-  }
-  
-  float x_max, y_max, z_max = -1;
-  float x_min, y_min, z_min = 1;
-  
-  for(int i = 0; i < 8; i++) {
-    x_max = clamp(max(x_max, bounding_box[i].x), -1, 1);
-    x_min = clamp(min(x_min, bounding_box[i].x), -1, 1);
-    y_max = clamp(max(y_max, bounding_box[i].y), -1, 1);
-    y_min = clamp(min(y_min, bounding_box[i].y), -1, 1);
-    z_max = clamp(max(z_max, bounding_box[i].z), -1, 1);
-    z_min = clamp(min(z_min, bounding_box[i].z), -1, 1);
-  }
-  
-  int x_bot = ((float)x_min + 1) * 0.5 * width;
-  int x_top = ((float)x_max + 1) * 0.5 * width;
-  int y_bot = ((float)y_min + 1) * 0.5 * height;
-  int y_top = ((float)y_max + 1) * 0.5 * height;
-  int z_bot = ((float)z_min + 1) * 0.5 * depth;
-  int z_top = ((float)z_max + 1) * 0.5 * depth;
-  
-  int x_size = x_top - x_bot;
-  int y_size = y_top - y_bot;
-  int z_size = z_top - z_bot;
-  
-  int padding = 1;
-  
-  int offset[3] = {x_bot-padding, y_bot-padding, z_bot-padding};
-  int size[3] = {x_size+padding, y_size+padding, z_size+padding};
-  int total_size[3] = {width, height, depth};
-  
-  //printf("Offset: %i %i %i\n", offset[0], offset[1], offset[2]);
-  //printf("Size: %i %i %i\n", size[0], size[1], size[2]);
-  
-  kernel_memory_gl_aquire(k_stencil_texture);
-  
-    kernel_set_argument(k_blit_metaball, 0, sizeof(vector4), &position);
-    kernel_set_argument(k_blit_metaball, 1, sizeof(vector4), &color);
-    kernel_set_argument(k_blit_metaball, 2, sizeof(matrix_4x4), &inv_view_m);
-    kernel_set_argument(k_blit_metaball, 3, sizeof(matrix_4x4), &inv_proj_m);
-    kernel_set_argument(k_blit_metaball, 4, sizeof(cl_int3), &offset);
-    kernel_set_argument(k_blit_metaball, 5, sizeof(cl_int3), &size);
-    kernel_set_argument(k_blit_metaball, 6, sizeof(cl_int3), &total_size);
-    int total_num = multiple_two(x_size + 2*padding) * 
-                    multiple_two(y_size + 2*padding) * 
-                    multiple_two(z_size + 2*padding);
-    kernel_run(k_blit_metaball, total_num);
-  
-  kernel_memory_gl_release(k_stencil_texture);
 }

@@ -336,7 +336,7 @@ void marching_cubes_render(bool wireframe, camera* c, light* l) {
   glVertexAttribPointer(NORMALS, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
   glEnableVertexAttribArray(NORMALS);
   
-  glDrawArrays(GL_TRIANGLES, 0, num_verts);
+    glDrawArrays(GL_TRIANGLES, 0, num_verts);
   
   glDisableClientState(GL_VERTEX_ARRAY);
   glDisableVertexAttribArray(NORMALS);

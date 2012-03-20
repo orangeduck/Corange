@@ -21,4 +21,6 @@ void particle_positions(vector4* out);
 GLuint particle_positions_buffer();
 GLuint particle_velocities_buffer();
 
+void particles_render();
+
 #endif

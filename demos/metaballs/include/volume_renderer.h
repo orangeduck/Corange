@@ -9,9 +9,8 @@ void volume_renderer_finish();
 void volume_renderer_set_camera(camera* cam);
 void volume_renderer_set_light(light* sun);
 
-void volume_renderer_begin();
-void volume_renderer_end();
-void volume_renderer_render_point(vector3 point, vector3 color);
-void volume_renderer_render_metaball(vector3 position, vector3 color);
+void volume_renderer_metaball_data(kernel_memory positions, int num_balls);
+void volume_renderer_update();
+void volume_renderer_render();
 
 #endif

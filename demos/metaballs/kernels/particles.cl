@@ -9,7 +9,8 @@ kernel void particle_update(global float4* positions,
                             const float time_difference,
                             const int reset,
                             
-                            const int random
+                            const int random,
+                            const int particle_count
                               ) {
   
   const int i = get_global_id(0);
@@ -23,7 +24,7 @@ kernel void particle_update(global float4* positions,
     //positions[i] = (float4)(0,0,0,1);
     positions[i] = (float4)(32,15,32,1);
     
-    int random_index = (random + i) % 25;
+    int random_index = (random + i) % particle_count;
     float rx = randoms[random_index].x;
     float ry = randoms[random_index].y;
     float rz = randoms[random_index].z;

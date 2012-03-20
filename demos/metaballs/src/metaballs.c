@@ -5,18 +5,17 @@
 
 #include "metaballs.h"
 
-#define MARCHING_CUBES
+#define VOLUME_RENDERER
 
 static int mouse_x;
 static int mouse_y;
 static int mouse_down;
 static int mouse_right_down;
 
-#define MAX_PARTICLES 1024
-
 void metaballs_init() {
   
   graphics_viewport_set_title("Metaballs");
+  graphics_set_multisamples(16);
   
   kernels_init_with_opengl();
   
@@ -118,6 +117,11 @@ void metaballs_update() {
   marching_cubes_clear();
   marching_cubes_update();
 #endif
+
+#ifdef VOLUME_RENDERER
+  volume_renderer_metaball_data( particle_positions_memory(), particles_count() );
+  //volume_renderer_update();
+#endif
   
 }
 
@@ -126,29 +130,13 @@ static float view_matrix[16];
 
 static bool wireframe = false;
 
-#ifdef VOLUME_RENDERER
-static vector4 part_positions[MAX_PARTICLES];
-#endif
-
 void metaballs_render() {
 
   static_object* s_podium = entity_get("podium");
   camera* cam = entity_get("camera");
   light* sun = entity_get("sun");
 
-#ifdef VOLUME_RENDERER
-
-  particle_positions(part_positions);
-
-  volume_renderer_begin();
-  volume_renderer_render_point( sun->position, v3_one() );
-  for(int i = 0; i < particles_count(); i++) {
-    vector3 pos = v3(part_positions[i].x, part_positions[i].y, part_positions[i].z);
-    //volume_renderer_render_point( pos, v3_red() );
-    volume_renderer_render_metaball( pos, v3_red() );
-  }
-  volume_renderer_end();
-#endif
+  glClear(GL_COLOR_BUFFER_BIT);
   
 #ifdef MARCHING_CUBES
   shadow_mapper_begin();
@@ -164,6 +152,16 @@ void metaballs_render() {
     marching_cubes_render(wireframe, cam, sun);
   
   forward_renderer_end();
+#endif
+  
+#ifdef VOLUME_RENDERER
+  volume_renderer_render();
+#endif
+  
+#ifndef VOLUME_RENDERER
+#ifndef MARCHING_CUBES
+  particles_render();
+#endif
 #endif
   
   ui_render();

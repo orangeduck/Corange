@@ -26,6 +26,8 @@ void ui_rectangle_delete(ui_rectangle* rect);
 void ui_rectangle_update(ui_rectangle* rect);
 void ui_rectangle_render(ui_rectangle* rect);
 
+void ui_rectangle_move(ui_rectangle* rect, vector2 pos);
+void ui_rectangle_resize(ui_rectangle* rect, vector2 size);
 void ui_rectangle_set_texture(ui_rectangle* rect, texture* t);
 
 bool ui_rectangle_contains_position(ui_rectangle* rect, vector2 pos);

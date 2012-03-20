@@ -6,7 +6,7 @@
 #include "particles.h"
 #include "kernel.h"
 
-#define particle_count 32
+static int particle_count = 32;
 
 GLuint positions_buffer;
 GLuint velocities_buffer;
@@ -39,8 +39,11 @@ void particles_init() {
     float rx = ((float)rand() / RAND_MAX) * 2 - 1;
     float ry = ((float)rand() / RAND_MAX) * 2 + 0.5;
     float rz = ((float)rand() / RAND_MAX) * 2 - 1;
+    float rm = (float)rand() / RAND_MAX;
     
-    particle_randoms[i] = v4(rx, ry, rz, 0);
+    vector3 rand = v3_mul(v3_normalize(v3(rx, ry, rz)), rm * 2);
+    
+    particle_randoms[i] = v4(rand.x, rand.y, rand.z, 0);
   }
     
   glGenBuffers(1, &positions_buffer);
@@ -76,6 +79,7 @@ void particles_init() {
   kernel_set_argument(k_update, 3, sizeof(kernel_memory), &k_particle_randoms);
   kernel_set_argument(k_update, 4, sizeof(cl_float), &max_life);
   kernel_set_argument(k_update, 5, sizeof(cl_float), &min_velocity);
+  kernel_set_argument(k_update, 9, sizeof(cl_int), &particle_count);
   
   free(particle_positions);
   free(particle_velocities);
@@ -146,4 +150,38 @@ void particle_positions(vector4* out) {
   kernel_memory_gl_aquire(k_particle_positions);
     kernel_memory_read(k_particle_positions, sizeof(vector4) * particle_count, out);
   kernel_memory_gl_release(k_particle_positions);
+}
+
+static float view_matrix[16];
+static float proj_matrix[16];
+
+void particles_render() {
+  
+  camera* cam = entity_get("camera");
+  
+  matrix_4x4 viewm = camera_view_matrix(cam);
+  matrix_4x4 projm = camera_proj_matrix(cam, graphics_viewport_ratio() );
+  
+  m44_to_array(viewm, view_matrix);
+  m44_to_array(projm, proj_matrix);
+
+  glMatrixMode(GL_MODELVIEW);
+  glLoadMatrixf(view_matrix);
+  
+  glMatrixMode(GL_PROJECTION);
+  glLoadMatrixf(proj_matrix);
+  
+  glBindBuffer(GL_ARRAY_BUFFER, positions_buffer);
+  glVertexPointer(4, GL_FLOAT, 0, (void*)0);
+  glEnableClientState(GL_VERTEX_ARRAY);
+  
+  glBindBuffer(GL_ARRAY_BUFFER, randoms_buffer);
+  glColorPointer(4, GL_FLOAT, 0, (void*)0);
+  glEnableClientState(GL_COLOR_ARRAY);
+  
+    glDrawArrays(GL_POINTS, 0, particle_count);
+  
+  glDisableClientState(GL_VERTEX_ARRAY);
+  glDisableClientState(GL_COLOR_ARRAY);
+  
 }
