@@ -45,6 +45,10 @@
 	
 	:: FAQ ::
 		
+		* How is that pronounced?
+		
+		  Rhymes with Purple.
+		
 		* Why not C++?
 			
 			There are plenty of C++ engines which do what I've done here and better. Pure C game engines on the other hand are much rarer. Corange provided me an outlet to practice my C skills and Data Oriented Design. Of course if you are just linking to it you can still program your game/executable using C++.

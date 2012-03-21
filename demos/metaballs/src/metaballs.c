@@ -46,14 +46,6 @@ void metaballs_init() {
   sun->specular_color = v3_mul(v3_one(), 5);
   light_set_type(sun, light_type_spot);  
   
-  shadow_mapper_init(sun);  
-  
-  forward_renderer_init();
-  forward_renderer_set_camera(cam);
-  forward_renderer_set_shadow_light(sun);
-  forward_renderer_set_shadow_texture( shadow_mapper_depth_texture() );
-  forward_renderer_add_light(sun);
-  
   ui_rectangle* ui_box = ui_elem_new("ui_box", ui_rectangle);
   ui_box->top_left = v2(15, 15);
   ui_box->bottom_right = v2(40, 40);
@@ -73,7 +65,15 @@ void metaballs_init() {
   volume_renderer_set_light(sun);
 #endif
  
-#ifdef MARCHING_CUBES 
+#ifdef MARCHING_CUBES
+  shadow_mapper_init(sun);  
+  
+  forward_renderer_init();
+  forward_renderer_set_camera(cam);
+  forward_renderer_set_shadow_light(sun);
+  forward_renderer_set_shadow_texture( shadow_mapper_depth_texture() );
+  forward_renderer_add_light(sun);
+
   marching_cubes_init();
 #endif
   
@@ -120,7 +120,7 @@ void metaballs_update() {
 
 #ifdef VOLUME_RENDERER
   volume_renderer_metaball_data( particle_positions_memory(), particles_count() );
-  //volume_renderer_update();
+  volume_renderer_update();
 #endif
   
 }
@@ -136,21 +136,18 @@ void metaballs_render() {
   camera* cam = entity_get("camera");
   light* sun = entity_get("sun");
 
-  glClear(GL_COLOR_BUFFER_BIT);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   
 #ifdef MARCHING_CUBES
   shadow_mapper_begin();
-  shadow_mapper_render_static(s_podium);
-  marching_cubes_render_shadows(sun);
+    shadow_mapper_render_static(s_podium);
+    marching_cubes_render_shadows(sun);
   shadow_mapper_end();
   
   forward_renderer_begin();
-    
     forward_renderer_render_static(s_podium);
     forward_renderer_render_light(sun);
-  
     marching_cubes_render(wireframe, cam, sun);
-  
   forward_renderer_end();
 #endif
   
@@ -218,10 +215,6 @@ void metaballs_event(SDL_Event event) {
 
 void metaballs_finish() {
   
-  forward_renderer_finish();
-  
-  shadow_mapper_finish();
-  
   particles_finish();
   
 #ifdef VOLUME_RENDERER
@@ -229,6 +222,8 @@ void metaballs_finish() {
 #endif
   
 #ifdef MARCHING_CUBES
+  shadow_mapper_finish();
+  forward_renderer_finish();
   marching_cubes_finish();
 #endif
   

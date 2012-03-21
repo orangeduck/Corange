@@ -23,6 +23,7 @@ void noise_render() {
   
   GLuint handle = shader_program_handle(asset_get("./shaders/noise.prog"));
   GLuint random_tex = texture_handle(asset_get("$CORANGE/resources/random.dds"));
+  
   glUseProgram(handle);
   
   glActiveTexture(GL_TEXTURE0 + 0 );
@@ -158,7 +159,7 @@ int main(int argc, char **argv) {
   save_spinner->bottom_right = v2_add(save_spinner->top_left, v2(24,24));
   
   srand(time(NULL));
-  shader_time = rand();
+  shader_time = (float)rand() / (RAND_MAX / 1000);
   
   bool running = true;
   while(running) {
@@ -183,7 +184,7 @@ int main(int argc, char **argv) {
       
     }
     
-    shader_time += 1.0;
+    shader_time += frame_time();
     ui_update();
     
     noise_render();

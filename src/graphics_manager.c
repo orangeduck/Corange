@@ -51,7 +51,7 @@ void graphics_manager_init() {
   window_height = DEFAULT_HEIGHT;
   window_flags = SDL_OPENGL;
   window_vsync = 1;
-  window_multisamples = 16;
+  window_multisamples = 4;
   window_multisamplesbuffs = 1;
   
   graphics_viewport_set_title("Corange");

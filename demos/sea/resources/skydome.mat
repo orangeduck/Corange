@@ -1,0 +1,2 @@
+string name = skydome
+program prog = $CORANGE/shaders/skydome.prog

@@ -15,9 +15,9 @@ int volume_index(volume v, int3 pos) {
 }
 
 int3 volume_position(volume v, int index) {
-return (int3)( index % v.size.x, 
-               (index / (v.size.x)) % v.size.y, 
-               index / (v.size.x * v.size.y) );
+return (int3)(index % v.size.x, 
+             (index / (v.size.x)) % v.size.y, 
+              index / (v.size.x * v.size.y) );
 }
 
 
@@ -38,9 +38,18 @@ float trilerp(float s0, float s1,
   return s0;
 }
 
-float volume_sample(volume v, float3 pos) {
+float volume_sample_nearest(volume v, float3 pos) {
   
-  pos = pos * (v.size-2);
+  int3 spos = (int3)(pos.x * (v.size.x-1), 
+                     pos.y * (v.size.y-1),
+                     pos.z * (v.size.z-1));
+  return volume_get(v, spos);
+  
+}
+
+float volume_sample_linear(volume v, float3 pos) {
+  
+  pos = pos * (v.size-1);
   
   float3 amount = fmod(pos, 1.0);
   int3 p0 = (int3)(floor(pos.x), floor(pos.y), floor(pos.z));

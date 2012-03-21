@@ -50,7 +50,7 @@ void sea_init() {
   texture* noise4 = asset_get("./resources/noise4.dds");
   texture* noise5 = asset_get("./resources/noise5.dds");
   
-  texture* skydome = asset_get("./resources/skybox_cloud_10.dds");
+  texture* skydome_tex = asset_get("./resources/skybox_cloud_10.dds");
 
   texture* water_calm = asset_get("./resources/water_calm.dds");
   texture* water_foam = asset_get("./resources/water_foam.dds");
@@ -63,7 +63,7 @@ void sea_init() {
   material_set_property(seaplane_mat, "tex_noise4", noise4, mat_type_texture);
   material_set_property(seaplane_mat, "tex_noise5", noise5, mat_type_texture);
   
-  material_set_property(seaplane_mat, "tex_skybox", skydome, mat_type_texture);
+  material_set_property(seaplane_mat, "tex_skybox", skydome_tex, mat_type_texture);
 
   material_set_property(seaplane_mat, "tex_calm_water", water_calm, mat_type_texture);
   material_set_property(seaplane_mat, "tex_foam_water", water_foam, mat_type_texture);
@@ -72,6 +72,13 @@ void sea_init() {
   renderable_set_material(r_seaplane, seaplane_mat);
   static_object* s_seaplane = entity_new("seaplane", static_object);
   s_seaplane->renderable = r_seaplane;
+  s_seaplane->scale = v3(3,1,3);
+  
+  static_object* skydome = entity_new("skydome", static_object);
+  skydome->renderable = asset_get("./resources/skydome.obj");
+  renderable_set_material(skydome->renderable, asset_get("./resources/skydome.mat"));
+  skydome->position = v3(0, -512, 0);
+  skydome->scale = v3(1024, 1024, 1024);
   
   load_folder("./resources/corvette/");
   
@@ -107,10 +114,10 @@ void sea_update() {
   
   wave_time += frame_time();
   static_object* corvette = entity_get("corvette");
-  //corvette->position.y = (sin(wave_time) + 1) / 2;
-  //corvette->rotation = v4_quaternion_pitch(sin(wave_time * 1.123) / 50);
-  //corvette->rotation = v4_quaternion_mul(corvette->rotation, v4_quaternion_yaw(sin(wave_time * 1.254) / 25));
-  //corvette->rotation = v4_quaternion_mul(corvette->rotation, v4_quaternion_roll(sin(wave_time * 1.355) / 100));
+  corvette->position.y = (sin(wave_time) + 1) / 2;
+  corvette->rotation = v4_quaternion_pitch(sin(wave_time * 1.123) / 50);
+  corvette->rotation = v4_quaternion_mul(corvette->rotation, v4_quaternion_yaw(sin(wave_time * 1.254) / 25));
+  corvette->rotation = v4_quaternion_mul(corvette->rotation, v4_quaternion_roll(sin(wave_time * 1.355) / 100));
   
   static_object* center_sphere = entity_get("center_sphere");
   
@@ -155,6 +162,7 @@ void sea_update() {
 void sea_render() {
 
   static_object* s_seaplane = entity_get("seaplane");
+  static_object* s_skydome = entity_get("skydome");
   static_object* s_corvette = entity_get("corvette");
   light* sun = entity_get("sun");
   light* backlight = entity_get("backlight");
@@ -165,8 +173,10 @@ void sea_render() {
   
   forward_renderer_begin();
   
-  forward_renderer_render_static(s_corvette);
+  forward_renderer_render_static(s_skydome);
   forward_renderer_render_static(s_seaplane);
+  forward_renderer_render_static(s_corvette);
+  
   
   physics_object* balls[100];
   int num_balls;

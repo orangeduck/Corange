@@ -1,7 +1,6 @@
 -- To Finish Demos --
 
-Sea Game - Add depth pass and foam effects? Walk around on moving deck? Proper Skybox. Bigger waterplane.
-Skybox/Atmospheric Scattering for scotland
+Sea Game - Add depth pass and foam effects? Walk around on moving deck?
 
 -- Tweaks/Cleanup --
 
