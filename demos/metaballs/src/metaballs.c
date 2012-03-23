@@ -1,11 +1,11 @@
+#define VOLUME_RENDERER
+
 #include "particles.h"
 #include "volume_renderer.h"
 #include "marching_cubes.h"
 #include "kernel.h"
 
 #include "metaballs.h"
-
-#define VOLUME_RENDERER
 
 static int mouse_x;
 static int mouse_y;
@@ -17,7 +17,11 @@ void metaballs_init() {
   graphics_viewport_set_title("Metaballs");
   graphics_set_multisamples(16);
   
+#ifdef OPEN_GL_CPU
+  kernels_init_with_cpu();
+#else 
   kernels_init_with_opengl();
+#endif
   
   asset_manager_handler("cl", cl_load_file, kernel_program_delete);
   
@@ -46,18 +50,29 @@ void metaballs_init() {
   sun->specular_color = v3_mul(v3_one(), 5);
   light_set_type(sun, light_type_spot);  
   
-  ui_rectangle* ui_box = ui_elem_new("ui_box", ui_rectangle);
-  ui_box->top_left = v2(15, 15);
-  ui_box->bottom_right = v2(40, 40);
-  ui_box->color = v4_black();
-  ui_box->border_size = 2;
-  ui_box->border_color = v4_white();
+  ui_button* framerate = ui_elem_new("framerate", ui_button);
+  ui_button_move(framerate, v2(10,10));
+  ui_button_resize(framerate, v2(30,25));
+  ui_button_set_label(framerate, "");
+  ui_button_disable(framerate);
   
-  ui_text* ui_framerate = ui_elem_new("ui_framerate", ui_text);
-  ui_framerate->position = v2( 20, 20 );
-  ui_framerate->scale = v2(1,1);
-  ui_framerate->color = v4(1,1,1,1);
-  ui_text_update_string(ui_framerate, "framerate");
+  ui_button* score = ui_elem_new("score", ui_button);
+  ui_button_move(score, v2(50, 10));
+#ifdef VOLUME_RENDERER
+  ui_button_resize(score, v2(125, 25));
+  ui_button_set_label(score, "Volume Renderer");
+#endif
+#ifdef MARCHING_CUBES
+  ui_button_resize(score, v2(120, 25));
+  ui_button_set_label(score, "Marching Cubes");
+#endif
+#ifndef VOLUME_RENDERER
+#ifndef MARCHING_CUBES
+  ui_button_resize(score, v2(80, 25));
+  ui_button_set_label(score, "Particles");
+#endif
+#endif
+  ui_button_disable(score);
   
 #ifdef VOLUME_RENDERER
   volume_renderer_init();
@@ -109,8 +124,8 @@ void metaballs_update() {
 
   particles_update(frame_time());
   
-  ui_text* ui_framerate = ui_elem_get("ui_framerate");
-  ui_text_update_string(ui_framerate, frame_rate_string());
+  ui_button* framerate = ui_elem_get("framerate");
+  ui_button_set_label(framerate, frame_rate_string());
   
 #ifdef MARCHING_CUBES
   marching_cubes_metaball_data( particle_positions_memory(), particles_count() );

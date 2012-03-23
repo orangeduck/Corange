@@ -12,6 +12,8 @@ void kernels_init_with_cpu();
 void kernels_init_with_opengl();
 void kernels_finish();
 
+void kernels_info();
+
 void kernels_check_error(const char* name);
 
 kernel_program* cl_load_file(char* filename);

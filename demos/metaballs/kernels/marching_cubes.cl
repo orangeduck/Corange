@@ -122,22 +122,6 @@ kernel void construct_surface(global float* volume,
   
   /* Find the vertices where the surface intersects the cube */
   
-  /*
-  int edge_mask = edge_table[hash];
-  if (edge_mask & 1) vert_list[0] = vertex_lerp(threashold, p0, p1, v0, v1);
-  if (edge_mask & 2) vert_list[1] = vertex_lerp(threashold, p1, p2, v1, v2);
-  if (edge_mask & 4) vert_list[2] = vertex_lerp(threashold, p2, p3, v2, v3);
-  if (edge_mask & 8) vert_list[3] = vertex_lerp(threashold, p3, p0, v3, v0);
-  if (edge_mask & 16) vert_list[4] = vertex_lerp(threashold, p4, p5, v4, v5);
-  if (edge_mask & 32) vert_list[5] = vertex_lerp(threashold, p5, p6, v5, v6);
-  if (edge_mask & 64) vert_list[6] = vertex_lerp(threashold, p6, p7, v6, v7);
-  if (edge_mask & 128) vert_list[7] = vertex_lerp(threashold, p7, p4, v7, v4);
-  if (edge_mask & 256) vert_list[8] = vertex_lerp(threashold, p0, p4, v0, v4);
-  if (edge_mask & 512) vert_list[9] = vertex_lerp(threashold, p1, p5, v1, v5);
-  if (edge_mask & 1024) vert_list[10] = vertex_lerp(threashold, p2, p6, v2, v6);
-  if (edge_mask & 2048) vert_list[11] = vertex_lerp(threashold, p3, p7, v3, v7);
-  */
-  
   vert_list[0] = vertex_lerp(threashold, p0, p1, v0, v1);
   vert_list[1] = vertex_lerp(threashold, p1, p2, v1, v2);
   vert_list[2] = vertex_lerp(threashold, p2, p3, v2, v3);
@@ -153,11 +137,7 @@ kernel void construct_surface(global float* volume,
   
   /* Push appropriate verts to the back of the vertex buffer */
   
-  int num_verts = 0;
-  while(triangle_table[hash][num_verts] != -1) {
-    num_verts += 3;
-  }
-  
+  int num_verts = triangle_counts[hash];
   int index = atomic_add(vertex_index, num_verts);
   
   for(int i = 0; i < num_verts; i++) {

@@ -8,26 +8,31 @@
 
 static int particle_count = 32;
 
+vector4* particle_positions;
+vector4* particle_velocities;
+float* particle_lifetimes;
+vector4* particle_randoms;
+
 GLuint positions_buffer;
 GLuint velocities_buffer;
 GLuint lifetimes_buffer;
 GLuint randoms_buffer;
-
-kernel k_update;
 
 kernel_memory k_particle_positions;
 kernel_memory k_particle_velocities;
 kernel_memory k_particle_lifetimes;
 kernel_memory k_particle_randoms;
 
+kernel k_update;
+
 bool reset = 0;
 
 void particles_init() {
 
-  vector4* particle_positions = malloc(sizeof(vector4) * particle_count);
-  vector4* particle_velocities = malloc(sizeof(vector4) * particle_count);
-  float* particle_lifetimes = malloc(sizeof(float) * particle_count);
-  vector4* particle_randoms = malloc(sizeof(vector4) * particle_count);
+  particle_positions = malloc(sizeof(vector4) * particle_count);
+  particle_velocities = malloc(sizeof(vector4) * particle_count);
+  particle_lifetimes = malloc(sizeof(float) * particle_count);
+  particle_randoms = malloc(sizeof(vector4) * particle_count);
   
   srand(time(NULL));
   
@@ -62,10 +67,22 @@ void particles_init() {
   glBindBuffer(GL_ARRAY_BUFFER, randoms_buffer);
   glBufferData(GL_ARRAY_BUFFER, sizeof(vector4) * particle_count, particle_randoms, GL_DYNAMIC_COPY);
   
+#ifdef OPEN_GL_CPU
+  k_particle_positions = kernel_memory_allocate(sizeof(vector4) * particle_count);
+  k_particle_velocities = kernel_memory_allocate(sizeof(vector4) * particle_count);
+  k_particle_lifetimes = kernel_memory_allocate(sizeof(float) * particle_count);
+  k_particle_randoms = kernel_memory_allocate(sizeof(vector4) * particle_count);
+  
+  kernel_memory_write(k_particle_positions, sizeof(vector4) * particle_count, particle_positions);
+  kernel_memory_write(k_particle_velocities, sizeof(vector4) * particle_count, particle_velocities);
+  kernel_memory_write(k_particle_lifetimes, sizeof(float) * particle_count, particle_lifetimes);
+  kernel_memory_write(k_particle_randoms, sizeof(vector4) * particle_count, particle_randoms);
+#else
   k_particle_positions = kernel_memory_from_glbuffer(positions_buffer);
   k_particle_velocities = kernel_memory_from_glbuffer(velocities_buffer);
   k_particle_lifetimes = kernel_memory_from_glbuffer(lifetimes_buffer);
   k_particle_randoms = kernel_memory_from_glbuffer(randoms_buffer);
+#endif
   
   kernel_program* program = asset_get("./kernels/particles.cl");
   
@@ -81,11 +98,6 @@ void particles_init() {
   kernel_set_argument(k_update, 5, sizeof(cl_float), &min_velocity);
   kernel_set_argument(k_update, 9, sizeof(cl_int), &particle_count);
   
-  free(particle_positions);
-  free(particle_velocities);
-  free(particle_lifetimes);
-  free(particle_randoms);
-  
 }
 
 void particles_finish() {
@@ -100,16 +112,23 @@ void particles_finish() {
   glDeleteBuffers(1, &lifetimes_buffer);
   glDeleteBuffers(1, &randoms_buffer);
   
+  free(particle_positions);
+  free(particle_velocities);
+  free(particle_lifetimes);
+  free(particle_randoms);
+  
 }
 
 void particles_update(float timestep) {
   
   int random = rand();
   
+#ifndef OPEN_GL_CPU
   kernel_memory_gl_aquire(k_particle_positions);
   kernel_memory_gl_aquire(k_particle_velocities);
   kernel_memory_gl_aquire(k_particle_lifetimes);
   kernel_memory_gl_aquire(k_particle_randoms);
+#endif
   
     kernel_set_argument(k_update, 6, sizeof(cl_float), &timestep);
     kernel_set_argument(k_update, 7, sizeof(cl_int), &reset);
@@ -118,10 +137,12 @@ void particles_update(float timestep) {
     
     reset = 0;
   
+#ifndef OPEN_GL_CPU
   kernel_memory_gl_release(k_particle_positions);
   kernel_memory_gl_release(k_particle_velocities);
   kernel_memory_gl_release(k_particle_lifetimes);
   kernel_memory_gl_release(k_particle_randoms);
+#endif
   
   kernel_run_finish();
 }
@@ -146,16 +167,22 @@ GLuint particle_velocities_buffer() {
   return velocities_buffer;
 }
 
-void particle_positions(vector4* out) {
-  kernel_memory_gl_aquire(k_particle_positions);
-    kernel_memory_read(k_particle_positions, sizeof(vector4) * particle_count, out);
-  kernel_memory_gl_release(k_particle_positions);
-}
-
 static float view_matrix[16];
 static float proj_matrix[16];
 
 void particles_render() {
+  
+#ifdef OPEN_GL_CPU
+  
+  kernel_memory_read(k_particle_positions, sizeof(vector4) * particle_count, particle_positions);
+  glBindBuffer(GL_ARRAY_BUFFER, positions_buffer);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(vector4) * particle_count, particle_positions, GL_DYNAMIC_COPY);
+  
+  kernel_memory_read(k_particle_randoms, sizeof(vector4) * particle_count, particle_randoms);
+  glBindBuffer(GL_ARRAY_BUFFER, randoms_buffer);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(vector4) * particle_count, particle_randoms, GL_DYNAMIC_COPY);
+
+#endif
   
   camera* cam = entity_get("camera");
   

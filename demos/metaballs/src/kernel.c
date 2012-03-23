@@ -21,17 +21,21 @@
 #endif
 
 static cl_int error = 0;
-static cl_platform_id platform;
+static cl_platform_id platforms[32];
+static cl_uint num_platforms = 0;
+
 static cl_context context;
 static cl_command_queue queue;
 static cl_device_id device;
 
 void kernels_init() {
   
-  error = clGetPlatformIDs(1, &platform, NULL);
-  kernels_check_error("oclGetPlatformID");
+  error = clGetPlatformIDs(32, platforms, &num_platforms);
+  kernels_check_error("clGetPlatformID");
   
-  error = clGetDeviceIDs(platform, CL_DEVICE_TYPE_GPU, 1, &device, NULL);
+  kernels_info();
+  
+  error = clGetDeviceIDs(platforms[0], CL_DEVICE_TYPE_GPU, 1, &device, NULL);
   kernels_check_error("clGetDeviceIDs");
   
   context = clCreateContext(0, 1, &device, NULL, NULL, &error);
@@ -44,10 +48,12 @@ void kernels_init() {
 
 void kernels_init_with_cpu() {
 
-  error = clGetPlatformIDs(1, &platform, NULL);
-  kernels_check_error("oclGetPlatformID");
+  error = clGetPlatformIDs(32, platforms, &num_platforms);
+  kernels_check_error("clGetPlatformID");
   
-  error = clGetDeviceIDs(platform, CL_DEVICE_TYPE_CPU, 1, &device, NULL);
+  kernels_info();
+  
+  error = clGetDeviceIDs(platforms[1], CL_DEVICE_TYPE_CPU, 1, &device, NULL);
   kernels_check_error("clGetDeviceIDs");
   
   context = clCreateContext(0, 1, &device, NULL, NULL, &error);
@@ -60,56 +66,48 @@ void kernels_init_with_cpu() {
 
 void kernels_init_with_opengl() {
 
+  error = clGetPlatformIDs(32, platforms, &num_platforms);
+  kernels_check_error("clGetPlatformID");
+
+  kernels_info();
+  
+  error = clGetDeviceIDs(platforms[0], CL_DEVICE_TYPE_GPU, 1, &device, NULL);
+  kernels_check_error("clGetDeviceIDs");
+
 #ifdef _WIN32
 
 #define CL_GL_CONTEXT_KHR 0x2008
 #define CL_WGL_HDC_KHR 0x200B
 
-  error = clGetPlatformIDs(1, &platform, NULL);
-  kernels_check_error("clGetPlatformIDs");
-
-  error = clGetDeviceIDs(platform, CL_DEVICE_TYPE_GPU, 1, &device, NULL);
-  kernels_check_error("clGetDeviceIDs");
-
   cl_context_properties props[] = 
   {
     CL_GL_CONTEXT_KHR, (cl_context_properties)wglGetCurrentContext(), 
     CL_WGL_HDC_KHR, (cl_context_properties)wglGetCurrentDC(), 
-    CL_CONTEXT_PLATFORM, (cl_context_properties)platform, 
+    CL_CONTEXT_PLATFORM, (cl_context_properties)platforms[0], 
     0
   };
-  context = clCreateContext(props, 1, &device, NULL, NULL, &error);
-  kernels_check_error("clCreateContext");
-  
-  queue = clCreateCommandQueue(context, device, 0, &error);
-  kernels_check_error("clCreateCommandQueue");
   
 #elif __linux__
-  
-  error = clGetPlatformIDs(1, &platform, NULL);
-  kernels_check_error("clGetPlatformIDs");
-
-  error = clGetDeviceIDs(platform, CL_DEVICE_TYPE_GPU, 1, &device, NULL);
-  kernels_check_error("clGetDeviceIDs");
 
   cl_context_properties props[] = 
   {
     CL_GL_CONTEXT_KHR, (intptr_t)glXGetCurrentContext(), 
     CL_GLX_DISPLAY_KHR, (intptr_t)glXGetCurrentDisplay(), 
-    CL_CONTEXT_PLATFORM, (cl_context_properties)platform, 
+    CL_CONTEXT_PLATFORM, (cl_context_properties)platforms[0], 
     0
   };
-  context = clCreateContext(props, 1, &device, NULL, NULL, &error);
-  kernels_check_error("clCreateContext");
-  
-  queue = clCreateCommandQueue(context, device, 0, &error);
-  kernels_check_error("clCreateCommandQueue");
 
 #else
   
   error("Can't interlop CL with GL, unsupported platform!");
 
 #endif
+
+  context = clCreateContext(props, 1, &device, NULL, NULL, &error);
+  kernels_check_error("clCreateContext");
+  
+  queue = clCreateCommandQueue(context, device, 0, &error);
+  kernels_check_error("clCreateCommandQueue");
 
 }
 
@@ -118,6 +116,40 @@ void kernels_finish() {
   clReleaseCommandQueue(queue);
   clReleaseContext(context);
 
+}
+
+void kernels_info() {
+  
+  static char platform_info[512];
+  static size_t platform_info_size = 0;
+  
+  debug("OpenCL Info for %i Platforms", num_platforms)
+  
+  for(int i = 0; i < num_platforms; i++) {
+    debug("Platform: %i", i);
+    
+    error = clGetPlatformInfo(platforms[i], CL_PLATFORM_PROFILE, 512, platform_info, &platform_info_size);
+    kernels_check_error("clGetPlatformInfo");
+    debug("Profile: %s", platform_info);
+  
+    error = clGetPlatformInfo(platforms[i], CL_PLATFORM_VERSION, 512, platform_info, &platform_info_size);
+    kernels_check_error("clGetPlatformInfo");
+    debug("Version: %s", platform_info);
+  
+    error = clGetPlatformInfo(platforms[i], CL_PLATFORM_NAME, 512, platform_info, &platform_info_size);
+    kernels_check_error("clGetPlatformInfo");
+    debug("Name: %s", platform_info);
+  
+    error = clGetPlatformInfo(platforms[i], CL_PLATFORM_VENDOR, 512, platform_info, &platform_info_size);
+    kernels_check_error("clGetPlatformInfo");
+    debug("Vendor: %s", platform_info);
+  
+    error = clGetPlatformInfo(platforms[i], CL_PLATFORM_EXTENSIONS, 512, platform_info, &platform_info_size);
+    kernels_check_error("clGetPlatformInfo");
+    debug("Extensions: %s", platform_info);
+  
+  }
+  
 }
 
 void kernels_check_error(const char* name) {
