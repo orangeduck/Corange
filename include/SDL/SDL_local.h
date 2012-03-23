@@ -31,6 +31,9 @@ int SDL_RWreadline(SDL_RWops* file, char* buffer, int buffersize);
 void SDL_WM_UseResourceIcon();
 void SDL_WM_DeleteResourceIcon();
 
+void SDL_WM_CreateTempContext();
+void SDL_WM_DeleteTempContext();
+
 void SDL_GL_PrintInfo();
 void SDL_GL_PrintExtensions();
 
@@ -105,7 +108,7 @@ typedef void (APIENTRY * GLCOMPRESSEDTEXIMAGE2DFN)(GLenum target, GLint level, G
 typedef void (APIENTRY * GLTEXIMAGE3DFN)(GLenum target, GLint level, GLint internalFormat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLenum format, GLenum type, const GLvoid* data);
 typedef void (APIENTRY * GLDRAWELEMENTSINSTANCEDFN)(GLenum mode, GLsizei count, GLenum type, const void* indicies, GLsizei primcount);
 
-#ifndef __linux__
+#ifndef __unix__
   extern GLACTIVETEXTUREFN glActiveTexture;
   extern GLCOMPRESSEDTEXIMAGE2DFN glCompressedTexImage2D;
   extern GLTEXIMAGE3DFN glTexImage3D;

@@ -85,53 +85,12 @@ int graphics_get_multisamples() {
 }
 
 void graphics_viewport_restart() {
-
-#ifdef _WIN32
-  /* Built temp context and share resources */
   
-  SDL_SysWMinfo info;
-  SDL_VERSION(&info.version);
-  if (SDL_GetWMInfo(&info) == -1) {
-    error("Could not get SDL version info.");
-  }
-
-  /* get device context handle */
-  HDC tempDC = GetDC( info.window );
-
-  /* create temporary context */
-  HGLRC tempRC = wglCreateContext( tempDC );
-  if (tempRC == NULL) {
-    error("Could not create OpenGL context");
-  }
-
-  /* share resources to temporary context */
-  SetLastError(0);
-  if (!wglShareLists(info.hglrc, tempRC)) {
-    error("Could not get OpenGL share lists.");
-  }
-#endif
+  SDL_WM_CreateTempContext();
   
   graphics_viewport_start();
   
-#ifdef _WIN32
-
-  /* Get rid of temp context */
-
-  SDL_VERSION(&info.version);
-  if (SDL_GetWMInfo(&info) == -1) {
-    error("Could not get SDL version info.");
-  }
-
-  /* share resources to new SDL-created context */
-  if (!wglShareLists(tempRC, info.hglrc)) {
-    error("Could not create OpenGL context");
-  }
-
-  /* we no longer need our temporary context */
-  if (!wglDeleteContext(tempRC)) {
-    error("Could not get OpenGL share lists.");
-  }
-#endif
+  SDL_WM_DeleteTempContext();
   
 }
 

@@ -10,7 +10,7 @@
   #include "SDL/SDL_syswm.h"
 #endif
 
-#ifdef __linux__
+#ifdef __unix__
   #include <execinfo.h>
 #endif
   
@@ -19,7 +19,7 @@
   #include <winbase.h>
 #endif
 
-#ifndef __linux__
+#ifndef __unix__
   GLACTIVETEXTUREFN glActiveTexture;
   GLCOMPRESSEDTEXIMAGE2DFN glCompressedTexImage2D;
   GLTEXIMAGE3DFN glTexImage3D;
@@ -80,7 +80,7 @@ void SDL_PathFullName(char* dst, char* path) {
   GetFullPathName(path, MAX_PATH, dst, NULL);
 }
 
-#elif __linux__
+#elif __unix__
 
 void SDL_PathFullName(char* dst, char* path) {
   char* ret = realpath(path, dst);
@@ -354,7 +354,7 @@ SDL_Thread* SDL_GL_CreateThread(int (*fn)(void *), void *data) {
 
 }
 
-#elif __linux__
+#elif __unix__
 
 #include <GL/glx.h>
 
@@ -433,6 +433,57 @@ SDL_Thread* SDL_GL_CreateThread(int (*fn)(void *), void *data) {
 
 #endif
 
+#ifdef _WIN32
+
+static HDC temp_device;
+static HGLRC temp_context;
+
+void SDL_WM_CreateTempContext() {
+  
+  SDL_SysWMinfo info;
+  SDL_VERSION(&info.version);
+  if (SDL_GetWMInfo(&info) == -1) {
+    error("Could not get SDL version info.");
+  }
+  
+  HDC temp_device = GetDC(info.window);
+
+  HGLRC temp_context = wglCreateContext(temp_device);
+  if (temp_context == NULL) {
+    error("Could not create OpenGL context");
+  }
+
+  if (!wglShareLists(info.hglrc, temp_context)) {
+    error("Could not get OpenGL share lists.");
+  }
+  
+}
+
+void SDL_WM_DeleteTempContext() {
+
+  SDL_SysWMinfo info;
+  SDL_VERSION(&info.version);
+  if (SDL_GetWMInfo(&info) == -1) {
+    error("Could not get SDL version info.");
+  }
+
+  if (!wglShareLists(temp_context, info.hglrc)) {
+    error("Could not create OpenGL context");
+  }
+
+  if (!wglDeleteContext(temp_context)) {
+    error("Could not get OpenGL share lists.");
+  }
+
+}
+
+#else
+
+void SDL_WM_CreateTempContext() {}
+void SDL_WM_DeleteTempContext() {}
+
+#endif
+
 void SDL_GL_LoadExtensions() {
 
   debug("Loading OpenGL Extensions...");
@@ -474,7 +525,7 @@ void SDL_GL_LoadExtensions() {
   /* Textures */
   
   glGenerateMipmap           = (GLGENERATEMIPMAPFN)SDL_GL_GetProcAddress( "glGenerateMipmap" ); SDL_GL_CheckExtension("glGenerateMipmap", glGenerateMipmap);
-  #ifndef __linux__
+  #ifndef __unix__
   glActiveTexture            = (GLACTIVETEXTUREFN)SDL_GL_GetProcAddress( "glActiveTexture" ); SDL_GL_CheckExtension("glActiveTexture", glActiveTexture);
   glCompressedTexImage2D     = (GLCOMPRESSEDTEXIMAGE2DFN)SDL_GL_GetProcAddress( "glCompressedTexImage2D" ); SDL_GL_CheckExtension("glCompressedTexImage2D", glCompressedTexImage2D);
   glTexImage3D               = (GLTEXIMAGE3DFN)SDL_GL_GetProcAddress( "glTexImage3D" ); SDL_GL_CheckExtension("glTexImage3D", glTexImage3D);
@@ -516,7 +567,7 @@ void SDL_GL_CheckExtension(const char* name, void* function_pointer) {
   }  
 }
 
-#ifdef __linux__
+#ifdef __unix__
 
 void SDL_PrintStackTrace() {
   
