@@ -446,15 +446,15 @@ void SDL_WM_CreateTempContext() {
     error("Could not get SDL version info.");
   }
   
-  HDC temp_device = GetDC(info.window);
+  temp_device = GetDC(info.window);
 
-  HGLRC temp_context = wglCreateContext(temp_device);
+  temp_context = wglCreateContext(temp_device);
   if (temp_context == NULL) {
     error("Could not create OpenGL context");
   }
 
   if (!wglShareLists(info.hglrc, temp_context)) {
-    error("Could not get OpenGL share lists.");
+    error("Could not share lists with temp context.");
   }
   
 }
@@ -468,11 +468,11 @@ void SDL_WM_DeleteTempContext() {
   }
 
   if (!wglShareLists(temp_context, info.hglrc)) {
-    error("Could not create OpenGL context");
+    error("Could share lists with OpenGL context");
   }
 
   if (!wglDeleteContext(temp_context)) {
-    error("Could not get OpenGL share lists.");
+    error("Could delete OpenGL context");
   }
 
 }

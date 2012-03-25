@@ -196,8 +196,7 @@ void kernel generate_normals(read_only image2d_t depth,
                              write_only image2d_t normals,
                              int2 screen_size,
                              constant float4* metaball_positions,
-                             int num_metaballs) {
-                          
+                             int num_metaballs) {                       
   int id = get_global_id(0);
   int2 pixel = (int2)(id % screen_size.x, id / screen_size.x);
   

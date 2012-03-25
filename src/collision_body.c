@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <math.h>
 
-#include "SDL/SDL_rwops.h"
+#include "SDL/SDL_local.h"
 
 #include "error.h"
 #include "matrix.h"

@@ -8,7 +8,6 @@ void warning_bp() {}
 void debug_bp() {}
 void assert_bp() {}
 void exception_bp() {}
-void check_bp() {}
 
 void disable_errors() {
   errors_enabled = false;
@@ -48,12 +47,4 @@ void disable_exceptions() {
 
 void enable_exceptions() {
   exceptions_enabled = true;
-}
-
-void disable_check() {
-  check_enabled = false;
-}
-
-void enable_check() {
-  check_enabled = true;
 }

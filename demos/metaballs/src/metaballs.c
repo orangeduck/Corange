@@ -263,7 +263,12 @@ int main(int argc, char **argv) {
       case SDL_KEYDOWN:
       case SDL_KEYUP:
         if (event.key.keysym.sym == SDLK_ESCAPE) { running = 0; }
-        if (event.key.keysym.sym == SDLK_PRINT) { graphics_viewport_screenshot(); }
+        if (event.key.keysym.sym == SDLK_PRINT) { 
+          #ifdef VOLUME_RENDERER
+          volume_renderer_write_textures();
+          #endif
+          graphics_viewport_screenshot();
+        }
         break;
       case SDL_QUIT:
         running = 0;

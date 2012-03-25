@@ -13,4 +13,6 @@ void volume_renderer_metaball_data(kernel_memory positions, int num_balls);
 void volume_renderer_update();
 void volume_renderer_render();
 
+void volume_renderer_write_textures();
+
 #endif

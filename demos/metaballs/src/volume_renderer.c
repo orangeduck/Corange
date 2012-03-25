@@ -51,8 +51,8 @@ void volume_renderer_set_light(light* new_light) {
 
 void volume_renderer_init() {
   
-  WIDTH = graphics_viewport_width() / 12;
-  HEIGHT = graphics_viewport_height() / 12;
+  WIDTH = graphics_viewport_width() / 10;
+  HEIGHT = graphics_viewport_height() / 10;
   DEPTH = 128;
   
   SCREEN_WIDTH = graphics_viewport_width();
@@ -332,4 +332,29 @@ void volume_renderer_render() {
   
   glUseProgram(0);
   
+}
+
+void volume_renderer_write_textures() {
+  
+  texture* t0 = malloc(sizeof(texture));
+  *t0 = stencil_texture;
+  
+  texture* t1 = malloc(sizeof(texture));
+  *t1 = depth_texture;
+  
+  texture* t2 = malloc(sizeof(texture));
+  *t2 = positions_texture;
+
+  texture* t3 = malloc(sizeof(texture));
+  *t3 = normals_texture;
+
+  texture_write_to_file(t0, "stencil_texture.tga");
+  texture_write_to_file(t1, "depth_texture.tga");
+  texture_write_to_file(t2, "positions_texture.tga");
+  texture_write_to_file(t3, "normals_texture.tga");
+  
+  free(t0);
+  free(t1);
+  free(t2);
+  free(t3);
 }

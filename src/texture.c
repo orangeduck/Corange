@@ -1,4 +1,5 @@
-#include "asset_manager.h"
+#include <math.h>
+
 #include "vector.h"
 #include "error.h"
 #include "bool.h"
@@ -56,6 +57,55 @@ image* texture_get_image(texture* t) {
   if (format == GL_RGBA) {
   
     glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    
+  } else if (format == GL_ALPHA16) {
+    
+    float* depth_data = malloc(sizeof(float) * width * height);
+    glGetTexImage(GL_TEXTURE_2D, 0, GL_ALPHA, GL_FLOAT, depth_data);
+      
+    for(int x = 0; x < width; x++)
+    for(int y = 0; y < height; y++) {
+      
+      float depth = depth_data[(y*width) + x];
+      depth = pow(depth, 256.0);
+      
+      data[(y*4*width) + (x*4) + 0] = depth * 255;
+      data[(y*4*width) + (x*4) + 1] = depth * 255;
+      data[(y*4*width) + (x*4) + 2] = depth * 255;
+      data[(y*4*width) + (x*4) + 3] = depth * 255;
+    }
+      
+    free(depth_data);
+    
+  } else if (format == GL_RGBA32F) {
+    
+    float* pos_data = malloc(4 * sizeof(float) * width * height);
+    glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, pos_data);
+    
+    for(int x = 0; x < width; x++)
+    for(int y = 0; y < height; y++) {
+      data[(y*4*width) + (x*4) + 0] = clamp(pos_data[(y*4*width) + (x*4) + 0] * 255, 0, 255);
+      data[(y*4*width) + (x*4) + 1] = clamp(pos_data[(y*4*width) + (x*4) + 1] * 255, 0, 255);
+      data[(y*4*width) + (x*4) + 2] = clamp(pos_data[(y*4*width) + (x*4) + 2] * 255, 0, 255);
+      data[(y*4*width) + (x*4) + 3] = clamp(pos_data[(y*4*width) + (x*4) + 3] * 255, 0, 255);
+    }
+    
+    free(pos_data);
+  
+  } else if (format == GL_RGBA16F) {
+    
+    float* norm_data = malloc(4 * sizeof(float) * width * height);
+    glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, norm_data);
+    
+    for(int x = 0; x < width; x++)
+    for(int y = 0; y < height; y++) {
+      data[(y*4*width) + (x*4) + 0] = clamp(norm_data[(y*4*width) + (x*4) + 0] * 255, 0, 255);
+      data[(y*4*width) + (x*4) + 1] = clamp(norm_data[(y*4*width) + (x*4) + 1] * 255, 0, 255);
+      data[(y*4*width) + (x*4) + 2] = clamp(norm_data[(y*4*width) + (x*4) + 2] * 255, 0, 255);
+      data[(y*4*width) + (x*4) + 3] = clamp(norm_data[(y*4*width) + (x*4) + 3] * 255, 0, 255);
+    }
+    
+    free(norm_data);
     
   } else if (format == GL_DEPTH_COMPONENT) {
     
