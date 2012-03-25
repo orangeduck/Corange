@@ -1,7 +1,7 @@
 #ifndef audio_manager_h
 #define audio_manager_h
 
-#include "sound.h"
+#include "assets/sound.h"
 
 void audio_manager_init();
 void audio_manager_finish();

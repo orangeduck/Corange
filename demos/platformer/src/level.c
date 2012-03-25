@@ -36,6 +36,7 @@ static texture* tile_get_texture(int tiletype) {
     case tiletype_house_bot_right: t = asset_get("./tiles/tile_house_bot_right.dds"); break;
     case tiletype_house_top_left: t = asset_get("./tiles/tile_house_top_left.dds"); break;
     case tiletype_house_top_right: t = asset_get("./tiles/tile_house_top_right.dds"); break;
+    default: t = NULL;
   }
   return t;
 }
@@ -281,7 +282,7 @@ void level_render_tiles(level* l, vector2 camera_position) {
   for(int i = 1; i < l->num_tile_sets; i++) {
     
     texture* tile_tex = tile_get_texture(i);
-    glBindTexture(GL_TEXTURE_2D, *tile_tex);
+    glBindTexture(GL_TEXTURE_2D, texture_handle(tile_tex));
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     

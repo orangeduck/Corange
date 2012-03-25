@@ -4,8 +4,9 @@
 
 #include "bool.h"
 #include "error.h"
-#include "image.h"
 #include "timing.h"
+
+#include "assets/image.h"
 
 #include "graphics_manager.h"
 

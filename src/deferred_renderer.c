@@ -4,15 +4,14 @@
 
 #include "error.h"
 
-#include "shader.h"
-#include "camera.h"
-#include "texture.h"
-#include "renderable.h"
-#include "material.h"
-#include "asset_manager.h"
-#include "shadow_mapper.h"
+#include "assets/shader.h"
+#include "assets/texture.h"
+#include "assets/material.h"
 
+#include "asset_manager.h"
 #include "graphics_manager.h"
+
+#include "shadow_mapper.h"
 
 #include "deferred_renderer.h"
 

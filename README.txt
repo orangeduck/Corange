@@ -19,10 +19,10 @@
 		
 		$ make
 
-		To compile on Linux you need to install SDL1.2. Then you should run "make linux"
+		To compile on Linux you need to install SDL1.2. Then you should run "make"
 		
 		$ sudo apt-get install libsdl1.2-dev
-		$ make linux
+		$ make
 		
 		
 	:: Overview ::

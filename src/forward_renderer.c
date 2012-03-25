@@ -6,17 +6,14 @@
 #include "SDL/SDL_local.h"
 
 #include "error.h"
+#include "matrix.h"
+#include "dictionary.h"
+#include "timing.h"
+
+#include "assets/shader.h"
 
 #include "graphics_manager.h"
 #include "asset_manager.h"
-
-#include "renderable.h"
-#include "camera.h"
-#include "matrix.h"
-#include "shader.h"
-#include "texture.h"
-#include "dictionary.h"
-#include "timing.h"
 
 #include "forward_renderer.h"
 

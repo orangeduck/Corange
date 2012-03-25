@@ -1,12 +1,12 @@
 #ifndef shadow_mapper_h
 #define shadow_mapper_h
 
-#include "static_object.h"
-#include "animated_object.h"
-#include "landscape.h"
+#include "assets/texture.h"
 
-#include "light.h"
-#include "texture.h"
+#include "entities/static_object.h"
+#include "entities/animated_object.h"
+#include "entities/landscape.h"
+#include "entities/light.h"
 
 void shadow_mapper_init(light* l);
 void shadow_mapper_finish();

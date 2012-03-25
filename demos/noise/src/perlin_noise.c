@@ -4,9 +4,6 @@
 
 #include "perlin_noise.h"
 
-#include "texture.h"
-#include "vector.h"
-
 /*
     Perlin Noise
   

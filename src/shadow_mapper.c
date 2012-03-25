@@ -4,13 +4,12 @@
 #include "SDL/SDL_opengl.h"
 #include "SDL/SDL_local.h"
 
+#include "error.h"
+
+#include "assets/shader.h"
+
 #include "graphics_manager.h"
 #include "asset_manager.h"
-
-#include "shader.h"
-#include "camera.h"
-#include "renderable.h"
-#include "error.h"
 
 #include "shadow_mapper.h"
 

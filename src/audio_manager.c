@@ -4,8 +4,6 @@
 #include "bool.h"
 #include "vector.h"
 
-#include "sound.h"
-
 #include "audio_manager.h"
 
 static SDL_AudioSpec system_spec;

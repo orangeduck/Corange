@@ -1,10 +1,11 @@
 #ifndef deferred_renderer_h
 #define deferred_renderer_h
 
-#include "camera.h"
-#include "light.h"
-#include "material.h"
-#include "static_object.h"
+#include "assets/material.h"
+
+#include "entities/camera.h"
+#include "entities/light.h"
+#include "entities/static_object.h"
 
 void deferred_renderer_init();
 void deferred_renderer_finish();

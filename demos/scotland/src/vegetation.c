@@ -1,8 +1,6 @@
 #include <time.h>
 #include <math.h>
 
-#include "corange.h"
-
 #include "vegetation.h"
 
 static static_object** blocks;

@@ -27,38 +27,38 @@ void corange_finish();
 
 #include "entity_manager.h"
 
-#include "static_object.h"
-#include "animated_object.h"
-#include "physics_object.h"
-#include "instance_object.h"
-#include "camera.h"
-#include "light.h"
-#include "landscape.h"
+#include "entities/static_object.h"
+#include "entities/animated_object.h"
+#include "entities/physics_object.h"
+#include "entities/instance_object.h"
+#include "entities/camera.h"
+#include "entities/light.h"
+#include "entities/landscape.h"
 
 /* Assets */
 
 #include "asset_manager.h"
 
-#include "animation.h"
-#include "skeleton.h"
-#include "renderable.h"
-#include "collision_body.h"
-#include "font.h"
-#include "material.h"
-#include "shader.h"
-#include "texture.h"
-#include "image.h"
-#include "sound.h"
-#include "terrain.h"
+#include "assets/animation.h"
+#include "assets/skeleton.h"
+#include "assets/renderable.h"
+#include "assets/collision_body.h"
+#include "assets/font.h"
+#include "assets/material.h"
+#include "assets/shader.h"
+#include "assets/texture.h"
+#include "assets/image.h"
+#include "assets/sound.h"
+#include "assets/terrain.h"
 
 /* UI */
 
 #include "ui_manager.h"
 
-#include "ui_text.h"
-#include "ui_rectangle.h"
-#include "ui_spinner.h"
-#include "ui_button.h"
+#include "ui/ui_text.h"
+#include "ui/ui_rectangle.h"
+#include "ui/ui_spinner.h"
+#include "ui/ui_button.h"
 
 /* Rendering */
 

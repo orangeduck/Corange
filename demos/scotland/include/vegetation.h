@@ -1,8 +1,7 @@
 #ifndef vegetation_h
 #define vegetation_h
 
-#include "renderable.h"
-#include "terrain.h"
+#include "corange.h"
 
 void vegetation_init();
 void vegetation_finish();

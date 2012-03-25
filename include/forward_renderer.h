@@ -1,16 +1,16 @@
 #ifndef forward_renderer_h
 #define forward_renderer_h
 
-#include "camera.h"
-#include "light.h"
-#include "skeleton.h"
-#include "texture.h"
-#include "material.h"
-#include "landscape.h"
-#include "static_object.h"
-#include "physics_object.h"
-#include "animated_object.h"
-#include "instance_object.h"
+#include "assets/skeleton.h"
+#include "assets/texture.h"
+
+#include "entities/camera.h"
+#include "entities/light.h"
+#include "entities/landscape.h"
+#include "entities/static_object.h"
+#include "entities/physics_object.h"
+#include "entities/animated_object.h"
+#include "entities/instance_object.h"
 
 void forward_renderer_init();
 void forward_renderer_finish();
