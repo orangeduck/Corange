@@ -7,18 +7,18 @@ CFLAGS= $(INCS) -std=gnu99 -Wall -Werror -Wno-unused -O3 -g
 C_FILES= $(wildcard src/*.c)
 OBJ_FILES= $(addprefix obj/,$(notdir $(C_FILES:.c=.o)))
 
-ifndef OSTYPE
-  OSTYPE = $(shell uname -s|awk '{print tolower($$0)}')
-endif
+PLATFORM = $(shell uname)
 
-ifeq ($(OSTYPE),linux)
+ifeq ($(findstring Linux,$(PLATFORM)),Linux)
 	OUT=$(DEMO)
 	LFLAGS= -L./lib -lcorange -lGL -lSDLmain -lSDL -lOpenCL
 	CORANGE_LIB= ../../libcorange.so
 	CORANGE_TAR= ./lib/libcorange.a
-else
+endif
+
+ifeq ($(findstring MINGW,$(PLATFORM)),MINGW)
 	OUT=$(DEMO).exe
-	LFLAGS= ../../corange.res -L./ -L../../lib -lcorange -lmingw32 -lSDLmain -lSDL -lopengl32 -lopencl32
+	LFLAGS= ../../corange.res -L./ -L./lib -L../../lib -lcorange -lmingw32 -lSDLmain -lSDL -lopengl32 -lopencl32
 	CORANGE_LIB= ../../corange.dll
 	CORANGE_TAR= ./corange.dll
 endif

@@ -205,6 +205,11 @@ int SDL_RWreadline(SDL_RWops* file, char* buffer, int buffersize) {
 
 static HICON icon;
 
+#ifndef GCL_HICON
+  #define GCL_HICON -14
+  #define GCL_HICONSM -34
+#endif
+
 void SDL_WM_UseResourceIcon() {
 
   HINSTANCE handle = GetModuleHandle(NULL);
@@ -217,6 +222,7 @@ void SDL_WM_UseResourceIcon() {
   }
 
   SetClassLong(wminfo.window, GCL_HICON, (LONG)icon);
+  SetClassLong(wminfo.window, GCL_HICONSM, (LONG)icon);
   
 }
 

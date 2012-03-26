@@ -4,19 +4,19 @@ INCS= -I ./include
 
 C_FILES= $(wildcard src/*.c) $(wildcard src/*/*.c)
 
-ifndef OSTYPE
-  OSTYPE = $(shell uname -s|awk '{print tolower($$0)}')
-endif
+PLATFORM = $(shell uname)
 
-ifeq ($(OSTYPE),linux)
+ifeq ($(findstring Linux,$(PLATFORM)),Linux)
 	OUT=libcorange.so
 	CFLAGS= $(INCS) -std=gnu99 -Wall -Werror -Wno-unused -O3 -g -fPIC
 	LFLAGS= -lGL -lSDLmain -lSDL -shared
 	OBJ_FILES= $(addprefix obj/,$(notdir $(C_FILES:.c=.o)))
-else
+endif
+
+ifeq ($(findstring MINGW,$(PLATFORM)),MINGW)
 	OUT=corange.dll
 	CFLAGS= $(INCS) -std=gnu99 -Wall -Werror -Wno-unused -O3 -g
-	LFLAGS= -g -L ./lib -lmingw32 -lopengl32 -lSDLmain -lSDL
+	LFLAGS= -g -L ./lib -lmingw32 -lopengl32 -lSDLmain -lSDL -shared
 	OBJ_FILES= $(addprefix obj/,$(notdir $(C_FILES:.c=.o))) corange.res
 endif
 
