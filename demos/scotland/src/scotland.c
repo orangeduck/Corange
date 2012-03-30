@@ -219,7 +219,7 @@ void scotland_event(SDL_Event event) {
     
 }
 
-static float sun_orbit = 0;
+static float sun_orbit = -1.5;
 
 void scotland_update() {
   
@@ -228,7 +228,7 @@ void scotland_update() {
   static_object* skydome = entity_get("skydome");
   landscape* world = entity_get("world");
   
-  sun_orbit += frame_time() * 0.1;
+  sun_orbit += frame_time() * 0.01;
   
   sun->position.x = 512 + sin(sun_orbit) * 512;
   sun->position.y = cos(sun_orbit) * 512;
@@ -293,16 +293,20 @@ void scotland_render() {
   
   forward_renderer_begin();
 
-  if (wireframe) {
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+  if (!wireframe) {
+    forward_renderer_render_static(skydome);
   }
   
-  forward_renderer_render_static(skydome);
-  
+  if (wireframe) {
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+  }  
   forward_renderer_render_landscape(world);
-  vegetation_render();
   if (wireframe) {
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+  }
+  
+  if (!wireframe) {
+    vegetation_render();
   }
   
   forward_renderer_render_light(sun);

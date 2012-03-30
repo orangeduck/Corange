@@ -1,7 +1,10 @@
+License
+=======
+
+Source Code
+-----------
 
 All source code is licensed under BSD
-
----------------------------------------------
 
 Copyright (c) 2010, Daniel Holden
 All rights reserved.
@@ -15,23 +18,25 @@ Redistribution and use in source and binary forms, with or without modification,
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
----------------------------------------------
 
-All demo assets are licensed under Creative Commons 3.0 (http://creativecommons.org/licenses/by/3.0/legalcode)
+Assets
+------
 
-Unless otherwise stated here:
+All demo assets are licensed under Creative Commons 3.0 
 
-
-	-- Imrod Asset --
-	
-Unsure of license, found from here: http://www.parkparkin.com/gallery/imrod_dw.html - best to ask Dmitry Parkin before use.
+http://creativecommons.org/licenses/by/3.0/legalcode
 
 
-	-- Platformer Assets --
-	
-(Mostly found from OpenGameArt.org)
+Exceptions
+----------
 
-Tiles. Creative Commons - http://opengameart.org/content/side-scrolling-fantasy-themed-game-assets
-Coin Sound. Creative Commons - http://opengameart.org/content/completion-sound
-Trees. Creative Commons - http://opengameart.org/content/old-frogatto-tile-art-2
-Coin. Free for Commercial Use - http://wefunction.com/2008/07/function-free-icon-set/
+* Imrod Asset
+  
+  Unsure of license. Best to ask Dmitry Parkin before use - http://www.parkparkin.com/gallery/imrod_dw.html
+
+* Platformer Assets
+
+  + Tiles. Creative Commons - http://opengameart.org/content/side-scrolling-fantasy-themed-game-assets
+  + Coin Sound. Creative Commons - http://opengameart.org/content/completion-sound
+  + Trees. Creative Commons - http://opengameart.org/content/old-frogatto-tile-art-2
+  + Coin. Free for Commercial Use - http://wefunction.com/2008/07/function-free-icon-set/

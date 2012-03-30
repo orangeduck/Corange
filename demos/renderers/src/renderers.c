@@ -336,7 +336,6 @@ void renderers_event(SDL_Event event) {
     
 }
 
-static float imrod_movement = 0.0;
 void renderers_update() {
   
   camera* cam = entity_get("camera");
@@ -355,6 +354,7 @@ void renderers_update() {
     cam->position = m33_mul_v3(m33_rotation_axis_angle(rotation_axis, a2 ), cam->position );
   }
   
+  /*
   if (keystate & SDL_BUTTON(3)) {
     
     matrix_4x4 view = camera_view_matrix(cam);
@@ -375,6 +375,7 @@ void renderers_update() {
     
     ik_target = ik_world;
   }
+  */
   
   if (g_down && selected_light) {
     vector3 move_dir = v3_sub(cam->target, cam->position); move_dir.y = 0;
@@ -399,35 +400,17 @@ void renderers_update() {
   ui_button_set_label(framerate, frame_rate_string());
   
   animated_object* imrod = entity_get("imrod");
-  //imrod_movement += frame_time() * 2;
-  //imrod->position.y = 1.5*sin(imrod_movement)+0.5;
   animated_object_update(imrod, 0.1);
   
   /*
   bone* thigh_r = skeleton_bone_name(imrod->pose, "thigh_r");
   bone* foot_r = skeleton_bone_name(imrod->pose, "foot_r");
-  bone* thigh_l = skeleton_bone_name(imrod->pose, "thigh_l");
-  bone* foot_l = skeleton_bone_name(imrod->pose, "foot_l");
-  
-  vector3 foot_r_pos = v3(0.0, 0.5, -2.8);
-  vector3 foot_l_pos = v3(0.0, 0.5, 2.8);
-  
   matrix_4x4 inv_world = m44_inverse(m44_world(imrod->position, imrod->scale, imrod->rotation));
-  foot_r_pos = m44_mul_v3(inv_world, foot_r_pos);
-  foot_l_pos = m44_mul_v3(inv_world, foot_l_pos);
-  
-  inverse_kinematics_solve(thigh_r, foot_r, foot_r_pos);
-  inverse_kinematics_solve(thigh_l, foot_l, foot_l_pos);
-  */
-  
-  bone* thigh_r = skeleton_bone_name(imrod->pose, "thigh_r");
-  bone* foot_r = skeleton_bone_name(imrod->pose, "foot_r");
-  matrix_4x4 inv_world = m44_inverse(m44_world(imrod->position, imrod->scale, imrod->rotation));
-  
   
   vector3 local_target = m44_mul_v3(inv_world, ik_target);
   
   inverse_kinematics_solve(thigh_r, foot_r, local_target);
+  */
   
 }
 
@@ -495,6 +478,7 @@ void renderers_render() {
       
       matrix_4x4 foot_pos = bone_transform(skeleton_bone_name(a_imrod->pose, "foot_r"));
       
+      /*
       vector3 pos = m44_mul_v3(foot_pos, v3_zero());
       pos = m44_mul_v3(m44_world(a_imrod->position, a_imrod->scale, a_imrod->rotation), pos);
       
@@ -509,6 +493,7 @@ void renderers_render() {
       glColor3f(1,1,1);
       glPointSize(1.0);
       glEnable(GL_DEPTH_TEST);
+      */
       
     } else if (object_id == 3) {
       forward_renderer_render_static(s_dino);

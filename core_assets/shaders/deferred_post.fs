@@ -12,8 +12,8 @@ uniform sampler3D lut;
 vec3 color_correction(vec3 color, sampler3D lut, int lut_size);
 vec3 fxaa(sampler2D tex, vec2 uvs, int width, int height);
 vec3 fxaa_unsharp(sampler2D tex, vec2 uvs, int width, int height);
-vec3 unsharp_mask(sampler2D input, vec2 coords, float strength, int width, int height);
-vec3 chromatic_aberration(sampler2D input, vec2 coords, float offset);
+vec3 unsharp_mask(sampler2D screen, vec2 coords, float strength, int width, int height);
+vec3 chromatic_aberration(sampler2D screen, vec2 coords, float offset);
 
 /* End */
 

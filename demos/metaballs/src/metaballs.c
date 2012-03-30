@@ -15,6 +15,7 @@ static int mouse_right_down;
 void metaballs_init() {
   
   graphics_viewport_set_title("Metaballs");
+  graphics_viewport_set_dimensions(1280, 720);
   graphics_set_multisamples(16);
   
 #ifdef OPEN_GL_CPU
