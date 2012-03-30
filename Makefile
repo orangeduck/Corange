@@ -22,12 +22,15 @@ endif
 
 $(OUT): $(OBJ_FILES)
 	$(CC) $(OBJ_FILES) $(LFLAGS) -o $@
-
-obj/%.o: src/%.c
+	
+obj/%.o: src/%.c obj
 	$(CC) $< -c $(CFLAGS) -o $@
 
-obj/%.o: src/*/%.c
+obj/%.o: src/*/%.c obj
 	$(CC) $< -c $(CFLAGS) -o $@
+	
+obj:
+	mkdir obj
 	
 corange.res: corange.rc
 	windres $< -O coff -o $@
