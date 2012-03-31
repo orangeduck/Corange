@@ -6,6 +6,7 @@
 #include "entities/camera.h"
 #include "entities/light.h"
 #include "entities/static_object.h"
+#include "entities/animated_object.h"
 
 void deferred_renderer_init();
 void deferred_renderer_finish();

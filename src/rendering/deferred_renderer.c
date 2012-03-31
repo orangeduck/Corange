@@ -11,9 +11,7 @@
 #include "asset_manager.h"
 #include "graphics_manager.h"
 
-#include "shadow_mapper.h"
-
-#include "deferred_renderer.h"
+#include "rendering/deferred_renderer.h"
 
 static camera* CAMERA = NULL;
 
@@ -378,8 +376,10 @@ static void deferred_renderer_use_material(material* mat, shader_program* PROG) 
 
 }
 
-static void deferred_renderer_setup_camera() {
+void deferred_renderer_begin() {
 
+  glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+  
   matrix_4x4 viewm = camera_view_matrix(CAMERA);
   matrix_4x4 projm = camera_proj_matrix(CAMERA, graphics_viewport_ratio() );
   
@@ -397,14 +397,6 @@ static void deferred_renderer_setup_camera() {
   
   m44_to_array(lviewm, LIGHT_VIEW_MATRIX);
   m44_to_array(lprojm, LIGHT_PROJ_MATRIX);
-
-}
-
-void deferred_renderer_begin() {
-
-  glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-  
-  deferred_renderer_setup_camera();
   
   GLenum buffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
   glDrawBuffers(3, buffers);

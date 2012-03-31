@@ -15,14 +15,15 @@
 #include "graphics_manager.h"
 #include "asset_manager.h"
 
-#include "forward_renderer.h"
+#include "rendering/forward_renderer.h"
 
-static int use_shadows;
+static bool use_shadows;
 
 static camera* CAMERA = NULL;
 static light* SHADOW_LIGHT = NULL;
 
 static texture* SHADOW_TEX = NULL;
+static texture* DEPTH_TEX = NULL;
 static texture* COLOR_CORRECTION = NULL;
 static texture* VIGNETTING = NULL;
 
@@ -199,13 +200,18 @@ void forward_renderer_set_shadow_light(light* l) {
 void forward_renderer_set_shadow_texture(texture* t) {
   
   if ( t == NULL) {
-    use_shadows = 0;
+    use_shadows = false;
   } else {
-    use_shadows = 1;
+    use_shadows = true;
     SHADOW_TEX = t;
   }
   
 }
+
+void forward_renderer_set_depth_texture(texture* t) {
+  DEPTH_TEX = t;
+}
+
 
 void forward_renderer_set_color_correction(texture* t) {
   COLOR_CORRECTION = t;
@@ -257,15 +263,6 @@ void forward_renderer_begin() {
   
   render_gradient();
   
-  forward_renderer_setup_camera();
-  
-  glEnable(GL_DEPTH_TEST);
-  glEnable(GL_CULL_FACE);
-  
-}
-
-void forward_renderer_setup_camera() {
-
   if (CAMERA == NULL) {
     error("Camera not set yet!");
   }
@@ -292,6 +289,9 @@ void forward_renderer_setup_camera() {
   
   m44_to_array(lviewm, lview_matrix);
   m44_to_array(lprojm, lproj_matrix);
+  
+  glEnable(GL_DEPTH_TEST);
+  glEnable(GL_CULL_FACE);
   
 }
 

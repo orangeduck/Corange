@@ -24,8 +24,6 @@ void forward_renderer_set_color_correction(texture* t);
 void forward_renderer_add_light(light* l);
 void forward_renderer_remove_light(light* l);
 
-void forward_renderer_setup_camera();
-
 void forward_renderer_begin();
 void forward_renderer_end();
 

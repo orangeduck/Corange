@@ -28,7 +28,7 @@ endif
 $(OUT): $(OBJ_FILES) corange
 	$(CC) -g $(OBJ_FILES) $(LFLAGS) -o $@
 
-obj/%.o: src/%.c obj
+obj/%.o: src/%.c | obj
 	$(CC) $< -c $(CFLAGS) -o $@
 
 obj:
