@@ -1,5 +1,5 @@
 string name = cello
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/cello/cello.dds
 texture bump_map = ./resources/cello/cello_nm.dds
 texture spec_map = ./resources/cello/cello_s.dds
