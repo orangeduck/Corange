@@ -1,0 +1,3 @@
+vertex_shader : $CORANGE/shaders/deferred/static.vs
+fragment_shader : $CORANGE/shaders/deferred/static.fs
+fragment_shader : $CORANGE/shaders/colors.fs

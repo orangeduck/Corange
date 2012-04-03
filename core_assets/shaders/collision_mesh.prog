@@ -1,2 +1,0 @@
-vertex_shader : $CORANGE/shaders/collision_mesh.vs
-fragment_shader : $CORANGE/shaders/collision_mesh.fs

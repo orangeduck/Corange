@@ -1,5 +1,5 @@
 submaterial corvette_rudder
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/corvette_rudder.dds
 texture bump_map = ./resources/corvette/corvette_rudder_nm.dds
 texture spec_map = ./resources/corvette/corvette_rudder_s.dds
@@ -10,7 +10,7 @@ float specular_level = 2.0
 float env_amount = 4.0
 
 submaterial rigging_board
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/rigging_board.dds
 texture bump_map = ./resources/corvette/rigging_board_nm.dds
 texture spec_map = ./resources/corvette/rigging_board_s.dds
@@ -21,7 +21,7 @@ float specular_level = 2.0
 float env_amount = 1.0
 
 submaterial rigging_board
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/rigging_board.dds
 texture bump_map = ./resources/corvette/rigging_board_nm.dds
 texture spec_map = ./resources/corvette/rigging_board_s.dds
@@ -32,7 +32,7 @@ float specular_level = 2.0
 float env_amount = 1.0
 
 submaterial anchor_port
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/anchor_port.dds
 texture bump_map = ./resources/corvette/anchor_port_nm.dds
 texture spec_map = ./resources/corvette/anchor_port_s.dds
@@ -43,7 +43,7 @@ float specular_level = 2.0
 float env_amount = 4.0
 
 submaterial ship_loader_hook
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/ship_loader_hook.dds
 texture bump_map = ./resources/corvette/ship_loader_hook_nm.dds
 texture spec_map = ./resources/corvette/ship_loader_hook_s.dds
@@ -54,7 +54,7 @@ float specular_level = 2.0
 float env_amount = 4.0
 
 submaterial rope
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/rope.dds
 texture bump_map = ./resources/corvette/rope_nm.dds
 texture spec_map = ./resources/corvette/rope_s.dds
@@ -65,7 +65,7 @@ float specular_level = 2.0
 float env_amount = 1.0
 
 submaterial corvette_mast
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/corvette_mast.dds
 texture bump_map = ./resources/corvette/corvette_mast_nm.dds
 texture spec_map = ./resources/corvette/corvette_mast_s.dds
@@ -76,7 +76,7 @@ float specular_level = 2.0
 float env_amount = 2.0
 
 submaterial corvette_mast
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/corvette_mast.dds
 texture bump_map = ./resources/corvette/corvette_mast_nm.dds
 texture spec_map = ./resources/corvette/corvette_mast_s.dds
@@ -87,7 +87,7 @@ float specular_level = 2.0
 float env_amount = 2.0
 
 submaterial corvette_banister
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/corvette_banister.dds
 texture bump_map = ./resources/corvette/corvette_banister_nm.dds
 texture spec_map = ./resources/corvette/corvette_banister_s.dds
@@ -98,7 +98,7 @@ float specular_level = 2.0
 float env_amount = 1.0
 
 submaterial corvette_banister
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/corvette_banister.dds
 texture bump_map = ./resources/corvette/corvette_banister_nm.dds
 texture spec_map = ./resources/corvette/corvette_banister_s.dds
@@ -109,7 +109,7 @@ float specular_level = 2.0
 float env_amount = 1.0
 
 submaterial captains_wheel
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/captains_wheel.dds
 texture bump_map = ./resources/corvette/captains_wheel_nm.dds
 texture spec_map = ./resources/corvette/captains_wheel_s.dds
@@ -120,7 +120,7 @@ float specular_level = 2.0
 float env_amount = 2.0
 
 submaterial corvette_rigging
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/corvette_rigging.dds
 texture bump_map = ./resources/corvette/corvette_rigging_nm.dds
 texture spec_map = ./resources/corvette/corvette_rigging_s.dds
@@ -131,7 +131,7 @@ float specular_level = 2.0
 float env_amount = 2.0
 
 submaterial corvette_rigging
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/corvette_rigging.dds
 texture bump_map = ./resources/corvette/corvette_rigging_nm.dds
 texture spec_map = ./resources/corvette/corvette_rigging_s.dds
@@ -142,7 +142,7 @@ float specular_level = 2.0
 float env_amount = 2.0
 
 submaterial corvette_rigging
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/corvette_rigging.dds
 texture bump_map = ./resources/corvette/corvette_rigging_nm.dds
 texture spec_map = ./resources/corvette/corvette_rigging_s.dds
@@ -153,7 +153,7 @@ float specular_level = 2.0
 float env_amount = 2.0
 
 submaterial ship_ladder
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/ship_ladder.dds
 texture bump_map = ./resources/corvette/ship_ladder_nm.dds
 texture spec_map = ./resources/corvette/black.dds
@@ -164,7 +164,7 @@ float specular_level = 2.0
 float env_amount = 1.0
 
 submaterial corvette_figurehead
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/corvette_figurehead.dds
 texture bump_map = ./resources/corvette/corvette_figurehead_nm.dds
 texture spec_map = ./resources/corvette/corvette_figurehead_s.dds
@@ -175,7 +175,7 @@ float specular_level = 2.0
 float env_amount = 2.0
 
 submaterial black_rope
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/black_rope.dds
 texture bump_map = ./resources/corvette/rope_nm.dds
 texture spec_map = ./resources/corvette/rope_s.dds
@@ -186,7 +186,7 @@ float specular_level = 2.0
 float env_amount = 1.0
 
 submaterial rigging_bits
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/rigging_bits.dds
 texture bump_map = ./resources/corvette/rigging_bits_nm.dds
 texture spec_map = ./resources/corvette/black.dds
@@ -197,7 +197,7 @@ float specular_level = 2.0
 float env_amount = 2.0
 
 submaterial rope
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/rope.dds
 texture bump_map = ./resources/corvette/rope_nm.dds
 texture spec_map = ./resources/corvette/rope_s.dds
@@ -208,7 +208,7 @@ float specular_level = 2.0
 float env_amount = 1.0
 
 submaterial wire
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/wire.dds
 texture bump_map = ./resources/corvette/wire_nm.dds
 texture spec_map = ./resources/corvette/wire_s.dds
@@ -219,7 +219,7 @@ float specular_level = 2.0
 float env_amount = 2.0
 
 submaterial black_rope
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/black_rope.dds
 texture bump_map = ./resources/corvette/rope_nm.dds
 texture spec_map = ./resources/corvette/rope_s.dds
@@ -230,7 +230,7 @@ float specular_level = 2.0
 float env_amount = 1.0
 
 submaterial rigging_bits
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/rigging_bits.dds
 texture bump_map = ./resources/corvette/rigging_bits_nm.dds
 texture spec_map = ./resources/corvette/black.dds
@@ -241,7 +241,7 @@ float specular_level = 2.0
 float env_amount = 2.0
 
 submaterial rope
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/rope.dds
 texture bump_map = ./resources/corvette/rope_nm.dds
 texture spec_map = ./resources/corvette/rope_s.dds
@@ -252,7 +252,7 @@ float specular_level = 2.0
 float env_amount = 1.0
 
 submaterial wire
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/wire.dds
 texture bump_map = ./resources/corvette/wire_nm.dds
 texture spec_map = ./resources/corvette/wire_s.dds
@@ -263,7 +263,7 @@ float specular_level = 2.0
 float env_amount = 2.0
 
 submaterial black_rope
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/black_rope.dds
 texture bump_map = ./resources/corvette/rope_nm.dds
 texture spec_map = ./resources/corvette/rope_s.dds
@@ -274,7 +274,7 @@ float specular_level = 2.0
 float env_amount = 1.0
 
 submaterial rigging_bits
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/rigging_bits.dds
 texture bump_map = ./resources/corvette/rigging_bits_nm.dds
 texture spec_map = ./resources/corvette/black.dds
@@ -285,7 +285,7 @@ float specular_level = 2.0
 float env_amount = 2.0
 
 submaterial rope
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/rope.dds
 texture bump_map = ./resources/corvette/rope_nm.dds
 texture spec_map = ./resources/corvette/rope_s.dds
@@ -296,7 +296,7 @@ float specular_level = 2.0
 float env_amount = 1.0
 
 submaterial wire
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/wire.dds
 texture bump_map = ./resources/corvette/wire_nm.dds
 texture spec_map = ./resources/corvette/wire_s.dds
@@ -307,7 +307,7 @@ float specular_level = 2.0
 float env_amount = 2.0
 
 submaterial black_rope
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/black_rope.dds
 texture bump_map = ./resources/corvette/rope_nm.dds
 texture spec_map = ./resources/corvette/rope_s.dds
@@ -318,7 +318,7 @@ float specular_level = 2.0
 float env_amount = 1.0
 
 submaterial rigging_bits
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/rigging_bits.dds
 texture bump_map = ./resources/corvette/rigging_bits_nm.dds
 texture spec_map = ./resources/corvette/black.dds
@@ -329,7 +329,7 @@ float specular_level = 2.0
 float env_amount = 2.0
 
 submaterial rope
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/rope.dds
 texture bump_map = ./resources/corvette/rope_nm.dds
 texture spec_map = ./resources/corvette/rope_s.dds
@@ -340,7 +340,7 @@ float specular_level = 2.0
 float env_amount = 1.0
 
 submaterial wire
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/wire.dds
 texture bump_map = ./resources/corvette/wire_nm.dds
 texture spec_map = ./resources/corvette/wire_s.dds
@@ -351,7 +351,7 @@ float specular_level = 2.0
 float env_amount = 2.0
 
 submaterial black_rope
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/black_rope.dds
 texture bump_map = ./resources/corvette/rope_nm.dds
 texture spec_map = ./resources/corvette/rope_s.dds
@@ -362,7 +362,7 @@ float specular_level = 2.0
 float env_amount = 1.0
 
 submaterial rigging_bits
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/rigging_bits.dds
 texture bump_map = ./resources/corvette/rigging_bits_nm.dds
 texture spec_map = ./resources/corvette/black.dds
@@ -373,7 +373,7 @@ float specular_level = 2.0
 float env_amount = 2.0
 
 submaterial rope
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/rope.dds
 texture bump_map = ./resources/corvette/rope_nm.dds
 texture spec_map = ./resources/corvette/rope_s.dds
@@ -384,7 +384,7 @@ float specular_level = 2.0
 float env_amount = 1.0
 
 submaterial wire
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/wire.dds
 texture bump_map = ./resources/corvette/wire_nm.dds
 texture spec_map = ./resources/corvette/wire_s.dds
@@ -395,7 +395,7 @@ float specular_level = 2.0
 float env_amount = 2.0
 
 submaterial black_rope
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/black_rope.dds
 texture bump_map = ./resources/corvette/rope_nm.dds
 texture spec_map = ./resources/corvette/rope_s.dds
@@ -406,7 +406,7 @@ float specular_level = 2.0
 float env_amount = 1.0
 
 submaterial rigging_bits
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/rigging_bits.dds
 texture bump_map = ./resources/corvette/rigging_bits_nm.dds
 texture spec_map = ./resources/corvette/black.dds
@@ -417,7 +417,7 @@ float specular_level = 2.0
 float env_amount = 2.0
 
 submaterial rope
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/rope.dds
 texture bump_map = ./resources/corvette/rope_nm.dds
 texture spec_map = ./resources/corvette/rope_s.dds
@@ -428,7 +428,7 @@ float specular_level = 2.0
 float env_amount = 1.0
 
 submaterial wire
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/wire.dds
 texture bump_map = ./resources/corvette/wire_nm.dds
 texture spec_map = ./resources/corvette/wire_s.dds
@@ -439,7 +439,7 @@ float specular_level = 2.0
 float env_amount = 2.0
 
 submaterial furled_sails
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/furled_sails.dds
 texture bump_map = ./resources/corvette/furled_sails_nm.dds
 texture spec_map = ./resources/corvette/furled_sails_s.dds
@@ -450,7 +450,7 @@ float specular_level = 2.0
 float env_amount = 2.0
 
 submaterial mast_cross_beam
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/mast_cross_beam.dds
 texture bump_map = ./resources/corvette/mast_cross_beam_nm.dds
 texture spec_map = ./resources/corvette/black.dds
@@ -461,7 +461,7 @@ float specular_level = 2.0
 float env_amount = 1.0
 
 submaterial furled_sails
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/furled_sails.dds
 texture bump_map = ./resources/corvette/furled_sails_nm.dds
 texture spec_map = ./resources/corvette/furled_sails_s.dds
@@ -472,7 +472,7 @@ float specular_level = 2.0
 float env_amount = 2.0
 
 submaterial mast_cross_beam
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/mast_cross_beam.dds
 texture bump_map = ./resources/corvette/mast_cross_beam_nm.dds
 texture spec_map = ./resources/corvette/black.dds
@@ -483,7 +483,7 @@ float specular_level = 2.0
 float env_amount = 1.0
 
 submaterial furled_sails
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/furled_sails.dds
 texture bump_map = ./resources/corvette/furled_sails_nm.dds
 texture spec_map = ./resources/corvette/furled_sails_s.dds
@@ -494,7 +494,7 @@ float specular_level = 2.0
 float env_amount = 2.0
 
 submaterial mast_cross_beam
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/mast_cross_beam.dds
 texture bump_map = ./resources/corvette/mast_cross_beam_nm.dds
 texture spec_map = ./resources/corvette/black.dds
@@ -505,7 +505,7 @@ float specular_level = 2.0
 float env_amount = 1.0
 
 submaterial furled_sails
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/furled_sails.dds
 texture bump_map = ./resources/corvette/furled_sails_nm.dds
 texture spec_map = ./resources/corvette/furled_sails_s.dds
@@ -516,7 +516,7 @@ float specular_level = 2.0
 float env_amount = 2.0
 
 submaterial mast_cross_beam
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/mast_cross_beam.dds
 texture bump_map = ./resources/corvette/mast_cross_beam_nm.dds
 texture spec_map = ./resources/corvette/black.dds
@@ -527,7 +527,7 @@ float specular_level = 2.0
 float env_amount = 1.0
 
 submaterial corvette_mast
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/corvette_mast.dds
 texture bump_map = ./resources/corvette/corvette_mast_nm.dds
 texture spec_map = ./resources/corvette/corvette_mast_s.dds
@@ -538,7 +538,7 @@ float specular_level = 2.0
 float env_amount = 2.0
 
 submaterial corvette_front_mast
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/corvette_front_mast.dds
 texture bump_map = ./resources/corvette/corvette_front_mast_nm.dds
 texture spec_map = ./resources/corvette/corvette_front_mast_s.dds
@@ -549,7 +549,7 @@ float specular_level = 2.0
 float env_amount = 2.0
 
 submaterial corvette_decoration
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/corvette_decoration.dds
 texture bump_map = ./resources/corvette/corvette_decoration_nm.dds
 texture spec_map = ./resources/corvette/corvette_decoration_s.dds
@@ -560,7 +560,7 @@ float specular_level = 2.0
 float env_amount = 2.0
 
 submaterial captains_wheel
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/captains_wheel.dds
 texture bump_map = ./resources/corvette/captains_wheel_nm.dds
 texture spec_map = ./resources/corvette/captains_wheel_s.dds
@@ -571,7 +571,7 @@ float specular_level = 2.0
 float env_amount = 2.0
 
 submaterial ship_ladder
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/ship_ladder.dds
 texture bump_map = ./resources/corvette/ship_ladder_nm.dds
 texture spec_map = ./resources/corvette/black.dds
@@ -582,7 +582,7 @@ float specular_level = 2.0
 float env_amount = 1.0
 
 submaterial capstan
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/capstan.dds
 texture bump_map = ./resources/corvette/capstan_nm.dds
 texture spec_map = ./resources/corvette/capstan_s.dds
@@ -593,7 +593,7 @@ float specular_level = 2.0
 float env_amount = 2.0
 
 submaterial mast_turner
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/mast_turner.dds
 texture bump_map = ./resources/corvette/mast_turner_nm.dds
 texture spec_map = ./resources/corvette/mast_turner_s.dds
@@ -604,7 +604,7 @@ float specular_level = 2.0
 float env_amount = 2.0
 
 submaterial anchor
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/anchor.dds
 texture bump_map = ./resources/corvette/anchor_nm.dds
 texture spec_map = ./resources/corvette/anchor_s.dds
@@ -615,7 +615,7 @@ float specular_level = 2.0
 float env_amount = 2.0
 
 submaterial anchor
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/anchor.dds
 texture bump_map = ./resources/corvette/anchor_nm.dds
 texture spec_map = ./resources/corvette/anchor_s.dds
@@ -626,7 +626,7 @@ float specular_level = 2.0
 float env_amount = 2.0
 
 submaterial ship_below_area
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/ship_below_area.dds
 texture bump_map = ./resources/corvette/ship_below_area_nm.dds
 texture spec_map = ./resources/corvette/black.dds
@@ -637,7 +637,7 @@ float specular_level = 2.0
 float env_amount = 1.0
 
 submaterial ships_grate_medium
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/ships_grate_medium.dds
 texture bump_map = ./resources/corvette/ships_grate_medium_nm.dds
 texture spec_map = ./resources/corvette/black.dds
@@ -648,7 +648,7 @@ float specular_level = 2.0
 float env_amount = 1.0
 
 submaterial lantern
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/lantern.dds
 texture bump_map = ./resources/corvette/lantern_nm.dds
 texture spec_map = ./resources/corvette/lantern_s.dds
@@ -659,7 +659,7 @@ float specular_level = 2.0
 float env_amount = 2.0
 
 submaterial lantern_glass
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/lantern_glass.dds
 texture bump_map = ./resources/corvette/lantern_glass_nm.dds
 texture spec_map = ./resources/corvette/lantern_glass_s.dds
@@ -670,7 +670,7 @@ float specular_level = 2.0
 float env_amount = 2.0
 
 submaterial ship_below_area
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/ship_below_area.dds
 texture bump_map = ./resources/corvette/ship_below_area_nm.dds
 texture spec_map = ./resources/corvette/black.dds
@@ -681,7 +681,7 @@ float specular_level = 2.0
 float env_amount = 1.0
 
 submaterial ship_below_area
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/ship_below_area.dds
 texture bump_map = ./resources/corvette/ship_below_area_nm.dds
 texture spec_map = ./resources/corvette/black.dds
@@ -692,7 +692,7 @@ float specular_level = 2.0
 float env_amount = 1.0
 
 submaterial corvette_hull
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/corvette_hull.dds
 texture bump_map = ./resources/corvette/corvette_hull_nm.dds
 texture spec_map = ./resources/corvette/corvette_hull_s.dds
@@ -703,7 +703,7 @@ float specular_level = 2.0
 float env_amount = 2.0
 
 submaterial corvette_cabin
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/corvette_cabin.dds
 texture bump_map = ./resources/corvette/corvette_cabin_nm.dds
 texture spec_map = ./resources/corvette/corvette_cabin_s.dds
@@ -714,7 +714,7 @@ float specular_level = 2.0
 float env_amount = 2.0
 
 submaterial corvette_floor
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/corvette_floor.dds
 texture bump_map = ./resources/corvette/corvette_floor_nm.dds
 texture spec_map = ./resources/corvette/corvette_floor_s.dds
@@ -725,7 +725,7 @@ float specular_level = 2.0
 float env_amount = 2.0
 
 submaterial corvette_border
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/corvette_border.dds
 texture bump_map = ./resources/corvette/corvette_border_nm.dds
 texture spec_map = ./resources/corvette/corvette_border_s.dds
@@ -736,7 +736,7 @@ float specular_level = 2.0
 float env_amount = 2.0
 
 submaterial corvette_rudder
-program prog = $CORANGE/shaders/norm_spec_env.prog
+program prog = $CORANGE/shaders/forward/static.prog
 texture diffuse_map = ./resources/corvette/corvette_rudder.dds
 texture bump_map = ./resources/corvette/corvette_rudder_nm.dds
 texture spec_map = ./resources/corvette/corvette_rudder_s.dds

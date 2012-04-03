@@ -11,7 +11,7 @@
 #include "graphics_manager.h"
 #include "asset_manager.h"
 
-#include "shadow_mapper.h"
+#include "rendering/depth_mapper.h"
 
 static shader_program* depth_shader;
 static shader_program* depth_shader_animated;
@@ -21,7 +21,7 @@ static GLuint fbo;
 static GLuint depth_buffer;
 static GLuint depth_texture;
 
-static light* LIGHT;
+static camera* CAMERA;
 
 static float proj_matrix[16];
 static float view_matrix[16];
@@ -30,9 +30,9 @@ static float world_matrix[16];
 static int BONE_INDICIES;
 static int BONE_WEIGHTS;
 
-void shadow_mapper_init(light* l) {
+void depth_mapper_init(camera* c) {
 
-  LIGHT = l;
+  CAMERA = c;
   
   depth_shader = asset_load_get("$CORANGE/shaders/depth.prog");
   depth_shader_animated = asset_load_get("$CORANGE/shaders/depth_animated.prog");
@@ -43,8 +43,8 @@ void shadow_mapper_init(light* l) {
   glGenFramebuffers(1, &fbo);
   glBindFramebuffer(GL_FRAMEBUFFER, fbo);
   
-  int width = l->shadow_map_width;
-  int height = l->shadow_map_height;
+  int width = graphics_viewport_width();
+  int height = graphics_viewport_height();
   
   glGenRenderbuffers(1, &depth_buffer);
   glBindRenderbuffer(GL_RENDERBUFFER, depth_buffer);
@@ -54,8 +54,8 @@ void shadow_mapper_init(light* l) {
   glGenTextures(1, &depth_texture);
   glBindTexture(GL_TEXTURE_2D, depth_texture);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth_texture, 0);
@@ -67,7 +67,7 @@ void shadow_mapper_init(light* l) {
   
 }
 
-void shadow_mapper_finish() {
+void depth_mapper_finish() {
   
   texture_delete(texture_ptr);
   
@@ -78,10 +78,17 @@ void shadow_mapper_finish() {
   
 }
 
-static void shadow_mapper_setup_camera() {
+void depth_mapper_begin() {
   
-  matrix_4x4 viewm = light_view_matrix(LIGHT);
-  matrix_4x4 projm = light_proj_matrix(LIGHT);
+  glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+  
+  glClearDepth(1.0f);
+  glClear(GL_DEPTH_BUFFER_BIT);
+  
+  glViewport( 0, 0, graphics_viewport_width(), graphics_viewport_height());
+  
+  matrix_4x4 viewm = camera_view_matrix(CAMERA);
+  matrix_4x4 projm = camera_proj_matrix(CAMERA, graphics_viewport_ratio());
   
   m44_to_array(viewm, view_matrix);
   m44_to_array(projm, proj_matrix);
@@ -92,26 +99,13 @@ static void shadow_mapper_setup_camera() {
   glMatrixMode(GL_PROJECTION);
   glLoadMatrixf(proj_matrix);
   
-}
-
-void shadow_mapper_begin() {
-  
-  glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-  
-  glClearDepth(1.0f);
-  glClear(GL_DEPTH_BUFFER_BIT);
-  
-  glViewport( 0, 0, LIGHT->shadow_map_width, LIGHT->shadow_map_height);
-  
-  shadow_mapper_setup_camera();
-  
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);
   glCullFace(GL_FRONT);
   
 }
 
-void shadow_mapper_end() {
+void depth_mapper_end() {
   
   glCullFace(GL_BACK);
   glDisable(GL_CULL_FACE);
@@ -123,11 +117,7 @@ void shadow_mapper_end() {
   
 }
 
-void shadow_mapper_render_static(static_object* s) {
-  
-  if (!s->cast_shadows) {
-    return;
-  }
+void depth_mapper_render_static(static_object* s) {
   
   matrix_4x4 r_world_matrix = m44_world( s->position, s->scale, s->rotation );
   m44_to_array(r_world_matrix, world_matrix);
@@ -201,7 +191,7 @@ void shadow_mapper_render_static(static_object* s) {
 static matrix_4x4 bone_matrices[MAX_BONES];
 static float bone_matrix_data[4 * 4 * MAX_BONES];
 
-void shadow_mapper_render_animated(animated_object* ao) {
+void depth_mapper_render_animated(animated_object* ao) {
   
   if (ao->skeleton->num_bones > MAX_BONES) {
     error("animated object skeleton has too many bones (over %i)", MAX_BONES);
@@ -276,7 +266,7 @@ void shadow_mapper_render_animated(animated_object* ao) {
   
 }
 
-void shadow_mapper_render_landscape(landscape* ls) {
+void depth_mapper_render_landscape(landscape* ls) {
   
   matrix_4x4 r_world_matrix = m44_world( ls->position, ls->scale, ls->rotation );
   m44_to_array(r_world_matrix, world_matrix);
@@ -315,6 +305,6 @@ void shadow_mapper_render_landscape(landscape* ls) {
 
 }
 
-texture* shadow_mapper_depth_texture() {
+texture* depth_mapper_depth_texture() {
   return texture_ptr;
 }

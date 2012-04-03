@@ -15,14 +15,15 @@
 #include "graphics_manager.h"
 #include "asset_manager.h"
 
-#include "forward_renderer.h"
+#include "rendering/forward_renderer.h"
 
-static int use_shadows;
+static bool use_shadows;
 
 static camera* CAMERA = NULL;
 static light* SHADOW_LIGHT = NULL;
 
 static texture* SHADOW_TEX = NULL;
+static texture* DEPTH_TEX = NULL;
 static texture* COLOR_CORRECTION = NULL;
 static texture* VIGNETTING = NULL;
 
@@ -89,8 +90,11 @@ void forward_renderer_init() {
   COLOR_CORRECTION = asset_load_get("$CORANGE/resources/identity.lut");
   VIGNETTING = asset_load_get("$CORANGE/resources/vignetting.dds");
   GRADIENT = asset_load_get("$CORANGE/shaders/gradient.prog");
-  SCREEN_TONEMAP = asset_load_get("$CORANGE/shaders/deferred_tonemap.prog");
-  SCREEN_POST = asset_load_get("$CORANGE/shaders/deferred_post.prog");
+  
+  load_folder("$CORANGE/shaders/forward/");
+  
+  SCREEN_TONEMAP = asset_load_get("$CORANGE/shaders/forward/tonemap.prog");
+  SCREEN_POST = asset_load_get("$CORANGE/shaders/forward/post.prog");
   
   glClearColor(0.2, 0.2, 0.2, 1.0f);
   glClearDepth(1.0f);
@@ -154,6 +158,8 @@ void forward_renderer_finish() {
   glDeleteRenderbuffers(1, &ldr_buffer);
   glDeleteTextures(1,&ldr_texture);
   
+  unload_folder("$CORANGE/shaders/forward/");
+  
 }
 
 void forward_renderer_add_light(light* l) {
@@ -199,13 +205,18 @@ void forward_renderer_set_shadow_light(light* l) {
 void forward_renderer_set_shadow_texture(texture* t) {
   
   if ( t == NULL) {
-    use_shadows = 0;
+    use_shadows = false;
   } else {
-    use_shadows = 1;
+    use_shadows = true;
     SHADOW_TEX = t;
   }
   
 }
+
+void forward_renderer_set_depth_texture(texture* t) {
+  DEPTH_TEX = t;
+}
+
 
 void forward_renderer_set_color_correction(texture* t) {
   COLOR_CORRECTION = t;
@@ -257,15 +268,6 @@ void forward_renderer_begin() {
   
   render_gradient();
   
-  forward_renderer_setup_camera();
-  
-  glEnable(GL_DEPTH_TEST);
-  glEnable(GL_CULL_FACE);
-  
-}
-
-void forward_renderer_setup_camera() {
-
   if (CAMERA == NULL) {
     error("Camera not set yet!");
   }
@@ -292,6 +294,9 @@ void forward_renderer_setup_camera() {
   
   m44_to_array(lviewm, lview_matrix);
   m44_to_array(lprojm, lproj_matrix);
+  
+  glEnable(GL_DEPTH_TEST);
+  glEnable(GL_CULL_FACE);
   
 }
 
@@ -606,61 +611,6 @@ static void forward_renderer_disuse_material() {
 
 }
 
-static void render_collision_mesh(collision_mesh* cm) {
-  
-  if (cm->is_leaf) {
-    
-    shader_program* collision_prog = asset_load_get("$CORANGE/shaders/collision_mesh.prog");
-    GLuint collision_handle = shader_program_handle(collision_prog);
-    glUseProgram(collision_handle);
-    
-    GLint color = glGetUniformLocation(collision_handle, "color");
-    glUniform3f(color, 1, 1, 1);
-    
-    GLint world_matrix_u = glGetUniformLocation(collision_handle, "world_matrix");
-    glUniformMatrix4fv(world_matrix_u, 1, 0, world_matrix);
-    
-    GLint proj_matrix_u = glGetUniformLocation(collision_handle, "proj_matrix");
-    glUniformMatrix4fv(proj_matrix_u, 1, 0, proj_matrix);
-    
-    GLint view_matrix_u = glGetUniformLocation(collision_handle, "view_matrix");
-    glUniformMatrix4fv(view_matrix_u, 1, 0, view_matrix);
-    
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-   
-    glEnable(GL_POLYGON_OFFSET_FILL);
-    glPolygonOffset(-1, 1.0);
-    
-    glVertexPointer(3, GL_FLOAT, 0, cm->verticies);
-    glEnableClientState(GL_VERTEX_ARRAY);
-    
-      glDrawArrays(GL_TRIANGLES, 0, cm->num_verticies);
-    
-    glDisableClientState(GL_VERTEX_ARRAY);
-    
-    glDisable(GL_BLEND);
-    
-    glDisable(GL_POLYGON_OFFSET_FILL);
-    glPolygonOffset(0, 0);
-    
-    glUseProgram(0);
-    
-  } else {
-    render_collision_mesh(cm->front);
-    render_collision_mesh(cm->back);
-  }
-
-}
-
-void forward_renderer_render_collision_body(collision_body* cb) {
-  
-  if (cb->collision_type == collision_type_mesh) {
-    render_collision_mesh(cb->collision_mesh);
-  }
-  
-}
-
 void forward_renderer_render_static(static_object* so) {
   
   matrix_4x4 r_world_matrix = m44_world( so->position, so->scale, so->rotation );
@@ -730,13 +680,6 @@ void forward_renderer_render_static(static_object* so) {
     forward_renderer_disuse_material();
 
   }
-  
-  /*
-  if (so->collision_body != NULL) {
-    bsp_counter = 0;
-    render_bsp_mesh(so->collision_body->collision_mesh);
-  }
-  */
   
 }
 
@@ -1114,7 +1057,7 @@ void forward_renderer_render_landscape(landscape* ls) {
   matrix_4x4 r_world_matrix = m44_world(ls->position, ls->scale, ls->rotation);
   m44_to_array(r_world_matrix, world_matrix);
   
-  shader_program* terrain = asset_load_get("$CORANGE/shaders/terrain.prog");
+  shader_program* terrain = asset_get("$CORANGE/shaders/forward/terrain.prog");
   GLuint terrain_handle = shader_program_handle(terrain);
   glUseProgram(terrain_handle);
   

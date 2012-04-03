@@ -11,9 +11,7 @@
 #include "asset_manager.h"
 #include "graphics_manager.h"
 
-#include "shadow_mapper.h"
-
-#include "deferred_renderer.h"
+#include "rendering/deferred_renderer.h"
 
 static camera* CAMERA = NULL;
 
@@ -24,14 +22,14 @@ static float WORLD_MATRIX[16];
 static float LIGHT_VIEW_MATRIX[16];
 static float LIGHT_PROJ_MATRIX[16];
 
-static shader_program* PROGRAM;
+static shader_program* PROGRAM_STATIC;
 static shader_program* PROGRAM_ANIMATED;
 static shader_program* PROGRAM_CLEAR;
+static shader_program* PROGRAM_UI;
 static shader_program* PROGRAM_SSAO;
-
-static shader_program* SCREEN_PROGRAM;
-static shader_program* SCREEN_TONEMAP;
-static shader_program* SCREEN_POST;
+static shader_program* PROGRAM_COMPOSE;
+static shader_program* PROGRAM_TONEMAP;
+static shader_program* PROGRAM_POST;
 
 static int NORMAL;
 static int TANGENT;
@@ -104,18 +102,20 @@ void deferred_renderer_init() {
   ENVIRONMENT = asset_load_get("$CORANGE/resources/envmap.dds");
   VIGNETTING = asset_load_get("$CORANGE/resources/vignetting.dds");
   
-  PROGRAM = asset_load_get("$CORANGE/shaders/deferred.prog");
-  PROGRAM_ANIMATED = asset_load_get("$CORANGE/shaders/deferred_animated.prog");
-  PROGRAM_CLEAR = asset_load_get("$CORANGE/shaders/deferred_clear.prog");
-  PROGRAM_SSAO = asset_load_get("$CORANGE/shaders/deferred_ssao.prog");
+  load_folder("$CORANGE/shaders/deferred/");
   
-  SCREEN_TONEMAP = asset_load_get("$CORANGE/shaders/deferred_tonemap.prog");
-  SCREEN_PROGRAM = asset_load_get("$CORANGE/shaders/deferred_screen.prog");
-  SCREEN_POST = asset_load_get("$CORANGE/shaders/deferred_post.prog");
+  PROGRAM_STATIC = asset_get("$CORANGE/shaders/deferred/static.prog");
+  PROGRAM_ANIMATED = asset_get("$CORANGE/shaders/deferred/animated.prog");
+  PROGRAM_CLEAR = asset_get("$CORANGE/shaders/deferred/clear.prog");
+  PROGRAM_SSAO = asset_get("$CORANGE/shaders/deferred/ssao.prog");
+  PROGRAM_TONEMAP = asset_get("$CORANGE/shaders/deferred/tonemap.prog");
+  PROGRAM_COMPOSE = asset_get("$CORANGE/shaders/deferred/compose.prog");
+  PROGRAM_POST = asset_get("$CORANGE/shaders/deferred/post.prog");
+  PROGRAM_UI = asset_get("$CORANGE/shaders/deferred/ui.prog");
   
-  NORMAL = glGetAttribLocation(shader_program_handle(PROGRAM), "normal");
-  TANGENT = glGetAttribLocation(shader_program_handle(PROGRAM), "tangent");
-  BINORMAL = glGetAttribLocation(shader_program_handle(PROGRAM), "binormal");  
+  NORMAL = glGetAttribLocation(shader_program_handle(PROGRAM_STATIC), "normal");
+  TANGENT = glGetAttribLocation(shader_program_handle(PROGRAM_STATIC), "tangent");
+  BINORMAL = glGetAttribLocation(shader_program_handle(PROGRAM_STATIC), "binormal");  
   
   NORMAL_ANIMATED = glGetAttribLocation(shader_program_handle(PROGRAM_ANIMATED), "normal");
   TANGENT_ANIMATED = glGetAttribLocation(shader_program_handle(PROGRAM_ANIMATED), "tangent");
@@ -267,6 +267,8 @@ void deferred_renderer_finish() {
   glDeleteRenderbuffers(1, &ldr_buffer);
   glDeleteTextures(1,&ldr_texture);
   
+  unload_folder("$CORANGE/shaders/deferred/");
+  
 }
 
 void deferred_renderer_add_light(light* l) {
@@ -413,10 +415,10 @@ void deferred_renderer_begin() {
   glClearDepth(1.0f);
   glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
   
-  glUseProgram(*PROGRAM_CLEAR);
+  glUseProgram(shader_program_handle(PROGRAM_CLEAR));
   
-  GLint start = glGetUniformLocation(*PROGRAM_CLEAR, "start");
-  GLint end = glGetUniformLocation(*PROGRAM_CLEAR, "end");
+  GLint start = glGetUniformLocation(shader_program_handle(PROGRAM_CLEAR), "start");
+  GLint end = glGetUniformLocation(shader_program_handle(PROGRAM_CLEAR), "end");
   glUniform4f(start, 0.5, 0.5, 0.5, 1.0);
   glUniform4f(end, 0.0, 0.0, 0.0, 1.0);
   
@@ -512,7 +514,7 @@ void deferred_renderer_end() {
   
   glViewport(0, 0, graphics_viewport_width(), graphics_viewport_height());
   
-  GLuint screen_handle = shader_program_handle(SCREEN_PROGRAM);
+  GLuint screen_handle = shader_program_handle(PROGRAM_COMPOSE);
   glUseProgram(screen_handle);
   
 	glMatrixMode(GL_PROJECTION);
@@ -637,7 +639,7 @@ void deferred_renderer_end() {
   
   glBindFramebuffer(GL_FRAMEBUFFER, ldr_fbo);
   
-  GLuint screen_tonemap_handle = shader_program_handle(SCREEN_TONEMAP);
+  GLuint screen_tonemap_handle = shader_program_handle(PROGRAM_TONEMAP);
   glUseProgram(screen_tonemap_handle);
   
 	glMatrixMode(GL_PROJECTION);
@@ -709,7 +711,7 @@ void deferred_renderer_end() {
   
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   
-  GLuint screen_post_handle = shader_program_handle(SCREEN_POST);
+  GLuint screen_post_handle = shader_program_handle(PROGRAM_POST);
   glUseProgram(screen_post_handle);
   
 	glMatrixMode(GL_PROJECTION);
@@ -788,10 +790,10 @@ void deferred_renderer_render_static(static_object* so) {
       error("Renderable for static object is rigged!");
     }
     
-    GLuint program_handle = shader_program_handle(PROGRAM);
+    GLuint program_handle = shader_program_handle(PROGRAM_STATIC);
     glUseProgram(program_handle);
     
-    deferred_renderer_use_material(s->base, PROGRAM);
+    deferred_renderer_use_material(s->base, PROGRAM_STATIC);
     
     GLsizei stride = sizeof(float) * 18;
     
@@ -925,8 +927,6 @@ void deferred_renderer_render_animated(animated_object* ao) {
 
 }
 
-/* TODO: This could do with a proper shader attached to it */
-
 void deferred_renderer_render_light(light* l) {
   
   matrix_4x4 viewm = camera_view_matrix(CAMERA);
@@ -937,6 +937,8 @@ void deferred_renderer_render_light(light* l) {
   light_pos = m44_mul_v4(projm, light_pos);
   
   light_pos = v4_div(light_pos, light_pos.w);
+  
+  glUseProgram(shader_program_handle(PROGRAM_UI));
   
 	glMatrixMode(GL_PROJECTION);
   glPushMatrix();
@@ -952,35 +954,31 @@ void deferred_renderer_render_light(light* l) {
   float left = ((light_pos.x + 1) / 2) * graphics_viewport_width() - 8;
   float right = ((light_pos.x + 1) / 2) * graphics_viewport_width() + 8;
   
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  
-  glEnable(GL_ALPHA_TEST);
-  glAlphaFunc(GL_GREATER, 0.25);
-  
   texture* lightbulb = asset_load_get("$CORANGE/ui/lightbulb.dds");
   glActiveTexture(GL_TEXTURE0 + 0 );
   glBindTexture(GL_TEXTURE_2D, texture_handle(lightbulb));
   glEnable(GL_TEXTURE_2D);
+  glUniform1i(glGetUniformLocation(shader_program_handle(PROGRAM_UI), "diffuse"), 0);
+  
+  glUniform1f(glGetUniformLocation(shader_program_handle(PROGRAM_UI), "alpha_test"), 0.5);
   
 	glBegin(GL_QUADS);
 		glTexCoord2f(0.0f, 0.0f); glVertex3f(left, top, -light_pos.z);
-		glTexCoord2f(1.0f, 0.0f); glVertex3f(right, top, -light_pos.z);
-		glTexCoord2f(1.0f, 1.0f); glVertex3f(right,  bot, -light_pos.z);
 		glTexCoord2f(0.0f, 1.0f); glVertex3f(left,  bot, -light_pos.z);
+		glTexCoord2f(1.0f, 1.0f); glVertex3f(right,  bot, -light_pos.z);
+		glTexCoord2f(1.0f, 0.0f); glVertex3f(right, top, -light_pos.z);
 	glEnd();
   
   glActiveTexture(GL_TEXTURE0 + 0 );
   glDisable(GL_TEXTURE_2D);
-  
-  glDisable(GL_ALPHA_TEST);
-  glDisable(GL_BLEND);
   
   glMatrixMode(GL_PROJECTION);
   glPopMatrix();
 
   glMatrixMode(GL_MODELVIEW);
   glPopMatrix();
+
+  glUseProgram(0);
 
 }
 

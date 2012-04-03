@@ -62,9 +62,10 @@ void corange_finish();
 
 /* Rendering */
 
-#include "forward_renderer.h"
-#include "deferred_renderer.h"
-#include "shadow_mapper.h"
+#include "rendering/forward_renderer.h"
+#include "rendering/deferred_renderer.h"
+#include "rendering/shadow_mapper.h"
+#include "rendering/depth_mapper.h"
 
 /* Data Structures */
 

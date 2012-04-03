@@ -218,7 +218,7 @@ void load_folder(char* folder) {
   struct dirent* ent;
   
   if (dir == NULL) {
-    error("Could not open directory %s.", folder_map);
+    error("Could not open directory %s to load.", folder_map);
   }
     
   while ((ent = readdir(dir)) != NULL) {
@@ -280,11 +280,13 @@ void unload_folder(char* folder) {
     
   char* folder_map = asset_map_filename(folder);
   
+  debug("Unloading Folder: %s", folder_map);
+  
   DIR* dir = opendir(folder_map);
   struct dirent* ent;
   
   if (dir == NULL) {
-    error("Could not open directory %s\n", folder_map);
+    error("Could not open directory %s to unload.\n", folder_map);
   }
   
   while ((ent = readdir(dir)) != NULL) {
