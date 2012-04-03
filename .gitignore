@@ -1,6 +1,4 @@
 *~
 *.o
-*.ol
-logs/*
 stdout.txt
 stderr.txt
