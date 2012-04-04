@@ -3,20 +3,20 @@
 #include "assets/sound.h"
 
 static void flip_endian(char* data, int length) {
-	for(int i = 0; i < length; i += 2) {
-		int x = data[i];
-		data[i] = data[i + 1];
-		data[i + 1] = x;
-	}
+  for(int i = 0; i < length; i += 2) {
+    int x = data[i];
+    data[i] = data[i + 1];
+    data[i + 1] = x;
+  }
 }
 
 sound* wav_load_file(char* filename) {
   
   sound* s = malloc(sizeof(sound));
   
-	SDL_AudioSpec spec;
+  SDL_AudioSpec spec;
   
-	if( SDL_LoadWAV(filename, &spec, (Uint8**)&s->data, (Uint32*)&s->length) == NULL) {
+  if( SDL_LoadWAV(filename, &spec, (Uint8**)&s->data, (Uint32*)&s->length) == NULL) {
     error("Unable to load sound file %s", filename);
   }
   

@@ -59,6 +59,7 @@ void graphics_manager_init() {
   graphics_viewport_start();
   
   SDL_GL_PrintInfo();
+  SDL_GL_PrintExtensions();
   SDL_GL_LoadExtensions();
 
   SDL_WM_UseResourceIcon();

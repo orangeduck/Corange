@@ -37,8 +37,6 @@ void SDL_WM_DeleteTempContext();
 void SDL_GL_PrintInfo();
 void SDL_GL_PrintExtensions();
 
-bool SDL_GL_SupportsShaderLinkage();
-bool SDL_GL_SupportsVsync();
 
 SDL_Thread* SDL_GL_CreateThread(int (*fn)(void *), void *data);
 

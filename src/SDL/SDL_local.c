@@ -20,59 +20,59 @@
 #endif
 
 #ifndef __unix__
-  GLACTIVETEXTUREFN glActiveTexture;
-  GLCOMPRESSEDTEXIMAGE2DFN glCompressedTexImage2D;
-  GLTEXIMAGE3DFN glTexImage3D;
+  GLACTIVETEXTUREFN glActiveTexture = NULL;
+  GLCOMPRESSEDTEXIMAGE2DFN glCompressedTexImage2D = NULL;
+  GLTEXIMAGE3DFN glTexImage3D = NULL;
 #endif
-GLCREATESHADERFN glCreateShader;
-GLCREATEPROGRAMFN glCreateProgram;
-GLSHADERSOURCEFN glShaderSource;
-GLCOMPILESHADERFN glCompileShader;
-GLGETSHADERINFOLOGFN glGetShaderInfoLog;
-GLATTACHSHADERFN glAttachShader;
-GLLINKPROGRAMFN glLinkProgram;
-GLGETPROGRAMINFOLOGFN glGetProgramInfoLog;
-GLGETUNIFORMLOCATIONFN glGetUniformLocation;
-GLUNIFORM1FFN glUniform1f;
-GLUNIFORM1IFN glUniform1i;
-GLDELETESHADERFN glDeleteShader;
-GLDELETEPROGRAMFN glDeleteProgram;
-GLUSEPROGRAMFN glUseProgram;
-GLVERTEXATTRIBPOINTERFN glVertexAttribPointer;
-GLENABLEVERTEXATTRIBARRAYFN glEnableVertexAttribArray;
-GLDISABLEVERTEXATTRIBARRAYFN glDisableVertexAttribArray;
-GLUNIFORM2FFN glUniform2f;
-GLUNIFORM3FFN glUniform3f;
-GLUNIFORM4FFN glUniform4f;
-GLUNIFORMMATRIX4FVFN glUniformMatrix4fv;
-GLUNIFORM1FVFN glUniform1fv;
-GLUNIFORM2FVFN glUniform2fv;
-GLUNIFORM3FVFN glUniform3fv;
-GLGETSHADERIVFN glGetShaderiv;
-GLGETPROGRAMIVFN glGetProgramiv;
-GLBINDATTRIBLOCATIONFN glBindAttribLocation;
-GLGENFRAMEBUFFERSFN glGenFramebuffers;
-GLBINDFRAMEBUFFERFN glBindFramebuffer;
-GLBLITFRAMEBUFFERFN glBlitFramebuffer;
-GLFRAMEBUFFERTEXTUREFN glFramebufferTexture;
-GLFRAMEBUFFERTEXTURE2DFN glFramebufferTexture2D;
-GLDELETEFRAMEBUFFERSFN glDeleteFramebuffers;
-GLCHECKFRAMEBUFFERSTATUSFN glCheckFramebufferStatus;
-GLGENBUFFERSFN glGenBuffers;
-GLGENRENDERBUFFERSFN glGenRenderbuffers;
-GLDELETEBUFFERSFN glDeleteBuffers;
-GLDELETERENDERBUFFERSFN glDeleteRenderbuffers;
-GLBINDBUFFERFN glBindBuffer;
-GLBINDRENDERBUFFERFN glBindRenderbuffer;
-GLBUFFERDATAFN glBufferData;
-GLGETBUFFERSUBDATAFN glGetBufferSubData;
-GLFRAMEBUFFERRENDERBUFFERFN glFramebufferRenderbuffer;
-GLGETATTRIBLOCATIONFN glGetAttribLocation;
-GLRENDERBUFFERSTORAGEFN glRenderbufferStorage;
-GLRENDERBUFFERSTORAGEMULTISAMPLEFN glRenderbufferStorageMultisample;
-GLDRAWBUFFERSFN glDrawBuffers;
-GLGENERATEMIPMAPFN glGenerateMipmap;
-GLDRAWELEMENTSINSTANCEDFN glDrawElementsInstanced;
+GLCREATESHADERFN glCreateShader = NULL;
+GLCREATEPROGRAMFN glCreateProgram = NULL;
+GLSHADERSOURCEFN glShaderSource = NULL;
+GLCOMPILESHADERFN glCompileShader = NULL;
+GLGETSHADERINFOLOGFN glGetShaderInfoLog = NULL;
+GLATTACHSHADERFN glAttachShader = NULL;
+GLLINKPROGRAMFN glLinkProgram = NULL;
+GLGETPROGRAMINFOLOGFN glGetProgramInfoLog = NULL;
+GLGETUNIFORMLOCATIONFN glGetUniformLocation = NULL;
+GLUNIFORM1FFN glUniform1f = NULL;
+GLUNIFORM1IFN glUniform1i = NULL;
+GLDELETESHADERFN glDeleteShader = NULL;
+GLDELETEPROGRAMFN glDeleteProgram = NULL;
+GLUSEPROGRAMFN glUseProgram = NULL;
+GLVERTEXATTRIBPOINTERFN glVertexAttribPointer = NULL;
+GLENABLEVERTEXATTRIBARRAYFN glEnableVertexAttribArray = NULL;
+GLDISABLEVERTEXATTRIBARRAYFN glDisableVertexAttribArray = NULL;
+GLUNIFORM2FFN glUniform2f = NULL;
+GLUNIFORM3FFN glUniform3f = NULL;
+GLUNIFORM4FFN glUniform4f = NULL;
+GLUNIFORMMATRIX4FVFN glUniformMatrix4fv = NULL;
+GLUNIFORM1FVFN glUniform1fv = NULL;
+GLUNIFORM2FVFN glUniform2fv = NULL;
+GLUNIFORM3FVFN glUniform3fv = NULL;
+GLGETSHADERIVFN glGetShaderiv = NULL;
+GLGETPROGRAMIVFN glGetProgramiv = NULL;
+GLBINDATTRIBLOCATIONFN glBindAttribLocation = NULL;
+GLGENFRAMEBUFFERSFN glGenFramebuffers = NULL;
+GLBINDFRAMEBUFFERFN glBindFramebuffer = NULL;
+GLBLITFRAMEBUFFERFN glBlitFramebuffer = NULL;
+GLFRAMEBUFFERTEXTUREFN glFramebufferTexture = NULL;
+GLFRAMEBUFFERTEXTURE2DFN glFramebufferTexture2D = NULL;
+GLDELETEFRAMEBUFFERSFN glDeleteFramebuffers = NULL;
+GLCHECKFRAMEBUFFERSTATUSFN glCheckFramebufferStatus = NULL;
+GLGENBUFFERSFN glGenBuffers = NULL;
+GLGENRENDERBUFFERSFN glGenRenderbuffers = NULL;
+GLDELETEBUFFERSFN glDeleteBuffers = NULL;
+GLDELETERENDERBUFFERSFN glDeleteRenderbuffers = NULL;
+GLBINDBUFFERFN glBindBuffer = NULL;
+GLBINDRENDERBUFFERFN glBindRenderbuffer = NULL;
+GLBUFFERDATAFN glBufferData = NULL;
+GLGETBUFFERSUBDATAFN glGetBufferSubData = NULL;
+GLFRAMEBUFFERRENDERBUFFERFN glFramebufferRenderbuffer = NULL;
+GLGETATTRIBLOCATIONFN glGetAttribLocation = NULL;
+GLRENDERBUFFERSTORAGEFN glRenderbufferStorage = NULL;
+GLRENDERBUFFERSTORAGEMULTISAMPLEFN glRenderbufferStorageMultisample = NULL;
+GLDRAWBUFFERSFN glDrawBuffers = NULL;
+GLGENERATEMIPMAPFN glGenerateMipmap = NULL;
+GLDRAWELEMENTSINSTANCEDFN glDrawElementsInstanced = NULL;
 
 #ifdef _WIN32
 
@@ -257,26 +257,6 @@ void SDL_GL_PrintInfo() {
 void SDL_GL_PrintExtensions() {
   const char* extensions = (const char*)glGetString(GL_EXTENSIONS);
   debug("OpenGL Extensions: %s\n", extensions);
-}
-
-bool SDL_GL_SupportsShaderLinkage() {
-  
-  const char* renderer = (const char*)glGetString(GL_RENDERER);
-  if (strstr("ATI Mobility Radeon HD 5650", renderer)) {
-    return false;
-  }
-  
-  return true;
-}
-
-bool SDL_GL_SupportsVsync() {
-
-  const char* renderer = (const char*)glGetString(GL_RENDERER);
-  if (strstr("ATI Mobility Radeon HD 5650", renderer)) {
-    return false;
-  }
-  
-  return true;
 }
 
 
@@ -569,7 +549,7 @@ void SDL_GL_LoadExtensions() {
 
 void SDL_GL_CheckExtension(const char* name, void* function_pointer) {
   if (function_pointer == NULL) {
-    error("Failed to load OpenGL extension %s", name);
+    warning("Failed to load OpenGL extension function %s. Use of this function will crash Corange.", name);
   }  
 }
 
