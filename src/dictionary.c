@@ -202,6 +202,20 @@ void dictionary_print(dictionary* dict) {
   
 }
 
+char* dictionary_find(dictionary* dict, void* item) {
+  
+  for(int i = 0; i < dict->table_size; i++) {
+    bucket* b = dict->buckets[i];
+    while (b != NULL) {
+      if (b->item == item) { return b->string; }
+      b = b->next;
+    }
+  }
+  
+  return NULL; 
+  
+}
+
 bucket* bucket_new(char* string, void* item) {
   
   bucket* b = malloc(sizeof(bucket));

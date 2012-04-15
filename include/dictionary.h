@@ -40,6 +40,8 @@ void dictionary_filter_map(dictionary* dict, int filter(void*) , void func(void*
 
 void dictionary_print(dictionary* dict);
 
+char* dictionary_find(dictionary* dict, void* item);
+
 /* Buckets */
 
 bucket* bucket_new(char* string, void* item);

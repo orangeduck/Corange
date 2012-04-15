@@ -48,27 +48,27 @@ void corange_init(char* core_assets_path) {
   asset_manager_init();
   asset_manager_add_path_variable("$CORANGE", core_assets_path);
   
-  asset_manager_handler("obj", obj_load_file, renderable_delete);
-  asset_manager_handler("smd", smd_load_file, renderable_delete);
-  asset_manager_handler("skl", skl_load_file, skeleton_delete);
-  asset_manager_handler("ani", ani_load_file, animation_delete);
-  asset_manager_handler("col", col_load_file, collision_body_delete);
-  asset_manager_handler("raw", raw_load_file, terrain_delete);
+  asset_manager_handler(renderable, "obj", obj_load_file, renderable_delete);
+  asset_manager_handler(renderable, "smd", smd_load_file, renderable_delete);
+  asset_manager_handler(skeleton, "skl", skl_load_file, skeleton_delete);
+  asset_manager_handler(animation, "ani", ani_load_file, animation_delete);
+  asset_manager_handler(collision_body, "col", col_load_file, collision_body_delete);
+  asset_manager_handler(terrain, "raw", raw_load_file, terrain_delete);
   
-  asset_manager_handler("bmp", bmp_load_file, image_delete);
-  asset_manager_handler("tga", tga_load_file, image_delete);
-  asset_manager_handler("dds", dds_load_file, texture_delete);
-  asset_manager_handler("lut", lut_load_file, texture_delete);
+  asset_manager_handler(image, "bmp", bmp_load_file, image_delete);
+  asset_manager_handler(image, "tga", tga_load_file, image_delete);
+  asset_manager_handler(texture, "dds", dds_load_file, texture_delete);
+  asset_manager_handler(texture, "lut", lut_load_file, texture_delete);
   
-  asset_manager_handler("vs" , vs_load_file,  shader_delete);
-  asset_manager_handler("fs" , fs_load_file,  shader_delete);
-  asset_manager_handler("prog",prog_load_file,shader_program_delete);
+  asset_manager_handler(shader, "vs" , vs_load_file,  shader_delete);
+  asset_manager_handler(shader, "fs" , fs_load_file,  shader_delete);
+  asset_manager_handler(shader_program, "prog", prog_load_file, shader_program_delete);
   
-  asset_manager_handler("fnt", font_load_file,font_delete);
-  asset_manager_handler("mat", mat_load_file, material_delete);
-  asset_manager_handler("mmat", mmat_load_file, multi_material_delete);
+  asset_manager_handler(font, "fnt", font_load_file, font_delete);
+  asset_manager_handler(material, "mat", mat_load_file, material_delete);
+  asset_manager_handler(multi_material, "mmat", mmat_load_file, multi_material_delete);
   
-  asset_manager_handler("wav", wav_load_file, sound_delete);
+  asset_manager_handler(sound, "wav", wav_load_file, sound_delete);
   
   /* Entity Manager */
   debug("Creating Entity Manager...");

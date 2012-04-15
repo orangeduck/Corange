@@ -111,7 +111,7 @@ void platformer_init() {
   graphics_viewport_set_title("Platformer");
   
   /* Register functions for loading/unloading files with the extension .level */
-  asset_manager_handler("level", level_load_file, level_delete);
+  asset_manager_handler(level, "level", level_load_file, level_delete);
   
   /* Load Assets */
   load_folder("./tiles/");

@@ -1,5 +1,5 @@
-#ifndef shadow_mapper_h
-#define shadow_mapper_h
+#ifndef depth_mapper_h
+#define depth_mapper_h
 
 #include "assets/texture.h"
 

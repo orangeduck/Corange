@@ -24,7 +24,7 @@ void metaballs_init() {
   kernels_init_with_opengl();
 #endif
   
-  asset_manager_handler("cl", cl_load_file, kernel_program_delete);
+  asset_manager_handler(kernel_program, "cl", cl_load_file, kernel_program_delete);
   
   load_folder("./kernels/");
   

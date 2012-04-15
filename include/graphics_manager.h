@@ -25,6 +25,7 @@ void graphics_viewport_set_width(int width);
 void graphics_viewport_set_dimensions(int width, int height);
 void graphics_viewport_screenshot();
 
+char* graphics_viewport_title();
 int graphics_viewport_height();
 int graphics_viewport_width();
 float graphics_viewport_ratio();

@@ -13,7 +13,7 @@ typedef char type_string[MAX_TYPE_LEN];
 type_string type_table[MAX_NUM_TYPES];
 int type_index = 0;
 
-int type_find(const char* type) {
+int type_find(char* type) {
   
   if (strlen(type) >= MAX_TYPE_LEN) {
     error("Type name %s is too long to index into type table.", type);
@@ -34,6 +34,6 @@ int type_find(const char* type) {
   return type_index-1;
 }
 
-const char* type_id_name(int id) {
+char* type_id_name(int id) {
   return type_table[id];
 }

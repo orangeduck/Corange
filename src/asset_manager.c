@@ -8,6 +8,7 @@ static dictionary* asset_dictionary;
 
 typedef struct {
 
+  type_id type;
   char* extension;
   void* (*load_func)();
   void (*del_func)();
@@ -26,20 +27,6 @@ typedef struct {
 #define MAX_PATH_VARIABLES 512
 static path_variable path_variables[MAX_PATH_VARIABLES];
 static int num_path_variables = 0;
-
-/*
-  This whole string situation here is a bit of a mess.
-  And I'm not sure how possible it is to do without memory allocation.
-  The issue is we have strings coming in from the stack and the heap.
-  We can't statically allocate memory for asset_map_filename because
-  there are too many situations where it is called to multiple stack depth.
-  
-  There is almost certainly a memory leak somewhere in this code.
-  And the whole thing could do with some sanity. But I think it works for now.
-  
-  The solution is probably to make asset_map_filename static and flatten
-  its use across all the functions.
-*/
 
 void asset_manager_add_path_variable(char* variable, char* mapping) {
   
@@ -164,7 +151,7 @@ void asset_manager_finish() {
   
 }
 
-void asset_manager_handler_cast(char* extension, void* asset_loader(char* filename) , void asset_deleter(void* asset) ) {
+void asset_manager_handler_cast(type_id type, char* extension, void* asset_loader(char* filename) , void asset_deleter(void* asset) ) {
   
   if(num_asset_handlers == MAX_ASSET_HANDLERS) {
     warning("Max number of asset handlers reached. Handler for extension %s not added.", extension);
@@ -174,6 +161,7 @@ void asset_manager_handler_cast(char* extension, void* asset_loader(char* filena
   asset_handler h;
   char* c = malloc(strlen(extension) + 1);
   strcpy(c, extension);
+  h.type = type;
   h.extension = c;
   h.load_func = asset_loader;
   h.del_func = asset_deleter;
@@ -341,6 +329,39 @@ bool asset_loaded(char* path) {
 
 void asset_state_print() {
   dictionary_print(asset_dictionary);
+}
+
+char* asset_ptr_path(asset* a) {
+  char* path = dictionary_find(asset_dictionary, a);
+  if (path == NULL) {
+    error("Asset dictionary doesn't contain asset pointer %p", a);
+    return NULL;
+  } else {
+    return path; 
+  }
+}
+
+char* asset_ptr_typename(asset* a) {
+  char* path = dictionary_find(asset_dictionary, a);
+  if (path == NULL) {
+    error("Asset dictionary doesn't contain asset pointer %p", a);
+    return NULL;
+  } else {
+  
+    char* ext = asset_name_extension(path);
+    
+    for(int i=0; i < num_asset_handlers; i++) {
+      asset_handler handler = asset_handlers[i];
+      if (strcmp(ext, handler.extension) == 0) {
+        return type_id_name(handler.type);
+      }
+    }
+    
+    free(ext);
+  }
+  
+  return NULL;
+  
 }
 
 /* Asset Loader helper commands */
