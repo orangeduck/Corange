@@ -34,7 +34,7 @@ bool asset_loaded(char* path);
 void asset_state_print();
 
 char* asset_ptr_path(asset* a);
-//char* asset_ptr_typename(asset* a);
+char* asset_ptr_typename(asset* a);
 
 /* User is responsible for freeing strings returned by these */
 char* asset_map_filename(char* filename);
