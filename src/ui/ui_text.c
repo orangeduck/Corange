@@ -4,6 +4,7 @@
 #include "SDL/SDL_opengl.h"
 #include "SDL/SDL_local.h"
 
+#include "error.h"
 #include "matrix.h"
 
 #include "assets/font.h"
@@ -31,6 +32,7 @@ ui_text* ui_text_new() {
   text->bottom_right = v2_zero();
   
   text->font = asset_load_get("$CORANGE/fonts/console_font.fnt");
+  
   text->position = v2(0.0,0.0);
   text->scale = v2(1.0,1.0);
   text->color = v4_black();

@@ -197,7 +197,7 @@ void load_file(char* filename) {
 }
 
 void load_folder(char* folder) {
-    
+  
   char* folder_map = asset_map_filename(folder);
   
   debug("Loading Folder: %s", folder_map);
@@ -310,14 +310,13 @@ void* asset_get(char* path) {
 }
 
 void* asset_load_get(char* path) {
-  char* path_map = asset_map_filename(path);
-  void* val = dictionary_get(asset_dictionary, path_map);
-  if (val == NULL) {
-    load_file(path_map);
-    val = dictionary_get(asset_dictionary, path_map);
+  
+  if (!asset_loaded(path)) {
+    load_file(path);
   }
-  free(path_map);
-  return val;
+  
+  return asset_get(path);
+  
 }
 
 bool asset_loaded(char* path) {

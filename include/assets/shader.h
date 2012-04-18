@@ -21,8 +21,6 @@ void shader_program_delete(shader_program* p);
 
 GLuint shader_program_handle(shader_program* p);
 
-void shader_program_parse_line(shader_program* p, char* line);
-
 void shader_program_attach_shader(shader_program* p, shader* s);
 void shader_program_link(shader_program* p);
 
