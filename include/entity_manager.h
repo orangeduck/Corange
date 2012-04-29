@@ -27,8 +27,8 @@ entity* entity_get_as_type_id(char* name, int type_id);
 
 void entity_delete(char* name);
 
-/* returned string should not be freed */
 char* entity_name(entity* e);
+char* entity_typename(entity* a);
 
 #define entity_type_count(type) entity_type_count_type_id(typeid(type))
 int entity_type_count_type_id(int type_id);
