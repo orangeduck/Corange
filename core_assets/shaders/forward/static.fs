@@ -1,3 +1,5 @@
+#version 120
+
 uniform mat4 world_matrix;
 
 uniform mat4 light_view;

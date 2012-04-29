@@ -1,3 +1,5 @@
+#version 120
+
 uniform sampler2D diffuse_texture;
 uniform sampler2D positions_texture;
 uniform sampler2D normals_texture;

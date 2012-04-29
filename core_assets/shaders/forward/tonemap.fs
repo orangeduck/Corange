@@ -1,8 +1,13 @@
-uniform sampler2D hdr_texture;
+#version 120
 
+uniform sampler2D hdr_texture;
 uniform float exposure;
 
+/* Headers */
+
 vec3 filmic_tonemap(vec3 color, float exposure);
+
+/* End */
 
 void main() {
 

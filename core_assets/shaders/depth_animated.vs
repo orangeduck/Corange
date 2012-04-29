@@ -1,3 +1,5 @@
+#version 120
+
 attribute vec3 bone_indicies;
 attribute vec3 bone_weights;
 

@@ -1,3 +1,5 @@
+#version 120
+
 uniform int width;
 uniform int height;
 uniform int aa_type;

@@ -1,3 +1,5 @@
+#version 120
+
 uniform mat4 world_matrix;
 uniform mat4 proj_matrix;
 uniform mat4 view_matrix;
@@ -42,11 +44,11 @@ vec3 from_gamma(vec3 color) {
 
 void main() {
   
-  uvs = vec2(gl_MultiTexCoord0.x, 1-gl_MultiTexCoord0.y);
+  uvs = vec2(gl_MultiTexCoord0.x, 1.0-gl_MultiTexCoord0.y);
   
-  vec4 amplitude = gl_Color.r * vec4(0.025, 0, 0.025, 0);
-  vec4 speed = vec4(2, 0, 2.73, 0);
-  vec4 frequency = vec4(10, 0, 12, 0);
+  vec4 amplitude = gl_Color.r * vec4(0.025, 0.0, 0.025, 0.0);
+  vec4 speed = vec4(2.0, 0.0, 2.73, 0.0);
+  vec4 frequency = vec4(10.0, 0.0, 12.0, 0.0);
   
   vec4 offset = amplitude * sin(time * speed + frequency * gl_Vertex);
   
@@ -54,16 +56,16 @@ void main() {
   vec3 position = world_position.xyz;
   gl_Position = proj_matrix * view_matrix * world_position;
   
-  alpha_test = clamp(distance(camera_position, position) / 45, 0.1, 1.1);
+  alpha_test = clamp(distance(camera_position, position) / 45.0, 0.1, 1.1);
   
   vec2 global_uvs = vec2(position.x, position.z) / 1024.0;
-  vec3 albedo = from_gamma(texture2D(terrain_color, global_uvs));
-  vec3 normal = texture2D(terrain_normals, global_uvs);
+  vec3 albedo = from_gamma(texture2D(terrain_color, global_uvs).rgb);
+  vec3 normal = texture2D(terrain_normals, global_uvs).rgb;
   
   float temp = normal.g;
-  normal.g = 1-normal.b;
+  normal.g = 1.0-normal.b;
   normal.b = temp;
-  normal.r = 1-normal.r;
+  normal.r = 1.0-normal.r;
   normal = (normal * 2.0) - 1.0;
   
   vec3 diffuse = vec3(0,0,0);

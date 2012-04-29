@@ -1,3 +1,5 @@
+#version 120
+
 varying vec3 normal;
 varying vec2 uvs;
 

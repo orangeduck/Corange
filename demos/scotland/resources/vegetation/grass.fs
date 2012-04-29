@@ -1,3 +1,5 @@
+#version 120
+
 uniform sampler2D diffuse;
 
 varying float alpha_test;

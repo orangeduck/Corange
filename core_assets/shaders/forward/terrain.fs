@@ -1,3 +1,5 @@
+#version 120
+
 uniform sampler2D normals;
 uniform sampler2D color;
 uniform sampler2D attribs;

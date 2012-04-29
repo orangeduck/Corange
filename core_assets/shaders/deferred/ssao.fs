@@ -1,3 +1,5 @@
+#version 120
+
 uniform sampler2D random_texture;
 uniform sampler2D depth_texture;
 uniform float seed;

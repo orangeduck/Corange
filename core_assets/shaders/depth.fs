@@ -1,3 +1,5 @@
+#version 120
+
 uniform sampler2D diffuse;
 uniform float alpha_test;
 

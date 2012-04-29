@@ -1,3 +1,5 @@
+#version 120
+
 /* Photoshop based blending modes */
 
 /* Prototypes */

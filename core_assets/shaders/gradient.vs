@@ -1,3 +1,5 @@
+#version 120
+
 varying vec4 position;
 
 void main() {

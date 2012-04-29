@@ -1,3 +1,5 @@
+#version 120
+
 /* Headers */
 
 vec3 fxaa_unsharp(sampler2D screen, vec2 pos, int width, int height);

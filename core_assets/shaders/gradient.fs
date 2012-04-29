@@ -1,3 +1,5 @@
+#version 120
+
 uniform vec4 start;
 uniform vec4 end;
 

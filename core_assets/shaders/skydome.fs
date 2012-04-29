@@ -1,3 +1,5 @@
+#version 120
+
 uniform vec3 light_direction;
 
 varying vec3 direction;

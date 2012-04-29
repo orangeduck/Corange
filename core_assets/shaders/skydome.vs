@@ -23,13 +23,13 @@ varying vec3 debug;
 const int nsamples = 2;
 const float fsamples = 2.0;
 
-const vec3 inv_wavelength = 1 / pow(vec3(0.620,0.495,0.475), 4.0);
+const vec3 inv_wavelength = vec3(1.0/pow(0.620, 4.0), 1.0/pow(0.495, 4.0),1.0/pow(0.475, 4.0));
 
 const float outer_radius = 10.25;
 const float inner_radius = 10.00;
 
 const vec3 esun = vec3(100.0, 100.0, 100.0);
-const float kr = 0.0025;
+const float kr = 0.0010;
 const float km = 0.0010;
 
 const vec3 kresun = kr * esun;
@@ -52,19 +52,20 @@ void main() {
   
   vec3 light_direction = -normalize(light_target[0] - light_position[0]);
   
-  camera_position.y = camera_position.y / 2048 + inner_radius;
-  camera_position.xz = (camera_position.xz - 512) / 2048;
+  vec3 cam_pos = camera_position;
+  cam_pos.y = cam_pos.y / 2048 + inner_radius;
+  cam_pos.xz = (cam_pos.xz - 512) / 2048;
   
 	vec3 position;
   position.x = gl_Vertex.x * 4.0 * (outer_radius - inner_radius);
   position.z = gl_Vertex.z * 4.0 * (outer_radius - inner_radius);
   position.y = inner_radius + (gl_Vertex.y * (outer_radius - inner_radius));
   
-	vec3 ray = position - camera_position;
+	vec3 ray = position - cam_pos;
 	float far = length(ray);
 	ray /= far;
 
-	vec3 start = camera_position;
+	vec3 start = cam_pos;
 	float height = length(start);
 	float depth = exp(scale_over_depth * (inner_radius - height));
 	float start_angle = dot(ray, start) / height;
@@ -90,7 +91,7 @@ void main() {
 	m_color = front_color * kmesun;
 	r_color = front_color * (inv_wavelength * kresun);
   
-  direction = camera_position - position;
+  direction = cam_pos - position;
   
 	gl_Position = proj_matrix * view_matrix * world_matrix * gl_Vertex;
 }

@@ -1,3 +1,5 @@
+#version 120
+
 #define MAX_INSTANCES 128
 
 uniform mat4 world_matricies[MAX_INSTANCES];
