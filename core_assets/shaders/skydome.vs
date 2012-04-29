@@ -23,7 +23,7 @@ varying vec3 debug;
 const int nsamples = 2;
 const float fsamples = 2.0;
 
-const vec3 inv_wavelength = 1 / pow(vec3(0.620,0.495,0.475), 4);
+const vec3 inv_wavelength = 1 / pow(vec3(0.620,0.495,0.475), 4.0);
 
 const float outer_radius = 10.25;
 const float inner_radius = 10.00;

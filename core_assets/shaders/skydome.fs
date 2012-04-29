@@ -10,7 +10,7 @@ float rayleigh_phase(float cos2a) {
 }
 
 float mei_phase(float cosa, float cos2a) {
-  return (1.3125 / 5.125) * ((1 + cos2a) / pow(1.5625 + 1.4*cosa, 3/2));
+  return (1.3125 / 5.125) * ((1 + cos2a) / pow(1.5625 + 1.4*cosa, 3.0/2.0));
 }
 
 void main() {
