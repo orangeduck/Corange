@@ -42,7 +42,8 @@ SDL_Thread* SDL_GL_CreateThread(int (*fn)(void *), void *data);
 
 void SDL_GL_CheckError(const char* name);
 void SDL_GL_LoadExtensions();
-void SDL_GL_CheckExtension(const char* name, void* function_pointer);
+
+bool SDL_GL_ExtensionLoaded(void* function);
 
 void SDL_PrintStackTrace();
 

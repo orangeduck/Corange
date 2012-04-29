@@ -472,23 +472,25 @@ void SDL_WM_DeleteTempContext() {}
 
 #endif
 
-void SDL_GL_CheckExtension(const char* name, void* function_pointer) {
-  if (function_pointer == NULL) {
-    warning("Failed to load OpenGL extension function %s. Use of this function will crash Corange.", name);
-  }  
+bool SDL_GL_ExtensionLoaded(void* function) {
+  if (function == NULL) {
+    return false;
+  } else {
+    return true;
+  }
 }
 
 #define SDL_GL_LoadExtension(type, name) \
 name = (type)SDL_GL_GetProcAddress(#name); \
 if (name == NULL) { \
-  warning("Failed to load function '%s', looking for function '%s'", #name, #name"EXT"); \
+  warning("Failed to load function '%s', looking for function '%s'...", #name, #name"EXT"); \
   name = (type)SDL_GL_GetProcAddress(#name"EXT"); \
 } \
 if (name == NULL) { \
-  warning("Failed to load function '%s', looking for function '%s'", #name"EXT", #name"ARB"); \
+  warning("Failed to load function '%s', looking for function '%s'...", #name"EXT", #name"ARB"); \
   name = (type)SDL_GL_GetProcAddress(#name"ARB"); \
 } \
-if (name == NULL) { warning("Failed to load OpenGL extension function '%s'. Use of this function will crash Corange", #name); }
+if (name == NULL) { warning("Completely failed to load OpenGL extension function '%s'. Use of this function will crash Corange", #name); }
   
 void SDL_GL_LoadExtensions() {
 
