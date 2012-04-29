@@ -200,8 +200,23 @@ char* entity_name(entity* e) {
     }
   }
   
-  warning("Object at %p not loaded into entity manager. Cannot fetch name.", e);
+  error("Object at %p not loaded into entity manager. Cannot fetch name.", e);
+  return NULL;
+}
+
+char* entity_typename(entity* e) {
   
+  for(int i = 0; i < entity_names->num_items; i++) {
+    char* name = list_get(entity_names, i);
+    entity* ent = dictionary_get(entities, name);
+    
+    if (ent == e) {
+      int* type = dictionary_get(entity_types, name);
+      return type_id_name(*type);
+    }
+  }
+  
+  error("Object at %p not loaded into entity manager. Cannot fetch type name.", e);
   return NULL;
 }
 

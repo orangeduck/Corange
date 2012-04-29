@@ -44,7 +44,7 @@ void ui_elem_render(char* name);
 
 void ui_elem_delete(char* name);
 
-/* returned string should not be freed */
 char* ui_elem_name(ui_elem* e);
+char* ui_elem_typename(ui_elem* e);
 
 #endif

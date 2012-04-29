@@ -280,7 +280,25 @@ char* ui_elem_name(ui_elem* e) {
     }
   }
   
-  warning("UI Object at %p not loaded into ui manager. Cannot fetch name.", e);
-  
+  error("UI Object at %p not loaded into ui manager. Cannot fetch name.", e);
   return NULL;
 }
+
+char* ui_elem_typename(ui_elem* e) {
+  
+  for(int i = 0; i < ui_elem_names->num_items; i++) {
+    char* name = list_get(ui_elem_names, i);
+    ui_elem* elem = dictionary_get(ui_elems, name);
+    
+    if (elem == e) {
+      int* type = dictionary_get(ui_elem_types, name);
+      return type_name(*type);
+    }
+  }
+  
+  error("UI Object at %p not loaded into ui manager. Cannot fetch type name.", e);
+  return NULL;
+}
+
+
+
