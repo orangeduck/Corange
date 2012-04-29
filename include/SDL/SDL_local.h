@@ -106,6 +106,8 @@ typedef void (APIENTRY * GLCOMPRESSEDTEXIMAGE2DFN)(GLenum target, GLint level, G
 typedef void (APIENTRY * GLTEXIMAGE3DFN)(GLenum target, GLint level, GLint internalFormat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLenum format, GLenum type, const GLvoid* data);
 typedef void (APIENTRY * GLDRAWELEMENTSINSTANCEDFN)(GLenum mode, GLsizei count, GLenum type, const void* indicies, GLsizei primcount);
 
+typedef void (APIENTRY * GLBROKENEXTENSIONFN)();
+
 #ifndef __unix__
   extern GLACTIVETEXTUREFN glActiveTexture;
   extern GLCOMPRESSEDTEXIMAGE2DFN glCompressedTexImage2D;
@@ -160,6 +162,8 @@ extern GLRENDERBUFFERSTORAGEMULTISAMPLEFN glRenderbufferStorageMultisample;
 extern GLDRAWBUFFERSFN glDrawBuffers;
 extern GLGENERATEMIPMAPFN glGenerateMipmap;
 extern GLDRAWELEMENTSINSTANCEDFN glDrawElementsInstanced;
+
+extern GLBROKENEXTENSIONFN glBrokenExtension;
 
 /* Extension Constants - Found these from glew and Google */
 
@@ -217,6 +221,8 @@ extern GLDRAWELEMENTSINSTANCEDFN glDrawElementsInstanced;
 #define GL_TEXTURE_WRAP_R 0x8072
 #define GL_MIRRORED_REPEAT 0x8370
 #define GL_TEXTURE_DEPTH 0x8071
+#define GL_TEXTURE_MAX_ANISOTROPY 0x84FE
+#define GL_MAX_TEXTURE_MAX_ANISOTROPY 0x84FF
 #define GL_TEXTURE_MAX_ANISOTROPY_EXT 0x84FE
 #define GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT 0x84FF
 
