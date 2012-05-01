@@ -8,73 +8,13 @@
 
 #ifdef _WIN32
   #include "SDL/SDL_syswm.h"
+  #include <windows.h>
+  #include <winbase.h>
 #endif
 
 #ifdef __unix__
   #include <execinfo.h>
 #endif
-  
-#ifdef _WIN32
-  #include <windows.h>
-  #include <winbase.h>
-#endif
-
-#ifndef __unix__
-  GLACTIVETEXTUREFN glActiveTexture = NULL;
-  GLCOMPRESSEDTEXIMAGE2DFN glCompressedTexImage2D = NULL;
-  GLTEXIMAGE3DFN glTexImage3D = NULL;
-#endif
-GLCREATESHADERFN glCreateShader = NULL;
-GLCREATEPROGRAMFN glCreateProgram = NULL;
-GLSHADERSOURCEFN glShaderSource = NULL;
-GLCOMPILESHADERFN glCompileShader = NULL;
-GLGETSHADERINFOLOGFN glGetShaderInfoLog = NULL;
-GLATTACHSHADERFN glAttachShader = NULL;
-GLLINKPROGRAMFN glLinkProgram = NULL;
-GLGETPROGRAMINFOLOGFN glGetProgramInfoLog = NULL;
-GLGETUNIFORMLOCATIONFN glGetUniformLocation = NULL;
-GLUNIFORM1FFN glUniform1f = NULL;
-GLUNIFORM1IFN glUniform1i = NULL;
-GLDELETESHADERFN glDeleteShader = NULL;
-GLDELETEPROGRAMFN glDeleteProgram = NULL;
-GLUSEPROGRAMFN glUseProgram = NULL;
-GLVERTEXATTRIBPOINTERFN glVertexAttribPointer = NULL;
-GLENABLEVERTEXATTRIBARRAYFN glEnableVertexAttribArray = NULL;
-GLDISABLEVERTEXATTRIBARRAYFN glDisableVertexAttribArray = NULL;
-GLUNIFORM2FFN glUniform2f = NULL;
-GLUNIFORM3FFN glUniform3f = NULL;
-GLUNIFORM4FFN glUniform4f = NULL;
-GLUNIFORMMATRIX4FVFN glUniformMatrix4fv = NULL;
-GLUNIFORM1FVFN glUniform1fv = NULL;
-GLUNIFORM2FVFN glUniform2fv = NULL;
-GLUNIFORM3FVFN glUniform3fv = NULL;
-GLGETSHADERIVFN glGetShaderiv = NULL;
-GLGETPROGRAMIVFN glGetProgramiv = NULL;
-GLBINDATTRIBLOCATIONFN glBindAttribLocation = NULL;
-GLGENFRAMEBUFFERSFN glGenFramebuffers = NULL;
-GLBINDFRAMEBUFFERFN glBindFramebuffer = NULL;
-GLBLITFRAMEBUFFERFN glBlitFramebuffer = NULL;
-GLFRAMEBUFFERTEXTUREFN glFramebufferTexture = NULL;
-GLFRAMEBUFFERTEXTURE2DFN glFramebufferTexture2D = NULL;
-GLDELETEFRAMEBUFFERSFN glDeleteFramebuffers = NULL;
-GLCHECKFRAMEBUFFERSTATUSFN glCheckFramebufferStatus = NULL;
-GLGENBUFFERSFN glGenBuffers = NULL;
-GLGENRENDERBUFFERSFN glGenRenderbuffers = NULL;
-GLDELETEBUFFERSFN glDeleteBuffers = NULL;
-GLDELETERENDERBUFFERSFN glDeleteRenderbuffers = NULL;
-GLBINDBUFFERFN glBindBuffer = NULL;
-GLBINDRENDERBUFFERFN glBindRenderbuffer = NULL;
-GLBUFFERDATAFN glBufferData = NULL;
-GLGETBUFFERSUBDATAFN glGetBufferSubData = NULL;
-GLFRAMEBUFFERRENDERBUFFERFN glFramebufferRenderbuffer = NULL;
-GLGETATTRIBLOCATIONFN glGetAttribLocation = NULL;
-GLRENDERBUFFERSTORAGEFN glRenderbufferStorage = NULL;
-GLRENDERBUFFERSTORAGEMULTISAMPLEFN glRenderbufferStorageMultisample = NULL;
-GLDRAWBUFFERSFN glDrawBuffers = NULL;
-GLGENERATEMIPMAPFN glGenerateMipmap = NULL;
-GLDRAWELEMENTSINSTANCEDFN glDrawElementsInstanced = NULL;
-
-GLBROKENEXTENSIONFN glBrokenExtension = NULL;
 
 #ifdef _WIN32
 
@@ -147,7 +87,7 @@ void SDL_PathFileLocation(char* dst, char* path) {
 #endif
 
  
-static char curr_dir[FILENAME_MAX];
+static char curr_dir[MAX_PATH];
 char* SDL_GetWorkingDir() {
 
   if (!getcwd(curr_dir, sizeof(curr_dir))) {
@@ -171,24 +111,23 @@ void SDL_RWsize(SDL_RWops* file, int* size) {
   SDL_RWseek(file, pos, SEEK_SET);
 }
 
-
 int SDL_RWreadline(SDL_RWops* file, char* buffer, int buffersize) {
   
-  char c[10];
+  char c;
+  int status = 0;
   int i = 0;
-  int stat = 0;
   while(1) {
     
-    stat = SDL_RWread(file, &c[0], 1, 1);
+    status = SDL_RWread(file, &c, 1, 1);
     
-    if (stat == -1) error("Error reading file.");
+    if (status == -1) error("Error reading file.");
     if (i == buffersize-1) error("Buffer not large enough to read line!");
-    if (stat == 0) break;
+    if (status == 0) break;
     
-    buffer[i] = c[0];
+    buffer[i] = c;
     i++;
     
-    if (c[0] == '\n') {
+    if (c == '\n') {
       buffer[i] = '\0';
       return i;
     }
@@ -234,25 +173,73 @@ void SDL_WM_DeleteResourceIcon() {
 
 #else
 
-void SDL_WM_UseResourceIcon() {
-
-}
-
-void SDL_WM_DeleteResourceIcon() {
-
-}
+void SDL_WM_UseResourceIcon() {}
+void SDL_WM_DeleteResourceIcon() {}
 
 #endif
 
+#ifdef _WIN32
+
+static HDC temp_device;
+static HGLRC temp_context;
+
+void SDL_WM_CreateTempContext() {
+  
+  SDL_SysWMinfo info;
+  SDL_VERSION(&info.version);
+  if (SDL_GetWMInfo(&info) == -1) {
+    error("Could not get SDL version info.");
+  }
+  
+  temp_device = GetDC(info.window);
+
+  temp_context = wglCreateContext(temp_device);
+  if (temp_context == NULL) {
+    error("Could not create OpenGL context");
+  }
+
+  if (!wglShareLists(info.hglrc, temp_context)) {
+    error("Could not share lists with temp context.");
+  }
+  
+}
+
+void SDL_WM_DeleteTempContext() {
+
+  SDL_SysWMinfo info;
+  SDL_VERSION(&info.version);
+  if (SDL_GetWMInfo(&info) == -1) {
+    error("Could not get SDL version info.");
+  }
+
+  if (!wglShareLists(temp_context, info.hglrc)) {
+    error("Could share lists with OpenGL context");
+  }
+
+  if (!wglDeleteContext(temp_context)) {
+    error("Could delete OpenGL context");
+  }
+
+}
+
+#else
+
+void SDL_WM_CreateTempContext() {}
+void SDL_WM_DeleteTempContext() {}
+
+#endif
+
+
 void SDL_GL_PrintInfo() {
-  debug("OpenGL Info");
   const char* vendor = (const char*)glGetString(GL_VENDOR);
-  debug("Vendor: %s", vendor);
   const char* renderer = (const char*)glGetString(GL_RENDERER);
-  debug("Renderer: %s", renderer);
   const char* version = (const char*)glGetString(GL_VERSION);
-  debug("Version: %s", version);
   const char* shader_version = (const char*)glGetString(GL_SHADING_LANGUAGE_VERSION);
+  
+  debug("OpenGL Info");
+  debug("Vendor: %s", vendor);
+  debug("Renderer: %s", renderer);
+  debug("Version: %s", version);
   debug("Shader Version: %s", shader_version);
 }
 
@@ -261,26 +248,36 @@ void SDL_GL_PrintExtensions() {
   debug("OpenGL Extensions: %s\n", extensions);
 }
 
+static const char* gl_error_string_invalid_enum = "Invalid Enum";
+static const char* gl_error_string_invalid_value = "Invalid Value";
+static const char* gl_error_string_invalid_operation = "Invalid Operation";
+static const char* gl_error_string_out_of_memory = "Out of Memory";
+static const char* gl_error_string_invalid_framebuffer_operation = "Invalid Framebuffer Operation";
+static const char* gl_error_string_stack_overflow = "Stack Overflow";
+static const char* gl_error_string_stack_underflow = "Stack Underflow";
+static const char* gl_error_string_table_too_large = "Table Too Large";
+static const char* gl_error_string_no_error = "No Error";
 
-void SDL_GL_CheckError(const char* name) {
-  switch (glGetError()) {
+const char* SDL_GL_ErrorString(GLenum error) {
+  switch (error) {
     case GL_INVALID_ENUM:
-      error("OpenGL Error on function %s: Invalid Enum", name);
+      return gl_error_string_invalid_enum;
     case GL_INVALID_VALUE:
-      error("OpenGL Error on function %s: Invalid Value", name);
+      return gl_error_string_invalid_value;
     case GL_INVALID_OPERATION:
-      error("OpenGL Error on function %s: Invalid Operation", name);
+      return gl_error_string_invalid_operation;
     case GL_OUT_OF_MEMORY:
-      error("OpenGL Error on function %s: Out of Memory", name);
+      return gl_error_string_out_of_memory;
     case GL_INVALID_FRAMEBUFFER_OPERATION:
-      error("OpenGL Error on function %s: Invalid FrameBuffer Operation", name);
+      return gl_error_string_invalid_framebuffer_operation;
     case GL_STACK_OVERFLOW:
-      error("OpenGL Error on function %s: Stack Overflow", name);
+      return gl_error_string_stack_overflow;
     case GL_STACK_UNDERFLOW:
-      error("OpenGL Error on function %s: Stack Underflow", name);
+      return gl_error_string_stack_underflow;
     case GL_TABLE_TOO_LARGE:
-      error("OpenGL Error on function %s: Table Too Large", name);
+      return gl_error_string_table_too_large;
   }
+  return gl_error_string_no_error;
 }
 
 #ifdef _WIN32
@@ -421,64 +418,80 @@ SDL_Thread* SDL_GL_CreateThread(int (*fn)(void *), void *data) {
 
 #endif
 
-#ifdef _WIN32
-
-static HDC temp_device;
-static HGLRC temp_context;
-
-void SDL_WM_CreateTempContext() {
-  
-  SDL_SysWMinfo info;
-  SDL_VERSION(&info.version);
-  if (SDL_GetWMInfo(&info) == -1) {
-    error("Could not get SDL version info.");
+bool SDL_GL_ExtensionPresent(char* name) {
+  const char* extensions = (const char*)glGetString(GL_EXTENSIONS);
+  if (strstr(extensions, name)) {
+    return true;
+  } else {
+    return false;
   }
-  
-  temp_device = GetDC(info.window);
-
-  temp_context = wglCreateContext(temp_device);
-  if (temp_context == NULL) {
-    error("Could not create OpenGL context");
-  }
-
-  if (!wglShareLists(info.hglrc, temp_context)) {
-    error("Could not share lists with temp context.");
-  }
-  
 }
 
-void SDL_WM_DeleteTempContext() {
-
-  SDL_SysWMinfo info;
-  SDL_VERSION(&info.version);
-  if (SDL_GetWMInfo(&info) == -1) {
-    error("Could not get SDL version info.");
-  }
-
-  if (!wglShareLists(temp_context, info.hglrc)) {
-    error("Could share lists with OpenGL context");
-  }
-
-  if (!wglDeleteContext(temp_context)) {
-    error("Could delete OpenGL context");
-  }
-
-}
-
-#else
-
-void SDL_WM_CreateTempContext() {}
-void SDL_WM_DeleteTempContext() {}
-
-#endif
-
-bool SDL_GL_ExtensionLoaded(void* function) {
+bool SDL_GL_ExtensionFuncionLoaded(void* function) {
   if (function == NULL) {
     return false;
   } else {
     return true;
   }
 }
+
+#ifndef __unix__
+GLACTIVETEXTUREFN glActiveTexture = NULL;
+GLCOMPRESSEDTEXIMAGE2DFN glCompressedTexImage2D = NULL;
+GLTEXIMAGE3DFN glTexImage3D = NULL;
+#endif
+GLCREATESHADERFN glCreateShader = NULL;
+GLCREATEPROGRAMFN glCreateProgram = NULL;
+GLSHADERSOURCEFN glShaderSource = NULL;
+GLCOMPILESHADERFN glCompileShader = NULL;
+GLGETSHADERINFOLOGFN glGetShaderInfoLog = NULL;
+GLATTACHSHADERFN glAttachShader = NULL;
+GLLINKPROGRAMFN glLinkProgram = NULL;
+GLGETPROGRAMINFOLOGFN glGetProgramInfoLog = NULL;
+GLGETUNIFORMLOCATIONFN glGetUniformLocation = NULL;
+GLUNIFORM1FFN glUniform1f = NULL;
+GLUNIFORM1IFN glUniform1i = NULL;
+GLDELETESHADERFN glDeleteShader = NULL;
+GLDELETEPROGRAMFN glDeleteProgram = NULL;
+GLUSEPROGRAMFN glUseProgram = NULL;
+GLVERTEXATTRIBPOINTERFN glVertexAttribPointer = NULL;
+GLENABLEVERTEXATTRIBARRAYFN glEnableVertexAttribArray = NULL;
+GLDISABLEVERTEXATTRIBARRAYFN glDisableVertexAttribArray = NULL;
+GLUNIFORM2FFN glUniform2f = NULL;
+GLUNIFORM3FFN glUniform3f = NULL;
+GLUNIFORM4FFN glUniform4f = NULL;
+GLUNIFORMMATRIX4FVFN glUniformMatrix4fv = NULL;
+GLUNIFORM1FVFN glUniform1fv = NULL;
+GLUNIFORM2FVFN glUniform2fv = NULL;
+GLUNIFORM3FVFN glUniform3fv = NULL;
+GLGETSHADERIVFN glGetShaderiv = NULL;
+GLPROGRAMPARAMETERIFN glProgramParameteri = NULL;
+GLGETPROGRAMIVFN glGetProgramiv = NULL;
+GLBINDATTRIBLOCATIONFN glBindAttribLocation = NULL;
+GLGENFRAMEBUFFERSFN glGenFramebuffers = NULL;
+GLBINDFRAMEBUFFERFN glBindFramebuffer = NULL;
+GLBLITFRAMEBUFFERFN glBlitFramebuffer = NULL;
+GLFRAMEBUFFERTEXTUREFN glFramebufferTexture = NULL;
+GLFRAMEBUFFERTEXTURE2DFN glFramebufferTexture2D = NULL;
+GLDELETEFRAMEBUFFERSFN glDeleteFramebuffers = NULL;
+GLCHECKFRAMEBUFFERSTATUSFN glCheckFramebufferStatus = NULL;
+GLGENBUFFERSFN glGenBuffers = NULL;
+GLGENRENDERBUFFERSFN glGenRenderbuffers = NULL;
+GLDELETEBUFFERSFN glDeleteBuffers = NULL;
+GLDELETERENDERBUFFERSFN glDeleteRenderbuffers = NULL;
+GLBINDBUFFERFN glBindBuffer = NULL;
+GLBINDRENDERBUFFERFN glBindRenderbuffer = NULL;
+GLBUFFERDATAFN glBufferData = NULL;
+GLGETBUFFERSUBDATAFN glGetBufferSubData = NULL;
+GLFRAMEBUFFERRENDERBUFFERFN glFramebufferRenderbuffer = NULL;
+GLGETATTRIBLOCATIONFN glGetAttribLocation = NULL;
+GLRENDERBUFFERSTORAGEFN glRenderbufferStorage = NULL;
+GLRENDERBUFFERSTORAGEMULTISAMPLEFN glRenderbufferStorageMultisample = NULL;
+GLDRAWBUFFERSFN glDrawBuffers = NULL;
+GLGENERATEMIPMAPFN glGenerateMipmap = NULL;
+GLDRAWELEMENTSINSTANCEDFN glDrawElementsInstanced = NULL;
+
+GLBROKENEXTENSIONFN glBrokenExtension = NULL;
 
 #define SDL_GL_LoadExtension(type, name) \
 name = (type)SDL_GL_GetProcAddress(#name); \
@@ -504,6 +517,7 @@ void SDL_GL_LoadExtensions() {
   SDL_GL_LoadExtension(GLGETPROGRAMINFOLOGFN, glGetProgramInfoLog);
   SDL_GL_LoadExtension(GLUSEPROGRAMFN, glUseProgram);
   SDL_GL_LoadExtension(GLGETPROGRAMIVFN, glGetProgramiv);
+  SDL_GL_LoadExtension(GLPROGRAMPARAMETERIFN, glProgramParameteri);
   
   SDL_GL_LoadExtension(GLCREATESHADERFN, glCreateShader);
   SDL_GL_LoadExtension(GLSHADERSOURCEFN, glShaderSource);

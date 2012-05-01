@@ -31,6 +31,8 @@ void corange_init(char* core_assets_path) {
   signal(SIGSEGV, corange_signal);
   signal(SIGTERM, corange_signal);
   
+  aterror(SDL_PrintStackTrace);
+  
   /* Starting Corange */
   debug("Starting Corange...");
   
@@ -62,6 +64,7 @@ void corange_init(char* core_assets_path) {
   
   asset_manager_handler(shader, "vs" , vs_load_file,  shader_delete);
   asset_manager_handler(shader, "fs" , fs_load_file,  shader_delete);
+  asset_manager_handler(shader, "gs" , gs_load_file,  shader_delete);
   asset_manager_handler(shader_program, "prog", prog_load_file, shader_program_delete);
   
   asset_manager_handler(font, "fnt", font_load_file, font_delete);

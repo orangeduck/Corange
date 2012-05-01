@@ -7,15 +7,17 @@
 
 #include "bool.h"
 
+#include <limits.h>
+
 #ifndef MAX_PATH
-  #include <limits.h>
-  
   #ifdef PATH_MAX
     #define MAX_PATH PATH_MAX
   #else
-    #define MAX_PATH 256
+    #error "Can't find define for MAX_PATH/PATH_MAX"
   #endif
 #endif
+
+void SDL_PrintStackTrace();
 
 void SDL_PathFullName(char* dst, char* path);
 void SDL_PathFileName(char* dst, char* path);
@@ -34,24 +36,22 @@ void SDL_WM_DeleteResourceIcon();
 void SDL_WM_CreateTempContext();
 void SDL_WM_DeleteTempContext();
 
-void SDL_GL_PrintInfo();
-void SDL_GL_PrintExtensions();
-
-
 SDL_Thread* SDL_GL_CreateThread(int (*fn)(void *), void *data);
 
-void SDL_GL_CheckError(const char* name);
+#define SDL_GL_CheckError() GLenum __glerror = glGetError(); if (__glerror) { error("OpenGL Error: %s", SDL_GL_ErrorString(__glerror)); }
+const char* SDL_GL_ErrorString(GLenum error);
+
+void SDL_GL_PrintInfo();
+void SDL_GL_PrintExtensions();
 void SDL_GL_LoadExtensions();
-
-bool SDL_GL_ExtensionLoaded(void* function);
-
-void SDL_PrintStackTrace();
+bool SDL_GL_ExtensionPresent(char* name);
+bool SDL_GL_ExtensionFunctionLoaded(void* function);
 
 #ifndef GLchar
   #define GLchar char
 #endif
 #ifndef GLsizeiptr
-  #define GLsizeiptr int
+  #define GLsizeiptr size_t
 #endif
 
 typedef GLuint (APIENTRY * GLCREATESHADERFN)( GLenum type );
@@ -81,6 +81,7 @@ typedef void (APIENTRY * GLUNIFORM2FVFN)( GLint location, GLsizei count, const G
 typedef void (APIENTRY * GLUNIFORM3FVFN)( GLint location, GLsizei count, const GLfloat* value );
 typedef void (APIENTRY * GLGETSHADERIVFN)( GLuint shader, GLenum pname, GLint* params );
 typedef void (APIENTRY * GLGETPROGRAMIVFN)( GLuint program, GLenum pname, GLint* params );
+typedef void (APIENTRY * GLPROGRAMPARAMETERIFN)( GLuint program, GLenum pname, GLint value );
 typedef void (APIENTRY * GLBINDATTRIBLOCATIONFN)( GLuint program, GLuint index, const GLchar* name );
 typedef void (APIENTRY * GLGENFRAMEBUFFERSFN)( GLsizei n, GLuint* ids );
 typedef void (APIENTRY * GLBINDFRAMEBUFFERFN)( GLenum target, GLuint framebuffer );
@@ -140,6 +141,7 @@ extern GLUNIFORM2FVFN glUniform2fv;
 extern GLUNIFORM2FVFN glUniform3fv;
 extern GLGETSHADERIVFN glGetShaderiv;
 extern GLGETPROGRAMIVFN glGetProgramiv;
+extern GLPROGRAMPARAMETERIFN glProgramParameteri;
 extern GLBINDATTRIBLOCATIONFN glBindAttribLocation;
 extern GLGENFRAMEBUFFERSFN glGenFramebuffers;
 extern GLBINDFRAMEBUFFERFN glBindFramebuffer;
@@ -168,11 +170,32 @@ extern GLBROKENEXTENSIONFN glBrokenExtension;
 
 /* Extension Constants - Found these from glew and Google */
 
+#define GL_TABLE_TOO_LARGE 0x8031
+#define GL_INVALID_FRAMEBUFFER_OPERATION 0x0506
+
 #define GL_SHADING_LANGUAGE_VERSION 0x8B8C
+
+#define GL_VERTEX_SHADER 0x8B31
+#define GL_FRAGMENT_SHADER 0x8B30
+#define GL_GEOMETRY_SHADER 0x8DD9
+#define GL_COMPILE_STATUS 0x8B81
+#define GL_LINK_STATUS 0x8B82
+#define GL_GEOMETRY_VERTICES_OUT 0x8DDA
+#define GL_GEOMETRY_INPUT_TYPE 0x8DDB
+#define GL_GEOMETRY_OUTPUT_TYPE 0x8DDC
+#define GL_MAX_GEOMETRY_OUTPUT_VERTICES 0x8DE0
+#define GL_MAX_GEOMETRY_TOTAL_OUTPUT_COMPONENTS 0x8DE1
+
 #define GL_FRAMEBUFFER 0x8D40
 #define GL_RENDERBUFFER 0x8D41
 #define GL_READ_FRAMEBUFFER 0x8CA8
 #define GL_DRAW_FRAMEBUFFER 0x8CA9
+#define GL_ARRAY_BUFFER 0x8892
+#define GL_ELEMENT_ARRAY_BUFFER 0x8893
+
+#define GL_STATIC_DRAW 0x88E4
+#define GL_DYNAMIC_COPY 0x88EA
+
 #define GL_MAX_COLOR_ATTACHMENTS 0x8CDF
 #define GL_COLOR_ATTACHMENT0 0x8CE0
 #define GL_COLOR_ATTACHMENT1 0x8CE1
@@ -192,6 +215,7 @@ extern GLBROKENEXTENSIONFN glBrokenExtension;
 #define GL_COLOR_ATTACHMENT15 0x8CEF
 #define GL_DEPTH_ATTACHMENT 0x8D00
 #define GL_STENCIL_ATTACHMENT 0x8D20
+
 #define GL_RGBA32F 0x8814
 #define GL_RGBA16F 0x881A
 #define GL_BGRA 0x80E1
@@ -203,22 +227,8 @@ extern GLBROKENEXTENSIONFN glBrokenExtension;
 #define GL_UNSIGNED_SHORT_5_6_5 0x8363
 #define GL_UNSIGNED_INT_24_8 34042
 #define GL_DEPTH_COMPONENT24 0x81A6
+
 #define GL_CLAMP_TO_EDGE 0x812F
-#define GL_TEXTURE0 0x84C0
-#define GL_ARRAY_BUFFER 0x8892
-#define GL_ELEMENT_ARRAY_BUFFER 0x8893
-#define GL_MULTISAMPLE 0x809D
-#define GL_STATIC_DRAW 0x88E4
-#define GL_GENERATE_MIPMAP 0x8191
-#define GL_VERTEX_SHADER 0x8B31
-#define GL_FRAGMENT_SHADER 0x8B30
-#define GL_TEXTURE_MAX_LEVEL 0x813D
-#define GL_DYNAMIC_COPY 0x88EA
-#define GL_COMPILE_STATUS 0x8B81
-#define GL_LINK_STATUS 0x8B82
-#define GL_TEXTURE_3D 0x806F
-#define GL_TABLE_TOO_LARGE 0x8031
-#define GL_INVALID_FRAMEBUFFER_OPERATION 0x0506
 #define GL_TEXTURE_WRAP_R 0x8072
 #define GL_MIRRORED_REPEAT 0x8370
 #define GL_TEXTURE_DEPTH 0x8071
@@ -226,6 +236,13 @@ extern GLBROKENEXTENSIONFN glBrokenExtension;
 #define GL_MAX_TEXTURE_MAX_ANISOTROPY 0x84FF
 #define GL_TEXTURE_MAX_ANISOTROPY_EXT 0x84FE
 #define GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT 0x84FF
+#define GL_GENERATE_MIPMAP 0x8191
+#define GL_TEXTURE_MAX_LEVEL 0x813D
+
+#define GL_TEXTURE0 0x84C0
+#define GL_TEXTURE_3D 0x806F
+
+#define GL_MULTISAMPLE 0x809D
 
 
 #endif

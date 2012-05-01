@@ -41,6 +41,8 @@ static void swap_renderer() {
     
     use_deferred = true;
   }
+  
+  SDL_GL_CheckError();
 
 }
 

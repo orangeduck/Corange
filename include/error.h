@@ -14,8 +14,11 @@ void enable_errors();
 
 void error_bp();
 
+void aterror(void(*func)(void));
+void error_funcs();
+
 #ifndef NO_ERROR_ENABLED
-  #define error(MSG, ...) if(errors_enabled) { printf("[ERROR] (%s:%i) ", __FILE__, __LINE__); printf(MSG, ##__VA_ARGS__); printf("\n"); fflush(stdout); error_bp(); exit(EXIT_FAILURE); }
+  #define error(MSG, ...) if(errors_enabled) { printf("[ERROR] (%s:%i) ", __FILE__, __LINE__); printf(MSG, ##__VA_ARGS__); printf("\n"); fflush(stdout); error_bp(); error_funcs(); exit(EXIT_FAILURE); }
 #else
   #define error(MSG, ...) {}
 #endif

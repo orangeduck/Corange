@@ -1,4 +1,4 @@
-#define VOLUME_RENDERER
+#define MARCHING_CUBES
 
 #include "particles.h"
 #include "volume_renderer.h"
@@ -42,7 +42,7 @@ void metaballs_init() {
   
   camera* cam = entity_new("camera", camera);
   cam->position = v3(50, 50, 50);
-  cam->target = v3(32, 20, 32);
+  cam->target = v3(32, 15, 32);
   
   light* sun = entity_new("sun", light);
   sun->position = v3(50,40,50);
@@ -154,7 +154,7 @@ void metaballs_render() {
 
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   
-#ifdef MARCHING_CUBES
+#ifdef MARCHING_CUBES 
   shadow_mapper_begin();
     shadow_mapper_render_static(s_podium);
     marching_cubes_render_shadows(sun);

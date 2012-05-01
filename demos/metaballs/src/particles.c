@@ -6,7 +6,7 @@
 #include "particles.h"
 #include "kernel.h"
 
-static int particle_count = 32;
+static int particle_count = 64;
 
 vector4* particle_positions;
 vector4* particle_velocities;

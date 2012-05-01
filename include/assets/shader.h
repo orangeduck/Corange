@@ -10,6 +10,7 @@ typedef GLuint shader_program;
 
 shader* vs_load_file(char* filename);
 shader* fs_load_file(char* filename);
+shader* gs_load_file(char* filename);
 
 void shader_delete(shader* s);
 void shader_print_log(shader* s);
