@@ -59,9 +59,15 @@ shader* fs_load_file(char* filename) {
 }
 
 shader* gs_load_file(char* filename) {
-  shader* gs = load_shader_file(filename, GL_GEOMETRY_SHADER);
+  return load_shader_file(filename, GL_GEOMETRY_SHADER);
+}
 
-  return gs;
+shader* tcs_load_file(char* filename) {
+  return load_shader_file(filename, GL_TESS_CONTROL_SHADER);
+}
+
+shader* tes_load_file(char* filename) {
+  return load_shader_file(filename, GL_TESS_EVALUATION_SHADER);
 }
 
 shader_program* shader_program_new() {

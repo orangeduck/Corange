@@ -41,13 +41,14 @@ Demos
 
 I'm a graphics programmer by trade so apologies that most of the demos are graphical apps; they're just what I love!
 
-* renderers  ~ Shows off the various renderers with shaders, shadows, animation etc.
-* lut_gen    ~ Tool for generating color correction LUTs from a photoshop curves file.
-* metaballs  ~ Uses OpenCL/OpenGL interop to do Metaball rendering.
-* noise      ~ Feedback based noise pattern on screen using shader. Can generate tileable perlin noise in software.
-* platformer ~ Basic platforming game. Fairly well commented.
-* sea        ~ Renders a sea-like surface, a ship, and some collision detection.
-* scotland   ~ Demonstrates terrain system.
+* __renderers__ Shows off the various renderers with shaders, shadows, animation etc.
+* __lut_gen__ Tool for generating color correction LUTs from a photoshop curves file.
+* __metaballs__ Uses OpenCL/OpenGL interop to do Metaball rendering.
+* __noise__ Feedback based noise pattern on screen using shader. Can generate tileable perlin noise in software.
+* __platformer__ Basic platforming game. Fairly well commented.
+* __sea__ Renders a sea-like surface, a ship, and some collision detection.
+* __scotland__ Demonstrates terrain system.
+* __tessellation__ Demo showing tessellation shaders in OpenGL 4.
 		
 	
 FAQ

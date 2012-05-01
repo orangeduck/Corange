@@ -38,7 +38,7 @@ void SDL_WM_DeleteTempContext();
 
 SDL_Thread* SDL_GL_CreateThread(int (*fn)(void *), void *data);
 
-#define SDL_GL_CheckError() GLenum __glerror = glGetError(); if (__glerror) { error("OpenGL Error: %s", SDL_GL_ErrorString(__glerror)); }
+#define SDL_GL_CheckError() { GLenum __glerror = glGetError(); if (__glerror) { error("OpenGL Error: %s", SDL_GL_ErrorString(__glerror)); } }
 const char* SDL_GL_ErrorString(GLenum error);
 
 void SDL_GL_PrintInfo();
@@ -107,6 +107,8 @@ typedef void (APIENTRY * GLGENERATEMIPMAPFN)(GLenum target);
 typedef void (APIENTRY * GLCOMPRESSEDTEXIMAGE2DFN)(GLenum target, GLint level, GLenum format, GLsizei width, GLsizei height, GLint border, GLsizei imagesize, const GLvoid* data);
 typedef void (APIENTRY * GLTEXIMAGE3DFN)(GLenum target, GLint level, GLint internalFormat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLenum format, GLenum type, const GLvoid* data);
 typedef void (APIENTRY * GLDRAWELEMENTSINSTANCEDFN)(GLenum mode, GLsizei count, GLenum type, const void* indicies, GLsizei primcount);
+typedef void (APIENTRY * GLPATCHPARAMETERIFN)(GLenum pname, GLint value);
+typedef void (APIENTRY * GLPATCHPARAMETERFVFN)(GLenum pname, const GLfloat* values);
 
 typedef void (APIENTRY * GLBROKENEXTENSIONFN)();
 
@@ -165,6 +167,8 @@ extern GLRENDERBUFFERSTORAGEMULTISAMPLEFN glRenderbufferStorageMultisample;
 extern GLDRAWBUFFERSFN glDrawBuffers;
 extern GLGENERATEMIPMAPFN glGenerateMipmap;
 extern GLDRAWELEMENTSINSTANCEDFN glDrawElementsInstanced;
+extern GLPATCHPARAMETERIFN glPatchParameteri;
+extern GLPATCHPARAMETERFVFN glPatchParameterfv;
 
 extern GLBROKENEXTENSIONFN glBrokenExtension;
 
@@ -243,6 +247,12 @@ extern GLBROKENEXTENSIONFN glBrokenExtension;
 #define GL_TEXTURE_3D 0x806F
 
 #define GL_MULTISAMPLE 0x809D
+
+#define GL_TESS_CONTROL_SHADER 0x8E88
+#define GL_TESS_EVALUATION_SHADER 0x8E87
+#define GL_PATCHES 0xE
+#define GL_PATCH_VERTICES 0x8E72
+
 
 
 #endif

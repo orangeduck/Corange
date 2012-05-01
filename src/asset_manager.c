@@ -113,7 +113,7 @@ static void delete_bucket_list(bucket* b) {
   
   delete_bucket_list(b->next);
   
-  debug("Unloading: %s", b->string);
+  debug("Unloading: '%s'", b->string);
   
   char* ext = asset_name_extension(b->string);
   
@@ -154,7 +154,7 @@ void asset_manager_finish() {
 void asset_manager_handler_cast(type_id type, char* extension, void* asset_loader(char* filename) , void asset_deleter(void* asset) ) {
   
   if(num_asset_handlers == MAX_ASSET_HANDLERS) {
-    warning("Max number of asset handlers reached. Handler for extension %s not added.", extension);
+    warning("Max number of asset handlers reached. Handler for extension '%s' not added.", extension);
     return;
   }
   
@@ -176,7 +176,7 @@ void load_file(char* filename) {
   char* filename_map = asset_map_filename(filename);
   
   if (dictionary_contains(asset_dictionary, filename_map)) {
-    error("Asset %s already loaded", filename_map);
+    error("Asset '%s' already loaded", filename_map);
   }
   
   char* ext = asset_name_extension(filename_map);
@@ -184,7 +184,7 @@ void load_file(char* filename) {
   for(int i=0; i < num_asset_handlers; i++) {
     asset_handler handler = asset_handlers[i];
     if (strcmp(ext, handler.extension) == 0) {
-      debug("Loading: %s", filename_map);
+      debug("Loading: '%s'", filename_map);
       void* asset = handler.load_func(filename_map);
       dictionary_set(asset_dictionary, filename_map, asset);
       break;
@@ -200,13 +200,13 @@ void load_folder(char* folder) {
   
   char* folder_map = asset_map_filename(folder);
   
-  debug("Loading Folder: %s", folder_map);
+  debug("Loading Folder: '%s'", folder_map);
   
   DIR* dir = opendir(folder_map);
   struct dirent* ent;
   
   if (dir == NULL) {
-    error("Could not open directory %s to load.", folder_map);
+    error("Could not open directory '%s' to load.", folder_map);
   }
     
   while ((ent = readdir(dir)) != NULL) {
@@ -253,7 +253,7 @@ void unload_file(char* filename) {
   
     asset_handler handler = asset_handlers[i];
     if (strcmp(ext, handler.extension) == 0) {
-      debug("Unloading: %s", filename_map);
+      debug("Unloading: '%s'", filename_map);
       dictionary_remove_with(asset_dictionary, filename_map, handler.del_func);
       break;
     }
@@ -268,13 +268,13 @@ void unload_folder(char* folder) {
     
   char* folder_map = asset_map_filename(folder);
   
-  debug("Unloading Folder: %s", folder_map);
+  debug("Unloading Folder: '%s'", folder_map);
   
   DIR* dir = opendir(folder_map);
   struct dirent* ent;
   
   if (dir == NULL) {
-    error("Could not open directory %s to unload.\n", folder_map);
+    error("Could not open directory '%s' to unload.\n", folder_map);
   }
   
   while ((ent = readdir(dir)) != NULL) {
@@ -302,7 +302,7 @@ void* asset_get(char* path) {
   void* val = dictionary_get(asset_dictionary, path_map);
   
   if (val == NULL) {
-    error("Could not find asset %s. Perhaps it is not loaded yet?", path_map);
+    error("Could not find asset '%s'. Perhaps it is not loaded yet?", path_map);
   }
   
   free(path_map);

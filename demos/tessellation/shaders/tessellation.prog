@@ -1,0 +1,5 @@
+tessellation_control_shader : ./shaders/tessellation.tcs
+tessellation_evaluation_shader : ./shaders/tessellation.tes
+vertex_shader : ./shaders/tessellation.vs
+geometry_shader : ./shaders/tessellation.gs
+fragment_shader : ./shaders/tessellation.fs

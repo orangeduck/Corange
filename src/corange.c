@@ -65,6 +65,8 @@ void corange_init(char* core_assets_path) {
   asset_manager_handler(shader, "vs" , vs_load_file,  shader_delete);
   asset_manager_handler(shader, "fs" , fs_load_file,  shader_delete);
   asset_manager_handler(shader, "gs" , gs_load_file,  shader_delete);
+  asset_manager_handler(shader, "tcs" , tcs_load_file,  shader_delete);
+  asset_manager_handler(shader, "tes" , tes_load_file,  shader_delete);
   asset_manager_handler(shader_program, "prog", prog_load_file, shader_program_delete);
   
   asset_manager_handler(font, "fnt", font_load_file, font_delete);

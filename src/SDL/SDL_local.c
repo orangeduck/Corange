@@ -490,6 +490,8 @@ GLRENDERBUFFERSTORAGEMULTISAMPLEFN glRenderbufferStorageMultisample = NULL;
 GLDRAWBUFFERSFN glDrawBuffers = NULL;
 GLGENERATEMIPMAPFN glGenerateMipmap = NULL;
 GLDRAWELEMENTSINSTANCEDFN glDrawElementsInstanced = NULL;
+GLPATCHPARAMETERIFN glPatchParameteri = NULL;
+GLPATCHPARAMETERFVFN glPatchParameterfv = NULL;
 
 GLBROKENEXTENSIONFN glBrokenExtension = NULL;
 
@@ -578,6 +580,11 @@ void SDL_GL_LoadExtensions() {
   SDL_GL_LoadExtension(GLDELETEFRAMEBUFFERSFN, glDeleteFramebuffers);
   SDL_GL_LoadExtension(GLCHECKFRAMEBUFFERSTATUSFN, glCheckFramebufferStatus);
   SDL_GL_LoadExtension(GLFRAMEBUFFERRENDERBUFFERFN, glFramebufferRenderbuffer);
+  
+  /* Tessellation */
+  
+  SDL_GL_LoadExtension(GLPATCHPARAMETERIFN, glPatchParameteri);
+  SDL_GL_LoadExtension(GLPATCHPARAMETERFVFN, glPatchParameterfv);
   
   /* Misc */
   
