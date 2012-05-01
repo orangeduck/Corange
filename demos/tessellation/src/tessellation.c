@@ -45,9 +45,17 @@ void tessellation_init() {
   graphics_viewport_set_dimensions(1280, 720);
   graphics_viewport_set_title("Tessellation");
   
+  tessellation_supported = SDL_GL_ExtensionPresent("GL_ARB_tessellation_shader");
+  
+  if (!tessellation_supported) {
+    ui_button* not_supported = ui_elem_new("not_supported", ui_button);
+    ui_button_move(not_supported, v2(graphics_viewport_width()/2 - 205, graphics_viewport_height()/2 - 12));
+    ui_button_resize(not_supported, v2(410, 25));
+    ui_button_set_label(not_supported, "Sorry your graphics card doesn't support tessellation!");
+    return;
+  }
+  
   load_folder("./shaders/");
-    
-  glClearColor(0.25, 0.25, 0.25, 1.0);
   
   camera* cam = entity_new("cam", camera);
   cam->position = v3(2,2,2);
@@ -56,19 +64,10 @@ void tessellation_init() {
   
   create_mesh();
   
-  tessellation_supported = SDL_GL_ExtensionPresent("GL_ARB_tessellation_shader");
-  
-  if (!tessellation_supported) {
-    ui_button* not_supported = ui_elem_new("not_supported", ui_button);
-    ui_button_move(not_supported, v2(graphics_viewport_width()/2 - 205, graphics_viewport_height()/2 - 12));
-    ui_button_resize(not_supported, v2(410, 25));
-    ui_button_set_label(not_supported, "Sorry your graphics card doesn't support tessellation!");
-  } else {
-    ui_button* controls = ui_elem_new("controls", ui_button);
-    ui_button_move(controls, v2(10,10));
-    ui_button_resize(controls, v2(300, 25));
-    ui_button_set_label(controls, "Up/Down Arrows to adjust Tessellation.");
-  }
+  ui_button* controls = ui_elem_new("controls", ui_button);
+  ui_button_move(controls, v2(10,10));
+  ui_button_resize(controls, v2(300, 25));
+  ui_button_set_label(controls, "Up/Down Arrows to adjust Tessellation.");
   
 }
 
@@ -125,6 +124,7 @@ void tesselation_update() {
 
 void tessellation_render() {
   
+  glClearColor(0.25, 0.25, 0.25, 1.0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   
   if (!tessellation_supported) { return; }
