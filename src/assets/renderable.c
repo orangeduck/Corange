@@ -303,6 +303,108 @@ void renderable_surface_set_material(renderable_surface* s, material* m) {
   s->base = m;
 }
 
+renderable* bmf_load_file(char* filename) {
+
+  renderable* r = malloc(sizeof(renderable));
+  
+  SDL_RWops* file = SDL_RWFromFile(filename, "rb");
+  
+  if(file == NULL) {
+    error("Could not load file %s", filename);
+  }
+  
+  char magic[4];
+  SDL_RWread(file, &magic, 3, 1);
+  magic[3] = '\0';
+  
+  if (strcmp(magic, "BMF") != 0) {
+    error("Badly formed bmf file '%s', missing magic number", filename);
+  }  
+  
+  int version = 0;
+  SDL_RWread(file, &version, 4, 1);
+  
+  if (version != 1) {
+    error("Only version 1 of bmf format supported. Recieved file of version %i.", version);
+  }
+  
+  SDL_RWread(file, &r->num_surfaces, 4, 1);
+  
+  r->surfaces = malloc(sizeof(renderable_surface*) * r->num_surfaces);
+  
+  for(int i = 0; i < r->num_surfaces; i++) {
+    renderable_surface* s = malloc(sizeof(renderable_surface));
+    s->is_rigged = false;
+    s->base = asset_load_get("$CORANGE/resources/basic.mat");
+    
+    SDL_RWread(file, &s->num_verticies, 4, 1);
+    float* vert_data = malloc(sizeof(float) * 18 * s->num_verticies);
+    SDL_RWread(file, vert_data, sizeof(float) * 18 * s->num_verticies, 1);
+    glGenBuffers(1, &s->vertex_vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * s->num_verticies * 18, vert_data, GL_STATIC_DRAW);
+    free(vert_data);
+    
+    int num_indicies;
+    SDL_RWread(file, &num_indicies, 4, 1);
+    s->num_triangles = num_indicies / 3;
+    int* index_data = malloc(sizeof(int) * num_indicies);
+    SDL_RWread(file, index_data, sizeof(int) * num_indicies, 1);
+    glGenBuffers(1, &s->triangle_vbo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * num_indicies, index_data, GL_STATIC_DRAW);
+    free(index_data);
+    
+    r->surfaces[i] = s;
+  }
+  
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  
+  SDL_RWclose(file);
+  
+  return r;
+}
+
+void bmf_save_file(renderable* r, char* filename) {
+  
+  SDL_RWops* file = SDL_RWFromFile(filename, "wb");
+  
+  int version = 1;
+  
+  SDL_RWwrite(file, "BMF", 3, 1);
+  SDL_RWwrite(file, &version, 4, 1);
+  SDL_RWwrite(file, &r->num_surfaces, 4, 1);
+  
+  for(int i = 0; i < r->num_surfaces; i++) {
+    renderable_surface* s = r->surfaces[i];
+    
+    SDL_RWwrite(file, &s->num_verticies, 4, 1);
+    int vert_data_size = sizeof(float) * 18 * s->num_verticies;
+    float* vert_data = malloc(vert_data_size);
+    glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
+    glGetBufferSubData(GL_ARRAY_BUFFER, 0, vert_data_size, vert_data);
+    SDL_RWwrite(file, vert_data, vert_data_size, 1);
+    free(vert_data);
+    
+    int num_indicies = s->num_triangles * 3;
+    SDL_RWwrite(file, &num_indicies, 4, 1);
+    int index_data_size = sizeof(int) * num_indicies;
+    int* index_data = malloc(index_data_size);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
+    glGetBufferSubData(GL_ARRAY_BUFFER, 0, index_data_size, index_data);
+    SDL_RWwrite(file, index_data, index_data_size, 1);
+    free(index_data);
+    
+  }
+  
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  
+  SDL_RWclose(file);
+  
+}
+
 renderable* obj_load_file(char* filename) {
   
   model* obj_model = malloc(sizeof(model));
@@ -654,6 +756,10 @@ renderable* obj_load_file(char* filename) {
   }
 
   SDL_RWclose(file);
+  
+  if (active_mesh == NULL) {
+    error("Unable to load file '%s', it appears to have no groups in it.", filename);
+  }
   
   active_mesh->num_verts = vert_index;
   active_mesh->num_triangles = tri_list->num_items / 3;

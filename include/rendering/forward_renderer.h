@@ -28,6 +28,7 @@ void forward_renderer_begin();
 void forward_renderer_end();
 
 void forward_renderer_render_static(static_object* so);
+void forward_renderer_render_static_tess(static_object* so);
 void forward_renderer_render_instance(instance_object* io);
 void forward_renderer_render_physics(physics_object* po);
 void forward_renderer_render_animated(animated_object* ao);

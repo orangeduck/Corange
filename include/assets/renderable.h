@@ -57,7 +57,11 @@ void renderable_surface_delete(renderable_surface* surface);
 
 void renderable_surface_set_material(renderable_surface* s, material* m);
 
+renderable* bmf_load_file(char* filename);
 renderable* obj_load_file(char* filename);
 renderable* smd_load_file(char* filename);
+
+void bmf_save_file(renderable* r, char* filename);
+
 
 #endif

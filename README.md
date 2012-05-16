@@ -54,25 +54,25 @@ I'm a graphics programmer by trade so apologies that most of the demos are graph
 FAQ
 ---
 		
-* How is that pronounced?
+* __How is that pronounced?__
 
 	Rhymes with Purple.
 
-* Why not C++?
+* __Why not C++?__
 	
 	There are plenty of C++ engines which do what I've done here and better. Pure C game engines on the other hand are much rarer. Corange provided me an outlet to practice my C skills and Data Oriented Design. Of course if you are just linking to it you can still program your game/executable using C++.
 	
-* What stuff does it do?
+* __What stuff does it do?__
 
 	I've used it as a platform for trying out all sorts of techniques and effects. These features are not out-of-the-box or plug-in-and-play, but if you are a developer who has knowledge of what they are, you should be able to utilize what I have written. Some are WIP or rough around the edges.
 	
 	Forward / Deferred / UI / Text Rendering. Multiple Lights. Post effects. SSAO. Shadow Mapping. Color Correction. Skeletal Animation. Inverse Kinematics. Collision Detection. OpenCL support. Audio Mixing. Asset / Entity / UI Management. Terrain. File loaders including .dds, .wav, .bmp, .obj, .smd. Maths and Geometry. And More...
 	
-* Can I use this for 2D stuff?
+* __Can I use this for 2D stuff?__
 	
 	Certainly. Though corange doesn't provide a 2D renderer for you. That you can write yourself. Believe it or not, making a generalized 2D renderer can be exceedingly complicated when you have to optimise for different sprites, tile sets, dynamic objects and all sorts of other effects. You're better off writing the rendering code application specific.
 	
-* Can I contact you about something?
+* __Can I contact you about something?__
 
 	Yes - contact@theorangeduck.com
 			
@@ -82,11 +82,11 @@ Using / Contributing
 	
 This is still mainly a personal project and so there are going to be lots of bugs, unfinished features and messy bits of code. The engine is heavily WIP and subject to sweeping changes. It isn't really viable to use without also being part of the project development and in communication with me. Rather than a full game engine like Unity, Corange is more of a framework and gives you access to features at about the same level as XNA.
 		
-Still, it is a great excuse to practise your C and I very much welcome help. If the project appeals to you here are a couple of quick things that might help get you started.
+Saying that, it is a great excuse to practise your C and I very much welcome help. If the project appeals to you here are a couple of quick things that might help get you started.
 		
 * First take a look at the demos. These give a brief overview of how Corange can be used. The platformer demo is probably the most commented.
 
-* There is no documentation so your first port of call is the header files and your second is the c files. The code has very minimal comments but should be pretty clear most of the time.
+* There is no real documentation so your first port of call is the header files and your second is the c files. The code has very minimal comments but should be pretty clear most of the time.
 
 * Corange doesn't hide anything from you. OpenGL and SDL calls are in the namespace so you've got access to the basics. The corange_init and corange_finish functions are fairly short so it is even possible to not call them and only use the components you want.
 

@@ -50,6 +50,7 @@ void corange_init(char* core_assets_path) {
   asset_manager_init();
   asset_manager_add_path_variable("$CORANGE", core_assets_path);
   
+  asset_manager_handler(renderable, "bmf", bmf_load_file, renderable_delete);
   asset_manager_handler(renderable, "obj", obj_load_file, renderable_delete);
   asset_manager_handler(renderable, "smd", smd_load_file, renderable_delete);
   asset_manager_handler(skeleton, "skl", skl_load_file, skeleton_delete);

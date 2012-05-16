@@ -27,7 +27,7 @@ static void create_mesh() {
     -0.894f,  0.000f, -0.447f, -0.276f, -0.851f, -0.447f,
     0.724f, -0.526f, -0.447f, 0.000f,  0.000f, -1.000f };
 
-  index_count = sizeof(faces) / sizeof(float);
+  index_count = sizeof(faces) / sizeof(int);
   
   glGenBuffers(1, &positions_buffer);
   glBindBuffer(GL_ARRAY_BUFFER, positions_buffer);
