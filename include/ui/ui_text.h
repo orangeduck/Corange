@@ -1,8 +1,9 @@
 #ifndef ui_text_h
 #define ui_text_h
 
+#include <stdbool.h>
+
 #include "vector.h"
-#include "bool.h"
 
 #include "assets/font.h"
 

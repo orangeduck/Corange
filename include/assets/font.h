@@ -2,7 +2,8 @@
 #define font_h
 
 #include "vector.h"
-#include "texture.h"
+
+#include "assets/texture.h"
 
 typedef struct {
 

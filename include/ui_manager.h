@@ -1,10 +1,11 @@
 #ifndef ui_manager_h
 #define ui_manager_h
 
+#include <stdbool.h>
+
 #include "SDL/SDL.h"
 
 #include "type.h"
-#include "bool.h"
 
 typedef void ui_elem;
 

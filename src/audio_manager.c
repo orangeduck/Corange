@@ -1,7 +1,6 @@
 #include <math.h>
 
 #include "error.h"
-#include "bool.h"
 #include "vector.h"
 
 #include "audio_manager.h"

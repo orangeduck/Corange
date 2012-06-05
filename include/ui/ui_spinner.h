@@ -1,8 +1,9 @@
 #ifndef ui_spinner_h
 #define ui_spinner_h
 
+#include <stdbool.h>
+
 #include "vector.h"
-#include "bool.h"
 
 #include "assets/texture.h"
 

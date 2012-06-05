@@ -1,13 +1,12 @@
 #ifndef SDL_LOCAL_H
 #define SDL_LOCAL_H
 
+#include <stdbool.h>
+#include <limits.h>
+
 #include "SDL/SDL.h"
 #include "SDL/SDL_opengl.h"
 #include "SDL/SDL_thread.h"
-
-#include "bool.h"
-
-#include <limits.h>
 
 #ifndef MAX_PATH
   #ifdef PATH_MAX

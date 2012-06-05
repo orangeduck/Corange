@@ -1,10 +1,11 @@
 #ifndef collision_body_h
 #define collision_body_h
 
+#include <stdbool.h>
+
 #include "geometry.h"
 #include "vector.h"
 #include "matrix.h"
-#include "bool.h"
 
 struct collision_mesh {
   

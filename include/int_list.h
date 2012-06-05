@@ -1,7 +1,7 @@
 #ifndef int_list_h
 #define int_list_h
 
-#include "bool.h"
+#include <stdbool.h>
 
 typedef struct {
 

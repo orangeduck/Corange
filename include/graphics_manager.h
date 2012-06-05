@@ -1,11 +1,11 @@
 #ifndef graphics_manager_h
 #define graphics_manager_h
 
+#include <stdbool.h>
+
 #include "SDL/SDL.h"
 #include "SDL/SDL_local.h"
 #include "SDL/SDL_opengl.h"
-
-#include "bool.h"
 
 void graphics_manager_init();
 void graphics_manager_finish();

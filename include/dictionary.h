@@ -1,7 +1,7 @@
 #ifndef dictionary_h
 #define dictionary_h
 
-#include "bool.h"
+#include <stdbool.h>
 
 struct bucket {
   

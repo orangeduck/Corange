@@ -2,7 +2,6 @@
   #include "SDL/SDL_syswm.h"
 #endif
 
-#include "bool.h"
 #include "error.h"
 #include "timing.h"
 

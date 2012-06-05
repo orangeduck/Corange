@@ -14,7 +14,6 @@ void corange_finish();
 
 /* Info and Utilities */
 
-#include "bool.h"
 #include "error.h"
 #include "timing.h"
 

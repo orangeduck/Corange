@@ -1,13 +1,15 @@
 #ifndef renderable_h
 #define renderable_h
 
+#include <stdbool.h>
+
 #include "SDL/SDL.h"
 #include "SDL/SDL_opengl.h"
 #include "SDL/SDL_local.h"
 
-#include "bool.h"
+#include "assets/material.h"
+
 #include "vector.h"
-#include "material.h"
 #include "geometry.h"
 
 typedef struct {

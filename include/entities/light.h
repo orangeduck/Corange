@@ -1,7 +1,8 @@
 #ifndef light_h
 #define light_h
 
-#include "bool.h"
+#include <stdbool.h>
+
 #include "vector.h"
 #include "matrix.h"
 

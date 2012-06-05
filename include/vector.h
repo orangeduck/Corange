@@ -1,7 +1,7 @@
 #ifndef vector_h
 #define vector_h
 
-#include "bool.h"
+#include <stdbool.h>
 
 typedef union {
   struct {

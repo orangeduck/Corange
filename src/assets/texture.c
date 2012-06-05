@@ -1,8 +1,8 @@
 #include <math.h>
+#include <stdbool.h>
 
 #include "vector.h"
 #include "error.h"
-#include "bool.h"
 
 #include "assets/texture.h"
 

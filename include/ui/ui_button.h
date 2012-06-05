@@ -1,7 +1,7 @@
 #ifndef ui_button_h
 #define ui_button_h
 
-#include "bool.h"
+#include <stdbool.h>
 
 #include "assets/texture.h"
 

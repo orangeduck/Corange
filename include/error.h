@@ -2,8 +2,7 @@
 #define error_h
 
 #include <stdlib.h>
-
-#include "bool.h"
+#include <stdbool.h>
 
 /* Errors */
 

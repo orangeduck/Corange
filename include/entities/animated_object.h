@@ -1,7 +1,8 @@
 #ifndef animated_object_h
 #define animated_object_h
 
-#include "bool.h"
+#include <stdbool.h>
+
 #include "matrix.h"
 
 #include "assets/renderable.h"

@@ -1,7 +1,7 @@
 #ifndef ui_rectangle_h
 #define ui_rectangle_h
 
-#include "bool.h"
+#include <stdbool.h>
 
 #include "assets/texture.h"
 

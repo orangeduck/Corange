@@ -1,7 +1,7 @@
 #ifndef static_object_h
 #define static_object_h
 
-#include "bool.h"
+#include <stdbool.h>
 
 #include "assets/renderable.h"
 #include "assets/collision_body.h"

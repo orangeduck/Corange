@@ -1,7 +1,8 @@
 #ifndef geometry_h
 #define geometry_h
 
-#include "bool.h"
+#include <stdbool.h>
+
 #include "vector.h"
 #include "matrix.h"
 

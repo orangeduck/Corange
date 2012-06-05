@@ -1,7 +1,8 @@
 #ifndef asset_manager_h
 #define asset_manager_h
 
-#include "bool.h"
+#include <stdbool.h>
+
 #include "type.h"
 #include "dictionary.h"
 #include "list.h"
