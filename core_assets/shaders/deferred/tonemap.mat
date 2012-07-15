@@ -1,0 +1,4 @@
+string name = tonemap
+shader vert = $CORANGE/shaders/deferred/tonemap.vs
+shader frag = $CORANGE/shaders/deferred/tonemap.fs
+shader colors = $CORANGE/shaders/colors.fs

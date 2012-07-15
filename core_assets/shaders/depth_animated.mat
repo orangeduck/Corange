@@ -1,0 +1,3 @@
+string name = depth
+shader vertex = $CORANGE/shaders/depth_animated.vs
+shader fragment = $CORANGE/shaders/depth.fs

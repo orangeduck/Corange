@@ -203,7 +203,7 @@ renderable_surface* renderable_surface_new(mesh* m) {
   if( asset_loaded(m->material) ) {
     s->base = asset_get(m->material);
   } else {
-    s->base = asset_load_get("$CORANGE/resources/basic.mat");
+    s->base = asset_load_get("$CORANGE/shaders/basic.mat");
   }
   
   return s;
@@ -283,7 +283,7 @@ renderable_surface* renderable_surface_new_rigged(mesh* m, vertex_weight* weight
   if( asset_loaded(m->material) ) {
     s->base = asset_get(m->material);
   } else {
-    s->base = asset_load_get("$CORANGE/resources/basic.mat");
+    s->base = asset_load_get("$CORANGE/shaders/basic.mat");
   }
   
   return s;
@@ -526,8 +526,8 @@ renderable* obj_load_file(char* filename) {
       
       active_mesh = malloc(sizeof(mesh));
       
-      active_mesh->material = malloc(strlen("$CORANGE/resources/basic.mat") + 1);
-      strcpy(active_mesh->material, "$CORANGE/resources/basic.mat");
+      active_mesh->material = malloc(strlen("$CORANGE/shaders/basic.mat") + 1);
+      strcpy(active_mesh->material, "$CORANGE/shaders/basic.mat");
       
       active_mesh->name = malloc(strlen("mesh1") + 1);
       strcpy(active_mesh->name, "mesh1");
@@ -932,8 +932,8 @@ renderable* smd_load_file(char* filename) {
   smd_mesh->name = malloc(strlen(filename) + 1);
   strcpy(smd_mesh->name, filename);
   
-  smd_mesh->material = malloc(strlen("$CORANGE/resources/basic_animated.mat") + 1);
-  strcpy(smd_mesh->material, "$CORANGE/resources/basic_animated.mat");
+  smd_mesh->material = malloc(strlen("$CORANGE/shaders/basic_animated.mat") + 1);
+  strcpy(smd_mesh->material, "$CORANGE/shaders/basic_animated.mat");
   
   smd_mesh->num_verts = vert_list->num_items;
   smd_mesh->num_triangles = tri_list->num_items / 3;

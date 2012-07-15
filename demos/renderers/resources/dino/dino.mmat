@@ -1,5 +1,8 @@
 submaterial shell
-program prog = $CORANGE/shaders/forward/static.prog
+shader vertex = $CORANGE/shaders/forward/static.vs
+shader fragment = $CORANGE/shaders/forward/static.fs
+shader shadows = $CORANGE/shaders/shadows.fs
+shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./resources/dino/shell.dds
 texture bump_map = ./resources/dino/shell_nm.dds
 texture spec_map = ./resources/dino/shell_s.dds
@@ -10,7 +13,10 @@ float specular_level = 1.5
 float env_amount = 3.0
 
 submaterial bands
-program prog = $CORANGE/shaders/forward/static.prog
+shader vertex = $CORANGE/shaders/forward/static.vs
+shader fragment = $CORANGE/shaders/forward/static.fs
+shader shadows = $CORANGE/shaders/shadows.fs
+shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./resources/dino/bands.dds
 texture bump_map = ./resources/dino/bands_nm.dds
 texture spec_map = ./resources/dino/bands_s.dds
@@ -21,7 +27,10 @@ float specular_level = 1.5
 float env_amount = 1.0
 
 submaterial gun
-program prog = $CORANGE/shaders/forward/static.prog
+shader vertex = $CORANGE/shaders/forward/static.vs
+shader fragment = $CORANGE/shaders/forward/static.fs
+shader shadows = $CORANGE/shaders/shadows.fs
+shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./resources/dino/gun.dds
 texture bump_map = ./resources/dino/gun_nm.dds
 texture spec_map = ./resources/dino/gun_s.dds
@@ -32,7 +41,10 @@ float specular_level = 1.5
 float env_amount = 3.0
 
 submaterial gunbox
-program prog = $CORANGE/shaders/forward/static.prog
+shader vertex = $CORANGE/shaders/forward/static.vs
+shader fragment = $CORANGE/shaders/forward/static.fs
+shader shadows = $CORANGE/shaders/shadows.fs
+shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./resources/dino/gunbox.dds
 texture bump_map = ./resources/dino/gunbox_nm.dds
 texture spec_map = ./resources/dino/gunbox_s.dds
@@ -43,7 +55,10 @@ float specular_level = 1.5
 float env_amount = 3.0
 
 submaterial ammo_box
-program prog = $CORANGE/shaders/forward/static.prog
+shader vertex = $CORANGE/shaders/forward/static.vs
+shader fragment = $CORANGE/shaders/forward/static.fs
+shader shadows = $CORANGE/shaders/shadows.fs
+shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./resources/dino/ammo_box.dds
 texture bump_map = ./resources/dino/ammo_box_nm.dds
 texture spec_map = ./resources/dino/ammo_box_s.dds
@@ -55,7 +70,10 @@ float env_amount = 3.0
 float alpha_test = 0.5
 
 submaterial main_platform
-program prog = $CORANGE/shaders/forward/static.prog
+shader vertex = $CORANGE/shaders/forward/static.vs
+shader fragment = $CORANGE/shaders/forward/static.fs
+shader shadows = $CORANGE/shaders/shadows.fs
+shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./resources/dino/main_platform.dds
 texture bump_map = ./resources/dino/main_platform_nm.dds
 texture spec_map = ./resources/dino/main_platform_s.dds
@@ -67,7 +85,10 @@ float env_amount = 3.0
 int mat_id = 3
 
 submaterial flag
-program prog = $CORANGE/shaders/forward/static.prog
+shader vertex = $CORANGE/shaders/forward/static.vs
+shader fragment = $CORANGE/shaders/forward/static.fs
+shader shadows = $CORANGE/shaders/shadows.fs
+shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./resources/dino/flag.dds
 texture bump_map = ./resources/dino/flag_nm.dds
 texture spec_map = ./resources/dino/flag_s.dds
@@ -80,7 +101,10 @@ float alpha_test = 0.5
 int mat_id = 3
 
 submaterial gunturret
-program prog = $CORANGE/shaders/forward/static.prog
+shader vertex = $CORANGE/shaders/forward/static.vs
+shader fragment = $CORANGE/shaders/forward/static.fs
+shader shadows = $CORANGE/shaders/shadows.fs
+shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./resources/dino/gunturret.dds
 texture bump_map = ./resources/dino/gunturret_nm.dds
 texture spec_map = ./resources/dino/gunturret_s.dds
@@ -92,7 +116,10 @@ float env_amount = 3.0
 int mat_id = 3
 
 submaterial neck_ring
-program prog = $CORANGE/shaders/forward/static.prog
+shader vertex = $CORANGE/shaders/forward/static.vs
+shader fragment = $CORANGE/shaders/forward/static.fs
+shader shadows = $CORANGE/shaders/shadows.fs
+shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./resources/dino/neck_ring.dds
 texture bump_map = ./resources/dino/neck_ring_nm.dds
 texture spec_map = ./resources/dino/neck_ring_s.dds
@@ -104,7 +131,10 @@ float env_amount = 3.0
 int mat_id = 3
 
 submaterial body
-program prog = $CORANGE/shaders/forward/static.prog
+shader vertex = $CORANGE/shaders/forward/static.vs
+shader fragment = $CORANGE/shaders/forward/static.fs
+shader shadows = $CORANGE/shaders/shadows.fs
+shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./resources/dino/body.dds
 texture bump_map = ./resources/dino/body_nm.dds
 texture spec_map = ./resources/dino/body_s.dds

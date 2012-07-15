@@ -116,7 +116,10 @@ void volume_renderer_init() {
   k_generate_normals = kernel_program_get_kernel(volume_rendering, "generate_normals");
   
   env_map = asset_load_get("./resources/metaballs_env.dds");
-  metaballs_def = asset_load_get("./shaders/metaballs_def.prog");
+  
+  material* metaballs_mat = asset_load_get("./shaders/metaballs_def.mat");
+  
+  metaballs_def = dictionary_get(metaballs_mat->properties, "program");
 }
 
 void volume_renderer_finish() {

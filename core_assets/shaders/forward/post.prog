@@ -1,5 +1,0 @@
-vertex_shader : $CORANGE/shaders/deferred/post.vs
-fragment_shader : $CORANGE/shaders/deferred/post.fs
-fragment_shader : $CORANGE/shaders/colors.fs
-fragment_shader : $CORANGE/shaders/anti_aliasing.fs
-fragment_shader : $CORANGE/shaders/post_effects.fs

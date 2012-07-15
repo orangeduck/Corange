@@ -13,8 +13,8 @@
 
 #include "rendering/depth_mapper.h"
 
-static shader_program* depth_shader;
-static shader_program* depth_shader_animated;
+static material* depth_mat;
+static material* depth_mat_animated;
 static texture* texture_ptr;
 
 static GLuint fbo;
@@ -34,8 +34,10 @@ void depth_mapper_init(camera* c) {
 
   CAMERA = c;
   
-  depth_shader = asset_load_get("$CORANGE/shaders/depth.prog");
-  depth_shader_animated = asset_load_get("$CORANGE/shaders/depth_animated.prog");
+  depth_mat = asset_load_get("$CORANGE/shaders/depth.mat");
+  depth_mat_animated = asset_load_get("$CORANGE/shaders/depth_animated.mat");
+  
+  shader_program* depth_shader_animated = dictionary_get(depth_mat_animated->properties, "program");
   
   BONE_INDICIES = glGetAttribLocation(*depth_shader_animated, "bone_indicies");
   BONE_WEIGHTS = glGetAttribLocation(*depth_shader_animated, "bone_weights");
@@ -121,6 +123,8 @@ void depth_mapper_render_static(static_object* s) {
   
   matrix_4x4 r_world_matrix = m44_world( s->position, s->scale, s->rotation );
   m44_to_array(r_world_matrix, world_matrix);
+  
+  shader_program* depth_shader = dictionary_get(depth_mat->properties, "program");
   
   glUseProgram(*depth_shader);
   
@@ -209,6 +213,8 @@ void depth_mapper_render_animated(animated_object* ao) {
     m44_to_array(bone_matrices[i], bone_matrix_data + (i * 4 * 4));
   }
   
+  shader_program* depth_shader_animated = dictionary_get(depth_mat_animated->properties, "program");
+  
   glUseProgram(*depth_shader_animated);
   
   GLint bone_world_matrices_u = glGetUniformLocation(*depth_shader_animated, "bone_world_matrices");
@@ -270,6 +276,8 @@ void depth_mapper_render_landscape(landscape* ls) {
   
   matrix_4x4 r_world_matrix = m44_world( ls->position, ls->scale, ls->rotation );
   m44_to_array(r_world_matrix, world_matrix);
+  
+  shader_program* depth_shader = dictionary_get(depth_mat->properties, "program");
   
   glUseProgram(*depth_shader);
   

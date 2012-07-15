@@ -1,2 +1,0 @@
-vertex_shader : $CORANGE/shaders/deferred/clear.vs
-fragment_shader : $CORANGE/shaders/deferred/clear.fs

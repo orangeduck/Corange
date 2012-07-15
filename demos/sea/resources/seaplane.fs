@@ -1,5 +1,21 @@
-uniform vec3 light_position;
-uniform vec3 eye_position;
+
+uniform mat4 world_matrix;
+
+uniform mat4 light_view;
+uniform mat4 light_proj;
+
+uniform vec3 camera_position;
+
+#define MAX_LIGHTS 32
+
+uniform int num_lights;
+uniform float light_power[MAX_LIGHTS];
+uniform float light_falloff[MAX_LIGHTS];
+uniform vec3 light_position[MAX_LIGHTS];
+uniform vec3 light_target[MAX_LIGHTS];
+uniform vec3 light_diffuse[MAX_LIGHTS];
+uniform vec3 light_ambient[MAX_LIGHTS];
+uniform vec3 light_specular[MAX_LIGHTS];
 
 uniform sampler2D tex_noise1;
 uniform sampler2D tex_noise2;
@@ -38,8 +54,8 @@ void main() {
 	
 	surface_normal = normalize(surface_normal);
 	
-	vec3 light_dir = normalize(position - light_position);
-	vec3 eye_dir = normalize(position - eye_position);
+	vec3 light_dir = normalize(position - light_position[0]);
+	vec3 eye_dir = normalize(position - camera_position);
 	
 	float eye_dot_normal = clamp( abs(dot(eye_dir, surface_normal)) , 0.9, 1.0);
 	

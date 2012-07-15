@@ -1,0 +1,3 @@
+string name = basic_instanced
+shader vertex = $CORANGE/shaders/basic_instanced.vs
+shader fragment = $CORANGE/shaders/basic.fs

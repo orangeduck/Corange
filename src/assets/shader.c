@@ -110,54 +110,6 @@ void shader_print_log(shader* shader) {
   debug("%s", log);
 }
 
-shader_program* prog_load_file(char* filename) {
-
-  shader_program* sp = shader_program_new();
-  
-  SDL_RWops* file = SDL_RWFromFile(filename, "r");
-  
-  if(file == NULL) {
-    error("Could not load file %s", filename);
-  }
-  
-  char line[1024];
-  while(SDL_RWreadline(file, line, 1024)) {
-    
-    char type[256];
-    char path[1024];
-    if (sscanf(line, "%256s : %1024s", type, path) == 2) {
-      
-      if (strcmp(type, "geometry_shader") == 0) {
-        GLint count = -1;
-        glGetIntegerv(GL_MAX_GEOMETRY_OUTPUT_VERTICES, &count);
-        glProgramParameteri(shader_program_handle(sp), GL_GEOMETRY_VERTICES_OUT, count); 
-      }
-      
-      if(!asset_loaded(path)) {
-        load_file(path);
-      }
-      
-      shader* s = asset_get(path);
-      shader_program_attach_shader(sp, s);
-    }
-  
-  }
-  
-  SDL_RWclose(file);
-  
-  shader_program_link(sp);
-  shader_program_print_log(sp);
-  
-  int is_linked = false;
-  glGetProgramiv(*sp, GL_LINK_STATUS, &is_linked);
-  if (is_linked == GL_FALSE) {
-    error("Linking Error on Shader Program %s.", filename);
-  }
-  
-  return sp;
-  
-} 
-
 void shader_program_delete(shader_program* program) {
   glDeleteProgram(*program);
   free(program);

@@ -1,3 +1,0 @@
-vertex_shader : ./shaders/metaballs.vs
-fragment_shader : ./shaders/metaballs.fs
-fragment_shader : $CORANGE/shaders/shadows.fs

@@ -8,16 +8,6 @@
 
 typedef struct {
   
-  texture* near_texture;
-  texture* near_texture_nm;
-  
-  texture* far_texture;
-  texture* far_texture_nm;
-  
-} landscape_surface;
-
-typedef struct {
-  
   terrain* terrain;
   
   texture* normalmap;
@@ -28,12 +18,15 @@ typedef struct {
   vector4 rotation;
   vector3 scale;
   
-  landscape_surface surface_types[4];
+  texture* near_texture;
+  texture* near_texture_bump;
+  texture* far_texture;
+  texture* far_texture_bump;
   
 } landscape;
 
 landscape* landscape_new();
 void landscape_delete(landscape* l);
-void landscape_set_surface(landscape* l, int channel, texture* near_texture, texture* near_texture_nm, texture* far_texture, texture* far_texture_nm);
+void landscape_set_textures(landscape* l, texture* near_texture, texture* near_texture_bump, texture* far_texture, texture* far_texture_bump);
 
 #endif

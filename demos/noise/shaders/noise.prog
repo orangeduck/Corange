@@ -1,2 +1,0 @@
-vertex_shader : ./shaders/noise.vs
-fragment_shader : ./shaders/noise.fs

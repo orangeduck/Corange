@@ -5,25 +5,11 @@ uniform sampler2D color;
 uniform sampler2D attribs;
 uniform sampler2D random;
 
-uniform sampler2D surface_diffuse0;
-uniform sampler2D surface_normals0;
-uniform sampler2D surface_diffuse_far0;
-uniform sampler2D surface_normals_far0;
+uniform sampler2D surface_diffuse;
+uniform sampler2D surface_diffuse_far;
 
-uniform sampler2D surface_diffuse1;
-uniform sampler2D surface_normals1;
-uniform sampler2D surface_diffuse_far1;
-uniform sampler2D surface_normals_far1;
-
-uniform sampler2D surface_diffuse2;
-uniform sampler2D surface_normals2;
-uniform sampler2D surface_diffuse_far2;
-uniform sampler2D surface_normals_far2;
-
-uniform sampler2D surface_diffuse3;
-uniform sampler2D surface_normals3;
-uniform sampler2D surface_diffuse_far3;
-uniform sampler2D surface_normals_far3;
+uniform sampler2D surface_bump;
+uniform sampler2D surface_bump_far;
 
 uniform vec3 camera_position;
 uniform vec3 camera_direction;
@@ -54,19 +40,6 @@ vec3 apply_fog_blue(vec3 pixel, vec3 position, vec3 camera_position);
 
 /* End */
 
-vec3 attribute_sum(vec4 weights, vec3 p0, vec3 p1, vec3 p2, vec3 p3) {
-  float scale = weights.r + weights.g + weights.b + weights.a;
-  return (p0 * weights.r + p1 * weights.g + p2 * weights.b + p3 * weights.a) / scale;
-}
-
-vec3 normal_scale(vec3 n) {
-  float temp = n.g;
-  n.g = n.b;
-  n.b = temp;
-  n.r = 1-n.r;
-  return ((n*2)-1);
-}
-
 void main() {
   
   vec2 random_off = texture2D(random, vec2(position.x, position.z) / 512.0).xy - 0.5;
@@ -81,32 +54,28 @@ void main() {
   vec3 ground_color = texture2D(color, world_uvs).rgb;
   vec4 ground_attribs = texture2D(attribs, world_uvs);
   
-  vec3 surdiff0 = texture2D(surface_diffuse0, local_uvs).rgb;
-  vec3 surdiff1 = texture2D(surface_diffuse1, local_uvs).rgb;
-  vec3 surdiff2 = texture2D(surface_diffuse2, local_uvs).rgb;
-  vec3 surdiff3 = texture2D(surface_diffuse3, local_uvs).rgb;
-  vec3 near_albedo = attribute_sum(ground_attribs, surdiff0, surdiff1, surdiff2, surdiff3);
-  
-  vec3 surdifffar0 = texture2D(surface_diffuse_far0, far_uvs).rgb;
-  vec3 surdifffar1 = texture2D(surface_diffuse_far1, far_uvs).rgb;
-  vec3 surdifffar2 = texture2D(surface_diffuse_far2, far_uvs).rgb;
-  vec3 surdifffar3 = texture2D(surface_diffuse_far3, far_uvs).rgb;
-  vec3 far_albedo = attribute_sum(ground_attribs, surdifffar0, surdifffar1, surdifffar2, surdifffar3);
-  
-  vec3 surnorm0 = texture2D(surface_normals0, local_uvs).rgb;
-  vec3 surnorm1 = texture2D(surface_normals1, local_uvs).rgb;
-  vec3 surnorm2 = texture2D(surface_normals2, local_uvs).rgb;
-  vec3 surnorm3 = texture2D(surface_normals3, local_uvs).rgb;
-  vec3 near_surface_norm = attribute_sum(ground_attribs, surnorm0, surnorm1, surnorm2, surnorm3);
-  
-  vec3 surnormfar0 = texture2D(surface_normals_far0, far_uvs).rgb;
-  vec3 surnormfar1 = texture2D(surface_normals_far1, far_uvs).rgb;
-  vec3 surnormfar2 = texture2D(surface_normals_far2, far_uvs).rgb;
-  vec3 surnormfar3 = texture2D(surface_normals_far3, far_uvs).rgb;
-  vec3 far_surface_norm = attribute_sum(ground_attribs, surnormfar0, surnormfar1, surnormfar2, surnormfar3);
-  
+  float near_albedo = dot(ground_attribs, texture2D(surface_diffuse, local_uvs));
+  float far_albedo = dot(ground_attribs, texture2D(surface_diffuse_far, far_uvs));
   vec3 albedo = from_gamma(ground_color * mix(near_albedo, far_albedo, dist_func));
-  vec3 surface_normals =  normal_scale(mix(near_surface_norm, far_surface_norm, dist_func));
+  
+  float bump_near_c = dot(ground_attribs, texture2D(surface_bump, local_uvs));
+  float bump_near_x = dot(ground_attribs, texture2D(surface_bump, local_uvs + vec2(0.001, 0) ));
+  float bump_near_y = dot(ground_attribs, texture2D(surface_bump, local_uvs + vec2(0, 0.001) ));
+  
+  float bump_far_c = dot(ground_attribs, texture2D(surface_bump_far, far_uvs));
+  float bump_far_x = dot(ground_attribs, texture2D(surface_bump_far, far_uvs + vec2(0.001, 0) ));
+  float bump_far_y = dot(ground_attribs, texture2D(surface_bump_far, far_uvs + vec2(0, 0.001) ));
+  
+  float bump_c =  mix(bump_near_c, bump_far_c, dist_func);
+  float bump_x =  mix(bump_near_x, bump_far_x, dist_func);
+  float bump_y =  mix(bump_near_y, bump_far_y, dist_func);
+  
+  float flatness = 1000.0;
+  
+  vec3 basis_x = normalize(vec3(flatness, bump_x, 0) - vec3(0, bump_c, 0));
+  vec3 basis_z = normalize(vec3(0, bump_y, flatness) - vec3(0, bump_c, 0));
+  vec3 basis_y = cross(basis_x, basis_z);
+  mat3 basis = mat3(basis_x, basis_y, basis_z);
   
   vec3 norm_up = texture2D(normals, world_uvs).rgb;
   float temp = norm_up.g;
@@ -115,11 +84,8 @@ void main() {
   norm_up.r = 1-norm_up.r;
   norm_up = (norm_up * 2.0) - 1.0;
   
-  vec3 norm_left = cross(norm_up, vec3(0,1,0));
-  vec3 norm_down = cross(norm_up, norm_left);
-  mat3 basis = mat3(norm_down, norm_up, norm_left);
-  
-  vec3 normal = basis * surface_normals;
+  vec3 normal = norm_up;
+  //vec3 normal = basis * norm_up;
   
   vec3 camera_vector = normalize(camera_position - position);
   

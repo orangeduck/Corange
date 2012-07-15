@@ -65,7 +65,7 @@ static int load_resources(void* unused) {
   
   static_object* skydome = entity_new("skydome", static_object);
   skydome->renderable = asset_get("./resources/terrain/skydome.obj");
-  renderable_set_material(skydome->renderable, asset_get("./resources/terrain/skydome.mat"));
+  renderable_set_material(skydome->renderable, asset_load_get("$CORANGE/shaders/skydome.mat"));
   skydome->position = v3(512, 0, 512);
   skydome->scale = v3(1024, 1024, 1024);
   
@@ -75,30 +75,15 @@ static int load_resources(void* unused) {
   world->colormap = asset_get("./resources/terrain/colormap.dds");
   world->attributemap = asset_get("./resources/terrain/attributemap.dds");
 
-  landscape_set_surface(world, 0, asset_get("./resources/terrain/grass.dds"), 
-                                  asset_get("./resources/terrain/grass_nm.dds"), 
-                                  asset_get("./resources/terrain/grass_far.dds"), 
-                                  asset_get("./resources/terrain/grass_far_nm.dds"));
-  
-  landscape_set_surface(world, 1, asset_get("./resources/terrain/grass2.dds"), 
-                                  asset_get("./resources/terrain/grass2_nm.dds"), 
-                                  asset_get("./resources/terrain/grass_far.dds"), 
-                                  asset_get("./resources/terrain/grass_far_nm.dds"));
-  
-  landscape_set_surface(world, 2, asset_get("./resources/terrain/earth.dds"), 
-                                  asset_get("./resources/terrain/earth_nm.dds"), 
-                                  asset_get("./resources/terrain/earth_far.dds"), 
-                                  asset_get("./resources/terrain/earth_far_nm.dds"));
-  
-  landscape_set_surface(world, 3, asset_get("./resources/terrain/rock.dds"), 
-                                  asset_get("./resources/terrain/rock_nm.dds"), 
-                                  asset_get("./resources/terrain/rock_far.dds"), 
-                                  asset_get("./resources/terrain/rock_far_nm.dds"));
+  landscape_set_textures(world, asset_get("./resources/terrain/surface.dds"), 
+                                asset_get("./resources/terrain/surface_bump.dds"), 
+                                asset_get("./resources/terrain/surface_far.dds"), 
+                                asset_get("./resources/terrain/surface_far_bump.dds"));
   
   vegetation_init();
-  vegetation_add_type(asset_get("./resources/terrain/heightmap.raw"), 
-                      asset_get("./resources/vegetation/grass.obj"), 
-                      4.0);
+  //vegetation_add_type(asset_get("./resources/terrain/heightmap.raw"), 
+  //                    asset_get("./resources/vegetation/grass.obj"), 
+  //                    4.0);
   
   ui_button* loading = ui_elem_get("loading");
   ui_spinner* load_spinner = ui_elem_get("load_spinner");

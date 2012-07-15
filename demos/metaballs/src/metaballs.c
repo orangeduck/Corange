@@ -1,4 +1,4 @@
-#define MARCHING_CUBES
+#define VOLUME_RENDERER
 
 #include "particles.h"
 #include "volume_renderer.h"

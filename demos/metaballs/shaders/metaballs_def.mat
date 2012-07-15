@@ -1,0 +1,2 @@
+shader vert = ./shaders/metaballs_def.vs
+shader frag = ./shaders/metaballs_def.fs

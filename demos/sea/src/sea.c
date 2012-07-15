@@ -76,7 +76,7 @@ void sea_init() {
   
   static_object* skydome = entity_new("skydome", static_object);
   skydome->renderable = asset_get("./resources/skydome.obj");
-  renderable_set_material(skydome->renderable, asset_get("./resources/skydome.mat"));
+  renderable_set_material(skydome->renderable, asset_load_get("$CORANGE/shaders/skydome.mat"));
   skydome->position = v3(0, -512, 0);
   skydome->scale = v3(1024, 1024, 1024);
   

@@ -21,7 +21,9 @@ void noise_render() {
   glPushMatrix();
 	glLoadIdentity();
   
-  GLuint handle = shader_program_handle(asset_get("./shaders/noise.prog"));
+  material* noise_mat = asset_get("./shaders/noise.mat");
+  
+  GLuint handle = shader_program_handle(dictionary_get(noise_mat->properties, "program"));
   GLuint random_tex = texture_handle(asset_get("$CORANGE/resources/random.dds"));
   
   glUseProgram(handle);

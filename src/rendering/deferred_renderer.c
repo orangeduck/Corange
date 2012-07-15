@@ -22,14 +22,14 @@ static float WORLD_MATRIX[16];
 static float LIGHT_VIEW_MATRIX[16];
 static float LIGHT_PROJ_MATRIX[16];
 
-static shader_program* PROGRAM_STATIC;
-static shader_program* PROGRAM_ANIMATED;
-static shader_program* PROGRAM_CLEAR;
-static shader_program* PROGRAM_UI;
-static shader_program* PROGRAM_SSAO;
-static shader_program* PROGRAM_COMPOSE;
-static shader_program* PROGRAM_TONEMAP;
-static shader_program* PROGRAM_POST;
+static material* MAT_STATIC;
+static material* MAT_ANIMATED;
+static material* MAT_CLEAR;
+static material* MAT_UI;
+static material* MAT_SSAO;
+static material* MAT_COMPOSE;
+static material* MAT_TONEMAP;
+static material* MAT_POST;
 
 static int NORMAL;
 static int TANGENT;
@@ -104,24 +104,27 @@ void deferred_renderer_init() {
   
   load_folder("$CORANGE/shaders/deferred/");
   
-  PROGRAM_STATIC = asset_get("$CORANGE/shaders/deferred/static.prog");
-  PROGRAM_ANIMATED = asset_get("$CORANGE/shaders/deferred/animated.prog");
-  PROGRAM_CLEAR = asset_get("$CORANGE/shaders/deferred/clear.prog");
-  PROGRAM_SSAO = asset_get("$CORANGE/shaders/deferred/ssao.prog");
-  PROGRAM_TONEMAP = asset_get("$CORANGE/shaders/deferred/tonemap.prog");
-  PROGRAM_COMPOSE = asset_get("$CORANGE/shaders/deferred/compose.prog");
-  PROGRAM_POST = asset_get("$CORANGE/shaders/deferred/post.prog");
-  PROGRAM_UI = asset_get("$CORANGE/shaders/deferred/ui.prog");
+  MAT_STATIC = asset_get("$CORANGE/shaders/deferred/static.mat");
+  MAT_ANIMATED = asset_get("$CORANGE/shaders/deferred/animated.mat");
+  MAT_CLEAR = asset_get("$CORANGE/shaders/deferred/clear.mat");
+  MAT_SSAO = asset_get("$CORANGE/shaders/deferred/ssao.mat");
+  MAT_TONEMAP = asset_get("$CORANGE/shaders/deferred/tonemap.mat");
+  MAT_COMPOSE = asset_get("$CORANGE/shaders/deferred/compose.mat");
+  MAT_POST = asset_get("$CORANGE/shaders/deferred/post.mat");
+  MAT_UI = asset_get("$CORANGE/shaders/deferred/ui.mat");
   
-  NORMAL = glGetAttribLocation(shader_program_handle(PROGRAM_STATIC), "normal");
-  TANGENT = glGetAttribLocation(shader_program_handle(PROGRAM_STATIC), "tangent");
-  BINORMAL = glGetAttribLocation(shader_program_handle(PROGRAM_STATIC), "binormal");  
+  shader_program* program_static = dictionary_get(MAT_STATIC->properties, "program");
+  shader_program* program_animated = dictionary_get(MAT_ANIMATED->properties, "program");
   
-  NORMAL_ANIMATED = glGetAttribLocation(shader_program_handle(PROGRAM_ANIMATED), "normal");
-  TANGENT_ANIMATED = glGetAttribLocation(shader_program_handle(PROGRAM_ANIMATED), "tangent");
-  BINORMAL_ANIMATED = glGetAttribLocation(shader_program_handle(PROGRAM_ANIMATED), "binormal");  
-  BONE_INDICIES = glGetAttribLocation(shader_program_handle(PROGRAM_ANIMATED), "bone_indicies");
-  BONE_WEIGHTS = glGetAttribLocation(shader_program_handle(PROGRAM_ANIMATED), "bone_weights"); 
+  NORMAL = glGetAttribLocation(shader_program_handle(program_static), "normal");
+  TANGENT = glGetAttribLocation(shader_program_handle(program_static), "tangent");
+  BINORMAL = glGetAttribLocation(shader_program_handle(program_static), "binormal");  
+  
+  NORMAL_ANIMATED = glGetAttribLocation(shader_program_handle(program_animated), "normal");
+  TANGENT_ANIMATED = glGetAttribLocation(shader_program_handle(program_animated), "tangent");
+  BINORMAL_ANIMATED = glGetAttribLocation(shader_program_handle(program_animated), "binormal");  
+  BONE_INDICIES = glGetAttribLocation(shader_program_handle(program_animated), "bone_indicies");
+  BONE_WEIGHTS = glGetAttribLocation(shader_program_handle(program_animated), "bone_weights"); 
   
   int viewport_width = graphics_viewport_width();
   int viewport_height = graphics_viewport_height();
@@ -415,10 +418,12 @@ void deferred_renderer_begin() {
   glClearDepth(1.0f);
   glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
   
-  glUseProgram(shader_program_handle(PROGRAM_CLEAR));
+  shader_program* program_clear = dictionary_get(MAT_CLEAR->properties, "program");
   
-  GLint start = glGetUniformLocation(shader_program_handle(PROGRAM_CLEAR), "start");
-  GLint end = glGetUniformLocation(shader_program_handle(PROGRAM_CLEAR), "end");
+  glUseProgram(shader_program_handle(program_clear));
+  
+  GLint start = glGetUniformLocation(shader_program_handle(program_clear), "start");
+  GLint end = glGetUniformLocation(shader_program_handle(program_clear), "end");
   glUniform4f(start, 0.5, 0.5, 0.5, 1.0);
   glUniform4f(end, 0.0, 0.0, 0.0, 1.0);
   
@@ -462,7 +467,9 @@ void deferred_renderer_end() {
   
   glViewport(0, 0, graphics_viewport_width() / 2, graphics_viewport_height() / 2);
   
-  GLuint ssao_handle = shader_program_handle(PROGRAM_SSAO);
+  shader_program* program_ssao = dictionary_get(MAT_SSAO->properties, "program");
+  
+  GLuint ssao_handle = shader_program_handle(program_ssao);
   glUseProgram(ssao_handle);
   
 	glMatrixMode(GL_PROJECTION);
@@ -514,7 +521,9 @@ void deferred_renderer_end() {
   
   glViewport(0, 0, graphics_viewport_width(), graphics_viewport_height());
   
-  GLuint screen_handle = shader_program_handle(PROGRAM_COMPOSE);
+  shader_program* program_compose = dictionary_get(MAT_COMPOSE->properties, "program");
+  
+  GLuint screen_handle = shader_program_handle(program_compose);
   glUseProgram(screen_handle);
   
 	glMatrixMode(GL_PROJECTION);
@@ -639,7 +648,9 @@ void deferred_renderer_end() {
   
   glBindFramebuffer(GL_FRAMEBUFFER, ldr_fbo);
   
-  GLuint screen_tonemap_handle = shader_program_handle(PROGRAM_TONEMAP);
+  shader_program* program_tonemap = dictionary_get(MAT_TONEMAP->properties, "program");
+  
+  GLuint screen_tonemap_handle = shader_program_handle(program_tonemap);
   glUseProgram(screen_tonemap_handle);
   
 	glMatrixMode(GL_PROJECTION);
@@ -711,7 +722,9 @@ void deferred_renderer_end() {
   
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   
-  GLuint screen_post_handle = shader_program_handle(PROGRAM_POST);
+  shader_program* program_post = dictionary_get(MAT_POST->properties, "program");
+  
+  GLuint screen_post_handle = shader_program_handle(program_post);
   glUseProgram(screen_post_handle);
   
 	glMatrixMode(GL_PROJECTION);
@@ -790,10 +803,12 @@ void deferred_renderer_render_static(static_object* so) {
       error("Renderable for static object is rigged!");
     }
     
-    GLuint program_handle = shader_program_handle(PROGRAM_STATIC);
+    shader_program* program_static = dictionary_get(MAT_STATIC->properties, "program");
+    
+    GLuint program_handle = shader_program_handle(program_static);
     glUseProgram(program_handle);
     
-    deferred_renderer_use_material(s->base, PROGRAM_STATIC);
+    deferred_renderer_use_material(s->base, program_static);
     
     GLsizei stride = sizeof(float) * 18;
     
@@ -864,10 +879,12 @@ void deferred_renderer_render_animated(animated_object* ao) {
     renderable_surface* s = r->surfaces[i];
     if(s->is_rigged) {
       
-      GLuint program_animated_handle = shader_program_handle(PROGRAM_ANIMATED);
+      shader_program* program_animated = dictionary_get(MAT_ANIMATED->properties, "program");
+      
+      GLuint program_animated_handle = shader_program_handle(program_animated);
       glUseProgram(program_animated_handle);
       
-      deferred_renderer_use_material(s->base, PROGRAM_ANIMATED);
+      deferred_renderer_use_material(s->base, program_animated);
       
       GLint bone_world_matrices_u = glGetUniformLocation(program_animated_handle, "bone_world_matrices");
       glUniformMatrix4fv(bone_world_matrices_u, ao->skeleton->num_bones, GL_FALSE, bone_matrix_data);
@@ -938,7 +955,9 @@ void deferred_renderer_render_light(light* l) {
   
   light_pos = v4_div(light_pos, light_pos.w);
   
-  glUseProgram(shader_program_handle(PROGRAM_UI));
+  shader_program* program_ui = dictionary_get(MAT_UI->properties, "program");
+  
+  glUseProgram(shader_program_handle(program_ui));
   
 	glMatrixMode(GL_PROJECTION);
   glPushMatrix();
@@ -958,9 +977,9 @@ void deferred_renderer_render_light(light* l) {
   glActiveTexture(GL_TEXTURE0 + 0 );
   glBindTexture(GL_TEXTURE_2D, texture_handle(lightbulb));
   glEnable(GL_TEXTURE_2D);
-  glUniform1i(glGetUniformLocation(shader_program_handle(PROGRAM_UI), "diffuse"), 0);
+  glUniform1i(glGetUniformLocation(shader_program_handle(program_ui), "diffuse"), 0);
   
-  glUniform1f(glGetUniformLocation(shader_program_handle(PROGRAM_UI), "alpha_test"), 0.5);
+  glUniform1f(glGetUniformLocation(shader_program_handle(program_ui), "alpha_test"), 0.5);
   
 	glBegin(GL_QUADS);
 		glTexCoord2f(0.0f, 0.0f); glVertex3f(left, top, -light_pos.z);

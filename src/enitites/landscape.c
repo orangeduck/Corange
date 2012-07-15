@@ -15,32 +15,24 @@ landscape* landscape_new() {
   l->rotation = v4_quaternion_id();
   l->scale = v3_one();
   
-  for(int i = 0; i < 4; i++) {
-    l->surface_types[i].near_texture = NULL;
-    l->surface_types[i].near_texture_nm = NULL;
-    l->surface_types[i].far_texture = NULL;
-    l->surface_types[i].far_texture_nm = NULL;
-  }
+  l->near_texture = NULL;
+  l->near_texture_bump = NULL;
+  l->far_texture = NULL;
+  l->far_texture_bump = NULL;
   
   return l;
   
 }
 
 void landscape_delete(landscape* l) {
-  
   free(l);
-  
 }
 
-void landscape_set_surface(landscape* l, int channel, texture* near_texture, texture* near_texture_nm, texture* far_texture, texture* far_texture_nm) {
+void landscape_set_textures(landscape* l, texture* near_texture, texture* near_texture_bump, texture* far_texture, texture* far_texture_bump) {
   
-  if (channel >= 4) {
-    error("Landscape only supports 4 surface types!");
-  }
-  
-  l->surface_types[channel].near_texture = near_texture;
-  l->surface_types[channel].near_texture_nm = near_texture_nm;
-  l->surface_types[channel].far_texture = far_texture;
-  l->surface_types[channel].far_texture_nm = far_texture_nm;
+  l->near_texture = near_texture;
+  l->near_texture_bump = near_texture_bump;
+  l->far_texture = far_texture;
+  l->far_texture_bump = far_texture_bump;
   
 }

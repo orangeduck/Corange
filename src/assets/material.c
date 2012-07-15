@@ -28,10 +28,6 @@ material* material_new() {
   mat->properties = dictionary_new(20);
   mat->types = dictionary_new(20);
   mat->keys = list_new();
-
-  mat->use_blending = 0;
-  mat->src_blend_func = blend_src_alpha;
-  mat->dst_blend_func = blend_one_minus_src_alpha;
   
   return mat;
   
@@ -50,20 +46,15 @@ static void material_parse_line(material* mat, char* line) {
   
     int* mat_type = malloc(sizeof(int));
     void* result = NULL;
-  
-    if (strcmp(type, "program") == 0) {
-      
-      *mat_type = mat_type_program;
-      
-      property = realloc(property, strlen("program")+1);
-      strcpy(property, "program");
-      
+    
+    if (strcmp(type, "shader") == 0) {
+    
+      *mat_type = mat_type_shader;
       result = asset_load_get(value);
-      
+    
     } else if (strcmp(type, "texture") == 0) {
       
       *mat_type = mat_type_texture;
-      
       result = asset_load_get(value);
     
     } else if (strcmp(type, "string") == 0) {
@@ -148,6 +139,45 @@ static void material_parse_line(material* mat, char* line) {
 
 }
 
+static void material_generate_program(material* mat) {
+  
+  shader_program* program = shader_program_new();
+  
+  for(int i = 0; i < mat->keys->num_items; i++) {
+    char* key = list_get(mat->keys, i);
+    
+    int* type = dictionary_get(mat->types, key);
+    void* val = dictionary_get(mat->properties, key);
+    
+    if (*type == mat_type_shader) {
+      shader_program_attach_shader(program, (shader*)val);
+    }
+  }
+  
+  /*
+  GLint count = -1;
+  glGetIntegerv(GL_MAX_GEOMETRY_OUTPUT_VERTICES, &count);
+  glProgramParameteri(shader_program_handle(program), GL_GEOMETRY_VERTICES_OUT, count); 
+  */
+  
+  shader_program_link(program);
+  shader_program_print_log(program);
+  
+  int is_linked = false;
+  glGetProgramiv(*program, GL_LINK_STATUS, &is_linked);
+  if (is_linked == GL_FALSE) {
+    error("Linking Error on Shader Program");
+  }
+  
+  int* type = malloc(sizeof(int));
+  *type = mat_type_program;
+  
+  dictionary_set(mat->types, "program", type);
+  dictionary_set(mat->properties, "program", program);
+  list_push_back(mat->keys, "program");
+  
+}
+
 material* mat_load_file(char* filename) {
   
   material* mat = material_new();
@@ -165,7 +195,9 @@ material* mat_load_file(char* filename) {
   }
   
   SDL_RWclose(file);
-    
+  
+  material_generate_program(mat);
+  
   return mat;
 
 }
@@ -180,7 +212,6 @@ multi_material* mmat_load_file(char* filename) {
   multi_material* mmat = malloc(sizeof(multi_material));
   mmat->num_materials = 0;
   mmat->materials = malloc(sizeof(material*) * 0);
-  alloc_check(mmat->materials);
   
   material* mat = NULL;
   
@@ -189,6 +220,10 @@ multi_material* mmat_load_file(char* filename) {
   
     char submatname[512];
     if ( sscanf(line, "submaterial %512s", submatname) == 1) {
+      
+      if (mat != NULL) {
+        material_generate_program(mat);
+      }
       
       mat = material_new();
       mat->name = malloc(strlen(submatname)+1);
@@ -205,7 +240,11 @@ multi_material* mmat_load_file(char* filename) {
   }
   
   SDL_RWclose(file);
-    
+  
+  if (mat != NULL) {
+    material_generate_program(mat);
+  }
+  
   return mmat;
 
 }
@@ -227,24 +266,24 @@ void material_delete(material* mat) {
     int* type = dictionary_get(mat->types, key);
     void* property = dictionary_get(mat->properties, key);
     
-    if (*type == mat_type_program) {
-      /* Do nothing */
-    } else if (*type == mat_type_texture) {
-      /* Do nothing */
-    } else if (*type == mat_type_string) {
-      free((char*)property);
-    } else if (*type == mat_type_int) {
-      free((int*)property);
-    } else if (*type == mat_type_float) {
-      free((float*)property);
-    } else if (*type == mat_type_vector2) {
-      free((vector2*)property);
-    } else if (*type == mat_type_vector3) {
-      free((vector3*)property);
-    } else if (*type == mat_type_vector4) {
-      free((vector4*)property);
-    } else {
-      error("Unknown material property type id %i for material %s", *type, mat->name);
+    switch (*type) {
+      case mat_type_program:
+        shader_program_delete((shader_program*)property);
+        break;
+      case mat_type_texture:
+      case mat_type_shader:
+        break;
+      case mat_type_string:
+      case mat_type_int:
+      case mat_type_float:
+      case mat_type_vector2:
+      case mat_type_vector3:
+      case mat_type_vector4:
+        free(property);
+        break;
+      default:
+        error("Unknown material property type id '%i' for material '%s'", *type, mat->name);
+        break;
     }
     
     free(type);
@@ -270,31 +309,25 @@ void material_print(material* mat) {
     void* property = dictionary_get(mat->properties, key);
     
     if (*type == mat_type_program) {
-      printf("Program : %s : [shader]\n", key);
-    
+      printf("Program : %s : [program]\n", key);
+    } else if (*type == mat_type_shader) {
+      printf("Shader : %s : [shader]\n", key);
     } else if (*type == mat_type_texture) {
       printf("Texture : %s : [texture]\n", key);
-    
     } else if (*type == mat_type_string) {
       printf("String : %s : %s\n", key, (char*)property);
-    
     } else if (*type == mat_type_int) {
       printf("Int : %s : %i\n", key, *((int*)property) );
-    
     } else if (*type == mat_type_float) {
       printf("Float : %s : %f\n", key, *((float*)property) );
-    
     } else if (*type == mat_type_vector2) {
       printf("Vector2 : %s : ", key); v2_print(*((vector2*)property)); printf("\n");
-    
     } else if (*type == mat_type_vector3) {
       printf("Vector3 : %s : ", key); v3_print(*((vector3*)property)); printf("\n");
-  
     } else if (*type == mat_type_vector4) {
       printf("Vector4 : %s : ", key); v4_print(*((vector4*)property)); printf("\n");
-    
     } else {
-      printf("Unknown Type %s\n", key);
+      printf("!! Unknown Type for entry '%s'\n", key);
     }
      
   }

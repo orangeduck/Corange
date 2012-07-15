@@ -1,2 +1,0 @@
-vertex_shader : $CORANGE/shaders/basic.vs
-fragment_shader : $CORANGE/shaders/basic.fs

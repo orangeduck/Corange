@@ -20,6 +20,8 @@ static void swap_renderer() {
   if (use_deferred) {
     
     deferred_renderer_finish();
+    SDL_GL_CheckError();
+    
     forward_renderer_init();
     forward_renderer_set_camera(cam);
     forward_renderer_set_shadow_light(sun);
@@ -28,10 +30,14 @@ static void swap_renderer() {
     forward_renderer_add_light(backlight);
     
     use_deferred = false;
+    SDL_GL_CheckError();
     
   } else {
     
+    SDL_GL_CheckError();
     forward_renderer_finish();
+    SDL_GL_CheckError();
+    
     deferred_renderer_init();
     deferred_renderer_set_camera(cam);
     deferred_renderer_set_shadow_light(sun);
@@ -40,9 +46,9 @@ static void swap_renderer() {
     deferred_renderer_add_light(backlight);
     
     use_deferred = true;
+    SDL_GL_CheckError();
+    
   }
-  
-  SDL_GL_CheckError();
 
 }
 
@@ -466,17 +472,23 @@ void renderers_render() {
     deferred_renderer_end();
     
   } else {
-  
+    
+    SDL_GL_CheckError();
     forward_renderer_begin();
+    SDL_GL_CheckError();
     
     forward_renderer_render_static(s_podium);
+    SDL_GL_CheckError();
     
     if (object_id == 0) {
       forward_renderer_render_static(s_cello);
+      SDL_GL_CheckError();
     } else if (object_id == 1) {
       forward_renderer_render_static(s_piano);
+      SDL_GL_CheckError();
     } else if (object_id == 2) {
       forward_renderer_render_animated(a_imrod);
+      SDL_GL_CheckError();
       
       matrix_4x4 foot_pos = bone_transform(skeleton_bone_name(a_imrod->pose, "foot_r"));
       
@@ -499,16 +511,21 @@ void renderers_render() {
       
     } else if (object_id == 3) {
       forward_renderer_render_static(s_dino);
+      SDL_GL_CheckError();
     }
     
     forward_renderer_render_light(sun);
+    SDL_GL_CheckError();
     forward_renderer_render_light(backlight);
+    SDL_GL_CheckError();
     
     if (selected_light != NULL) {
       forward_renderer_render_axis(m44_world(selected_light->position, v3_one(), v4_quaternion_id()));
+      SDL_GL_CheckError();
     }
     
     forward_renderer_end();
+    SDL_GL_CheckError();
   }
   
 }

@@ -1,5 +1,0 @@
-vertex_shader : $CORANGE/shaders/forward/static.vs
-fragment_shader : $CORANGE/shaders/forward/static.fs
-fragment_shader : $CORANGE/shaders/shadows.fs
-fragment_shader : $CORANGE/shaders/colors.fs
-fragment_shader : $CORANGE/shaders/fog.fs

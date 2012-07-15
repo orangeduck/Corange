@@ -27,9 +27,9 @@ static texture* DEPTH_TEX = NULL;
 static texture* COLOR_CORRECTION = NULL;
 static texture* VIGNETTING = NULL;
 
-static shader_program* GRADIENT = NULL;
-static shader_program* SCREEN_TONEMAP = NULL;
-static shader_program* SCREEN_POST = NULL;
+static material* GRADIENT = NULL;
+static material* SCREEN_TONEMAP = NULL;
+static material* SCREEN_POST = NULL;
 
 static float proj_matrix[16];
 static float view_matrix[16];
@@ -95,12 +95,13 @@ void forward_renderer_init() {
   
   COLOR_CORRECTION = asset_load_get("$CORANGE/resources/identity.lut");
   VIGNETTING = asset_load_get("$CORANGE/resources/vignetting.dds");
-  GRADIENT = asset_load_get("$CORANGE/shaders/gradient.prog");
+  
+  GRADIENT = asset_load_get("$CORANGE/shaders/gradient.mat");
   
   load_folder("$CORANGE/shaders/forward/");
   
-  SCREEN_TONEMAP = asset_load_get("$CORANGE/shaders/forward/tonemap.prog");
-  SCREEN_POST = asset_load_get("$CORANGE/shaders/forward/post.prog");
+  SCREEN_TONEMAP = asset_load_get("$CORANGE/shaders/forward/tonemap.mat");
+  SCREEN_POST = asset_load_get("$CORANGE/shaders/forward/post.mat");
   
   glClearColor(0.2, 0.2, 0.2, 1.0f);
   glClearDepth(1.0f);
@@ -230,7 +231,9 @@ void forward_renderer_set_color_correction(texture* t) {
 
 static void render_gradient() {
 
-  GLuint gradient_handle = shader_program_handle(GRADIENT);
+  shader_program* gradient_prog = dictionary_get(GRADIENT->properties, "program");
+
+  GLuint gradient_handle = shader_program_handle(gradient_prog);
   glUseProgram(gradient_handle);
   
   GLint start = glGetUniformLocation(gradient_handle, "start");
@@ -265,6 +268,8 @@ static void render_gradient() {
 }
 
 void forward_renderer_begin() {
+  
+  SDL_GL_CheckError();
   
   timer += frame_time();
   
@@ -304,9 +309,13 @@ void forward_renderer_begin() {
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);
   
+  SDL_GL_CheckError();
+  
 }
 
 void forward_renderer_end() {
+  
+  SDL_GL_CheckError();
   
   /* Resolve multisamples */
   
@@ -321,7 +330,9 @@ void forward_renderer_end() {
   
   glBindFramebuffer(GL_FRAMEBUFFER, ldr_fbo);
   
-  GLuint tonemap_handle = shader_program_handle(SCREEN_TONEMAP);
+  shader_program* tonemap_prog = dictionary_get(SCREEN_TONEMAP->properties, "program");
+  
+  GLuint tonemap_handle = shader_program_handle(tonemap_prog);
   glUseProgram(tonemap_handle);
   
 	glMatrixMode(GL_PROJECTION);
@@ -394,7 +405,9 @@ void forward_renderer_end() {
   
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   
-  GLuint post_handle = shader_program_handle(SCREEN_POST);
+  shader_program* post_prog = dictionary_get(SCREEN_POST->properties, "program");
+  
+  GLuint post_handle = shader_program_handle(post_prog);
   glUseProgram(post_handle);
   
 	glMatrixMode(GL_PROJECTION);
@@ -454,6 +467,8 @@ void forward_renderer_end() {
   
   glUseProgram(0);
   
+  SDL_GL_CheckError();
+  
 }
 
 float forward_renderer_get_exposure() {
@@ -471,6 +486,7 @@ static void forward_renderer_use_material(material* mat) {
   GLuint prog_handle = shader_program_handle(prog);
   
   glUseProgram(prog_handle);
+  SDL_GL_CheckError();
   
   /* Set global parameters */
   
@@ -496,6 +512,8 @@ static void forward_renderer_use_material(material* mat) {
     glUniform3f(camera_direction, direction.x, direction.y, direction.z);
   }
   
+  SDL_GL_CheckError();
+  
   for(int i = 0; i < num_lights; i++) {
     light_power[i] = lights[i]->power;
     light_falloff[i] = lights[i]->falloff;
@@ -505,6 +523,8 @@ static void forward_renderer_use_material(material* mat) {
     light_ambient[i] = lights[i]->ambient_color;
     light_specular[i] = lights[i]->specular_color;
   }
+  
+  SDL_GL_CheckError();
   
   glUniform1i(glGetUniformLocation(prog_handle, "num_lights"), num_lights);
   
@@ -524,6 +544,8 @@ static void forward_renderer_use_material(material* mat) {
   glUniform3fv(light_ambient_u, num_lights, (const GLfloat*)light_ambient);
   glUniform3fv(light_specular_u, num_lights, (const GLfloat*)light_specular);
 
+  SDL_GL_CheckError();
+  
   GLint time = glGetUniformLocation(prog_handle, "time");
   glUniform1f(time,timer);
   
@@ -550,6 +572,8 @@ static void forward_renderer_use_material(material* mat) {
   if (world_matricies_u != -1) {
     glUniformMatrix4fv(world_matricies_u, MAX_INSTANCES, 0, world_matricies);
   }
+  
+  SDL_GL_CheckError();
   
   /* Set material parameters */
   
@@ -598,6 +622,8 @@ static void forward_renderer_use_material(material* mat) {
       /* Do nothing */
     }
      
+    SDL_GL_CheckError();
+     
   }
   
   GLint shadow_map = glGetUniformLocation(prog_handle, "shadow_map");
@@ -608,6 +634,8 @@ static void forward_renderer_use_material(material* mat) {
     glEnable(GL_TEXTURE_2D);
     tex_counter++;
   }
+  
+  SDL_GL_CheckError();
   
 }
 
@@ -702,15 +730,18 @@ void forward_renderer_render_static(static_object* so) {
     }
     
     forward_renderer_use_material(s->base);
+    SDL_GL_CheckError();
     
     shader_program* prog = dictionary_get(s->base->properties, "program");
     GLint recieve_shadows = glGetUniformLocation(shader_program_handle(prog), "recieve_shadows");
     if (recieve_shadows != -1) {
       glUniform1i(recieve_shadows, so->recieve_shadows);
     }
+    SDL_GL_CheckError();
     
     glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
+    SDL_GL_CheckError();
     
     bind_attributes_static();
     
@@ -718,11 +749,17 @@ void forward_renderer_render_static(static_object* so) {
     
     unbind_attributes_static();
     
+    SDL_GL_CheckError();
+    
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     
+    SDL_GL_CheckError();
+    
     forward_renderer_disuse_material();
 
+    SDL_GL_CheckError();
+    
   }
   
 }
@@ -1086,7 +1123,9 @@ void forward_renderer_render_landscape(landscape* ls) {
   matrix_4x4 r_world_matrix = m44_world(ls->position, ls->scale, ls->rotation);
   m44_to_array(r_world_matrix, world_matrix);
   
-  shader_program* terrain = asset_get("$CORANGE/shaders/forward/terrain.prog");
+  material* terrain_mat = asset_get("$CORANGE/shaders/forward/terrain.mat");
+  
+  shader_program* terrain = dictionary_get(terrain_mat->properties, "program");
   GLuint terrain_handle = shader_program_handle(terrain);
   glUseProgram(terrain_handle);
   
@@ -1156,50 +1195,25 @@ void forward_renderer_render_landscape(landscape* ls) {
   glEnable(GL_TEXTURE_2D);
   glUniform1i(glGetUniformLocation(terrain_handle, "random"), 3);
   
-  char diffuse_name[512];
-  char normals_name[512];
-  char diffuse_far_name[512];
-  char normals_far_name[512];
+  glActiveTexture(GL_TEXTURE0 + 4 );
+  glBindTexture(GL_TEXTURE_2D, texture_handle(ls->near_texture));
+  glEnable(GL_TEXTURE_2D);
+  glUniform1i(glGetUniformLocation(terrain_handle, "surface_diffuse"), 4);
   
-  int tex_counter = 4;
-  for(int i = 0; i < 4; i++) {
-    
-    texture* diffuse = ls->surface_types[i].near_texture;
-    texture* diffuse_nm = ls->surface_types[i].near_texture_nm;
-    texture* diffuse_far = ls->surface_types[i].far_texture;
-    texture* diffuse_far_nm = ls->surface_types[i].far_texture_nm;
-    
-    if (diffuse == NULL) continue;
-    
-    sprintf(diffuse_name, "surface_diffuse%i", i);
-    sprintf(normals_name, "surface_normals%i", i);
-    sprintf(diffuse_far_name, "surface_diffuse_far%i", i);
-    sprintf(normals_far_name, "surface_normals_far%i", i);
-    
-    glActiveTexture(GL_TEXTURE0 + tex_counter );
-    glBindTexture(GL_TEXTURE_2D, texture_handle(diffuse));
-    glEnable(GL_TEXTURE_2D);
-    glUniform1i(glGetUniformLocation(terrain_handle, diffuse_name), tex_counter);
-    tex_counter++;
-    
-    glActiveTexture(GL_TEXTURE0 + tex_counter );
-    glBindTexture(GL_TEXTURE_2D, texture_handle(diffuse_nm));
-    glEnable(GL_TEXTURE_2D);
-    glUniform1i(glGetUniformLocation(terrain_handle, normals_name), tex_counter);
-    tex_counter++;
-    
-    glActiveTexture(GL_TEXTURE0 + tex_counter );
-    glBindTexture(GL_TEXTURE_2D, texture_handle(diffuse_far));
-    glEnable(GL_TEXTURE_2D);
-    glUniform1i(glGetUniformLocation(terrain_handle, diffuse_far_name), tex_counter);
-    tex_counter++;
-    
-    glActiveTexture(GL_TEXTURE0 + tex_counter );
-    glBindTexture(GL_TEXTURE_2D, texture_handle(diffuse_far_nm));
-    glEnable(GL_TEXTURE_2D);
-    glUniform1i(glGetUniformLocation(terrain_handle, normals_far_name), tex_counter);
-    tex_counter++;
-  }
+  glActiveTexture(GL_TEXTURE0 + 5 );
+  glBindTexture(GL_TEXTURE_2D, texture_handle(ls->near_texture_bump));
+  glEnable(GL_TEXTURE_2D);
+  glUniform1i(glGetUniformLocation(terrain_handle, "surface_bump"), 5);
+  
+  glActiveTexture(GL_TEXTURE0 + 6 );
+  glBindTexture(GL_TEXTURE_2D, texture_handle(ls->far_texture));
+  glEnable(GL_TEXTURE_2D);
+  glUniform1i(glGetUniformLocation(terrain_handle, "surface_diffuse_far"), 6);
+  
+  glActiveTexture(GL_TEXTURE0 + 7 );
+  glBindTexture(GL_TEXTURE_2D, texture_handle(ls->far_texture_bump));
+  glEnable(GL_TEXTURE_2D);
+  glUniform1i(glGetUniformLocation(terrain_handle, "surface_bump_far"), 7);
   
   for(int i = 0; i < ls->terrain->num_chunks; i++) {
     
@@ -1227,7 +1241,7 @@ void forward_renderer_render_landscape(landscape* ls) {
     
   }
   
-  tex_counter--;
+  tex_counter = 7;
   while(tex_counter >= 0) {
     glActiveTexture(GL_TEXTURE0 + tex_counter);
     glDisable(GL_TEXTURE_2D);

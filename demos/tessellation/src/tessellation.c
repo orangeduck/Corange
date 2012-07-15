@@ -132,7 +132,9 @@ void tessellation_render() {
   light* sun = entity_get("sun");
   camera* cam = entity_get("cam");
   
-  GLuint sp_handle = shader_program_handle(asset_get("./shaders/tessellation.prog"));
+  material* tess_mat = asset_get("./shaders/tessellation.mat");
+  
+  GLuint sp_handle = shader_program_handle(dictionary_get(tess_mat->properties, "program"));
   
   glUseProgram(sp_handle);
   

@@ -4,25 +4,15 @@
 #include "dictionary.h"
 #include "list.h"
 
-#define mat_type_program 0
-#define mat_type_texture 1
-#define mat_type_string 2
-#define mat_type_int 3
-#define mat_type_float 4
-#define mat_type_vector2 5
-#define mat_type_vector3 6
-#define mat_type_vector4 7
-
-#define blend_one 0
-#define blend_zero 1
-#define blend_src_alpha 2
-#define blend_dst_alpha 3
-#define blend_one_minus_src_alpha 4
-#define blend_one_minus_dst_alpha 5
-#define blend_src_color 6
-#define blend_dst_color 7
-#define blend_one_minus_src_color 8
-#define blend_one_minus_dst_color 9
+#define mat_type_program 1
+#define mat_type_shader 2
+#define mat_type_texture 3
+#define mat_type_string 4
+#define mat_type_int 5
+#define mat_type_float 6
+#define mat_type_vector2 7
+#define mat_type_vector3 8
+#define mat_type_vector4 9
 
 typedef struct {
 
@@ -30,10 +20,6 @@ typedef struct {
   list* keys;
   dictionary* properties;
   dictionary* types;
-  
-  bool use_blending;
-  int src_blend_func;
-  int dst_blend_func;
   
 } material;
 

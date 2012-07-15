@@ -293,7 +293,9 @@ void marching_cubes_render(bool wireframe, camera* c, light* l) {
     glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
   }
   
-  shader_program* metaballs = asset_load_get("./shaders/metaballs.prog");
+  material* metaballs_mat = asset_load_get("./shaders/metaballs.mat");
+  
+  shader_program* metaballs = dictionary_get(metaballs_mat->properties, "program");
   GLuint NORMALS = glGetAttribLocation(*metaballs, "normals");
   
   glUseProgram(*metaballs);
@@ -375,7 +377,9 @@ void marching_cubes_render_shadows(light* l) {
   
   m44_to_array(m44_id(), world_matrix);
   
-  shader_program* depth_shader = asset_load_get("$CORANGE/shaders/depth.prog");
+  material* depth_mat = asset_load_get("$CORANGE/shaders/depth.mat");
+  
+  shader_program* depth_shader = dictionary_get(depth_mat->properties, "program");
   glUseProgram(*depth_shader);
   
   GLint world_matrix_u = glGetUniformLocation(*depth_shader, "world_matrix");

@@ -1,2 +1,3 @@
 string name = seaplane
-program prog = ./resources/seaplane.prog
+shader vert = ./resources/seaplane.vs
+shader frag = ./resources/seaplane.fs

@@ -1,3 +1,0 @@
-string name = skydome
-program prog = $CORANGE/shaders/skydome.prog
-int mat_id = 1

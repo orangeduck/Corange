@@ -1,2 +1,0 @@
-vertex_shader : $CORANGE/shaders/deferred/ui.vs
-fragment_shader : $CORANGE/shaders/deferred/ui.fs
