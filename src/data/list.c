@@ -31,7 +31,7 @@ static void list_reserve_less(list* l) {
 void* list_pop_back(list* l) {
   assert( l->num_items > 0 );
   
-  void* item = l->items[ l->num_items ];
+  void* item = l->items[ l->num_items-1 ];
   
   l->num_items--;
   list_reserve_less(l);
@@ -55,11 +55,19 @@ void* list_pop_at(list* l, int index) {
 }
 
 void* list_get(list* l, int index) {
+  
+  if (index < 0) { error("Index out of bounds"); return NULL; }
+  if (index >= l->num_items) { error("Index out of bounds"); return NULL; }
+  
   return l->items[index]; 
 }
 
 
 void list_set(list* l, int index, void* item) {
+
+  if (index < 0) { error("Index out of bounds"); }
+  if (index >= l->num_items) { error("Index out of bounds"); }
+
   l->items[index] = item;
 }
 
@@ -95,7 +103,6 @@ void list_clear_with(list* l, void func(void*)) {
   while( l->num_items > 0) {
     void* item = list_pop_back(l);
     func(item);
-    free(item);
   }
   
 }

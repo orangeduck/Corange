@@ -138,13 +138,13 @@ void depth_mapper_render_static(static_object* s) {
   
   renderable* r = asset_hndl_ptr(s->renderable);
   
+  if(r->is_rigged) {
+    error("Static Object is rigged!");
+  }
+  
   for(int i=0; i < r->num_surfaces; i++) {
     
     renderable_surface* s = r->surfaces[i];
-    
-    if(s->is_rigged) {
-      error("Static Object is rigged!");
-    }
     
     material_entry* me = material_get_entry(asset_hndl_ptr(depth_mat), 0);
     
@@ -234,37 +234,36 @@ void depth_mapper_render_animated(animated_object* ao) {
   
   renderable* r = asset_hndl_ptr(ao->renderable);
   
+  if(!r->is_rigged) {
+    error("animated object is not rigged");
+  }
+  
   for(int i = 0; i < r->num_surfaces; i++) {
     
     renderable_surface* s = r->surfaces[i];
-    if(s->is_rigged) {
     
-      GLsizei stride = sizeof(float) * 24;
-      
-      glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
-          
-      glVertexPointer(3, GL_FLOAT, stride, (void*)0);
-      glEnableClientState(GL_VERTEX_ARRAY);
-      
-      glVertexAttribPointer(BONE_INDICIES, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 18));
-      glEnableVertexAttribArray(BONE_INDICIES);
-      
-      glVertexAttribPointer(BONE_WEIGHTS, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 21));
-      glEnableVertexAttribArray(BONE_WEIGHTS);
-      
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
-        glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
-      
-      glDisableClientState(GL_VERTEX_ARRAY);
-      glDisableVertexAttribArray(BONE_INDICIES);  
-      glDisableVertexAttribArray(BONE_WEIGHTS);  
-      
-      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-      glBindBuffer(GL_ARRAY_BUFFER, 0);
-      
-    } else {
-      error("animated object is not rigged");
-    }
+    GLsizei stride = sizeof(float) * 24;
+    
+    glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
+        
+    glVertexPointer(3, GL_FLOAT, stride, (void*)0);
+    glEnableClientState(GL_VERTEX_ARRAY);
+    
+    glVertexAttribPointer(BONE_INDICIES, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 18));
+    glEnableVertexAttribArray(BONE_INDICIES);
+    
+    glVertexAttribPointer(BONE_WEIGHTS, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 21));
+    glEnableVertexAttribArray(BONE_WEIGHTS);
+    
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
+      glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
+    
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableVertexAttribArray(BONE_INDICIES);  
+    glDisableVertexAttribArray(BONE_WEIGHTS);  
+    
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
   }
   

@@ -152,7 +152,7 @@ void renderers_init() {
   
   SDL_GL_CheckError();
   
-  asset_hndl r_imrod = asset_hndl_new(P("./resources/imrod/imrod.obj"));
+  asset_hndl r_imrod = asset_hndl_new(P("./resources/imrod/imrod.smd"));
   ((renderable*)asset_hndl_ptr(r_imrod))->material = asset_hndl_new(P("./resources/imrod/imrod_animated.mat"));
   
   animated_object* a_imrod = entity_new("imrod", animated_object);
@@ -446,16 +446,22 @@ void renderers_render() {
   
   shadow_mapper_begin();
   shadow_mapper_render_static(s_podium);
+  SDL_GL_CheckError();
   if (object_id == 0) {
     shadow_mapper_render_static(s_cello);
+    SDL_GL_CheckError();
   } else if (object_id == 1) { 
     shadow_mapper_render_static(s_piano);
+    SDL_GL_CheckError();
   } else if (object_id == 2) {
     shadow_mapper_render_animated(a_imrod);
+    SDL_GL_CheckError();
   } else if (object_id == 3) {
     shadow_mapper_render_static(s_dino);
+    SDL_GL_CheckError();
   }
   shadow_mapper_end();
+  SDL_GL_CheckError();
   
   if (use_deferred) {
     

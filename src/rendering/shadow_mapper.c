@@ -27,13 +27,13 @@ static int BONE_INDICIES;
 static int BONE_WEIGHTS;
 
 void shadow_mapper_init(light* l) {
-
+  
   LIGHT = l;
   
   depth_mat = asset_hndl_new_load(P("$CORANGE/shaders/depth.mat"));
   depth_mat_animated = asset_hndl_new_load(P("$CORANGE/shaders/depth_animated.mat"));
   
-  shader_program* depth_shader_animated = material_get_entry(asset_hndl_ptr(depth_mat), 0)->program;
+  shader_program* depth_shader_animated = material_get_entry(asset_hndl_ptr(depth_mat_animated), 0)->program;
   
   BONE_INDICIES = glGetAttribLocation(shader_program_handle(depth_shader_animated), "bone_indicies");
   BONE_WEIGHTS = glGetAttribLocation(shader_program_handle(depth_shader_animated), "bone_weights");
@@ -148,13 +148,13 @@ void shadow_mapper_render_static(static_object* s) {
   
   renderable* r = asset_hndl_ptr(s->renderable);
   
+  if(r->is_rigged) {
+    error("Static Object is rigged!");
+  }
+  
   for(int i=0; i < r->num_surfaces; i++) {
     
     renderable_surface* s = r->surfaces[i];
-    
-    if(s->is_rigged) {
-      error("Static Object is rigged!");
-    }
     
     material_entry* me = material_get_entry(asset_hndl_ptr(depth_mat), 0);
     
@@ -206,6 +206,7 @@ static float bone_matrix_data[4 * 4 * MAX_BONES];
 void shadow_mapper_render_animated(animated_object* ao) {
   
   skeleton* skel = asset_hndl_ptr(ao->skeleton);
+  SDL_GL_CheckError();
   
   if (skel->num_bones > MAX_BONES) {
     error("animated object skeleton has too many bones (over %i)", MAX_BONES);
@@ -213,6 +214,7 @@ void shadow_mapper_render_animated(animated_object* ao) {
   
   mat4 r_world_matrix = mat4_world( ao->position, ao->scale, ao->rotation );
   mat4_to_array(r_world_matrix, world_matrix);
+  SDL_GL_CheckError();
   
   for(int i = 0; i < skel->num_bones; i++) {
     mat4 base, ani;
@@ -222,60 +224,77 @@ void shadow_mapper_render_animated(animated_object* ao) {
     bone_matrices[i] = mat4_mul_mat4(ani, mat4_inverse(base));
     mat4_to_array(bone_matrices[i], bone_matrix_data + (i * 4 * 4));
   }
+  SDL_GL_CheckError();
   
   shader_program* depth_shader_animated = material_get_entry(asset_hndl_ptr(depth_mat_animated), 0)->program;
+  SDL_GL_CheckError();
   
   glUseProgram(*depth_shader_animated);
+  SDL_GL_CheckError();
   
   GLint bone_world_matrices_u = glGetUniformLocation(*depth_shader_animated, "bone_world_matrices");
   glUniformMatrix4fv(bone_world_matrices_u, skel->num_bones, GL_FALSE, bone_matrix_data);
+  SDL_GL_CheckError();
   
   GLint bone_count_u = glGetUniformLocation(*depth_shader_animated, "bone_count");
   glUniform1i(bone_count_u, skel->num_bones);
+  SDL_GL_CheckError();
   
   GLint world_matrix_u = glGetUniformLocation(*depth_shader_animated, "world_matrix");
   glUniformMatrix4fv(world_matrix_u, 1, 0, world_matrix);
+  SDL_GL_CheckError();
   
   GLint proj_matrix_u = glGetUniformLocation(*depth_shader_animated, "proj_matrix");
   glUniformMatrix4fv(proj_matrix_u, 1, 0, proj_matrix);
+  SDL_GL_CheckError();
   
   GLint view_matrix_u = glGetUniformLocation(*depth_shader_animated, "view_matrix");
   glUniformMatrix4fv(view_matrix_u, 1, 0, view_matrix);
+  SDL_GL_CheckError();
   
   renderable* r = asset_hndl_ptr(ao->renderable);
+  
+  if(!r->is_rigged) {
+    error("animated object is not rigged");
+  }
   
   for(int i = 0; i < r->num_surfaces; i++) {
     
     renderable_surface* s = r->surfaces[i];
     
-    if(!s->is_rigged) {
-      error("animated object is not rigged");
-    }
-    
     GLsizei stride = sizeof(float) * 24;
     
     glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
-        
+    SDL_GL_CheckError();
+    
     glVertexPointer(3, GL_FLOAT, stride, (void*)0);
     glEnableClientState(GL_VERTEX_ARRAY);
+    SDL_GL_CheckError();
     
     glVertexAttribPointer(BONE_INDICIES, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 18));
+    SDL_GL_CheckError();
     glEnableVertexAttribArray(BONE_INDICIES);
+    SDL_GL_CheckError();
     
     glVertexAttribPointer(BONE_WEIGHTS, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 21));
     glEnableVertexAttribArray(BONE_WEIGHTS);
+    SDL_GL_CheckError();
     
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
       glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
-    
+      SDL_GL_CheckError();
+      
     glDisableClientState(GL_VERTEX_ARRAY);
     glDisableVertexAttribArray(BONE_INDICIES);  
     glDisableVertexAttribArray(BONE_WEIGHTS);  
+    SDL_GL_CheckError();
     
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-
+    SDL_GL_CheckError();
+    
   }
+  SDL_GL_CheckError();
   
   glUseProgram(0);
   

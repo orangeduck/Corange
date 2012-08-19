@@ -37,7 +37,7 @@ static void int_list_reserve_less(int_list* l) {
 int int_list_pop_back(int_list* l) {
   assert( l->num_items > 0 );
   
-  int item = l->items[ l->num_items ];
+  int item = l->items[ l->num_items-1 ];
   
   l->num_items--;
   int_list_reserve_less(l);

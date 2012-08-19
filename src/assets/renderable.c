@@ -28,6 +28,7 @@ renderable* renderable_new() {
   r->material = asset_hndl_new_load(P("$CORANGE/shaders/basic.mat"));
   r->num_surfaces = 0;
   r->surfaces = NULL;
+  r->is_rigged = false;
     
   return r;
 
@@ -44,7 +45,11 @@ void renderable_delete(renderable* r) {
 }
 
 model* renderable_to_model(renderable* r) {
-  
+
+  if (r->is_rigged) {
+    error("Cannot convert rigged renderable to model");
+  }  
+
   model* m = model_new();
   
   m->num_meshes = r->num_surfaces;
@@ -53,10 +58,6 @@ model* renderable_to_model(renderable* r) {
   for(int i = 0; i < r->num_surfaces; i++) {
     
     renderable_surface* s = r->surfaces[i];
-    
-    if (s->is_rigged) {
-      error("Cannot convert rigged renderable to model");
-    }
     
     float* vb_data = malloc(sizeof(float) * s->num_verticies * 18);
     int* ib_data = malloc(sizeof(int) * s->num_triangles * 3);
@@ -121,7 +122,6 @@ renderable_surface* renderable_surface_new(mesh* m) {
   glGenBuffers(1, &s->vertex_vbo);
   glGenBuffers(1, &s->triangle_vbo);
   
-  s->is_rigged = false;
   s->num_verticies = m->num_verts;
   s->num_triangles = m->num_triangles;
   
@@ -185,7 +185,6 @@ renderable_surface* renderable_surface_new_rigged(mesh* m, vertex_weight* weight
   glGenBuffers(1, &s->vertex_vbo);
   glGenBuffers(1, &s->triangle_vbo);
   
-  s->is_rigged = true;
   s->num_verticies = m->num_verts;
   s->num_triangles = m->num_triangles;
   
@@ -263,6 +262,7 @@ renderable* bmf_load_file(char* filename) {
 
   renderable* r = malloc(sizeof(renderable));
   r->material = asset_hndl_new(P("$CORANGE/resources/basic.mat"));
+  r->is_rigged = false;
   
   SDL_RWops* file = SDL_RWFromFile(filename, "rb");
   
@@ -291,8 +291,6 @@ renderable* bmf_load_file(char* filename) {
   
   for(int i = 0; i < r->num_surfaces; i++) {
     renderable_surface* s = malloc(sizeof(renderable_surface));
-    s->is_rigged = false;
-    
     
     SDL_RWread(file, &s->num_verticies, 4, 1);
     float* vert_data = malloc(sizeof(float) * 18 * s->num_verticies);
@@ -886,8 +884,9 @@ renderable* smd_load_file(char* filename) {
   
   mesh_generate_tangents(smd_mesh);
   
-  renderable* renderable = renderable_new();
-  renderable_add_mesh_rigged(renderable, smd_mesh, weights);
+  renderable* r = renderable_new();
+  renderable_add_mesh_rigged(r, smd_mesh, weights);
+  r->is_rigged = true;
   
   vertex_hashtable_delete(hashes);
   vertex_list_delete(vert_list);
@@ -895,6 +894,6 @@ renderable* smd_load_file(char* filename) {
   mesh_delete(smd_mesh);
   free(weights);
   
-  return renderable;
+  return r;
 }
 

@@ -173,6 +173,7 @@ void entity_delete(char* name) {
   for(int i = 0; i < entity_names->num_items; i++) {
     if ( strcmp(list_get(entity_names, i), name) == 0 ) {
       list_pop_at(entity_names, i);
+      break;
     }
   }
   

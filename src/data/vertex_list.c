@@ -37,7 +37,7 @@ static void vertex_list_reserve_less(vertex_list* l) {
 vertex vertex_list_pop_back(vertex_list* l) {
   assert( l->num_items > 0 );
   
-  vertex item = l->items[ l->num_items ];
+  vertex item = l->items[ l->num_items-1 ];
   
   l->num_items--;
   vertex_list_reserve_less(l);

@@ -766,12 +766,13 @@ void deferred_renderer_render_static(static_object* so) {
   
   renderable* r = asset_hndl_ptr(so->renderable);
   
+  if(r->is_rigged) {
+    error("Static object is rigged!");
+  }
+  
   for(int i=0; i < r->num_surfaces; i++) {
     
     renderable_surface* s = r->surfaces[i];
-    if(s->is_rigged) {
-      error("Renderable for static object is rigged!");
-    }
     
     shader_program* program_static = material_get_entry(asset_hndl_ptr(MAT_STATIC), 0)->program;
     
@@ -848,12 +849,13 @@ void deferred_renderer_render_animated(animated_object* ao) {
   
   renderable* r = asset_hndl_ptr(ao->renderable);
   
+  if(!r->is_rigged) {
+    error("Animated object is not rigged!");
+  }
+  
   for(int i = 0; i < r->num_surfaces; i++) {
     
     renderable_surface* s = r->surfaces[i];
-    if(!s->is_rigged) {
-      error("Animated object is not rigged!");
-    }
     
     shader_program* program_animated = material_get_entry(asset_hndl_ptr(MAT_ANIMATED), 0)->program;
     

@@ -690,12 +690,14 @@ void forward_renderer_render_static(static_object* so) {
   
   renderable* r = asset_hndl_ptr(so->renderable);
   
+  if(r->is_rigged) {
+    error("Static object is rigged!");
+  }
+  
   for(int i=0; i < r->num_surfaces; i++) {
     
     renderable_surface* s = r->surfaces[i];
-    if(s->is_rigged) {
-      error("Renderable for static object is rigged!");
-    }
+
     
     int mat_id = min(i, ((material*)asset_hndl_ptr(r->material))->num_entries-1);
     material_entry* me = material_get_entry(asset_hndl_ptr(r->material), mat_id);
@@ -742,12 +744,13 @@ void forward_renderer_render_static_tess(static_object* so) {
   
   renderable* r = asset_hndl_ptr(so->renderable);
   
+  if(r->is_rigged) {
+    error("Static object is rigged!");
+  }
+  
   for(int i=0; i < r->num_surfaces; i++) {
     
     renderable_surface* s = r->surfaces[i];
-    if(s->is_rigged) {
-      error("Renderable for static object is rigged!");
-    }
     
     int mat_id = min(i, ((material*)asset_hndl_ptr(r->material))->num_entries-1);
     material_entry* me = material_get_entry(asset_hndl_ptr(r->material), mat_id);
@@ -791,12 +794,13 @@ void forward_renderer_render_instance(instance_object* io) {
   
   renderable* r = asset_hndl_ptr(io->renderable);
   
+  if(r->is_rigged) {
+    error("Static object is rigged!");
+  }
+  
   for(int i=0; i < r->num_surfaces; i++) {
     
     renderable_surface* s = r->surfaces[i];
-    if(s->is_rigged) {
-      error("Renderable for static object is rigged!");
-    }
     
     int mat_id = min(i, ((material*)asset_hndl_ptr(r->material))->num_entries-1);
     material_entry* me = material_get_entry(asset_hndl_ptr(r->material), mat_id);
@@ -834,12 +838,13 @@ void forward_renderer_render_physics(physics_object* po) {
   
   renderable* r = asset_hndl_ptr(po->renderable);
   
+  if(r->is_rigged) {
+    error("Physics object is rigged!");
+  } 
+  
   for(int i=0; i < r->num_surfaces; i++) {
     
     renderable_surface* s = r->surfaces[i];
-    if(s->is_rigged) {
-      error("Physics object is rigged!");
-    } 
     
     int mat_id = min(i, ((material*)asset_hndl_ptr(r->material))->num_entries-1);
     material_entry* me = material_get_entry(asset_hndl_ptr(r->material), mat_id);
@@ -896,12 +901,13 @@ void forward_renderer_render_animated(animated_object* ao) {
   
   renderable* r = asset_hndl_ptr(ao->renderable);
   
+  if(!r->is_rigged) {
+    error("animated object is not rigged");
+  }
+  
   for(int i = 0; i < r->num_surfaces; i++) {
     
     renderable_surface* s = r->surfaces[i];
-    if(!s->is_rigged) {
-      error("animated object is not rigged");
-    }
 
     int mat_id = min(i, ((material*)asset_hndl_ptr(r->material))->num_entries-1);
     material_entry* me = material_get_entry(asset_hndl_ptr(r->material), mat_id);

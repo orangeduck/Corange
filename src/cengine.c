@@ -451,17 +451,17 @@ float vec2_length(vec2 v) {
   return sqrt(vec2_length_sqrd(v));
 }
 
-float vec2_dist_sqrd(vec2 v1, vec2 vec2) {
-  return (v1.x - vec2.x) * (v1.x - vec2.x) + 
-         (v1.y - vec2.y) * (v1.y - vec2.y);
+float vec2_dist_sqrd(vec2 v1, vec2 v2) {
+  return (v1.x - v2.x) * (v1.x - v2.x) + 
+         (v1.y - v2.y) * (v1.y - v2.y);
 }
 
-float vec2_dist(vec2 v1, vec2 vec2) {
-  return sqrt(vec2_dist_sqrd(v1, vec2));
+float vec2_dist(vec2 v1, vec2 v2) {
+  return sqrt(vec2_dist_sqrd(v1, v2));
 }
 
-float vec2_dist_manhattan(vec2 v1, vec2 vec2) {
-  return fabs(v1.x - vec2.x) + fabs(v1.y - vec2.y);
+float vec2_dist_manhattan(vec2 v1, vec2 v2) {
+  return fabs(v1.x - v2.x) + fabs(v1.y - v2.y);
 }
 
 vec2 vec2_normalize(vec2 v) {
@@ -469,8 +469,8 @@ vec2 vec2_normalize(vec2 v) {
   return vec2_div(v, len);
 }
 
-vec2 vec2_reflect(vec2 v1, vec2 vec2) {
-  return vec2_sub(v1, vec2_mul(vec2, 2 * vec2_dot(v1, vec2)));
+vec2 vec2_reflect(vec2 v1, vec2 v2) {
+  return vec2_sub(v1, vec2_mul(v2, 2 * vec2_dot(v1, v2)));
 }
 
 vec2 vec2_from_string(char* s) {
@@ -487,9 +487,9 @@ vec2 vec2_from_string(char* s) {
   return v;
 }
 
-bool vec2_equ(vec2 v1, vec2 vec2) {
-  if(!(v1.x == vec2.x)) { return false; }
-  if(!(v1.y == vec2.y)) { return false; }
+bool vec2_equ(vec2 v1, vec2 v2) {
+  if(!(v1.x == v2.x)) { return false; }
+  if(!(v1.y == v2.y)) { return false; }
   return true;
 }
 
@@ -596,19 +596,19 @@ vec3 vec3_grey() {
   return vec3_new(0.5, 0.5, 0.5);
 }
 
-vec3 vec3_add(vec3 v1, vec3 vec2) {
+vec3 vec3_add(vec3 v1, vec3 v2) {
   vec3 v;
-  v.x = v1.x + vec2.x;
-  v.y = v1.y + vec2.y;
-  v.z = v1.z + vec2.z;
+  v.x = v1.x + v2.x;
+  v.y = v1.y + v2.y;
+  v.z = v1.z + v2.z;
   return v;
 }
 
-vec3 vec3_sub(vec3 v1, vec3 vec2) {
+vec3 vec3_sub(vec3 v1, vec3 v2) {
   vec3 v;
-  v.x = v1.x - vec2.x;
-  v.y = v1.y - vec2.y;
-  v.z = v1.z - vec2.z;
+  v.x = v1.x - v2.x;
+  v.y = v1.y - v2.y;
+  v.z = v1.z - v2.z;
   return v;
 }
 
@@ -626,11 +626,11 @@ vec3 vec3_mul(vec3 v, float fac) {
   return v;
 }
 
-vec3 vec3_mul_vec3(vec3 v1, vec3 vec2) {
+vec3 vec3_mul_vec3(vec3 v1, vec3 v2) {
   vec3 v;
-  v.x = v1.x * vec2.x;
-  v.y = v1.y * vec2.y;
-  v.z = v1.z * vec2.z;
+  v.x = v1.x * v2.x;
+  v.y = v1.y * v2.y;
+  v.z = v1.z * v2.z;
   return v;
 }
 
@@ -673,15 +673,15 @@ void vec3_print(vec3 v) {
   printf("vec3(%4.2f,%4.2f,%4.2f)", v.x, v.y, v.z);
 }
 
-float vec3_dot(vec3 v1, vec3 vec2) {
-  return (v1.x * vec2.x) + (v1.y * vec2.y) + (v1.z * vec2.z);
+float vec3_dot(vec3 v1, vec3 v2) {
+  return (v1.x * v2.x) + (v1.y * v2.y) + (v1.z * v2.z);
 }
 
-vec3 vec3_cross(vec3 v1, vec3 vec2) {
+vec3 vec3_cross(vec3 v1, vec3 v2) {
   vec3 v;
-  v.x = (v1.y * vec2.z) - (v1.z * vec2.y);
-  v.y = (v1.z * vec2.x) - (v1.x * vec2.z);
-  v.z = (v1.x * vec2.y) - (v1.y * vec2.x);
+  v.x = (v1.y * v2.z) - (v1.z * v2.y);
+  v.y = (v1.z * v2.x) - (v1.x * v2.z);
+  v.z = (v1.x * v2.y) - (v1.y * v2.x);
   return v;
 }
 
@@ -697,18 +697,18 @@ float vec3_length(vec3 v) {
   return sqrt(vec3_length_sqrd(v));
 }
 
-float vec3_dist_sqrd(vec3 v1, vec3 vec2) {
-  return (v1.x - vec2.x) * (v1.x - vec2.x) + 
-         (v1.y - vec2.y) * (v1.y - vec2.y) + 
-         (v1.z - vec2.z) * (v1.z - vec2.z);
+float vec3_dist_sqrd(vec3 v1, vec3 v2) {
+  return (v1.x - v2.x) * (v1.x - v2.x) + 
+         (v1.y - v2.y) * (v1.y - v2.y) + 
+         (v1.z - v2.z) * (v1.z - v2.z);
 }
 
-float vec3_dist(vec3 v1, vec3 vec2) {
-  return sqrt(vec3_dist_sqrd(v1, vec2));
+float vec3_dist(vec3 v1, vec3 v2) {
+  return sqrt(vec3_dist_sqrd(v1, v2));
 }
 
-float vec3_dist_manhattan(vec3 v1, vec3 vec2) {
-  return fabs(v1.x - vec2.x) + fabs(v1.y - vec2.y) + fabs(v1.z - vec2.z);
+float vec3_dist_manhattan(vec3 v1, vec3 v2) {
+  return fabs(v1.x - v2.x) + fabs(v1.y - v2.y) + fabs(v1.z - v2.z);
 }
 
 vec3 vec3_normalize(vec3 v) {
@@ -720,8 +720,8 @@ vec3 vec3_normalize(vec3 v) {
   }
 }
 
-vec3 vec3_reflect(vec3 v1, vec3 vec2) {
-  return vec3_sub(v1, vec3_mul(vec2, 2 * vec3_dot(v1, vec2)));
+vec3 vec3_reflect(vec3 v1, vec3 v2) {
+  return vec3_sub(v1, vec3_mul(v2, 2 * vec3_dot(v1, v2)));
 }
 
 vec3 vec3_from_string(char* s) {
@@ -741,10 +741,10 @@ vec3 vec3_from_string(char* s) {
 
 }
 
-bool vec3_equ(vec3 v1, vec3 vec2) {
-  if(!(v1.x == vec2.x)) { return false; }
-  if(!(v1.y == vec2.y)) { return false; }
-  if(!(v1.z == vec2.z)) { return false; }
+bool vec3_equ(vec3 v1, vec3 v2) {
+  if(!(v1.x == v2.x)) { return false; }
+  if(!(v1.y == v2.y)) { return false; }
+  if(!(v1.z == v2.z)) { return false; }
   return true;
 }
 
@@ -791,12 +791,12 @@ vec3 vec3_smootherstep(vec3 v1, vec3 v2, float amount) {
 
 /* vec4 */
 
-vec4 vec4_new(float w, float x, float y, float z) {
+vec4 vec4_new(float x, float y, float z, float w) {
   vec4 v;
-  v.w = w;
   v.x = x;
   v.y = y;
   v.z = z;
+  v.w = w;
   return v;
 }
 
@@ -869,9 +869,9 @@ vec4 vec4_mul(vec4 v, float fac) {
 vec4 vec4_mul_vec4(vec4 v1, vec4 v2) {
   vec4 v;
   v.x = v1.x * v2.x;
-  v.y = v1.y * v2.x;
-  v.z = v1.z * v2.x;
-  v.w = v1.w * v2.x;
+  v.y = v1.y * v2.y;
+  v.z = v1.z * v2.z;
+  v.w = v1.w * v2.w;
   return v;
 }
 
@@ -919,8 +919,8 @@ void vec4_print(vec4 v) {
   printf("vec4(%4.2f, %4.2f, %4.2f, %4.2f)", v.x, v.y, v.z,  v.w);
 }
 
-float vec4_dot(vec4 v1, vec4 vec2) {
-  return  (v1.x * vec2.x) + (v1.y * vec2.y) + (v1.z * vec2.z) + (v1.w * vec2.w);
+float vec4_dot(vec4 v1, vec4 v2) {
+  return  (v1.x * v2.x) + (v1.y * v2.y) + (v1.z * v2.z) + (v1.w * v2.w);
 }
 
 float vec4_length_sqrd(vec4 v) {
@@ -936,19 +936,19 @@ float vec4_length(vec4 v) {
   return sqrt(vec4_length_sqrd(v));
 }
 
-float vec4_dist_sqrd(vec4 v1, vec4 vec2) {
-  return (v1.x - vec2.x) * (v1.x - vec2.x) + 
-         (v1.y - vec2.y) * (v1.y - vec2.y) +
-         (v1.y - vec2.z) * (v1.y - vec2.z) +
-         (v1.y - vec2.w) * (v1.y - vec2.w);
+float vec4_dist_sqrd(vec4 v1, vec4 v2) {
+  return (v1.x - v2.x) * (v1.x - v2.x) + 
+         (v1.y - v2.y) * (v1.y - v2.y) +
+         (v1.y - v2.z) * (v1.y - v2.z) +
+         (v1.y - v2.w) * (v1.y - v2.w);
 }
 
-float vec4_dist(vec4 v1, vec4 vec2) {
-  return sqrt(vec4_dist_sqrd(v1, vec2));
+float vec4_dist(vec4 v1, vec4 v2) {
+  return sqrt(vec4_dist_sqrd(v1, v2));
 }
 
-float vec4_dist_manhattan(vec4 v1, vec4 vec2) {
-  return fabs(v1.x - vec2.x) + fabs(v1.y - vec2.y) + fabs(v1.z - vec2.z) + fabs(v1.w - vec2.w);
+float vec4_dist_manhattan(vec4 v1, vec4 v2) {
+  return fabs(v1.x - v2.x) + fabs(v1.y - v2.y) + fabs(v1.z - v2.z) + fabs(v1.w - v2.w);
 }
 
 vec4 vec4_normalize(vec4 v) {
@@ -960,17 +960,17 @@ vec4 vec4_normalize(vec4 v) {
   }
 }
 
-vec4 vec4_reflect(vec4 v1, vec4 vec2) {
-  return vec4_sub(v1, vec4_mul(vec2, 2 * vec4_dot(v1, vec2)));
+vec4 vec4_reflect(vec4 v1, vec4 v2) {
+  return vec4_sub(v1, vec4_mul(v2, 2 * vec4_dot(v1, v2)));
 }
 
 vec4 vec4_from_string(char* s) {
-  char* pEnd;
+  char* end;
   double d1, d2, d3, d4;
-  d1 = strtod(s,&pEnd);
-  d2 = strtod(pEnd,&pEnd);  
-  d3 = strtod(pEnd,&pEnd);  
-  d4 = strtod(pEnd,NULL);  
+  d1 = strtod(s,&end);
+  d2 = strtod(end,&end);  
+  d3 = strtod(end,&end);  
+  d4 = strtod(end,NULL);  
 
   vec4 v;
   v.x = d1;
@@ -981,11 +981,11 @@ vec4 vec4_from_string(char* s) {
   return v;
 }
 
-bool vec4_equ(vec4 v1, vec4 vec2) {
-  if(!(v1.x == vec2.x)) { return false; }
-  if(!(v1.y == vec2.y)) { return false; }
-  if(!(v1.z == vec2.z)) { return false; }
-  if(!(v1.w == vec2.w)) { return false; }
+bool vec4_equ(vec4 v1, vec4 v2) {
+  if(!(v1.x == v2.x)) { return false; }
+  if(!(v1.y == v2.y)) { return false; }
+  if(!(v1.z == v2.z)) { return false; }
+  if(!(v1.w == v2.w)) { return false; }
   return true;
 }
 
@@ -1015,31 +1015,31 @@ vec4 vec4_saturate(vec4 v) {
   return v;
 }
 
-vec4 vec4_lerp(vec4 v1, vec4 vec2, float amount) {
+vec4 vec4_lerp(vec4 v1, vec4 v2, float amount) {
   vec4 v;
-  v.x = lerp(v1.x, vec2.x, amount);
-  v.y = lerp(v1.y, vec2.y, amount);
-  v.z = lerp(v1.z, vec2.z, amount);
-  v.w = lerp(v1.w, vec2.w, amount);
+  v.x = lerp(v1.x, v2.x, amount);
+  v.y = lerp(v1.y, v2.y, amount);
+  v.z = lerp(v1.z, v2.z, amount);
+  v.w = lerp(v1.w, v2.w, amount);
   return v;
 }
 
-vec4 vec4_smoothstep(vec4 v1, vec4 vec2, float amount) {
+vec4 vec4_smoothstep(vec4 v1, vec4 v2, float amount) {
   float scaled_amount = amount*amount*(3 - 2*amount);
-  return vec4_lerp( v1, vec2, scaled_amount );
+  return vec4_lerp( v1, v2, scaled_amount );
 }
 
-vec4 vec4_smootherstep(vec4 v1, vec4 vec2, float amount) {
+vec4 vec4_smootherstep(vec4 v1, vec4 v2, float amount) {
   float scaled_amount = amount*amount*amount*(amount*(amount*6 - 15) + 10);
-  return vec4_lerp( v1, vec2, scaled_amount );
+  return vec4_lerp( v1, v2, scaled_amount );
 }
 
-vec4 vec4_nearest_interp(vec4 v1, vec4 vec2, float amount) {
+vec4 vec4_nearest_interp(vec4 v1, vec4 v2, float amount) {
   vec4 v;
-  v.w = nearest_interp(v1.w, vec2.w, amount);
-  v.x = nearest_interp(v1.x, vec2.x, amount);
-  v.y = nearest_interp(v1.y, vec2.y, amount);
-  v.z = nearest_interp(v1.z, vec2.z, amount);
+  v.w = nearest_interp(v1.w, v2.w, amount);
+  v.x = nearest_interp(v1.x, v2.x, amount);
+  v.y = nearest_interp(v1.y, v2.y, amount);
+  v.z = nearest_interp(v1.z, v2.z, amount);
   return v;
 }
 
@@ -1142,34 +1142,24 @@ vec4 quaternion_swap_handedness(vec4 q) {
 
 mat2 mat2_id() {
   mat2 mat;
-  
-  mat.xx = 1.0f;
-  mat.xy = 0.0f;
-  mat.yx = 0.0f;
-  mat.yy = 1.0f;
-  
+  mat.xx = 1.0f; mat.xy = 0.0f;
+  mat.yx = 0.0f; mat.yy = 1.0f;
   return mat;
 }
 
 mat2 mat2_zero() {
   mat2 mat;
-  
-  mat.xx = 0.0f;
-  mat.xy = 0.0f;
-  mat.yx = 0.0f;
-  mat.yy = 0.0f;
-  
+  mat.xx = 0.0f; mat.xy = 0.0f;
+  mat.yx = 0.0f; mat.yy = 0.0f;
   return mat;
 }
 
 mat2 mat2_new(float xx, float xy, float yx, float yy) {
   mat2 mat;
-  
   mat.xx = xx;
   mat.xy = xy;
   mat.yx = yx;
   mat.yy = yy;
-  
   return mat;
 }
 
@@ -1766,12 +1756,6 @@ void mat4_print(mat4 m) {
 }
 
 mat4 mat4_view_look_at(vec3 position, vec3 target, vec3 up) {
-
-  /*
-Taken From:
-http://www.opengl.org/wiki/GluLookAt_code
-
-*/
   
   vec3 zaxis = vec3_normalize( vec3_sub(target, position) );
   vec3 xaxis = vec3_normalize( vec3_cross(up, zaxis) );
@@ -1790,15 +1774,12 @@ http://www.opengl.org/wiki/GluLookAt_code
   view_matrix.zy = -zaxis.y;
   view_matrix.zz = -zaxis.z;
   
-  // Also unsure of this.
   view_matrix = mat4_mul_mat4(view_matrix, mat4_translation(vec3_neg(position)) );
   
   return view_matrix;
 }
 
 mat4 mat4_perspective(float fov, float near_clip, float far_clip, float ratio) {
-  
-  /* http://www.opengl.org/wiki/GluPerspective_code */
   
   float right, left, bottom, top;
   
@@ -1925,29 +1906,28 @@ mat4 mat4_rotation_euler(float x, float y, float z) {
 
   mat4 m = mat4_zero();
 
-float cosx = cos(x);
-float cosy = cos(y);
-float cosz = cos(z);
-float sinx = sin(x);
-float siny = sin(y);
-float sinz = sin(z);
+  float cosx = cos(x);
+  float cosy = cos(y);
+  float cosz = cos(z);
+  float sinx = sin(x);
+  float siny = sin(y);
+  float sinz = sin(z);
 
-m.xx = cosy * cosz;
-m.yx = -cosx * sinz + sinx * siny * cosz;
-m.zx = sinx * sinz + cosx * siny * cosz;
+  m.xx = cosy * cosz;
+  m.yx = -cosx * sinz + sinx * siny * cosz;
+  m.zx = sinx * sinz + cosx * siny * cosz;
 
-m.xy = cosy * sinz;
-m.yy = cosx * cosz + sinx * siny * sinz;
-m.zy = -sinx * cosz + cosx * siny * sinz;
+  m.xy = cosy * sinz;
+  m.yy = cosx * cosz + sinx * siny * sinz;
+  m.zy = -sinx * cosz + cosx * siny * sinz;
 
-m.xz = -siny;
-m.yz = sinx * cosy;
-m.zz = cosx * cosy;
+  m.xz = -siny;
+  m.yz = sinx * cosy;
+  m.zz = cosx * cosy;
 
-m.ww = 1;
+  m.ww = 1;
   
   return m;
-  
 }
 
 mat4 mat4_rotation_quaternion(vec4 q) {
@@ -2041,7 +2021,6 @@ mat4 mat4_smoothstep(mat4 m1, mat4 m2, float amount) {
 }
 
 /* Geometry Functions */
-
 
 plane plane_new(vec3 position, vec3 direction) {
   plane p;
@@ -2335,7 +2314,6 @@ void mesh_generate_tangents(mesh* m) {
   }
   
   /* normalize all tangents */
-  
   for(int i = 0; i < m->num_verts; i++) {
     m->verticies[i].tangent = vec3_normalize( m->verticies[i].tangent );
     m->verticies[i].binormal = vec3_normalize( m->verticies[i].binormal );
@@ -2346,13 +2324,11 @@ void mesh_generate_tangents(mesh* m) {
 void mesh_generate_normals(mesh* m) {
   
   /* Clear all normals to 0,0,0 */
-  
   for(int i = 0; i < m->num_verts; i++) {
     m->verticies[i].normal = vec3_zero();
   }
   
   /* Loop over faces, calculate normals and append to verticies of that face */
-  
   int i = 0;
   while( i < m->num_triangles * 3) {
     
@@ -2378,7 +2354,6 @@ void mesh_generate_normals(mesh* m) {
   }
   
   /* normalize all normals */
-  
   for(int i = 0; i < m->num_verts; i++) {
     m->verticies[i].normal = vec3_normalize( m->verticies[i].normal );
   }
@@ -2575,19 +2550,15 @@ void model_generate_tangents(model* m) {
 }
 
 void model_generate_orthagonal_tangents(model* m) {
-
   for(int i = 0; i < m->num_meshes; i++) {
     mesh_generate_orthagonal_tangents( m->meshes[i] );
   }
-
 }
 
 void model_generate_texcoords_cylinder(model* m) {
-
   for(int i = 0; i < m->num_meshes; i++) {
     mesh_generate_texcoords_cylinder( m->meshes[i] );
   }
-
 }
 
 float model_surface_area(model* m) {
@@ -2601,27 +2572,21 @@ float model_surface_area(model* m) {
 }
 
 void model_translate(model* m, vec3 translation) {
-
   for(int i = 0; i < m->num_meshes; i++) {
     mesh_translate(m->meshes[i], translation);
   }
-
 }
 
 void model_scale(model* m, float scale) {
-
   for(int i = 0; i < m->num_meshes; i++) {
     mesh_scale(m->meshes[i], scale);
   }
-
 }
 
 void model_transform(model* m, mat4 transform) {
-
   for(int i = 0; i < m->num_meshes; i++) {
     mesh_transform(m->meshes[i], transform);
   }
-
 }
 
 vec3 triangle_tangent(vertex vert1, vertex vert2, vertex vert3) {
