@@ -2,7 +2,8 @@
 #define animated_object_h
 
 #include "cengine.h"
-#include "asset_manager.h"
+#include "casset.h"
+
 #include "assets/skeleton.h"
 
 typedef struct {

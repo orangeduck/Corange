@@ -1,3 +1,2 @@
-string name = gradient
 shader vertex = $CORANGE/shaders/gradient.vs
 shader fragment = $CORANGE/shaders/gradient.fs

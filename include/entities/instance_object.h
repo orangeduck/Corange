@@ -2,7 +2,7 @@
 #define instance_object_h
 
 #include "cengine.h"
-#include "asset_manager.h"
+#include "casset.h"
 
 #define MAX_INSTANCES 128
 

@@ -1,4 +1,3 @@
-string name = imrod
 shader vertex = $CORANGE/shaders/forward/static.vs
 shader fragment = $CORANGE/shaders/forward/static.fs
 shader shadows = $CORANGE/shaders/shadows.fs

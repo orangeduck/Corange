@@ -1,15 +1,22 @@
-#ifndef entity_manager_h
-#define entity_manager_h
+/**
+*** :: Entity ::
+***
+***   Entities in the virtual world
+***
+**/
+
+#ifndef centity_h
+#define centity_h
 
 #include "cengine.h"
 
 typedef void entity;
 
-void entity_manager_init();
-void entity_manager_finish();
+void entity_init();
+void entity_finish();
 
-#define entity_manager_handler(type, new, del) entity_manager_handler_cast(typeid(type), (void*(*)())new , (void(*)(void*))del)
-void entity_manager_handler_cast(int type_id, void* entity_new() , void entity_del(void* entity));
+#define entity_handler(type, new, del) entity_handler_cast(typeid(type), (void*(*)())new , (void(*)(void*))del)
+void entity_handler_cast(int type_id, void* entity_new() , void entity_del(void* entity));
 
 bool entity_exists(char* name);
 

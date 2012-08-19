@@ -1,3 +1,2 @@
-string name = ui
 shader vert = $CORANGE/shaders/deferred/ui.vs
 shader frag = $CORANGE/shaders/deferred/ui.fs

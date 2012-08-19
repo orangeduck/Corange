@@ -1,21 +1,20 @@
 #ifndef corange_h
 #define corange_h
 
+/* Core engine modules */
+
 #include "cengine.h"
+#include "cgraphics.h"
+#include "caudio.h"
 
 /* Corange Functions */
 
 void corange_init(const char* core_assets_path);
 void corange_finish();
 
-/* Audio and Graphics */
-
-#include "graphics_manager.h"
-#include "audio_manager.h"
-
 /* Entities */
 
-#include "entity_manager.h"
+#include "centity.h"
 
 #include "entities/static_object.h"
 #include "entities/animated_object.h"
@@ -27,7 +26,7 @@ void corange_finish();
 
 /* Assets */
 
-#include "asset_manager.h"
+#include "casset.h"
 
 #include "assets/animation.h"
 #include "assets/skeleton.h"
@@ -43,7 +42,7 @@ void corange_finish();
 
 /* UI */
 
-#include "ui_manager.h"
+#include "cui.h"
 
 #include "ui/ui_text.h"
 #include "ui/ui_rectangle.h"

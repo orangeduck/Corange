@@ -1,4 +1,4 @@
-#include "entity_manager.h"
+#include "centity.h"
 
 #include "data/list.h"
 #include "data/dict.h"
@@ -17,7 +17,7 @@ static list* entity_names;
 static dict* entities;
 static dict* entity_types;
 
-void entity_manager_init() {
+void entity_init() {
   
   entities = dict_new(512);
   entity_types = dict_new(512);
@@ -25,7 +25,7 @@ void entity_manager_init() {
   entity_names = list_new(512);
 }
 
-void entity_manager_finish() {
+void entity_finish() {
     
   for (int i = 0; i < entity_names->num_items; i++) {
     char* name = list_get(entity_names, i);
@@ -42,7 +42,7 @@ void entity_manager_finish() {
   
 }
 
-void entity_manager_handler_cast(int type_id, void* entity_new_func() , void entity_del_func(void* entity)) {
+void entity_handler_cast(int type_id, void* entity_new_func() , void entity_del_func(void* entity)) {
   
   if (num_entity_handlers >= MAX_ENTITY_HANDLERS) {
     warning("Max number of entity handlers reached. Handler for type %s not added.", type_id_name(type_id));

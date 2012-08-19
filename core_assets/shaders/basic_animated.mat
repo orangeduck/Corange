@@ -1,3 +1,2 @@
-string name = basic_animated
 shader vertex = $CORANGE/shaders/basic_animated.vs
 shader fragment = $CORANGE/shaders/basic.fs

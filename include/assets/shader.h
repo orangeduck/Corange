@@ -21,15 +21,18 @@ shader* tes_load_file(char* filename);
 
 void shader_delete(shader* s);
 void shader_print_log(shader* s);
+GLuint shader_handle(shader* s);
 
 shader_program* shader_program_new();
 void shader_program_delete(shader_program* p);
 
 GLuint shader_program_handle(shader_program* p);
 
+bool shader_program_has_shader(shader_program* p, shader* s);
 void shader_program_attach_shader(shader_program* p, shader* s);
 void shader_program_link(shader_program* p);
 
+void shader_program_print_info(shader_program* p);
 void shader_program_print_log(shader_program* p);
 
 

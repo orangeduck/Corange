@@ -50,6 +50,42 @@ void material_delete(material* m) {
   free(m);
 }
 
+static void material_generate_programs(material* m) {
+  
+  SDL_GL_CheckError();
+  
+  for(int i = 0; i < m->num_entries; i++) {
+    
+    material_entry* me = m->entries[i];
+    me->program = shader_program_new();
+    
+    for(int j = 0; j < me->num_items; j++) {
+      
+      if (me->types[j] == mat_item_shader) {
+        asset_hndl ah = me->items[j].as_asset;
+        
+        if (!file_isloaded(ah.path)) { file_load(ah.path); }
+        
+        SDL_GL_CheckError();
+        shader_program_attach_shader(me->program, asset_hndl_ptr(ah));
+        SDL_GL_CheckError();
+        shader_program_print_log(me->program);
+        SDL_GL_CheckError();
+      }
+      
+    }
+    
+    shader_program_link(me->program);
+    SDL_GL_CheckError();
+    shader_program_print_log(me->program);
+    SDL_GL_CheckError();
+    
+  }
+  
+  SDL_GL_CheckError();
+  
+}
+
 material* mat_load_file(char* filename) {
   
   SDL_RWops* file = SDL_RWFromFile(filename, "r");
@@ -57,61 +93,111 @@ material* mat_load_file(char* filename) {
     error("Cannot load file %s", filename);
   }
   
-  material* m = malloc(sizeof(material));
-  m->num_entries = 1;
-  m->entries = malloc(sizeof(material_entry) * m->num_entries);
+  material* m = material_new();
   
-  material_entry* me = m->entries[m->num_entries];
+  /* Create first entry */
+  m->num_entries++;
+  m->entries = realloc(m->entries, sizeof(material_entry*) * m->num_entries);
+  m->entries[m->num_entries-1] = malloc(sizeof(material_entry));
+  
+  /* Fill in first entry */
+  material_entry* me = m->entries[m->num_entries-1];
+  me->program = NULL;
   me->num_items = 0;
-  me->types = realloc(me->types, sizeof(int) * me->num_items);
-  me->names = realloc(me->names, sizeof(char*) * me->num_items);
-  me->items = realloc(me->items, sizeof(material_item) * me->num_items);
+  me->types = malloc(sizeof(int) * me->num_items);
+  me->names = malloc(sizeof(char*) * me->num_items);
+  me->items = malloc(sizeof(material_item) * me->num_items);
   
   char line[1024];
   while(SDL_RWreadline(file, line, 1024)) {
     
-    material_entry* me = m->entries[m->num_entries];
+    char type[512]; char name[512]; char value[512];
+    sscanf(line, "%511s %511s = %511s", type, name, value);
     
+    if (strcmp(type, "submaterial") == 0) {
+      
+      /* Skip first submaterial entry if required. */
+      if ((me->num_items == 0) && (m->num_entries == 1)) {
+        continue;
+      }
+      
+      m->num_entries++;
+      m->entries = realloc(m->entries, sizeof(material_entry*) * m->num_entries);
+      m->entries[m->num_entries-1] = malloc(sizeof(material_entry));
+      
+      material_entry* me = m->entries[m->num_entries-1];
+      me->program = NULL;
+      me->num_items = 0;
+      me->types = malloc(sizeof(int) * me->num_items);
+      me->names = malloc(sizeof(char*) * me->num_items);
+      me->items = malloc(sizeof(material_item) * me->num_items);
+      continue;
+    }
+    
+    material_entry* me = m->entries[m->num_entries-1];
     me->num_items++;
     me->types = realloc(me->types, sizeof(int) * me->num_items);
     me->names = realloc(me->names, sizeof(char*) * me->num_items);
     me->items = realloc(me->items, sizeof(material_item) * me->num_items);
     
-    char type[256]; char name[256]; char value[256];
-    sscanf(line, "%255s %255s=%255s", type, name, value);
-    
-    me->names[me->num_items] = malloc(strlen(name)+1);
-    strcpy(me->names[me->num_items], name);
+    me->names[me->num_items-1] = malloc(strlen(name)+1);
+    strcpy(me->names[me->num_items-1], name);
     
     material_item mi;
+    char* end;
+    float f0, f1, f2, f3;
     
     if (strcmp(type, "shader") == 0) {
+    
       mi.as_asset = asset_hndl_new(P(value));
-      me->types[me->num_items] = mat_item_shader;
+      me->types[me->num_items-1] = mat_item_shader;
+    
     } else if (strcmp(type, "texture") == 0) {
+    
       mi.as_asset = asset_hndl_new(P(value));
-      me->types[me->num_items] = mat_item_texture;
+      me->types[me->num_items-1] = mat_item_texture;
+    
+    } else if (strcmp(type, "int") == 0) {
+    
+      mi.as_int = atoi(value);
+      me->types[me->num_items-1] = mat_item_int;
+    
     } else if (strcmp(type, "float") == 0) {
-      mi.as_float = 1.0f;
-      me->types[me->num_items] = mat_item_float;
+      
+      mi.as_float = atof(value);
+      me->types[me->num_items-1] = mat_item_float;
+      
     } else if (strcmp(type, "vec2") == 0) {
-      mi.as_vec2 = vec2_new(1.0f, 1.0f);
-      me->types[me->num_items] = mat_item_vec2;
+    
+      f0 = strtod(value, &end); f1 = strtod(end, NULL);
+      mi.as_vec2 = vec2_new(f0, f1);
+      me->types[me->num_items-1] = mat_item_vec2;
+      
     } else if (strcmp(type, "vec3") == 0) {
-      mi.as_vec3 = vec3_new(1.0f, 1.0f, 1.0f);
-      me->types[me->num_items] = mat_item_vec3;
+      
+      f0 = strtod(value, &end); f1 = strtod(end, &end);
+      f2 = strtod(end, NULL);
+      mi.as_vec3 = vec3_new(f0, f1, f2);
+      me->types[me->num_items-1] = mat_item_vec3;
+      
     } else if (strcmp(type, "vec4") == 0) {
-      mi.as_vec4 = vec4_new(1.0f, 1.0f, 1.0f, 1.0f);
-      me->types[me->num_items] = mat_item_vec4;
+    
+      f0 = strtod(value, &end); f1 = strtod(end, &end);
+      f2 = strtod(end, &end); f3 = strtod(end, NULL);
+      mi.as_vec4 = vec4_new(f0, f1, f2, f3);
+      me->types[me->num_items-1] = mat_item_vec4;
+      
     } else {
       error("Unknown material item type '%s'", type);
     }
     
-    me->items[me->num_items] = mi;
+    me->items[me->num_items-1] = mi;
   
   }
   
   SDL_RWclose(file);
+  
+  material_generate_programs(m);
   
   return m;
 }

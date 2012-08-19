@@ -1,6 +1,6 @@
 #include "ui/ui_button.h"
 
-#include "graphics_manager.h"
+#include "cgraphics.h"
 
 #include "assets/texture.h"
 

@@ -1,4 +1,3 @@
-string name = static
 shader vert = $CORANGE/shaders/deferred/static.vs
 shader frag = $CORANGE/shaders/deferred/static.fs
 shader colors = $CORANGE/shaders/colors.fs

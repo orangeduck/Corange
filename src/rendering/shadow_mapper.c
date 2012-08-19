@@ -1,7 +1,7 @@
 #include "rendering/shadow_mapper.h"
 
-#include "graphics_manager.h"
-#include "asset_manager.h"
+#include "cgraphics.h"
+#include "casset.h"
 
 #include "assets/shader.h"
 #include "assets/material.h"
@@ -30,13 +30,13 @@ void shadow_mapper_init(light* l) {
 
   LIGHT = l;
   
-  depth_mat = asset_hndl_new(P("$CORANGE/shaders/depth.mat"));
-  depth_mat_animated = asset_hndl_new(P("$CORANGE/shaders/depth_animated.mat"));
+  depth_mat = asset_hndl_new_load(P("$CORANGE/shaders/depth.mat"));
+  depth_mat_animated = asset_hndl_new_load(P("$CORANGE/shaders/depth_animated.mat"));
   
   shader_program* depth_shader_animated = material_get_entry(asset_hndl_ptr(depth_mat), 0)->program;
   
-  BONE_INDICIES = glGetAttribLocation(*depth_shader_animated, "bone_indicies");
-  BONE_WEIGHTS = glGetAttribLocation(*depth_shader_animated, "bone_weights");
+  BONE_INDICIES = glGetAttribLocation(shader_program_handle(depth_shader_animated), "bone_indicies");
+  BONE_WEIGHTS = glGetAttribLocation(shader_program_handle(depth_shader_animated), "bone_weights");
   
   glGenFramebuffers(1, &fbo);
   glBindFramebuffer(GL_FRAMEBUFFER, fbo);
@@ -165,8 +165,8 @@ void shadow_mapper_render_static(static_object* s) {
       glUniform1f(alpha_test_u, 0.0);
     }
     
-    texture* diffuse_texture = asset_hndl_ptr(material_entry_item(me, "diffuse_texture").as_asset);
-    if (diffuse_texture != NULL) {
+    if (material_entry_has_item(me, "diffuse_texture")) {
+      texture* diffuse_texture = asset_hndl_ptr(material_entry_item(me, "diffuse_texture").as_asset);
       glUniform1i(diffuse_u, 0);
       glActiveTexture(GL_TEXTURE0 + 0);
       glBindTexture(GL_TEXTURE_2D, *diffuse_texture);
@@ -188,7 +188,7 @@ void shadow_mapper_render_static(static_object* s) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     
-    if (diffuse_texture != NULL) {
+    if (material_entry_has_item(me, "diffuse_texture")) {
       glActiveTexture(GL_TEXTURE0 + 0);
       glDisable(GL_TEXTURE_2D);
     }
@@ -247,34 +247,33 @@ void shadow_mapper_render_animated(animated_object* ao) {
   for(int i = 0; i < r->num_surfaces; i++) {
     
     renderable_surface* s = r->surfaces[i];
-    if(s->is_rigged) {
     
-      GLsizei stride = sizeof(float) * 24;
-      
-      glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
-          
-      glVertexPointer(3, GL_FLOAT, stride, (void*)0);
-      glEnableClientState(GL_VERTEX_ARRAY);
-      
-      glVertexAttribPointer(BONE_INDICIES, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 18));
-      glEnableVertexAttribArray(BONE_INDICIES);
-      
-      glVertexAttribPointer(BONE_WEIGHTS, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 21));
-      glEnableVertexAttribArray(BONE_WEIGHTS);
-      
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
-        glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
-      
-      glDisableClientState(GL_VERTEX_ARRAY);
-      glDisableVertexAttribArray(BONE_INDICIES);  
-      glDisableVertexAttribArray(BONE_WEIGHTS);  
-      
-      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-      glBindBuffer(GL_ARRAY_BUFFER, 0);
-      
-    } else {
+    if(!s->is_rigged) {
       error("animated object is not rigged");
     }
+    
+    GLsizei stride = sizeof(float) * 24;
+    
+    glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
+        
+    glVertexPointer(3, GL_FLOAT, stride, (void*)0);
+    glEnableClientState(GL_VERTEX_ARRAY);
+    
+    glVertexAttribPointer(BONE_INDICIES, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 18));
+    glEnableVertexAttribArray(BONE_INDICIES);
+    
+    glVertexAttribPointer(BONE_WEIGHTS, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 21));
+    glEnableVertexAttribArray(BONE_WEIGHTS);
+    
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
+      glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
+    
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableVertexAttribArray(BONE_INDICIES);  
+    glDisableVertexAttribArray(BONE_WEIGHTS);  
+    
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
   }
   

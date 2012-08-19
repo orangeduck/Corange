@@ -1,6 +1,6 @@
 #include "rendering/deferred_renderer.h"
 
-#include "graphics_manager.h"
+#include "cgraphics.h"
 
 #include "assets/shader.h"
 #include "assets/texture.h"
@@ -90,10 +90,10 @@ void deferred_renderer_init() {
   EXPOSURE_SPEED = 1.0;
   EXPOSURE_TARGET = 0.4;
   
-  COLOR_CORRECTION = asset_hndl_new(P("$CORANGE/resources/identity.lut"));
-  RANDOM = asset_hndl_new(P("$CORANGE/resources/random.dds"));
-  ENVIRONMENT = asset_hndl_new(P("$CORANGE/resources/envmap.dds"));
-  VIGNETTING = asset_hndl_new(P("$CORANGE/resources/vignetting.dds"));
+  COLOR_CORRECTION = asset_hndl_new_load(P("$CORANGE/resources/identity.lut"));
+  RANDOM = asset_hndl_new_load(P("$CORANGE/resources/random.dds"));
+  ENVIRONMENT = asset_hndl_new_load(P("$CORANGE/resources/envmap.dds"));
+  VIGNETTING = asset_hndl_new_load(P("$CORANGE/resources/vignetting.dds"));
   
   folder_load(P("$CORANGE/shaders/deferred/"));
   
@@ -778,7 +778,8 @@ void deferred_renderer_render_static(static_object* so) {
     GLuint program_handle = shader_program_handle(program_static);
     glUseProgram(program_handle);
     
-    deferred_renderer_use_material_entry(material_get_entry(asset_hndl_ptr(s->material), 0), program_static);
+    int mat_id = min(i, ((material*)asset_hndl_ptr(r->material))->num_entries-1);
+    deferred_renderer_use_material_entry(material_get_entry(asset_hndl_ptr(r->material), mat_id), program_static);
     
     GLsizei stride = sizeof(float) * 18;
     
@@ -850,69 +851,65 @@ void deferred_renderer_render_animated(animated_object* ao) {
   for(int i = 0; i < r->num_surfaces; i++) {
     
     renderable_surface* s = r->surfaces[i];
-    if(s->is_rigged) {
-      
-      shader_program* program_animated = material_get_entry(asset_hndl_ptr(MAT_ANIMATED), 0)->program;
-      
-      GLuint program_animated_handle = shader_program_handle(program_animated);
-      glUseProgram(program_animated_handle);
-      
-      deferred_renderer_use_material_entry(material_get_entry(asset_hndl_ptr(s->material),0), program_animated);
-      
-      GLint bone_world_matrices_u = glGetUniformLocation(program_animated_handle, "bone_world_matrices");
-      glUniformMatrix4fv(bone_world_matrices_u, skel->num_bones, GL_FALSE, bone_matrix_data);
-      
-      GLint bone_count_u = glGetUniformLocation(program_animated_handle, "bone_count");
-      glUniform1i(bone_count_u, skel->num_bones);
-      
-      GLsizei stride = sizeof(float) * 24;
-      
-      glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
-          
-      glVertexPointer(3, GL_FLOAT, stride, (void*)0);
-      glEnableClientState(GL_VERTEX_ARRAY);
-      
-      glVertexAttribPointer(NORMAL, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 3));
-      glEnableVertexAttribArray(NORMAL);
-      
-      glVertexAttribPointer(TANGENT, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 6));
-      glEnableVertexAttribArray(TANGENT);
-      
-      glVertexAttribPointer(BINORMAL, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 9));
-      glEnableVertexAttribArray(BINORMAL);
-      
-      glTexCoordPointer(2, GL_FLOAT, stride, (void*)(sizeof(float) * 12));
-      glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-      
-      glVertexAttribPointer(BONE_INDICIES, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 18));
-      glEnableVertexAttribArray(BONE_INDICIES);
-      
-      glVertexAttribPointer(BONE_WEIGHTS, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 21));
-      glEnableVertexAttribArray(BONE_WEIGHTS);
-      
-      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
-      glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
-      
-      glDisableClientState(GL_VERTEX_ARRAY);
-      glDisableClientState(GL_TEXTURE_COORD_ARRAY);  
-      
-      glDisableVertexAttribArray(NORMAL);
-      glDisableVertexAttribArray(TANGENT);
-      glDisableVertexAttribArray(BINORMAL);
-      glDisableVertexAttribArray(BONE_INDICIES);  
-      glDisableVertexAttribArray(BONE_WEIGHTS);  
-      
-      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-      glBindBuffer(GL_ARRAY_BUFFER, 0);
-      
-      glUseProgram(0);
-      
-    } else {
-    
+    if(!s->is_rigged) {
       error("Animated object is not rigged!");
-    
     }
-
+    
+    shader_program* program_animated = material_get_entry(asset_hndl_ptr(MAT_ANIMATED), 0)->program;
+    
+    GLuint program_animated_handle = shader_program_handle(program_animated);
+    glUseProgram(program_animated_handle);
+    
+    int mat_id = min(i, ((material*)asset_hndl_ptr(r->material))->num_entries-1);
+    deferred_renderer_use_material_entry(material_get_entry(asset_hndl_ptr(r->material), mat_id), program_animated);
+    
+    GLint bone_world_matrices_u = glGetUniformLocation(program_animated_handle, "bone_world_matrices");
+    glUniformMatrix4fv(bone_world_matrices_u, skel->num_bones, GL_FALSE, bone_matrix_data);
+    
+    GLint bone_count_u = glGetUniformLocation(program_animated_handle, "bone_count");
+    glUniform1i(bone_count_u, skel->num_bones);
+    
+    GLsizei stride = sizeof(float) * 24;
+    
+    glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
+        
+    glVertexPointer(3, GL_FLOAT, stride, (void*)0);
+    glEnableClientState(GL_VERTEX_ARRAY);
+    
+    glVertexAttribPointer(NORMAL, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 3));
+    glEnableVertexAttribArray(NORMAL);
+    
+    glVertexAttribPointer(TANGENT, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 6));
+    glEnableVertexAttribArray(TANGENT);
+    
+    glVertexAttribPointer(BINORMAL, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 9));
+    glEnableVertexAttribArray(BINORMAL);
+    
+    glTexCoordPointer(2, GL_FLOAT, stride, (void*)(sizeof(float) * 12));
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+    
+    glVertexAttribPointer(BONE_INDICIES, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 18));
+    glEnableVertexAttribArray(BONE_INDICIES);
+    
+    glVertexAttribPointer(BONE_WEIGHTS, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 21));
+    glEnableVertexAttribArray(BONE_WEIGHTS);
+    
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
+    glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
+    
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);  
+    
+    glDisableVertexAttribArray(NORMAL);
+    glDisableVertexAttribArray(TANGENT);
+    glDisableVertexAttribArray(BINORMAL);
+    glDisableVertexAttribArray(BONE_INDICIES);  
+    glDisableVertexAttribArray(BONE_WEIGHTS);  
+    
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    
+    glUseProgram(0);
   }
 
 }
@@ -946,7 +943,7 @@ void deferred_renderer_render_light(light* l) {
   float left = ((light_pos.x + 1) / 2) * graphics_viewport_width() - 8;
   float right = ((light_pos.x + 1) / 2) * graphics_viewport_width() + 8;
   
-  texture* lightbulb = asset_hndl_ptr(asset_hndl_new(P("$CORANGE/ui/lightbulb.dds")));
+  texture* lightbulb = asset_hndl_ptr(asset_hndl_new_load(P("$CORANGE/ui/lightbulb.dds")));
   glActiveTexture(GL_TEXTURE0 + 0 );
   glBindTexture(GL_TEXTURE_2D, texture_handle(lightbulb));
   glEnable(GL_TEXTURE_2D);

@@ -13,7 +13,7 @@
 #define ui_text_h
 
 #include "cengine.h"
-#include "asset_manager.h"
+#include "casset.h"
 
 static int text_align_left = 0;
 static int text_align_right = 1;

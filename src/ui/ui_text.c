@@ -1,6 +1,6 @@
 #include "ui/ui_text.h"
 
-#include "graphics_manager.h"
+#include "cgraphics.h"
 
 #include "assets/texture.h"
 #include "assets/font.h"
@@ -21,7 +21,7 @@ ui_text* ui_text_new() {
   text->top_left = vec2_zero();
   text->bottom_right = vec2_zero();
   
-  text->font = asset_hndl_new(P("$CORANGE/fonts/console_font.fnt"));
+  text->font = asset_hndl_new_load(P("$CORANGE/fonts/console_font.fnt"));
   
   text->position = vec2_new(0.0,0.0);
   text->scale = vec2_new(1.0,1.0);

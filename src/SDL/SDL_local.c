@@ -233,11 +233,11 @@ void SDL_GL_PrintInfo() {
   const char* version = (const char*)glGetString(GL_VERSION);
   const char* shader_version = (const char*)glGetString(GL_SHADING_LANGUAGE_VERSION);
   
-  printf("OpenGL Info");
-  printf("Vendor: %s", vendor);
-  printf("Renderer: %s", renderer);
-  printf("Version: %s", version);
-  printf("Shader Version: %s", shader_version);
+  printf("OpenGL Info\n");
+  printf("Vendor: %s\n", vendor);
+  printf("Renderer: %s\n", renderer);
+  printf("Version: %s\n", version);
+  printf("Shader Version: %s\n", shader_version);
 }
 
 void SDL_GL_PrintExtensions() {
@@ -459,6 +459,9 @@ GLGETSHADERINFOLOGFN glGetShaderInfoLog = NULL;
 GLATTACHSHADERFN glAttachShader = NULL;
 GLLINKPROGRAMFN glLinkProgram = NULL;
 GLGETPROGRAMINFOLOGFN glGetProgramInfoLog = NULL;
+GLISPROGRAMFN glIsProgram = NULL;
+GLISSHADERFN glIsShader = NULL;
+GLGETATTACHEDSHADERSFN glGetAttachedShaders = NULL;
 GLGETUNIFORMLOCATIONFN glGetUniformLocation = NULL;
 GLUNIFORM1FFN glUniform1f = NULL;
 GLUNIFORM1IFN glUniform1i = NULL;
@@ -537,6 +540,9 @@ void SDL_GL_LoadExtensions() {
   SDL_GL_LoadExtension(GLATTACHSHADERFN, glAttachShader);
   SDL_GL_LoadExtension(GLDELETESHADERFN, glDeleteShader);
   SDL_GL_LoadExtension(GLGETSHADERIVFN, glGetShaderiv);
+  SDL_GL_LoadExtension(GLISPROGRAMFN, glIsProgram);
+  SDL_GL_LoadExtension(GLISSHADERFN, glIsShader);
+  SDL_GL_LoadExtension(GLGETATTACHEDSHADERSFN, glGetAttachedShaders);
   
   SDL_GL_LoadExtension(GLGETUNIFORMLOCATIONFN, glGetUniformLocation);
   SDL_GL_LoadExtension(GLUNIFORM1FFN, glUniform1f);

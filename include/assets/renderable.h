@@ -17,7 +17,6 @@ typedef struct {
   int num_triangles;
   
   bool is_rigged;
-  asset_hndl material;
 } renderable_surface;
 
 renderable_surface* renderable_surface_new(mesh* m);
@@ -27,6 +26,7 @@ void renderable_surface_delete(renderable_surface* surface);
 typedef struct {
   renderable_surface** surfaces;
   int num_surfaces;
+  asset_hndl material;
 } renderable;
 
 renderable* renderable_new();

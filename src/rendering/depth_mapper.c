@@ -1,7 +1,7 @@
 #include "rendering/depth_mapper.h"
 
-#include "graphics_manager.h"
-#include "asset_manager.h"
+#include "cgraphics.h"
+#include "casset.h"
 
 #include "assets/material.h"
 #include "assets/shader.h"
@@ -30,8 +30,8 @@ void depth_mapper_init(camera* c) {
 
   CAMERA = c;
   
-  depth_mat = asset_hndl_new(P("$CORANGE/shaders/depth.mat"));
-  depth_mat_animated = asset_hndl_new(P("$CORANGE/shaders/depth_animated.mat"));
+  depth_mat = asset_hndl_new_load(P("$CORANGE/shaders/depth.mat"));
+  depth_mat_animated = asset_hndl_new_load(P("$CORANGE/shaders/depth_animated.mat"));
   
   shader_program* depth_shader_animated = material_get_entry(asset_hndl_ptr(depth_mat_animated), 0)->program;
   

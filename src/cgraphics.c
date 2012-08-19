@@ -1,4 +1,4 @@
-#include "graphics_manager.h"
+#include "cgraphics.h"
 
 #ifdef _WIN32
   #include "SDL/SDL_syswm.h"
@@ -38,7 +38,7 @@ static void graphics_viewport_start() {
   
 }
 
-void graphics_manager_init() {
+void graphics_init() {
 
   int error = SDL_Init(SDL_INIT_VIDEO);
   if (error == -1) {
@@ -62,7 +62,7 @@ void graphics_manager_init() {
   SDL_WM_UseResourceIcon();
 }
 
-void graphics_manager_finish() {
+void graphics_finish() {
   
   SDL_WM_DeleteResourceIcon();
   

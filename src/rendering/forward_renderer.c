@@ -1,7 +1,7 @@
 #include "rendering/forward_renderer.h"
 
-#include "graphics_manager.h"
-#include "asset_manager.h"
+#include "cgraphics.h"
+#include "casset.h"
 
 #include "assets/material.h"
 #include "assets/shader.h"
@@ -85,15 +85,15 @@ void forward_renderer_init() {
   EXPOSURE_SPEED = 1.0;
   EXPOSURE_TARGET = 0.4;
   
-  COLOR_CORRECTION = asset_hndl_new(P("$CORANGE/resources/identity.lut"));
-  VIGNETTING = asset_hndl_new(P("$CORANGE/resources/vignetting.dds"));
+  COLOR_CORRECTION = asset_hndl_new_load(P("$CORANGE/resources/identity.lut"));
+  VIGNETTING = asset_hndl_new_load(P("$CORANGE/resources/vignetting.dds"));
   
-  GRADIENT = asset_hndl_new(P("$CORANGE/shaders/gradient.mat"));
+  GRADIENT = asset_hndl_new_load(P("$CORANGE/shaders/gradient.mat"));
   
   folder_load(P("$CORANGE/shaders/forward/"));
   
-  SCREEN_TONEMAP = asset_hndl_new(P("$CORANGE/shaders/forward/tonemap.mat"));
-  SCREEN_POST = asset_hndl_new(P("$CORANGE/shaders/forward/post.mat"));
+  SCREEN_TONEMAP = asset_hndl_new_load(P("$CORANGE/shaders/forward/tonemap.mat"));
+  SCREEN_POST = asset_hndl_new_load(P("$CORANGE/shaders/forward/post.mat"));
   
   glClearColor(0.2, 0.2, 0.2, 1.0f);
   glClearDepth(1.0f);
@@ -472,9 +472,9 @@ void forward_renderer_set_exposure(float exposure) {
 }
 
 static int tex_counter = 0;
-static void forward_renderer_use_material(material* mat) {
+static void forward_renderer_use_material_entry(material_entry* me) {
   
-  shader_program* prog = material_get_entry(mat, 0)->program;
+  shader_program* prog = me->program;
   GLuint prog_handle = shader_program_handle(prog);
   
   glUseProgram(prog_handle);
@@ -570,8 +570,6 @@ static void forward_renderer_use_material(material* mat) {
   /* Set material parameters */
   
   tex_counter = 0;
-  
-  material_entry* me = material_get_entry(mat, 0);
   
   for(int i = 0; i < me->num_items; i++) {
     char* key = me->names[i];
@@ -699,10 +697,13 @@ void forward_renderer_render_static(static_object* so) {
       error("Renderable for static object is rigged!");
     }
     
-    forward_renderer_use_material(asset_hndl_ptr(s->material));
+    int mat_id = min(i, ((material*)asset_hndl_ptr(r->material))->num_entries-1);
+    material_entry* me = material_get_entry(asset_hndl_ptr(r->material), mat_id);
+    
+    forward_renderer_use_material_entry(me);
     SDL_GL_CheckError();
     
-    shader_program* prog = material_get_entry(asset_hndl_ptr(s->material), 0)->program;
+    shader_program* prog = me->program;
     GLint recieve_shadows = glGetUniformLocation(shader_program_handle(prog), "recieve_shadows");
     if (recieve_shadows != -1) {
       glUniform1i(recieve_shadows, so->recieve_shadows);
@@ -748,9 +749,12 @@ void forward_renderer_render_static_tess(static_object* so) {
       error("Renderable for static object is rigged!");
     }
     
-    forward_renderer_use_material(asset_hndl_ptr(s->material));
+    int mat_id = min(i, ((material*)asset_hndl_ptr(r->material))->num_entries-1);
+    material_entry* me = material_get_entry(asset_hndl_ptr(r->material), mat_id);
     
-    shader_program* prog = material_get_entry(asset_hndl_ptr(s->material), 0)->program;
+    forward_renderer_use_material_entry(me);
+    
+    shader_program* prog = me->program;
     GLint recieve_shadows = glGetUniformLocation(shader_program_handle(prog), "recieve_shadows");
     if (recieve_shadows != -1) {
       glUniform1i(recieve_shadows, so->recieve_shadows);
@@ -794,9 +798,12 @@ void forward_renderer_render_instance(instance_object* io) {
       error("Renderable for static object is rigged!");
     }
     
-    forward_renderer_use_material(asset_hndl_ptr(s->material));
+    int mat_id = min(i, ((material*)asset_hndl_ptr(r->material))->num_entries-1);
+    material_entry* me = material_get_entry(asset_hndl_ptr(r->material), mat_id);
     
-    shader_program* prog = material_get_entry(asset_hndl_ptr(s->material), 0)->program;
+    forward_renderer_use_material_entry(me);
+    
+    shader_program* prog = me->program;
     GLint recieve_shadows = glGetUniformLocation(shader_program_handle(prog), "recieve_shadows");
     if (recieve_shadows != -1) {
       glUniform1i(recieve_shadows, io->recieve_shadows);
@@ -834,9 +841,12 @@ void forward_renderer_render_physics(physics_object* po) {
       error("Physics object is rigged!");
     } 
     
-    forward_renderer_use_material(asset_hndl_ptr(s->material));
+    int mat_id = min(i, ((material*)asset_hndl_ptr(r->material))->num_entries-1);
+    material_entry* me = material_get_entry(asset_hndl_ptr(r->material), mat_id);
     
-    shader_program* prog = material_get_entry(asset_hndl_ptr(s->material), 0)->program;
+    forward_renderer_use_material_entry(me);
+    
+    shader_program* prog = me->program;
     GLint recieve_shadows = glGetUniformLocation(shader_program_handle(prog), "recieve_shadows");
     glUniform1i(recieve_shadows, po->recieve_shadows);
     
@@ -889,70 +899,71 @@ void forward_renderer_render_animated(animated_object* ao) {
   for(int i = 0; i < r->num_surfaces; i++) {
     
     renderable_surface* s = r->surfaces[i];
-    if(s->is_rigged) {
-
-      forward_renderer_use_material(asset_hndl_ptr(s->material));
-      
-      shader_program* prog = material_get_entry(asset_hndl_ptr(s->material), 0)->program;
-      
-      GLint bone_world_matrices_u = glGetUniformLocation(shader_program_handle(prog), "bone_world_matrices");
-      glUniformMatrix4fv(bone_world_matrices_u, skel->num_bones, GL_FALSE, bone_matrix_data);
-      
-      GLint bone_count_u = glGetUniformLocation(shader_program_handle(prog), "bone_count");
-      glUniform1i(bone_count_u, skel->num_bones);
-      
-      GLint recieve_shadows = glGetUniformLocation(shader_program_handle(prog), "recieve_shadows");
-      glUniform1i(recieve_shadows, ao->recieve_shadows);
-      
-      GLsizei stride = sizeof(float) * 24;
-      
-      glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
-          
-      glVertexPointer(3, GL_FLOAT, stride, (void*)0);
-      glEnableClientState(GL_VERTEX_ARRAY);
-      
-      glNormalPointer(GL_FLOAT, stride, (void*)(sizeof(float) * 3));
-      glEnableClientState(GL_NORMAL_ARRAY);
-      
-      glVertexAttribPointer(ATTR_TANGENT, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 6));
-      glEnableVertexAttribArray(ATTR_TANGENT);
-      
-      glVertexAttribPointer(ATTR_BINORMAL, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 9));
-      glEnableVertexAttribArray(ATTR_BINORMAL);
-      
-      glTexCoordPointer(2, GL_FLOAT, stride, (void*)(sizeof(float) * 12));
-      glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-      
-      glColorPointer(4, GL_FLOAT, stride, (void*)(sizeof(float) * 14));
-      glEnableClientState(GL_COLOR_ARRAY);
-      
-      glVertexAttribPointer(ATTR_BONE_INDICIES, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 18));
-      glEnableVertexAttribArray(ATTR_BONE_INDICIES);
-      
-      glVertexAttribPointer(ATTR_BONE_WEIGHTS, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 21));
-      glEnableVertexAttribArray(ATTR_BONE_WEIGHTS);
-      
-      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
-      glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
-      
-      glDisableClientState(GL_VERTEX_ARRAY);
-      glDisableClientState(GL_NORMAL_ARRAY);
-      glDisableClientState(GL_TEXTURE_COORD_ARRAY);  
-      glDisableClientState(GL_COLOR_ARRAY);  
-      
-      glDisableVertexAttribArray(ATTR_TANGENT);
-      glDisableVertexAttribArray(ATTR_BINORMAL);
-      glDisableVertexAttribArray(ATTR_BONE_INDICIES);  
-      glDisableVertexAttribArray(ATTR_BONE_WEIGHTS);  
-      
-      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-      glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-      forward_renderer_disuse_material();
-    
-    } else {
+    if(!s->is_rigged) {
       error("animated object is not rigged");
     }
+
+    int mat_id = min(i, ((material*)asset_hndl_ptr(r->material))->num_entries-1);
+    material_entry* me = material_get_entry(asset_hndl_ptr(r->material), mat_id);
+    
+    forward_renderer_use_material_entry(me);
+    
+    shader_program* prog = me->program;
+    
+    GLint bone_world_matrices_u = glGetUniformLocation(shader_program_handle(prog), "bone_world_matrices");
+    glUniformMatrix4fv(bone_world_matrices_u, skel->num_bones, GL_FALSE, bone_matrix_data);
+    
+    GLint bone_count_u = glGetUniformLocation(shader_program_handle(prog), "bone_count");
+    glUniform1i(bone_count_u, skel->num_bones);
+    
+    GLint recieve_shadows = glGetUniformLocation(shader_program_handle(prog), "recieve_shadows");
+    glUniform1i(recieve_shadows, ao->recieve_shadows);
+    
+    GLsizei stride = sizeof(float) * 24;
+    
+    glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
+        
+    glVertexPointer(3, GL_FLOAT, stride, (void*)0);
+    glEnableClientState(GL_VERTEX_ARRAY);
+    
+    glNormalPointer(GL_FLOAT, stride, (void*)(sizeof(float) * 3));
+    glEnableClientState(GL_NORMAL_ARRAY);
+    
+    glVertexAttribPointer(ATTR_TANGENT, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 6));
+    glEnableVertexAttribArray(ATTR_TANGENT);
+    
+    glVertexAttribPointer(ATTR_BINORMAL, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 9));
+    glEnableVertexAttribArray(ATTR_BINORMAL);
+    
+    glTexCoordPointer(2, GL_FLOAT, stride, (void*)(sizeof(float) * 12));
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+    
+    glColorPointer(4, GL_FLOAT, stride, (void*)(sizeof(float) * 14));
+    glEnableClientState(GL_COLOR_ARRAY);
+    
+    glVertexAttribPointer(ATTR_BONE_INDICIES, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 18));
+    glEnableVertexAttribArray(ATTR_BONE_INDICIES);
+    
+    glVertexAttribPointer(ATTR_BONE_WEIGHTS, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 21));
+    glEnableVertexAttribArray(ATTR_BONE_WEIGHTS);
+    
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
+    glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
+    
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_NORMAL_ARRAY);
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);  
+    glDisableClientState(GL_COLOR_ARRAY);  
+    
+    glDisableVertexAttribArray(ATTR_TANGENT);
+    glDisableVertexAttribArray(ATTR_BINORMAL);
+    glDisableVertexAttribArray(ATTR_BONE_INDICIES);  
+    glDisableVertexAttribArray(ATTR_BONE_WEIGHTS);  
+    
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    forward_renderer_disuse_material();
     
   }
   
@@ -1059,7 +1070,7 @@ void forward_renderer_render_light(light* l) {
   glEnable(GL_ALPHA_TEST);
   glAlphaFunc(GL_GREATER, 0.25);
   
-  texture* lightbulb = asset_hndl_ptr(asset_hndl_new(P("$CORANGE/ui/lightbulb.dds")));
+  texture* lightbulb = asset_hndl_ptr(asset_hndl_new_load(P("$CORANGE/ui/lightbulb.dds")));
   glActiveTexture(GL_TEXTURE0 + 0 );
   glBindTexture(GL_TEXTURE_2D, texture_handle(lightbulb));
   glEnable(GL_TEXTURE_2D);
@@ -1090,7 +1101,7 @@ void forward_renderer_render_landscape(landscape* ls) {
   mat4 r_world_matrix = mat4_world(ls->position, ls->scale, ls->rotation);
   mat4_to_array(r_world_matrix, world_matrix);
   
-  material* terrain_mat = asset_hndl_ptr(asset_hndl_new(P("$CORANGE/shaders/forward/terrain.mat")));
+  material* terrain_mat = asset_hndl_ptr(asset_hndl_new_load(P("$CORANGE/shaders/forward/terrain.mat")));
   
   shader_program* terrain_prog = material_get_entry(terrain_mat, 0)->program;
   GLuint terrain_handle = shader_program_handle(terrain_prog);
@@ -1155,7 +1166,7 @@ void forward_renderer_render_landscape(landscape* ls) {
   glEnable(GL_TEXTURE_2D);
   glUniform1i(glGetUniformLocation(terrain_handle, "attribs"), 2);
   
-  texture* random = asset_hndl_ptr(asset_hndl_new(P("$CORANGE/resources/random.dds")));
+  texture* random = asset_hndl_ptr(asset_hndl_new_load(P("$CORANGE/resources/random.dds")));
   
   glActiveTexture(GL_TEXTURE0 + 3 );
   glBindTexture(GL_TEXTURE_2D, texture_handle(random));

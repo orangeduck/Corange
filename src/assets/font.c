@@ -33,7 +33,7 @@ font* font_load_file(char* filename) {
       /* remove ending quotation */
       location.ptr[strlen(location.ptr)-1] = '\0';
       
-      f->texture_map = asset_hndl_new(location);
+      f->texture_map = asset_hndl_new_load(location);
     }
     
     int lineheight, base, scalew, scaleh;

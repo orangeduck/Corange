@@ -1,4 +1,3 @@
-string name = post
 shader vertex = $CORANGE/shaders/forward/post.vs
 shader fragment = $CORANGE/shaders/forward/post.fs
 shader colors = $CORANGE/shaders/colors.fs

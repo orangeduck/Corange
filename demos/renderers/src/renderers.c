@@ -1,6 +1,3 @@
-#include <stdio.h>
-#include <math.h>
-
 #include "renderers.h"
 
 static int mouse_x;
@@ -19,6 +16,7 @@ static void swap_renderer() {
   
   if (use_deferred) {
     
+    SDL_GL_CheckError();
     deferred_renderer_finish();
     SDL_GL_CheckError();
     
@@ -58,7 +56,7 @@ static void switch_renderer_event(ui_button* b, SDL_Event event) {
   
   if (event.type == SDL_MOUSEBUTTONDOWN) {
     
-    if (ui_button_contains_position(b, v2(event.motion.x, event.motion.y))) {
+    if (ui_button_contains_position(b, vec2_new(event.motion.x, event.motion.y))) {
       any_button_pressed = true;
       b->pressed = true;
     }
@@ -83,7 +81,7 @@ static void switch_object_event(ui_button* b, SDL_Event event) {
   
   if (event.type == SDL_MOUSEBUTTONDOWN) {
     
-    if (ui_button_contains_position(b, v2(event.motion.x, event.motion.y))) {
+    if (ui_button_contains_position(b, vec2_new(event.motion.x, event.motion.y))) {
       any_button_pressed = true;
       b->pressed = true;
     }
@@ -110,112 +108,117 @@ static void switch_object_event(ui_button* b, SDL_Event event) {
   
 }
 
-static vector3 ik_target;
+static vec3 ik_target;
 
 void renderers_init() {
   
   graphics_viewport_set_dimensions(1280, 720);
   graphics_viewport_set_title("Renderers");
-
-  load_folder("./resources/podium/");
-  load_folder("./resources/cello/");
-  load_folder("./resources/piano/");
-  load_folder("./resources/imrod/");
-  load_folder("./resources/dino/");
   
-  renderable* r_podium = asset_get("./resources/podium/podium.obj");
-  renderable_set_material(r_podium, asset_get("./resources/podium/podium.mat"));
+  folder_load(P("./resources/podium/"));
+  folder_load(P("./resources/cello/"));
+  folder_load(P("./resources/piano/"));
+  folder_load(P("./resources/imrod/"));
+  folder_load(P("./resources/dino/"));
+  
+  asset_hndl r_podium = asset_hndl_new(P("./resources/podium/podium.obj"));
+  ((renderable*)asset_hndl_ptr(r_podium))->material = asset_hndl_new(P("./resources/podium/podium.mat"));
   
   static_object* s_podium = entity_new("podium", static_object);
   s_podium->renderable = r_podium;
   
-  renderable* r_cello = asset_get("./resources/cello/cello.obj");
-  renderable_set_material(r_cello, asset_get("./resources/cello/cello.mat"));
+  asset_hndl r_cello = asset_hndl_new(P("./resources/cello/cello.obj"));
+  ((renderable*)asset_hndl_ptr(r_cello))->material = asset_hndl_new(P("./resources/cello/cello.mat"));
   
   static_object* s_cello = entity_new("cello", static_object);
   s_cello->renderable = r_cello;
-  s_cello->position = v3(0, 3, 0);
-  s_cello->rotation = v4_quaternion_mul(s_cello->rotation, v4_quaternion_yaw(-1.7));
-  s_cello->scale = v3(0.6, 0.6, 0.6);
+  s_cello->position = vec3_new(0, 3, 0);
+  s_cello->rotation = quaternion_mul(s_cello->rotation, quaternion_yaw(-1.7));
+  s_cello->scale = vec3_new(0.6, 0.6, 0.6);
   
-  renderable* r_piano = asset_get("./resources/piano/piano.obj");
-  renderable_set_material(r_piano, asset_get("./resources/piano/piano.mat"));
+  asset_hndl r_piano = asset_hndl_new(P("./resources/piano/piano.obj"));
+  ((renderable*)asset_hndl_ptr(r_piano))->material = asset_hndl_new(P("./resources/piano/piano.mat"));
   
   static_object* s_piano = entity_new("piano", static_object);
   s_piano->renderable = r_piano;
-  s_piano->position = v3(1, 5, 0);
+  s_piano->position = vec3_new(1, 5, 0);
   
-  renderable* r_dino = asset_get("./resources/dino/dino.obj");
-  renderable_set_multi_material(r_dino, asset_get("./resources/dino/dino.mmat"));
+  asset_hndl r_dino = asset_hndl_new(P("./resources/dino/dino.obj"));
+  ((renderable*)asset_hndl_ptr(r_dino))->material = asset_hndl_new(P("./resources/dino/dino.mat"));
   
   static_object* s_dino = entity_new("dino", static_object);
   s_dino->renderable = r_dino;
-  s_dino->scale = v3(4,4,4);
+  s_dino->scale = vec3_new(4,4,4);
   
-  renderable* r_imrod = asset_get("./resources/imrod/imrod.smd");
-  material* mat_imrod = asset_get("./resources/imrod/imrod_animated.mat");  
-  renderable_set_material(r_imrod, mat_imrod);
+  SDL_GL_CheckError();
   
-  skeleton* skel_imrod = asset_get("./resources/imrod/imrod.skl");
-  animation* ani_imrod = asset_get("./resources/imrod/imrod.ani");
+  asset_hndl r_imrod = asset_hndl_new(P("./resources/imrod/imrod.obj"));
+  ((renderable*)asset_hndl_ptr(r_imrod))->material = asset_hndl_new(P("./resources/imrod/imrod_animated.mat"));
   
   animated_object* a_imrod = entity_new("imrod", animated_object);
-  animated_object_load_skeleton(a_imrod, skel_imrod);
+  animated_object_load_skeleton(a_imrod, asset_hndl_new(P("./resources/imrod/imrod.skl")));
+  
   a_imrod->renderable = r_imrod;
-  a_imrod->animation = ani_imrod;
-  a_imrod->rotation = v4_quaternion_mul(a_imrod->rotation, v4_quaternion_roll(1.57));
+  a_imrod->animation = asset_hndl_new(P("./resources/imrod/imrod.ani"));
+  a_imrod->rotation = quaternion_mul(a_imrod->rotation, quaternion_roll(1.57));
   
   /* Put some text on the screen */
   
+  SDL_GL_CheckError();
+  
   ui_button* framerate = ui_elem_new("framerate", ui_button);
-  ui_button_move(framerate, v2(10,10));
-  ui_button_resize(framerate, v2(30,25));
+  ui_button_move(framerate, vec2_new(10,10));
+  ui_button_resize(framerate, vec2_new(30,25));
   ui_button_set_label(framerate, "FRAMERATE");
   ui_button_disable(framerate);
   
   ui_button* renderer = ui_elem_new("renderer", ui_button);
-  ui_button_move(renderer, v2(10, graphics_viewport_height() - 35));
-  ui_button_resize(renderer, v2(75,25));
+  ui_button_move(renderer, vec2_new(10, graphics_viewport_height() - 35));
+  ui_button_resize(renderer, vec2_new(75,25));
   ui_button_set_label(renderer, "Renderer");
   ui_button_disable(renderer);
   
   ui_button* forward_renderer = ui_elem_new("forward_renderer", ui_button);
-  ui_button_move(forward_renderer, v2(95, graphics_viewport_height() - 35));
-  ui_button_resize(forward_renderer, v2(65,25));
+  ui_button_move(forward_renderer, vec2_new(95, graphics_viewport_height() - 35));
+  ui_button_resize(forward_renderer, vec2_new(65,25));
   ui_button_set_label(forward_renderer, "Forward");
   
+  SDL_GL_CheckError();
+  
   ui_button* deferred_renderer = ui_elem_new("deferred_renderer", ui_button);
-  ui_button_move(deferred_renderer, v2(170, graphics_viewport_height() - 35));
-  ui_button_resize(deferred_renderer, v2(75,25));
+  ui_button_move(deferred_renderer, vec2_new(170, graphics_viewport_height() - 35));
+  ui_button_resize(deferred_renderer, vec2_new(75,25));
   ui_button_set_label(deferred_renderer, "Deferred");
   
   ui_elem_add_event("forward_renderer", switch_renderer_event);
   ui_elem_add_event("deferred_renderer", switch_renderer_event);
   
   ui_button* object = ui_elem_new("object", ui_button);
-  ui_button_move(object, v2(10, graphics_viewport_height() - 70));
-  ui_button_resize(object, v2(60,25));
+  ui_button_move(object, vec2_new(10, graphics_viewport_height() - 70));
+  ui_button_resize(object, vec2_new(60,25));
   ui_button_set_label(object, "Object");
   ui_button_disable(object);
   
   ui_button* piano = ui_elem_new("piano", ui_button);
-  ui_button_move(piano, v2(80, graphics_viewport_height() - 70));
-  ui_button_resize(piano, v2(50,25));
+  ui_button_move(piano, vec2_new(80, graphics_viewport_height() - 70));
+  ui_button_resize(piano, vec2_new(50,25));
   ui_button_set_label(piano, "Piano");
   
+  SDL_GL_CheckError();
+  
   ui_button* cello = ui_elem_new("cello", ui_button);
-  ui_button_move(cello, v2(140, graphics_viewport_height() - 70));
-  ui_button_resize(cello, v2(50,25));
+  ui_button_move(cello, vec2_new(140, graphics_viewport_height() - 70));
+  ui_button_resize(cello, vec2_new(50,25));
   ui_button_set_label(cello, "Cello");
   
   ui_button* imrod = ui_elem_new("imrod", ui_button);
-  ui_button_move(imrod, v2(200, graphics_viewport_height() - 70));
-  ui_button_resize(imrod, v2(50,25));
+  ui_button_move(imrod, vec2_new(200, graphics_viewport_height() - 70));
+  ui_button_resize(imrod, vec2_new(50,25));
   ui_button_set_label(imrod, "Imrod");
   
   ui_button* dino = ui_elem_new("dino", ui_button);
-  ui_button_move(dino, v2(260, graphics_viewport_height() - 70));
-  ui_button_resize(dino, v2(40,25));
+  ui_button_move(dino, vec2_new(260, graphics_viewport_height() - 70));
+  ui_button_resize(dino, vec2_new(40,25));
   ui_button_set_label(dino, "Dino");
   
   ui_elem_add_event("piano", switch_object_event);
@@ -223,37 +226,44 @@ void renderers_init() {
   ui_elem_add_event("imrod", switch_object_event);
   ui_elem_add_event("dino", switch_object_event);
   
+  SDL_GL_CheckError();
+  
   /* New Camera and light */
   
   camera* cam = entity_new("camera", camera);
-  cam->position = v3(25.0, 25.0, 10.0);
-  cam->target = v3(0, 5, 0);
+  cam->position = vec3_new(25.0, 25.0, 10.0);
+  cam->target = vec3_new(0, 5, 0);
   
   light* sun = entity_new("sun", light);
   light_set_type(sun, light_type_spot);
-  sun->position = v3(20,23,16);
-  sun->ambient_color = v3(0.5, 0.5, 0.5);
-  sun->diffuse_color = v3(1.0,  0.894, 0.811);
-  sun->specular_color = v3_mul(v3(1.0,  0.894, 0.811), 4);
+  sun->position = vec3_new(20,23,16);
+  sun->ambient_color = vec3_new(0.5, 0.5, 0.5);
+  sun->diffuse_color = vec3_new(1.0,  0.894, 0.811);
+  sun->specular_color = vec3_mul(vec3_new(1.0,  0.894, 0.811), 4);
   sun->power = 5;
+  
+  SDL_GL_CheckError();
   
   light* backlight = entity_new("backlight", light);
   light_set_type(backlight, light_type_point);
-  backlight->position = v3(-22,10,-13);
-  backlight->ambient_color = v3(0.2, 0.2, 0.2);
-  backlight->diffuse_color = v3(0.729, 0.729, 1.0);
-  backlight->specular_color = v3_mul(v3(0.729, 0.729, 1.0), 1);
+  backlight->position = vec3_new(-22,10,-13);
+  backlight->ambient_color = vec3_new(0.2, 0.2, 0.2);
+  backlight->diffuse_color = vec3_new(0.729, 0.729, 1.0);
+  backlight->specular_color = vec3_mul(vec3_new(0.729, 0.729, 1.0), 1);
   backlight->power = 2;
   
   /* Renderer Setup */
+  
+  SDL_GL_CheckError();
   
   shadow_mapper_init(sun);
   
   use_deferred = 1;
   swap_renderer();
   
-  ik_target = v3(0.0, 0.5, -2.8);
+  ik_target = vec3_new(0.0, 0.5, -2.8);
   
+  SDL_GL_CheckError();
 }
 
 light* selected_light = NULL;
@@ -267,8 +277,8 @@ static void select_light(int x, int y) {
   entities_get(light_ents, &num_light_ents, light);
   
   camera* cam = entity_get("camera");
-  matrix_4x4 viewm = camera_view_matrix(cam);
-  matrix_4x4 projm = camera_proj_matrix(cam, graphics_viewport_ratio() );
+  mat4 viewm = camera_view_matrix(cam);
+  mat4 projm = camera_proj_matrix(cam, graphics_viewport_ratio() );
   
   selected_light = NULL;
   float range = 0.1;
@@ -277,13 +287,13 @@ static void select_light(int x, int y) {
     
     light* l = light_ents[i];
     
-    vector4 light_pos = v4(l->position.x, l->position.y, l->position.z, 1);
-    light_pos = m44_mul_v4(viewm, light_pos);
-    light_pos = m44_mul_v4(projm, light_pos);
+    vec4 light_pos = vec4_new(l->position.x, l->position.y, l->position.z, 1);
+    light_pos = mat4_mul_vec4(viewm, light_pos);
+    light_pos = mat4_mul_vec4(projm, light_pos);
     
-    light_pos = v4_div(light_pos, light_pos.w);
+    light_pos = vec4_div(light_pos, light_pos.w);
     
-    float distance = v2_dist(v2(light_pos.x, light_pos.y), v2(x_clip, y_clip));
+    float distance = vec2_dist(vec2_new(light_pos.x, light_pos.y), vec2_new(x_clip, y_clip));
     if (distance < range) {
       range = distance;
       selected_light = l;
@@ -319,10 +329,10 @@ void renderers_event(SDL_Event event) {
 
   case SDL_MOUSEBUTTONDOWN:
     if (event.button.button == SDL_BUTTON_WHEELUP) {
-      cam->position = v3_sub(cam->position, v3_normalize(cam->position));
+      cam->position = vec3_sub(cam->position, vec3_normalize(cam->position));
     }
     if (event.button.button == SDL_BUTTON_WHEELDOWN) {
-      cam->position = v3_add(cam->position, v3_normalize(cam->position));
+      cam->position = vec3_add(cam->position, vec3_normalize(cam->position));
     }
   break;
   
@@ -355,11 +365,11 @@ void renderers_update() {
     float a1 = -(float)mouse_x * 0.005;
     float a2 = (float)mouse_y * 0.005;
     
-    cam->position = m33_mul_v3(m33_rotation_y( a1 ), cam->position );
+    cam->position = mat3_mul_vec3(mat3_rotation_y( a1 ), cam->position );
     
-    vector3 rotation_axis = v3_normalize(v3_cross( v3_sub(cam->position, cam->target) , v3(0,1,0) ));
+    vec3 rotation_axis = vec3_normalize(vec3_cross( vec3_sub(cam->position, cam->target) , vec3_new(0,1,0) ));
     
-    cam->position = m33_mul_v3(m33_rotation_axis_angle(rotation_axis, a2 ), cam->position );
+    cam->position = mat3_mul_vec3(mat3_rotation_axis_angle(rotation_axis, a2 ), cam->position );
   }
   
   /*
@@ -370,28 +380,28 @@ void renderers_update() {
     matrix_4x4 inv_view = m44_inverse(view);
     matrix_4x4 inv_proj = m44_inverse(proj);
     
-    vector3 ik_screen = ik_target;
-    ik_screen = m44_mul_v3(view, ik_screen);
-    ik_screen = m44_mul_v3(proj, ik_screen);
+    vec3 ik_screen = ik_target;
+    ik_screen = m44_mul_vec3(view, ik_screen);
+    ik_screen = m44_mul_vec3(proj, ik_screen);
     
     ik_screen.x +=  (float)mouse_x * 0.001;
     ik_screen.y += -(float)mouse_y * 0.001;
     
-    vector3 ik_world = ik_screen;
-    ik_world = m44_mul_v3(inv_proj, ik_world);
-    ik_world = m44_mul_v3(inv_view, ik_world);
+    vec3 ik_world = ik_screen;
+    ik_world = m44_mul_vec3(inv_proj, ik_world);
+    ik_world = m44_mul_vec3(inv_view, ik_world);
     
     ik_target = ik_world;
   }
   */
   
   if (g_down && selected_light) {
-    vector3 move_dir = v3_sub(cam->target, cam->position); move_dir.y = 0;
+    vec3 move_dir = vec3_sub(cam->target, cam->position); move_dir.y = 0;
     
-    vector3 move_forward = v3_normalize(move_dir);
-    vector3 move_left = v3_cross(move_forward, v3(0,1,0));
+    vec3 move_forward = vec3_normalize(move_dir);
+    vec3 move_left = vec3_cross(move_forward, vec3_new(0,1,0));
     
-    vector3 move = v3_add( v3_mul(move_forward, -mouse_y), v3_mul(move_left, mouse_x));
+    vec3 move = vec3_add( vec3_mul(move_forward, -mouse_y), vec3_mul(move_left, mouse_x));
     
     selected_light->position.x += (float)move.x * 0.1;
     selected_light->position.z += (float)move.z * 0.1;
@@ -415,7 +425,7 @@ void renderers_update() {
   bone* foot_r = skeleton_bone_name(imrod->pose, "foot_r");
   matrix_4x4 inv_world = m44_inverse(m44_world(imrod->position, imrod->scale, imrod->rotation));
   
-  vector3 local_target = m44_mul_v3(inv_world, ik_target);
+  vec3 local_target = m44_mul_vec3(inv_world, ik_target);
   
   inverse_kinematics_solve(thigh_r, foot_r, local_target);
   */
@@ -466,7 +476,7 @@ void renderers_render() {
     deferred_renderer_render_light(backlight);
     
     if (selected_light != NULL) {
-      deferred_renderer_render_axis(m44_world(selected_light->position, v3_one(), v4_quaternion_id()));
+      deferred_renderer_render_axis(mat4_world(selected_light->position, vec3_one(), quaternion_id()));
     }
     
     deferred_renderer_end();
@@ -490,11 +500,11 @@ void renderers_render() {
       forward_renderer_render_animated(a_imrod);
       SDL_GL_CheckError();
       
-      matrix_4x4 foot_pos = bone_transform(skeleton_bone_name(a_imrod->pose, "foot_r"));
+      mat4 foot_pos = bone_transform(skeleton_bone_name(a_imrod->pose, "foot_r"));
       
       /*
-      vector3 pos = m44_mul_v3(foot_pos, v3_zero());
-      pos = m44_mul_v3(m44_world(a_imrod->position, a_imrod->scale, a_imrod->rotation), pos);
+      vec3 pos = m44_mul_vec3(foot_pos, vec3_zero());
+      pos = m44_mul_vec3(m44_world(a_imrod->position, a_imrod->scale, a_imrod->rotation), pos);
       
       glDisable(GL_DEPTH_TEST);
       glPointSize(5.0);
@@ -520,7 +530,7 @@ void renderers_render() {
     SDL_GL_CheckError();
     
     if (selected_light != NULL) {
-      forward_renderer_render_axis(m44_world(selected_light->position, v3_one(), v4_quaternion_id()));
+      forward_renderer_render_axis(mat4_world(selected_light->position, vec3_one(), quaternion_id()));
       SDL_GL_CheckError();
     }
     

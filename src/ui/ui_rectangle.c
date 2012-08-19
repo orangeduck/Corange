@@ -1,6 +1,7 @@
 #include "ui/ui_rectangle.h"
 
-#include "graphics_manager.h"
+#include "cgraphics.h"
+
 #include "assets/texture.h"
 
 ui_rectangle* ui_rectangle_new() {

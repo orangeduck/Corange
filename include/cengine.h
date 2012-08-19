@@ -16,6 +16,7 @@
 #include <assert.h>
 #include <math.h>
 #include <time.h>
+#include <signal.h>
 
 /* SDL includes */
 #include "SDL/SDL.h"
@@ -48,9 +49,9 @@ void error_();
 void warning_();
 void debug_();
 
-#define error(MSG, ...) printf("[ERROR] at '%s' (%s:%i) ", __func__, __FILE__, __LINE__); printf(MSG, ##__VA_ARGS__); printf("\n"); fflush(stdout); error_(); exit(EXIT_FAILURE)
-#define warning(MSG, ...) printf("[WARNING] at '%s' (%s:%i) ", __func__, __FILE__, __LINE__); printf(MSG, ##__VA_ARGS__); printf("\n"); fflush(stdout); warning_()
-#define debug(MSG, ...) printf("[DEBUG] at '%s' (%s:%i) ", __func__, __FILE__, __LINE__); printf(MSG, ##__VA_ARGS__); printf("\n"); fflush(stdout); debug_()
+#define error(MSG, ...) printf("[ERROR] (%s:%s:%i) ", __FILE__, __func__, __LINE__); printf(MSG, ##__VA_ARGS__); printf("\n"); fflush(stdout); error_(); exit(EXIT_FAILURE)
+#define warning(MSG, ...) printf("[WARNING] (%s:%s:%i) ", __FILE__, __func__, __LINE__); printf(MSG, ##__VA_ARGS__); printf("\n"); fflush(stdout); warning_()
+#define debug(MSG, ...) printf("[DEBUG] (%s:%s:%i) ", __FILE__, __func__, __LINE__); printf(MSG, ##__VA_ARGS__); printf("\n"); fflush(stdout); debug_()
 
 #define alloc_check(PTR) if((PTR) == NULL) { error("Out of Memory!"); }
 
@@ -449,13 +450,8 @@ bool vertex_equal(vertex v1, vertex v2);
 void vertex_print(vertex v);
 
 typedef struct {
-  char* name;
-  char* material;
-  
   int num_verts;
   int num_triangles;
-  int num_triangles_3;
-  
   vertex* verticies;
   int* triangles;
 } mesh;
@@ -476,7 +472,6 @@ void mesh_translate(mesh* m, vec3 translation);
 void mesh_scale(mesh* m, float scale);
 
 typedef struct {
-  char* name;
   int num_meshes;
   mesh** meshes;
 } model;

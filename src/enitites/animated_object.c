@@ -33,7 +33,7 @@ void animated_object_load_skeleton(animated_object* ao, asset_hndl ah) {
     skeleton_delete(ao->pose);
   }
   ao->skeleton = ah;
-  ao->pose = skeleton_copy(asset_hndl_ptr(ah));
+  ao->pose = skeleton_copy(asset_hndl_ptr(ao->skeleton));
 }
 
 void animated_object_update(animated_object* ao, float timestep) {

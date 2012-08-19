@@ -1,4 +1,3 @@
-string name = skydome
 shader vert = $CORANGE/shaders/skydome.vs
 shader frag = $CORANGE/shaders/skydome.fs
 int mat_id = 1

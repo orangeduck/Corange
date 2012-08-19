@@ -2266,51 +2266,34 @@ void vertex_print(vertex v) {
 }
 
 void mesh_print(mesh* m) {
-  
-  printf("Mesh Name: %s\n", m->name);
-  printf("Material Name: %s\n", m->material);
   printf("Num Verts: %i\n", m->num_verts);
   printf("Num Tris: %i\n", m->num_triangles);
   for(int i=0; i < m->num_verts; i++) {
     vertex_print(m->verticies[i]); printf("\n");
   }
   printf("Triangle Indicies:");
-  for(int i=0; i < m->num_triangles_3; i++) {
+  for(int i=0; i < m->num_triangles * 3; i++) {
     printf("%i ", m->triangles[i]);
   }
   printf("\n");
-  
 }
 
 mesh* mesh_new() {
   
   mesh* m = malloc(sizeof(mesh));
-  
-  m->name = malloc(strlen("Untitled Mesh") + 1);
-  strcpy(m->name, "Untitled Mesh");
-  
-  m->material = malloc(strlen("None") + 1);
-  strcpy(m->material, "None");
-  
   m->num_verts = 0;
   m->num_triangles = 0;
-  m->num_triangles_3 = 0;
   m->verticies = malloc(sizeof(vertex) * m->num_verts);
-  m->triangles = malloc(sizeof(int) * m->num_triangles_3);
+  m->triangles = malloc(sizeof(int) * m->num_triangles * 3);
   
   return m;
   
 }
 
 void mesh_delete(mesh* m) {
-  
-  free(m->name);
-  free(m->material);
   free(m->verticies);
   free(m->triangles);
-  
   free(m);
-
 }
 
 void mesh_generate_tangents(mesh* m) {
@@ -2323,7 +2306,7 @@ void mesh_generate_tangents(mesh* m) {
   
   /* Loop over faces, calculate tangent and append to verticies of that face */
   int i = 0;
-  while( i < m->num_triangles_3) {
+  while( i < m->num_triangles * 3) {
     
     int t_i1 = m->triangles[i];
     int t_i2 = m->triangles[i+1];
@@ -2371,7 +2354,7 @@ void mesh_generate_normals(mesh* m) {
   /* Loop over faces, calculate normals and append to verticies of that face */
   
   int i = 0;
-  while( i < m->num_triangles_3) {
+  while( i < m->num_triangles * 3) {
     
     int t_i1 = m->triangles[i];
     int t_i2 = m->triangles[i+1];
@@ -2412,7 +2395,7 @@ void mesh_generate_orthagonal_tangents(mesh* m) {
   
   /* Loop over faces, calculate tangent and append to verticies of that face */
   int i = 0;
-  while( i < m->num_triangles_3) {
+  while( i < m->num_triangles * 3) {
     
     int t_i1 = m->triangles[i];
     int t_i2 = m->triangles[i+1];
@@ -2482,7 +2465,7 @@ float mesh_surface_area(mesh* m) {
   float total = 0.0;
   
   int i = 0;
-  while( i < m->num_triangles_3) {
+  while( i < m->num_triangles * 3) {
   
     int t_i1 = m->triangles[i];
     int t_i2 = m->triangles[i+1];
@@ -2504,7 +2487,7 @@ float mesh_surface_area(mesh* m) {
 void mesh_translate(mesh* m, vec3 translation) {
 
   int i = 0;
-  while(i < m->num_triangles_3) {
+  while(i < m->num_triangles * 3) {
   
     int t_i1 = m->triangles[i];
     int t_i2 = m->triangles[i+1];
@@ -2522,7 +2505,7 @@ void mesh_translate(mesh* m, vec3 translation) {
 void mesh_scale(mesh* m, float scale) {
 
   int i = 0;
-  while(i < m->num_triangles_3) {
+  while(i < m->num_triangles * 3) {
   
     int t_i1 = m->triangles[i];
     int t_i2 = m->triangles[i+1];
@@ -2540,7 +2523,7 @@ void mesh_scale(mesh* m, float scale) {
 void mesh_transform(mesh* m, mat4 transform) {
 
   int i = 0;
-  while(i < m->num_triangles_3) {
+  while(i < m->num_triangles * 3) {
   
     int t_i1 = m->triangles[i];
     int t_i2 = m->triangles[i+1];
@@ -2563,25 +2546,16 @@ void model_print(model* m) {
 
 model* model_new() {
   model* m = malloc(sizeof(model));
-  
-  m->name = malloc(strlen("Untitled Model") + 1);
-  strcpy(m->name, "Untitled Model");
-  
   m->num_meshes = 0;
   m->meshes = malloc(sizeof(mesh*) * m->num_meshes);
-  
   return m;
 }
 
 void model_delete(model* m) {
-  
   for(int i=0; i<m->num_meshes; i++) {
     mesh_delete( m->meshes[i] );
   }
-  
-  free(m->name);
   free(m);
-  
 }
 
 void model_generate_normals(model* m) {
@@ -2686,7 +2660,7 @@ vec3 triangle_tangent(vertex vert1, vertex vert2, vertex vert3) {
   
   return vec3_normalize(tdir);
 
-};
+}
 
 vec3 triangle_binormal(vertex vert1, vertex vert2, vertex vert3) {
   

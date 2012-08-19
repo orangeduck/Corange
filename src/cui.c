@@ -1,4 +1,4 @@
-#include "ui_manager.h"
+#include "cui.h"
 
 #include "data/dict.h"
 #include "data/list.h"
@@ -32,14 +32,14 @@ static list* ui_elem_names;
 static dict* ui_elems;
 static dict* ui_elem_types;
 
-void ui_manager_init() {
+void ui_init() {
   ui_elems = dict_new(512);
   ui_elem_types = dict_new(512);
   
   ui_elem_names = list_new(512);
 }
 
-void ui_manager_finish() {
+void ui_finish() {
 
   for(int i = 0; i < num_ui_events; i++) {
     free(ui_events[i].name);
@@ -90,7 +90,7 @@ void ui_render() {
 
 }
 
-void ui_manager_handler_cast(int type_id, void* ui_elem_new_func(), void ui_elem_del_func(void* ui_elem), void ui_elem_update_func(void* ui_elem), void ui_elem_render_func(void* ui_elem)) {
+void ui_handler_cast(int type_id, void* ui_elem_new_func(), void ui_elem_del_func(void* ui_elem), void ui_elem_update_func(void* ui_elem), void ui_elem_render_func(void* ui_elem)) {
   
   if (num_ui_elem_handlers >= MAX_UI_ELEM_HANDLERS) {
     warning("Max number of ui element handlers reached. Handler for type %s not added.", type_id_name(type_id));

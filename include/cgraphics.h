@@ -1,14 +1,17 @@
-#ifndef graphics_manager_h
-#define graphics_manager_h
+/**
+*** :: Graphics ::
+***
+***   Graphics System
+***
+**/
 
-#include <stdbool.h>
+#ifndef cgraphics_h
+#define cgraphics_h
 
-#include "SDL/SDL.h"
-#include "SDL/SDL_local.h"
-#include "SDL/SDL_opengl.h"
+#include "cengine.h"
 
-void graphics_manager_init();
-void graphics_manager_finish();
+void graphics_init();
+void graphics_finish();
 
 void graphics_set_vsync(bool vsync);
 void graphics_set_multisamples(int samples);

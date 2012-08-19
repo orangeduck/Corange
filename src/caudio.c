@@ -1,4 +1,4 @@
-#include "audio_manager.h"
+#include "caudio.h"
 
 static SDL_AudioSpec system_spec;
 static bool enabled = true;
@@ -66,7 +66,7 @@ static void audio_mix(void* unused, char* stream, int stream_size) {
   
 }
 
-void audio_manager_init() {
+void audio_init() {
   
   int error = SDL_Init(SDL_INIT_AUDIO);
   if (error == -1) {
@@ -96,7 +96,7 @@ void audio_manager_init() {
   
 }
 
-void audio_manager_finish() {
+void audio_finish() {
   
 	SDL_PauseAudio(1);
   

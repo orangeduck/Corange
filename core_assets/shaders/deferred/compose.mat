@@ -1,4 +1,3 @@
-string name = compose
 shader vert = $CORANGE/shaders/deferred/compose.vs
 shader frag = $CORANGE/shaders/deferred/compose.fs
 shader shadows = $CORANGE/shaders/shadows.fs

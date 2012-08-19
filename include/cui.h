@@ -1,31 +1,31 @@
 /**
-*** :: UI Manager ::
+*** :: UI ::
 ***
-***   Manages UI objects much like the entity manager
+***   Manages UI objects much like entities
 ***
 **/
 
-#ifndef ui_manager_h
-#define ui_manager_h
+#ifndef cui_h
+#define cui_h
 
 #include "cengine.h"
 
 typedef void ui_elem;
 
-void ui_manager_init();
-void ui_manager_finish();
+void ui_init();
+void ui_finish();
 
 void ui_event(SDL_Event e);
 void ui_update();
 void ui_render();
 
-#define ui_manager_handler(type, new, delete, update, render) \
-  ui_manager_handler_cast(typeid(type), (ui_elem*(*)())new, \
+#define ui_handler(type, new, delete, update, render) \
+  ui_handler_cast(typeid(type), (ui_elem*(*)())new, \
                                       (void(*)(ui_elem*))delete, \
                                       (void(*)(ui_elem*))update, \
                                       (void(*)(ui_elem*))render)
                                       
-void ui_manager_handler_cast(int type_id,
+void ui_handler_cast(int type_id,
   void* ui_elem_new_func(), 
   void ui_elem_del_func(void* ui_elem), 
   void ui_elem_update_func(void* ui_elem), 

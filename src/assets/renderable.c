@@ -25,6 +25,7 @@ renderable* renderable_new() {
   
   renderable* r = malloc(sizeof(renderable));
   
+  r->material = asset_hndl_new_load(P("$CORANGE/shaders/basic.mat"));
   r->num_surfaces = 0;
   r->surfaces = NULL;
     
@@ -72,10 +73,8 @@ model* renderable_to_model(renderable* r) {
     
     me->num_verts = s->num_verticies;
     me->num_triangles = s->num_triangles;
-    me->num_triangles_3 = s->num_triangles * 3;
-    
     me->verticies = realloc(me->verticies, sizeof(vertex) * me->num_verts);
-    me->triangles = realloc(me->triangles, sizeof(int) * me->num_triangles_3);
+    me->triangles = realloc(me->triangles, sizeof(int) * me->num_triangles * 3);
     
     for(int j = 0; j < me->num_verts; j++) {
       me->verticies[j].position.x = vb_data[(j*18)+0];
@@ -103,7 +102,7 @@ model* renderable_to_model(renderable* r) {
       me->verticies[j].color.w = vb_data[(j*18)+17];
     }
     
-    for(int j = 0; j < me->num_triangles_3; j++) {
+    for(int j = 0; j < me->num_triangles * 3; j++) {
       me->triangles[j] = ib_data[j];
     }
     
@@ -176,14 +175,6 @@ renderable_surface* renderable_surface_new(mesh* m) {
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   
-  fpath matpath = P(m->material);
-  
-  if( file_isloaded(matpath) ) {
-    s->material = asset_hndl_new(matpath);
-  } else {
-    s->material = asset_hndl_new(P("$CORANGE/shaders/basic.mat"));
-  }
-  
   return s;
 }
 
@@ -194,7 +185,7 @@ renderable_surface* renderable_surface_new_rigged(mesh* m, vertex_weight* weight
   glGenBuffers(1, &s->vertex_vbo);
   glGenBuffers(1, &s->triangle_vbo);
   
-  s->is_rigged = 1;
+  s->is_rigged = true;
   s->num_verticies = m->num_verts;
   s->num_triangles = m->num_triangles;
   
@@ -256,16 +247,7 @@ renderable_surface* renderable_surface_new_rigged(mesh* m, vertex_weight* weight
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   
-  fpath matpath = P(m->material);
-  
-  if( file_isloaded(matpath) ) {
-    s->material = asset_hndl_new(matpath);
-  } else {
-    s->material = asset_hndl_new(P("$CORANGE/shaders/basic.mat"));
-  }
-  
   return s;
-
 }
 
 void renderable_surface_delete(renderable_surface* s) {
@@ -280,6 +262,7 @@ void renderable_surface_delete(renderable_surface* s) {
 renderable* bmf_load_file(char* filename) {
 
   renderable* r = malloc(sizeof(renderable));
+  r->material = asset_hndl_new(P("$CORANGE/resources/basic.mat"));
   
   SDL_RWops* file = SDL_RWFromFile(filename, "rb");
   
@@ -309,7 +292,7 @@ renderable* bmf_load_file(char* filename) {
   for(int i = 0; i < r->num_surfaces; i++) {
     renderable_surface* s = malloc(sizeof(renderable_surface));
     s->is_rigged = false;
-    s->material = asset_hndl_new(P("$CORANGE/resources/basic.mat"));
+    
     
     SDL_RWread(file, &s->num_verticies, 4, 1);
     float* vert_data = malloc(sizeof(float) * 18 * s->num_verticies);
@@ -382,10 +365,6 @@ void bmf_save_file(renderable* r, char* filename) {
 renderable* obj_load_file(char* filename) {
   
   model* obj_model = malloc(sizeof(model));
-  
-  obj_model->name = malloc( strlen(filename) +1 );
-  strcpy(obj_model->name, filename);
-  
   obj_model->num_meshes = 0;
   obj_model->meshes = malloc(sizeof(mesh*) * 0);
   
@@ -427,14 +406,11 @@ renderable* obj_load_file(char* filename) {
     }
     
     else if (sscanf(line, "mtllib %512s", matlib) == 1) {
-      /* Material library, do nothing */
+      /* Do Nothing */
     }
     
     else if (sscanf(line, "o %512s", object) == 1) {
-      if (active_mesh != NULL) {
-        active_mesh->name = realloc(active_mesh->name, strlen(object) + 1);
-        strcpy(active_mesh->name, object);
-      }
+      /* Do Nothing */
     }
     
     else if (sscanf(line, "v %f %f %f", &px, &py, &pz) == 3) {
@@ -470,15 +446,14 @@ renderable* obj_load_file(char* filename) {
       
         active_mesh->num_verts = vert_index;
         active_mesh->num_triangles = tri_list->num_items / 3;
-        active_mesh->num_triangles_3 = tri_list->num_items;
         
         active_mesh->verticies = malloc(sizeof(vertex) * active_mesh->num_verts);
         for(int i = 0; i < active_mesh->num_verts; i++) {
           active_mesh->verticies[i] = vertex_list_get(vert_list, i);
         }
         
-        active_mesh->triangles = malloc(sizeof(int) * active_mesh->num_triangles_3);
-        for(int i = 0; i < active_mesh->num_triangles_3; i++) {
+        active_mesh->triangles = malloc(sizeof(int) * active_mesh->num_triangles * 3);
+        for(int i = 0; i < active_mesh->num_triangles * 3; i++) {
           active_mesh->triangles[i] = int_list_get(tri_list, i);
         }
       
@@ -500,19 +475,10 @@ renderable* obj_load_file(char* filename) {
       
       active_mesh = malloc(sizeof(mesh));
       
-      active_mesh->material = malloc(strlen("$CORANGE/shaders/basic.mat") + 1);
-      strcpy(active_mesh->material, "$CORANGE/shaders/basic.mat");
-      
-      active_mesh->name = malloc(strlen("mesh1") + 1);
-      strcpy(active_mesh->name, "mesh1");
-      
     }
     
     else if (sscanf(line, "usemtl %512s", material) == 1) {
-      if (active_mesh != NULL) {
-        active_mesh->material = realloc(active_mesh->material, strlen(material) + 1);
-        strcpy(active_mesh->material, material);
-      }
+      /* Do Nothing */
     }
     
     else if (sscanf(line, "s %i", &smoothing_group) == 1) {
@@ -737,15 +703,14 @@ renderable* obj_load_file(char* filename) {
   
   active_mesh->num_verts = vert_index;
   active_mesh->num_triangles = tri_list->num_items / 3;
-  active_mesh->num_triangles_3 = tri_list->num_items;
   
   active_mesh->verticies = malloc(sizeof(vertex) * active_mesh->num_verts);
   for(int i = 0; i < active_mesh->num_verts; i++) {
     active_mesh->verticies[i] = vertex_list_get(vert_list, i);
   }
   
-  active_mesh->triangles = malloc(sizeof(int) * active_mesh->num_triangles_3);
-  for(int i = 0; i < active_mesh->num_triangles_3; i++) {
+  active_mesh->triangles = malloc(sizeof(int) * active_mesh->num_triangles * 3);
+  for(int i = 0; i < active_mesh->num_triangles * 3; i++) {
     active_mesh->triangles[i] = int_list_get(tri_list, i);
   }
   
@@ -903,24 +868,17 @@ renderable* smd_load_file(char* filename) {
   SDL_RWclose(file);
   
   mesh* smd_mesh = malloc(sizeof(mesh));
-  smd_mesh->name = malloc(strlen(filename) + 1);
-  strcpy(smd_mesh->name, filename);
-  
-  smd_mesh->material = malloc(strlen("$CORANGE/shaders/basic_animated.mat") + 1);
-  strcpy(smd_mesh->material, "$CORANGE/shaders/basic_animated.mat");
-  
   smd_mesh->num_verts = vert_list->num_items;
   smd_mesh->num_triangles = tri_list->num_items / 3;
-  smd_mesh->num_triangles_3 = tri_list->num_items;
   
   smd_mesh->verticies = malloc(sizeof(vertex) * smd_mesh->num_verts);
-  smd_mesh->triangles = malloc(sizeof(int) * smd_mesh->num_triangles_3);
+  smd_mesh->triangles = malloc(sizeof(int) * smd_mesh->num_triangles * 3);
   
   for(int i = 0; i < smd_mesh->num_verts; i++) {
     smd_mesh->verticies[i] = vertex_list_get(vert_list, i);
   }
   
-  for(int i = 0; i < smd_mesh->num_triangles_3; i+=3) {
+  for(int i = 0; i < smd_mesh->num_triangles * 3; i+=3) {
     smd_mesh->triangles[i] = int_list_get(tri_list, i+2);
     smd_mesh->triangles[i+1] = int_list_get(tri_list, i+1);
     smd_mesh->triangles[i+2] = int_list_get(tri_list, i);
