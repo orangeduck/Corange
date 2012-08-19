@@ -1,15 +1,8 @@
-#include <stdlib.h>
-#include <math.h>
-
-#include "SDL/SDL_local.h"
-
-#include "error.h"
-#include "matrix.h"
-#include "int_list.h"
-#include "vertex_list.h"
-#include "vertex_hashtable.h"
-
 #include "assets/collision_body.h"
+
+#include "data/int_list.h"
+#include "data/vertex_list.h"
+#include "data/vertex_hashtable.h"
 
 void collision_mesh_delete(collision_mesh* cm) {
   
@@ -25,13 +18,13 @@ void collision_mesh_delete(collision_mesh* cm) {
   
 }
 
-static vector3 collision_mesh_vertex_average(collision_mesh* cm) {
+static vec3 collision_mesh_vertex_average(collision_mesh* cm) {
 
-  vector3 midpoint = v3_zero();
+  vec3 midpoint = vec3_zero();
   for(int i = 0; i < cm->num_verticies; i++) {
-    midpoint = v3_add(midpoint, cm->verticies[i]);
+    midpoint = vec3_add(midpoint, cm->verticies[i]);
   }
-  midpoint = v3_div(midpoint, cm->num_verticies);
+  midpoint = vec3_div(midpoint, cm->num_verticies);
   
   return midpoint;
 
@@ -49,11 +42,11 @@ static plane collision_mesh_division(collision_mesh* cm) {
   float z_diff = bb.front.position.z - bb.back.position.z;
   
   if ((x_diff >= y_diff) && (x_diff >= z_diff)) {
-    p.direction = v3(1,0,0);
+    p.direction = vec3_new(1,0,0);
   } else if ((y_diff >= x_diff) && (y_diff >= z_diff)) {
-    p.direction = v3(0,1,0); 
+    p.direction = vec3_new(0,1,0); 
   } else if ((z_diff >= x_diff) && (z_diff >= y_diff)) {
-    p.direction = v3(0,0,1);
+    p.direction = vec3_new(0,0,1);
   }
   
   return p;
@@ -75,9 +68,9 @@ void collision_mesh_subdivide(collision_mesh* cm, int iterations) {
   
   for(int i = 0; i < cm->num_verticies / 3; i++) {
   
-    vector3 p1 = cm->verticies[i*3+0];
-    vector3 p2 = cm->verticies[i*3+1];
-    vector3 p3 = cm->verticies[i*3+2];
+    vec3 p1 = cm->verticies[i*3+0];
+    vec3 p2 = cm->verticies[i*3+1];
+    vec3 p3 = cm->verticies[i*3+2];
     
     if (point_behind_plane(p1, cm->division) &&
         point_behind_plane(p2, cm->division) &&
@@ -97,32 +90,32 @@ void collision_mesh_subdivide(collision_mesh* cm, int iterations) {
   cm->front->is_leaf = true;
   cm->front->front = NULL;
   cm->front->back = NULL;
-  cm->front->division.position = v3_zero();
-  cm->front->division.direction = v3_zero();
-  cm->front->verticies = malloc(sizeof(vector3) * num_front);
+  cm->front->division.position = vec3_zero();
+  cm->front->division.direction = vec3_zero();
+  cm->front->verticies = malloc(sizeof(vec3) * num_front);
   cm->front->num_verticies = num_front;
-  cm->front->triangle_normals = malloc(sizeof(vector3) * (num_front / 3));
+  cm->front->triangle_normals = malloc(sizeof(vec3) * (num_front / 3));
   
   cm->back = malloc(sizeof(collision_mesh));
   cm->back->is_leaf = true;
   cm->back->front = NULL;
   cm->back->back = NULL;
-  cm->back->division.position = v3_zero();
-  cm->back->division.direction = v3_zero();
-  cm->back->verticies = malloc(sizeof(vector3) * num_back);
+  cm->back->division.position = vec3_zero();
+  cm->back->division.direction = vec3_zero();
+  cm->back->verticies = malloc(sizeof(vec3) * num_back);
   cm->back->num_verticies = num_back;
-  cm->back->triangle_normals = malloc(sizeof(vector3) * (num_back / 3));
+  cm->back->triangle_normals = malloc(sizeof(vec3) * (num_back / 3));
   
   int front_i = 0;
   int back_i = 0;
   
   for(int i = 0; i < cm->num_verticies / 3; i++) {
   
-    vector3 p1 = cm->verticies[i*3+0];
-    vector3 p2 = cm->verticies[i*3+1];
-    vector3 p3 = cm->verticies[i*3+2];
+    vec3 p1 = cm->verticies[i*3+0];
+    vec3 p2 = cm->verticies[i*3+1];
+    vec3 p3 = cm->verticies[i*3+2];
     
-    vector3 norm = cm->triangle_normals[i];
+    vec3 norm = cm->triangle_normals[i];
     
     if (point_behind_plane(p1, cm->division) &&
         point_behind_plane(p2, cm->division) &&
@@ -175,14 +168,14 @@ sphere collision_mesh_sphere(collision_mesh* cm) {
   if (cm->is_leaf) {
     
     box bb = collision_mesh_box(cm);
-    vector3 center;
+    vec3 center;
     center.x = (bb.left.position.x + bb.right.position.x) / 2;
     center.y = (bb.top.position.y + bb.bottom.position.y) / 2;
     center.z = (bb.front.position.z + bb.back.position.z) / 2;
     
     float dist = 0;
     for(int i = 0; i < cm->num_verticies; i++) {
-      dist = max(dist, v3_dist(cm->verticies[i], center));
+      dist = max(dist, vec3_dist(cm->verticies[i], center));
     }
     
     sphere bs;
@@ -268,15 +261,15 @@ void collision_body_delete(collision_body* cb) {
 collision_mesh* col_load_file(char* filename) {
   
   collision_mesh* mesh = malloc(sizeof(collision_mesh));
-  mesh->division.position = v3_zero();
-  mesh->division.direction = v3_zero();
+  mesh->division.position = vec3_zero();
+  mesh->division.direction = vec3_zero();
   mesh->front = NULL;
   mesh->back = NULL;
   mesh->is_leaf = true;
   
-  vertex_list* vert_data = vertex_list_new_blocksize(1024);
-  vertex_list* vert_list = vertex_list_new_blocksize(1024);
-  int_list* tri_list = int_list_new_blocksize(1024);
+  vertex_list* vert_data = vertex_list_new();
+  vertex_list* vert_list = vertex_list_new();
+  int_list* tri_list = int_list_new();
   vertex_hashtable* vert_hashes = vertex_hashtable_new(4096);
   
   int num_pos, num_norm, num_tex;
@@ -317,7 +310,7 @@ collision_mesh* col_load_file(char* filename) {
     
       while(vert_data->num_items <= num_pos) { vertex_list_push_back(vert_data, vertex_new()); }
       vertex vert = vertex_list_get(vert_data, num_pos);
-      vert.position = v3(px, py, pz);
+      vert.position = vec3_new(px, py, pz);
       vertex_list_set(vert_data, num_pos, vert);
       num_pos++;
     }
@@ -326,7 +319,7 @@ collision_mesh* col_load_file(char* filename) {
     
       while(vert_data->num_items <= num_tex) { vertex_list_push_back(vert_data, vertex_new()); }
       vertex vert = vertex_list_get(vert_data, num_tex);
-      vert.uvs = v2(tx, ty);
+      vert.uvs = vec2_new(tx, ty);
       vertex_list_set(vert_data, num_tex, vert);
       num_tex++;
     }
@@ -335,7 +328,7 @@ collision_mesh* col_load_file(char* filename) {
     
       while(vert_data->num_items <= num_norm) { vertex_list_push_back(vert_data, vertex_new()); }
       vertex vert = vertex_list_get(vert_data, num_norm);
-      vert.normal = v3(nx, ny, nz);
+      vert.normal = vec3_new(nx, ny, nz);
       vertex_list_set(vert_data, num_norm, vert);
       num_norm++;
     }
@@ -409,15 +402,15 @@ collision_mesh* col_load_file(char* filename) {
       
       vertex v1, v2, v3;
       v1.position = vertex_list_get(vert_data, pi1).position;
-      v1.uvs = v2_zero();
+      v1.uvs = vec2_zero();
       v1.normal = vertex_list_get(vert_data, ni1).normal;
       
       v2.position = vertex_list_get(vert_data, pi2).position;
-      v2.uvs = v2_zero();
+      v2.uvs = vec2_zero();
       v2.normal = vertex_list_get(vert_data, ni2).normal;
       
       v3.position = vertex_list_get(vert_data, pi3).position;
-      v3.uvs = v2_zero();
+      v3.uvs = vec2_zero();
       v3.normal = vertex_list_get(vert_data, ni3).normal;
       
       int v1_id = vertex_hashtable_get(vert_hashes, v1);
@@ -460,15 +453,15 @@ collision_mesh* col_load_file(char* filename) {
       vertex v1, v2, v3;
       v1.position = vertex_list_get(vert_data, pi1).position;
       v1.uvs = vertex_list_get(vert_data, ti1).uvs;
-      v1.normal = v3_zero();
+      v1.normal = vec3_zero();
       
       v2.position = vertex_list_get(vert_data, pi2).position;
       v2.uvs = vertex_list_get(vert_data, ti2).uvs;
-      v2.normal = v3_zero();
+      v2.normal = vec3_zero();
       
       v3.position = vertex_list_get(vert_data, pi3).position;
       v3.uvs = vertex_list_get(vert_data, ti3).uvs;
-      v3.normal = v3_zero();
+      v3.normal = vec3_zero();
       
       int v1_id = vertex_hashtable_get(vert_hashes, v1);
       if ( v1_id == -1 ) {
@@ -509,16 +502,16 @@ collision_mesh* col_load_file(char* filename) {
       
       vertex v1, v2, v3;
       v1.position = vertex_list_get(vert_data, pi1).position;
-      v1.uvs = v2_zero();
-      v1.normal = v3_zero();
+      v1.uvs = vec2_zero();
+      v1.normal = vec3_zero();
       
       v2.position = vertex_list_get(vert_data, pi2).position;
-      v2.uvs = v2_zero();
-      v2.normal = v3_zero();
+      v2.uvs = vec2_zero();
+      v2.normal = vec3_zero();
       
       v3.position = vertex_list_get(vert_data, pi3).position;
-      v3.uvs = v2_zero();
-      v3.normal = v3_zero();
+      v3.uvs = vec2_zero();
+      v3.normal = vec3_zero();
       
       int v1_id = vertex_hashtable_get(vert_hashes, v1);
       if ( v1_id == -1 ) {
@@ -558,8 +551,8 @@ collision_mesh* col_load_file(char* filename) {
 
   mesh->num_verticies = tri_list->num_items;
   
-  mesh->verticies = malloc(sizeof(vector3) * mesh->num_verticies);
-  mesh->triangle_normals = malloc(sizeof(vector3) * mesh->num_verticies / 3);
+  mesh->verticies = malloc(sizeof(vec3) * mesh->num_verticies);
+  mesh->triangle_normals = malloc(sizeof(vec3) * mesh->num_verticies / 3);
   
   for(int i = 0; i < mesh->num_verticies / 3; i++) {
     int i1 = int_list_get(tri_list, i*3+0);
@@ -574,14 +567,14 @@ collision_mesh* col_load_file(char* filename) {
     mesh->verticies[i*3+1] = v2.position;
     mesh->verticies[i*3+2] = v3.position;
     
-    vector3 avg_norm = v3_add(v1.normal, v3_add(v2.normal, v3.normal)); 
-    avg_norm = v3_div(avg_norm, 3);
+    vec3 avg_norm = vec3_add(v1.normal, vec3_add(v2.normal, v3.normal)); 
+    avg_norm = vec3_div(avg_norm, 3);
     
-    vector3 norm1 = triangle_normal(v1, v2, v3);
-    vector3 norm2 = v3_neg(triangle_normal(v1, v2, v3));
+    vec3 norm1 = triangle_normal(v1, v2, v3);
+    vec3 norm2 = vec3_neg(triangle_normal(v1, v2, v3));
     
-    float norm1_angle = 1 - v3_dot(avg_norm, norm1);
-    float norm2_angle = 1 - v3_dot(avg_norm, norm2);
+    float norm1_angle = 1 - vec3_dot(avg_norm, norm1);
+    float norm2_angle = 1 - vec3_dot(avg_norm, norm2);
     
     if (norm1_angle < norm2_angle) {
       mesh->triangle_normals[i] = norm1;
@@ -614,16 +607,16 @@ static float best_collision_time(float t0, float t1, float timestep) {
   return time;
 }
 
-void sphere_collide_sphere(collision* out, sphere object, vector3 object_velocity, sphere target, float timestep) {
+void sphere_collide_sphere(collision* out, sphere object, vec3 object_velocity, sphere target, float timestep) {
   
   float r = object.radius + target.radius;
   
-  vector3 V = object_velocity;
-  vector3 O = v3_sub(object.center, target.center);
+  vec3 V = object_velocity;
+  vec3 O = vec3_sub(object.center, target.center);
   
-  float A = v3_dot(V, V);
-  float B = 2 * v3_dot(V, O);
-  float C = v3_dot(O, O) - (r*r);
+  float A = vec3_dot(V, V);
+  float B = 2 * vec3_dot(V, O);
+  float C = vec3_dot(O, O) - (r*r);
   
   float descrim = B*B - 4*A*C;
   if (descrim < 0) {
@@ -649,31 +642,28 @@ void sphere_collide_sphere(collision* out, sphere object, vector3 object_velocit
   if (time < out->time) {
     out->collided = true;
     out->time = time;
-    out->object_position = v3_add(object.center, v3_mul(object_velocity, time - 0.001));
-    out->surface_normal = v3_normalize(v3_sub(out->object_position, target.center));
-    out->surface_position = v3_add(target.center, v3_mul(out->surface_normal, target.radius));
+    out->object_position = vec3_add(object.center, vec3_mul(object_velocity, time - 0.001));
+    out->surface_normal = vec3_normalize(vec3_sub(out->object_position, target.center));
+    out->surface_position = vec3_add(target.center, vec3_mul(out->surface_normal, target.radius));
   }
   
 }
 
-void sphere_collide_box(collision* out, sphere object, vector3 object_velocity, box target, float timestep) {
-  
-  
-  
-
+/* TODO: Implement */
+void sphere_collide_box(collision* out, sphere object, vec3 object_velocity, box target, float timestep) {
 }
     
-static bool point_in_triangle(vector3 point, vector3 normal, vector3 v0, vector3 v1, vector3 v2) {
+static bool point_in_triangle(vec3 point, vec3 normal, vec3 v0, vec3 v1, vec3 v2) {
   
-  vector3 d0 = v3_sub(v2, v0);
-  vector3 d1 = v3_sub(v1, v0);
-  vector3 d2 = v3_sub(point, v0);
+  vec3 d0 = vec3_sub(v2, v0);
+  vec3 d1 = vec3_sub(v1, v0);
+  vec3 d2 = vec3_sub(point, v0);
 
-  float dot00 = v3_dot(d0, d0);
-  float dot01 = v3_dot(d0, d1);
-  float dot02 = v3_dot(d0, d2);
-  float dot11 = v3_dot(d1, d1);
-  float dot12 = v3_dot(d1, d2);
+  float dot00 = vec3_dot(d0, d0);
+  float dot01 = vec3_dot(d0, d1);
+  float dot02 = vec3_dot(d0, d2);
+  float dot11 = vec3_dot(d1, d1);
+  float dot12 = vec3_dot(d1, d2);
 
   float inv_dom = 1.0f / (dot00 * dot11 - dot01 * dot01);
   float u = (dot11 * dot02 - dot01 * dot12) * inv_dom;
@@ -682,15 +672,15 @@ static bool point_in_triangle(vector3 point, vector3 normal, vector3 v0, vector3
   return (u >= 0.0f) && (v >= 0.0f) && (u + v < 1.0f);
 }
 
-static void sphere_collide_vertex(collision* out, sphere object, vector3 object_velocity, vector3 vertex, float timestep) {
+static void sphere_collide_vertex(collision* out, sphere object, vec3 object_velocity, vec3 vertex, float timestep) {
   
-  vector3 O = v3_sub(object.center, vertex);
-  vector3 V = object_velocity;
+  vec3 O = vec3_sub(object.center, vertex);
+  vec3 V = object_velocity;
   float r_r = object.radius_sqrd;
   
-  float A = v3_dot(V, V);
-  float B = 2 * v3_dot(V, O);
-  float C = v3_dot(O, O) - r_r;
+  float A = vec3_dot(V, V);
+  float B = 2 * vec3_dot(V, O);
+  float C = vec3_dot(O, O) - r_r;
   
   float descrim = B*B - 4*A*C;
   if (descrim < 0) {
@@ -715,27 +705,27 @@ static void sphere_collide_vertex(collision* out, sphere object, vector3 object_
   if (time < out->time) {
     out->collided = true;
     out->time = time;
-    out->object_position = v3_add(object.center, v3_mul(object_velocity, time - 0.001));;
-    out->surface_normal = v3_normalize(v3_sub(object.center, vertex));
-    out->surface_position = v3_add(out->object_position, v3_mul(out->surface_normal, -object.radius));;
+    out->object_position = vec3_add(object.center, vec3_mul(object_velocity, time - 0.001));;
+    out->surface_normal = vec3_normalize(vec3_sub(object.center, vertex));
+    out->surface_position = vec3_add(out->object_position, vec3_mul(out->surface_normal, -object.radius));;
   }
   
 }
 
-static void sphere_collide_edge(collision* out, sphere object, vector3 object_velocity, vector3 v0, vector3 v1, float timestep) {
+static void sphere_collide_edge(collision* out, sphere object, vec3 object_velocity, vec3 v0, vec3 v1, float timestep) {
   
   float r_r = object.radius * object.radius;
-  vector3 O = v3_sub(object.center, object.center);
-  v0 = v3_sub(v0, object.center);
-  v1 = v3_sub(v1, object.center);
+  vec3 O = vec3_sub(object.center, object.center);
+  v0 = vec3_sub(v0, object.center);
+  v1 = vec3_sub(v1, object.center);
   
-  vector3 E = v3_sub(v1, v0);
-  vector3 V = object_velocity;
-  vector3 X = v3_sub(v0, O);
+  vec3 E = vec3_sub(v1, v0);
+  vec3 V = object_velocity;
+  vec3 X = vec3_sub(v0, O);
   
-  float A = v3_length_sqrd(E) * -v3_length_sqrd(V) + v3_dot(E, V) * v3_dot(E, V);
-  float B = v3_length_sqrd(E) * 2 * v3_dot(V, X) - 2 * v3_dot(E, V) * v3_dot(E, X);
-  float C = v3_length_sqrd(E) * (r_r - v3_length_sqrd(X)) + v3_dot(E, X) * v3_dot(E, X);
+  float A = vec3_length_sqrd(E) * -vec3_length_sqrd(V) + vec3_dot(E, V) * vec3_dot(E, V);
+  float B = vec3_length_sqrd(E) * 2 * vec3_dot(V, X) - 2 * vec3_dot(E, V) * vec3_dot(E, X);
+  float C = vec3_length_sqrd(E) * (r_r - vec3_length_sqrd(X)) + vec3_dot(E, X) * vec3_dot(E, X);
   
   float descrim = B*B - 4*A*C;
   if (descrim < 0) {
@@ -757,21 +747,21 @@ static void sphere_collide_edge(collision* out, sphere object, vector3 object_ve
   
   float time = best_collision_time(t0, t1, timestep);
   
-  float range = (v3_dot(E, V) * time - v3_dot(E, X)) / v3_length_sqrd(E);
+  float range = (vec3_dot(E, V) * time - vec3_dot(E, X)) / vec3_length_sqrd(E);
   if ((range < 0) || (range > 1)) return;
   
   if (time < out->time) {
     out->collided = true;
     out->time = time;
-    out->object_position = v3_add(object.center, v3_mul(object_velocity, time - 0.001));
-    out->surface_position = v3_add(v0, v3_mul(E, range));
+    out->object_position = vec3_add(object.center, vec3_mul(object_velocity, time - 0.001));
+    out->surface_position = vec3_add(v0, vec3_mul(E, range));
     
     /* Not sure how accurate this is */
-    vector3 incident = v3_sub(out->surface_position, out->object_position);
-    vector3 outward = v3_cross(incident, E);
-    vector3 normal = v3_cross(outward, E);
+    vec3 incident = vec3_sub(out->surface_position, out->object_position);
+    vec3 outward = vec3_cross(incident, E);
+    vec3 normal = vec3_cross(outward, E);
     
-    out->surface_normal = v3_normalize(normal);
+    out->surface_normal = vec3_normalize(normal);
   }
   
 }
@@ -780,10 +770,10 @@ static const int before = 0;
 static const int behind = 1; 
 static const int intersecting = 2; 
 
-static int sphere_plane_location(sphere object, vector3 object_velocity, plane p, float timestep) {
+static int sphere_plane_location(sphere object, vec3 object_velocity, plane p, float timestep) {
   
-  float angle = v3_dot(p.direction, object_velocity);
-  float dist = v3_dot(p.direction, v3_sub(object.center, p.position)); 
+  float angle = vec3_dot(p.direction, object_velocity);
+  float dist = vec3_dot(p.direction, vec3_sub(object.center, p.position)); 
   
   float t0 = ( object.radius - dist) / angle;
   float t1 = (-object.radius - dist) / angle;
@@ -796,10 +786,9 @@ static int sphere_plane_location(sphere object, vector3 object_velocity, plane p
   }
   
   return intersecting;
-  
 }
 
-void sphere_collide_mesh(collision* out, sphere object, vector3 object_velocity, collision_mesh* target, matrix_4x4 target_world, float timestep) {
+void sphere_collide_mesh(collision* out, sphere object, vec3 object_velocity, collision_mesh* target, mat4 target_world, float timestep) {
   
   if (!target->is_leaf) {
     
@@ -824,23 +813,23 @@ void sphere_collide_mesh(collision* out, sphere object, vector3 object_velocity,
   
   for(int i=0; i < target->num_verticies / 3; i++) {
     
-    vector3 v0 = target->verticies[i*3+0];
-    vector3 v1 = target->verticies[i*3+1];
-    vector3 v2 = target->verticies[i*3+2];
+    vec3 v0 = target->verticies[i*3+0];
+    vec3 v1 = target->verticies[i*3+1];
+    vec3 v2 = target->verticies[i*3+2];
         
-    v0 = m44_mul_v3(target_world, v0);
-    v1 = m44_mul_v3(target_world, v1);
-    v2 = m44_mul_v3(target_world, v2);
+    v0 = mat4_mul_vec3(target_world, v0);
+    v1 = mat4_mul_vec3(target_world, v1);
+    v2 = mat4_mul_vec3(target_world, v2);
     
-    vector3 norm = target->triangle_normals[i];
-    matrix_4x4 norm_world = target_world;
+    vec3 norm = target->triangle_normals[i];
+    mat4 norm_world = target_world;
     norm_world.xw = 0; norm_world.yw = 0; norm_world.zw = 0;
     
-    norm = m44_mul_v3(norm_world, norm);
-    norm = v3_normalize(norm);
+    norm = mat4_mul_vec3(norm_world, norm);
+    norm = vec3_normalize(norm);
     
-    float angle = v3_dot(norm, object_velocity);
-    float dist = v3_dot(norm, v3_sub(object.center, v0)); 
+    float angle = vec3_dot(norm, object_velocity);
+    float dist = vec3_dot(norm, vec3_sub(object.center, v0)); 
     
     float t0 = ( object.radius - dist) / angle;
     float t1 = (-object.radius - dist) / angle;
@@ -852,8 +841,8 @@ void sphere_collide_mesh(collision* out, sphere object, vector3 object_velocity,
       
       float time = best_collision_time(t0, t1, timestep);
       
-      vector3 collision_point = v3_add(object.center, v3_mul(object_velocity, time - 0.001));
-      vector3 surface_point = v3_add(collision_point, v3_mul(norm, -object.radius));
+      vec3 collision_point = vec3_add(object.center, vec3_mul(object_velocity, time - 0.001));
+      vec3 surface_point = vec3_add(collision_point, vec3_mul(norm, -object.radius));
       
       if ((time < out->time) && point_in_triangle(surface_point, norm, v0, v1, v2)) {
         out->collided = true;

@@ -1,8 +1,3 @@
-#include <math.h>
-
-#include "error.h"
-#include "vector.h"
-
 #include "audio_manager.h"
 
 static SDL_AudioSpec system_spec;

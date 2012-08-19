@@ -1,13 +1,7 @@
-#include <stdlib.h>
-#include <string.h>
-
-#include "error.h"
-#include "vector.h"
-#include "vertex_hashtable.h"
-
-#include "asset_manager.h"
-
 #include "assets/renderable.h"
+
+#include "data/vertex_hashtable.h"
+
 
 void renderable_add_mesh(renderable* r, mesh* m) {
   
@@ -46,22 +40,6 @@ void renderable_delete(renderable* r) {
   
   free(r);
 
-}
-
-void renderable_set_material(renderable* r, material* m) {
-  for(int i = 0; i < r->num_surfaces; i++) {
-    renderable_surface_set_material(r->surfaces[i], m);
-  }
-}
-
-void renderable_set_multi_material(renderable* r, multi_material* mmat) {
-  
-  int min_range = min(r->num_surfaces, mmat->num_materials);
-  
-  for(int i = 0; i < min_range; i++) {
-    renderable_surface_set_material(r->surfaces[i], mmat->materials[i]);
-  }
-  
 }
 
 model* renderable_to_model(renderable* r) {
@@ -119,10 +97,10 @@ model* renderable_to_model(renderable* r) {
       me->verticies[j].uvs.x = vb_data[(j*18)+12];
       me->verticies[j].uvs.y = vb_data[(j*18)+13];
       
-      me->verticies[j].color.r = vb_data[(j*18)+14];
-      me->verticies[j].color.g = vb_data[(j*18)+15];
-      me->verticies[j].color.b = vb_data[(j*18)+16];
-      me->verticies[j].color.a = vb_data[(j*18)+17];
+      me->verticies[j].color.x = vb_data[(j*18)+14];
+      me->verticies[j].color.y = vb_data[(j*18)+15];
+      me->verticies[j].color.z = vb_data[(j*18)+16];
+      me->verticies[j].color.w = vb_data[(j*18)+17];
     }
     
     for(int j = 0; j < me->num_triangles_3; j++) {
@@ -154,12 +132,12 @@ renderable_surface* renderable_surface_new(mesh* m) {
   
   for(int i = 0; i < m->num_verts; i++) {
   
-    vector3 pos = m->verticies[i].position;
-    vector3 norm = m->verticies[i].normal;
-    vector3 tang = m->verticies[i].tangent;
-    vector3 bino = m->verticies[i].binormal;
-    vector2 uvs = m->verticies[i].uvs;
-    vector4 col = m->verticies[i].color;
+    vec3 pos = m->verticies[i].position;
+    vec3 norm = m->verticies[i].normal;
+    vec3 tang = m->verticies[i].tangent;
+    vec3 bino = m->verticies[i].binormal;
+    vec2 uvs = m->verticies[i].uvs;
+    vec4 col = m->verticies[i].color;
     
     vb_data[(i*18)+0] = pos.x;
     vb_data[(i*18)+1] = pos.y;
@@ -180,10 +158,10 @@ renderable_surface* renderable_surface_new(mesh* m) {
     vb_data[(i*18)+12] = uvs.x;
     vb_data[(i*18)+13] = uvs.y;
     
-    vb_data[(i*18)+14] = col.r;
-    vb_data[(i*18)+15] = col.g;
-    vb_data[(i*18)+16] = col.b;
-    vb_data[(i*18)+17] = col.a;
+    vb_data[(i*18)+14] = col.x;
+    vb_data[(i*18)+15] = col.y;
+    vb_data[(i*18)+16] = col.z;
+    vb_data[(i*18)+17] = col.w;
   
   }
   
@@ -198,12 +176,12 @@ renderable_surface* renderable_surface_new(mesh* m) {
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   
-  material* base;
+  fpath matpath = P(m->material);
   
-  if( asset_loaded(m->material) ) {
-    s->base = asset_get(m->material);
+  if( file_isloaded(matpath) ) {
+    s->material = asset_hndl_new(matpath);
   } else {
-    s->base = asset_load_get("$CORANGE/shaders/basic.mat");
+    s->material = asset_hndl_new(P("$CORANGE/shaders/basic.mat"));
   }
   
   return s;
@@ -226,12 +204,12 @@ renderable_surface* renderable_surface_new_rigged(mesh* m, vertex_weight* weight
   
   for(int i = 0; i < m->num_verts; i++) {
   
-    vector3 pos = m->verticies[i].position;
-    vector3 norm = m->verticies[i].normal;
-    vector3 tang = m->verticies[i].tangent;
-    vector3 bino = m->verticies[i].binormal;
-    vector2 uvs = m->verticies[i].uvs;
-    vector4 col = m->verticies[i].color;
+    vec3 pos = m->verticies[i].position;
+    vec3 norm = m->verticies[i].normal;
+    vec3 tang = m->verticies[i].tangent;
+    vec3 bino = m->verticies[i].binormal;
+    vec2 uvs = m->verticies[i].uvs;
+    vec4 col = m->verticies[i].color;
     
     vb_data[(i*24)+0] = pos.x;
     vb_data[(i*24)+1] = pos.y;
@@ -278,12 +256,12 @@ renderable_surface* renderable_surface_new_rigged(mesh* m, vertex_weight* weight
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   
-  material* base;
+  fpath matpath = P(m->material);
   
-  if( asset_loaded(m->material) ) {
-    s->base = asset_get(m->material);
+  if( file_isloaded(matpath) ) {
+    s->material = asset_hndl_new(matpath);
   } else {
-    s->base = asset_load_get("$CORANGE/shaders/basic.mat");
+    s->material = asset_hndl_new(P("$CORANGE/shaders/basic.mat"));
   }
   
   return s;
@@ -297,10 +275,6 @@ void renderable_surface_delete(renderable_surface* s) {
   
   free(s);
   
-}
-
-void renderable_surface_set_material(renderable_surface* s, material* m) {
-  s->base = m;
 }
 
 renderable* bmf_load_file(char* filename) {
@@ -335,7 +309,7 @@ renderable* bmf_load_file(char* filename) {
   for(int i = 0; i < r->num_surfaces; i++) {
     renderable_surface* s = malloc(sizeof(renderable_surface));
     s->is_rigged = false;
-    s->base = asset_load_get("$CORANGE/resources/basic.mat");
+    s->material = asset_hndl_new(P("$CORANGE/resources/basic.mat"));
     
     SDL_RWread(file, &s->num_verticies, 4, 1);
     float* vert_data = malloc(sizeof(float) * 18 * s->num_verticies);
@@ -417,9 +391,9 @@ renderable* obj_load_file(char* filename) {
   
   mesh* active_mesh = NULL;
   
-  vertex_list* vert_data = vertex_list_new_blocksize(1024);
-  vertex_list* vert_list = vertex_list_new_blocksize(1024);
-  int_list* tri_list = int_list_new_blocksize(1024);
+  vertex_list* vert_data = vertex_list_new();
+  vertex_list* vert_list = vertex_list_new();
+  int_list* tri_list = int_list_new();
   vertex_hashtable* vert_hashes = vertex_hashtable_new(4096);
   
   int num_pos, num_norm, num_tex;
@@ -467,7 +441,7 @@ renderable* obj_load_file(char* filename) {
     
       while(vert_data->num_items <= num_pos) { vertex_list_push_back(vert_data, vertex_new()); }
       vertex vert = vertex_list_get(vert_data, num_pos);
-      vert.position = v3(px, py, pz);
+      vert.position = vec3_new(px, py, pz);
       vertex_list_set(vert_data, num_pos, vert);
       num_pos++;
     }
@@ -476,7 +450,7 @@ renderable* obj_load_file(char* filename) {
     
       while(vert_data->num_items <= num_tex) { vertex_list_push_back(vert_data, vertex_new()); }
       vertex vert = vertex_list_get(vert_data, num_tex);
-      vert.uvs = v2(tx, ty);
+      vert.uvs = vec2_new(tx, ty);
       vertex_list_set(vert_data, num_tex, vert);
       num_tex++;
     }
@@ -485,7 +459,7 @@ renderable* obj_load_file(char* filename) {
     
       while(vert_data->num_items <= num_norm) { vertex_list_push_back(vert_data, vertex_new()); }
       vertex vert = vertex_list_get(vert_data, num_norm);
-      vert.normal = v3(nx, ny, nz);
+      vert.normal = vec3_new(nx, ny, nz);
       vertex_list_set(vert_data, num_norm, vert);
       num_norm++;
     }
@@ -520,8 +494,8 @@ renderable* obj_load_file(char* filename) {
       vertex_list_delete(vert_list);
       int_list_delete(tri_list);
       
-      vert_list = vertex_list_new_blocksize(1024);
-      tri_list = int_list_new_blocksize(1024);
+      vert_list = vertex_list_new();
+      tri_list = int_list_new();
       vert_hashes = vertex_hashtable_new(4096);
       
       active_mesh = malloc(sizeof(mesh));
@@ -606,15 +580,15 @@ renderable* obj_load_file(char* filename) {
       
       vertex v1, v2, v3;
       v1.position = vertex_list_get(vert_data, pi1).position;
-      v1.uvs = v2_zero();
+      v1.uvs = vec2_zero();
       v1.normal = vertex_list_get(vert_data, ni1).normal;
       
       v2.position = vertex_list_get(vert_data, pi2).position;
-      v2.uvs = v2_zero();
+      v2.uvs = vec2_zero();
       v2.normal = vertex_list_get(vert_data, ni2).normal;
       
       v3.position = vertex_list_get(vert_data, pi3).position;
-      v3.uvs = v2_zero();
+      v3.uvs = vec2_zero();
       v3.normal = vertex_list_get(vert_data, ni3).normal;
       
       int v1_id = vertex_hashtable_get(vert_hashes, v1);
@@ -659,15 +633,15 @@ renderable* obj_load_file(char* filename) {
       vertex v1, v2, v3;
       v1.position = vertex_list_get(vert_data, pi1).position;
       v1.uvs = vertex_list_get(vert_data, ti1).uvs;
-      v1.normal = v3_zero();
+      v1.normal = vec3_zero();
       
       v2.position = vertex_list_get(vert_data, pi2).position;
       v2.uvs = vertex_list_get(vert_data, ti2).uvs;
-      v2.normal = v3_zero();
+      v2.normal = vec3_zero();
       
       v3.position = vertex_list_get(vert_data, pi3).position;
       v3.uvs = vertex_list_get(vert_data, ti3).uvs;
-      v3.normal = v3_zero();
+      v3.normal = vec3_zero();
       
       int v1_id = vertex_hashtable_get(vert_hashes, v1);
       if ( v1_id == -1 ) {
@@ -710,16 +684,16 @@ renderable* obj_load_file(char* filename) {
       
       vertex v1, v2, v3;
       v1.position = vertex_list_get(vert_data, pi1).position;
-      v1.uvs = v2_zero();
-      v1.normal = v3_zero();
+      v1.uvs = vec2_zero();
+      v1.normal = vec3_zero();
       
       v2.position = vertex_list_get(vert_data, pi2).position;
-      v2.uvs = v2_zero();
-      v2.normal = v3_zero();
+      v2.uvs = vec2_zero();
+      v2.normal = vec3_zero();
       
       v3.position = vertex_list_get(vert_data, pi3).position;
-      v3.uvs = v2_zero();
-      v3.normal = v3_zero();
+      v3.uvs = vec2_zero();
+      v3.normal = vec3_zero();
       
       int v1_id = vertex_hashtable_get(vert_hashes, v1);
       if ( v1_id == -1 ) {
@@ -873,12 +847,12 @@ renderable* smd_load_file(char* filename) {
         
         vertex vert;
         /* Swap y and z axis */
-        vert.position = v3(x, z, y);
-        vert.normal = v3(nx, nz, ny);
-        vert.uvs = v2(u, v);
-        vert.color = v4_one();
-        vert.tangent = v3_zero();
-        vert.binormal = v3_zero();
+        vert.position = vec3_new(x, z, y);
+        vert.normal = vec3_new(nx, nz, ny);
+        vert.uvs = vec2_new(u, v);
+        vert.color = vec4_one();
+        vert.tangent = vec3_zero();
+        vert.binormal = vec3_zero();
         
         int vert_pos = vertex_hashtable_get(hashes, vert);
         

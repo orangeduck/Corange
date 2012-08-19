@@ -1,23 +1,20 @@
 #ifndef ui_spinner_h
 #define ui_spinner_h
 
-#include <stdbool.h>
-
-#include "vector.h"
-
-#include "assets/texture.h"
+#include "cengine.h"
+#include "asset_manager.h"
 
 typedef struct {
+  vec2 top_left;
+  vec2 bottom_right;
   
-  vector2 top_left;
-  vector2 bottom_right;
-  vector4 color;
-  texture* texture;
+  vec4 color;
+  asset_hndl texture;
+  
   float speed;
   float rotation;
   
   bool active;
-  
 } ui_spinner;
 
 ui_spinner* ui_spinner_new();

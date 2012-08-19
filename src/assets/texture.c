@@ -1,9 +1,3 @@
-#include <math.h>
-#include <stdbool.h>
-
-#include "vector.h"
-#include "error.h"
-
 #include "assets/texture.h"
 
 texture* texture_new() {

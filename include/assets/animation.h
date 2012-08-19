@@ -1,3 +1,11 @@
+/**
+*** :: Animation ::
+***  
+***   Contains an array of frames (skeletons).
+***   And frame times.
+***
+**/
+
 #ifndef animation_h
 #define animation_h
 

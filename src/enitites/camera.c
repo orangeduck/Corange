@@ -1,9 +1,3 @@
-#include <math.h>
-#include <stdlib.h>
-
-#include "matrix.h"
-#include "vector.h"
-
 #include "entities/camera.h"
 
 #define DEFAULT_NEAR_CLIP 0.1
@@ -11,7 +5,7 @@
 
 #define DEFAULT_FOV 0.785398163
 
-camera* camera_new(vector3 position, vector3 target) {
+camera* camera_new(vec3 position, vec3 target) {
 
   camera* cam = malloc(sizeof(camera));
   
@@ -28,20 +22,20 @@ void camera_delete(camera* cam) {
   free(cam);
 }
 
-matrix_4x4 camera_view_matrix(camera* c) {
-  return m44_view_look_at(c->position, c->target, v3(0.0f,1.0f,0.0f) );
+mat4 camera_view_matrix(camera* c) {
+  return mat4_view_look_at(c->position, c->target, vec3_new(0.0f,1.0f,0.0f) );
 };
 
 
-matrix_4x4 camera_proj_matrix(camera* c, float aspect_ratio) {
-  return m44_perspective(c->fov, c->near_clip, c->far_clip, aspect_ratio);
+mat4 camera_proj_matrix(camera* c, float aspect_ratio) {
+  return mat4_perspective(c->fov, c->near_clip, c->far_clip, aspect_ratio);
 };
 
 
-matrix_4x4 camera_view_proj_matrix(camera* c, float aspect_ratio) {
+mat4 camera_view_proj_matrix(camera* c, float aspect_ratio) {
   
-  matrix_4x4 view = camera_view_matrix(c);
-  matrix_4x4 proj = camera_proj_matrix(c, aspect_ratio);
-  return m44_mul_m44(view, proj);
+  mat4 view = camera_view_matrix(c);
+  mat4 proj = camera_proj_matrix(c, aspect_ratio);
+  return mat4_mul_mat4(view, proj);
   
 };

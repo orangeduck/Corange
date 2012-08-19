@@ -1,13 +1,12 @@
 #ifndef int_hashtable_h
 #define int_hashtable_h
 
-#include "int_list.h"
+#include "cengine.h"
+#include "data/int_list.h"
 
 typedef struct {
-
 	list* keys;
 	int_list* values;
-
 } int_bucket;
 
 typedef struct {

@@ -1,6 +1,7 @@
 #ifndef shadow_mapper_h
 #define shadow_mapper_h
 
+#include "cengine.h"
 #include "assets/texture.h"
 
 #include "entities/static_object.h"

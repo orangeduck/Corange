@@ -1,15 +1,25 @@
+/**
+*** :: Skeleton ::
+***
+***   A collection of bones in some
+***   particular orientation.
+***
+***   Used as an asset but also generated
+***   dynamically by animation assets and
+***   others.
+***
+**/
+
 #ifndef skeleton_h
 #define skeleton_h
 
-#include "matrix.h"
+#include "cengine.h"
 
 struct bone {
   int id;
   char* name;
-  
-  vector3 position;
-  matrix_4x4 rotation;
-  
+  vec3 position;
+  mat4 rotation;
   struct bone* parent;
 };
 
@@ -18,17 +28,16 @@ typedef struct bone bone;
 
 bone* bone_new(int id, char* name);
 void bone_delete(bone* b);
-matrix_4x4 bone_transform(bone* b);
+mat4 bone_transform(bone* b);
 
-void inverse_kinematics_solve(bone* base, bone* end, vector3 target);
+/* This is fairly work in process */
+void inverse_kinematics_solve(bone* base, bone* end, vec3 target);
 
 typedef struct {
-
   int num_bones;
   bone** bones;
-  matrix_4x4* transforms;
-  matrix_4x4* inv_transforms;
-  
+  mat4* transforms;
+  mat4* inv_transforms;
 } skeleton;
 
 skeleton* skeleton_new();

@@ -1,5 +1,3 @@
-#include "error.h"
-
 #include "entities/instance_object.h"
 
 instance_object* instance_object_new() {
@@ -12,8 +10,8 @@ instance_object* instance_object_new() {
   io->recieve_shadows = true;
   io->cast_shadows = true;
   
-  io->renderable = NULL;
-  io->collision_body = NULL;
+  io->renderable = asset_hndl_null();
+  io->collision_body = asset_hndl_null();
   
   return io;
 }
@@ -23,7 +21,7 @@ void instance_object_delete(instance_object* io) {
   free(io);
 }
 
-void instance_object_add_instance(instance_object* io, vector3 position, vector3 scale, vector4 rotation) {
+void instance_object_add_instance(instance_object* io, vec3 position, vec3 scale, vec4 rotation) {
   
   if (io->num_instances == MAX_INSTANCES) {
     warning("Max number of instances %i reached for instance object!", MAX_INSTANCES);

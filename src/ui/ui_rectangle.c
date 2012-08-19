@@ -1,23 +1,20 @@
-#include "SDL/SDL.h"
-#include "SDL/SDL_opengl.h"
-#include "SDL/SDL_local.h"
+#include "ui/ui_rectangle.h"
 
 #include "graphics_manager.h"
-
-#include "ui/ui_rectangle.h"
+#include "assets/texture.h"
 
 ui_rectangle* ui_rectangle_new() {
 
   ui_rectangle* rect = malloc(sizeof(ui_rectangle));
   
-  rect->top_left = v2(10, 10);
-  rect->bottom_right = v2(20, 20);
-  rect->color = v4_white();
+  rect->top_left = vec2_new(10, 10);
+  rect->bottom_right = vec2_new(20, 20);
+  rect->color = vec4_white();
   
-  rect->texture = NULL;
+  rect->texture = asset_hndl_null();
 
   rect->border_size = 0.0;
-  rect->border_color = v4_black();
+  rect->border_color = vec4_black();
   
   rect->active = true;
   
@@ -29,22 +26,18 @@ void ui_rectangle_delete(ui_rectangle* rect) {
   free(rect);
 }
 
-void ui_rectangle_set_texture(ui_rectangle* rect, texture* t) {
-  rect->texture = t;
-}
-
 void ui_rectangle_update(ui_rectangle* rect) {
   
 }
 
-void ui_rectangle_move(ui_rectangle* rect, vector2 pos) {
-  vector2 size = v2_sub(rect->bottom_right, rect->top_left);
+void ui_rectangle_move(ui_rectangle* rect, vec2 pos) {
+  vec2 size = vec2_sub(rect->bottom_right, rect->top_left);
   rect->top_left = pos;
-  rect->bottom_right = v2_add(pos, size);
+  rect->bottom_right = vec2_add(pos, size);
 }
 
-void ui_rectangle_resize(ui_rectangle* rect, vector2 size) {
-  rect->bottom_right = v2_add(rect->top_left, size);
+void ui_rectangle_resize(ui_rectangle* rect, vec2 size) {
+  rect->bottom_right = vec2_add(rect->top_left, size);
 }
 
 void ui_rectangle_render(ui_rectangle* rect) {
@@ -65,13 +58,13 @@ void ui_rectangle_render(ui_rectangle* rect) {
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   
-  if(rect->texture != NULL) {
+  if(!asset_hndl_isnull(rect->texture)) {
     glActiveTexture(GL_TEXTURE0 + 0);
     glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, texture_handle(rect->texture) );
+    glBindTexture(GL_TEXTURE_2D, texture_handle(asset_hndl_ptr(rect->texture)) );
   }
   
-  glColor4f(rect->color.r, rect->color.g, rect->color.b, rect->color.a);  
+  glColor4f(rect->color.x, rect->color.y, rect->color.z, rect->color.w);  
     
   glBegin(GL_QUADS);
     glTexCoord2f(0, 1); glVertex3f(rect->top_left.x, rect->top_left.y, 0);
@@ -82,7 +75,7 @@ void ui_rectangle_render(ui_rectangle* rect) {
   
   if(rect->border_size > 0) {
   
-    glColor4f(rect->border_color.r, rect->border_color.g, rect->border_color.b, rect->border_color.a);  
+    glColor4f(rect->border_color.x, rect->border_color.y, rect->border_color.z, rect->border_color.w);  
     glLineWidth(rect->border_size);
     
     glBegin(GL_LINE_STRIP);
@@ -108,14 +101,14 @@ void ui_rectangle_render(ui_rectangle* rect) {
 	glMatrixMode(GL_MODELVIEW);
   glPopMatrix();
   
-  if(rect->texture != NULL) {
+  if(!asset_hndl_isnull(rect->texture)) {
     glActiveTexture(GL_TEXTURE0 + 0);
     glDisable(GL_TEXTURE_2D);
   }
  
 }
 
-bool ui_rectangle_contains_position(ui_rectangle* rect, vector2 pos) {
+bool ui_rectangle_contains_position(ui_rectangle* rect, vec2 pos) {
 
   if (!rect->active) { return false; }
 

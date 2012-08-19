@@ -1,20 +1,26 @@
+/**
+*** :: Font ::
+***
+***   Fonts created with Bitmap Font Generator
+***
+***   http://www.angelcode.com/products/bmfont/
+***
+**/
+
 #ifndef font_h
 #define font_h
 
-#include "vector.h"
-
-#include "assets/texture.h"
+#include "cengine.h"
+#include "asset_manager.h"
 
 typedef struct {
-
-  texture* texture_map;
+  asset_hndl texture_map;
   int width;
   int height;
   
-  vector2* locations;
-  vector2* sizes;
-  vector2* offsets;
-
+  vec2* locations;
+  vec2* sizes;
+  vec2* offsets;
 } font;
 
 font* font_load_file(char* filename);

@@ -1,19 +1,11 @@
-#include "SDL/SDL.h"
-#include "SDL/SDL_opengl.h"
-#include "SDL/SDL_local.h"
+#include "rendering/deferred_renderer.h"
 
-#include "error.h"
+#include "graphics_manager.h"
 
 #include "assets/shader.h"
 #include "assets/texture.h"
 #include "assets/material.h"
-
-#include "asset_manager.h"
-#include "graphics_manager.h"
-
-#include "rendering/deferred_renderer.h"
-
-static camera* CAMERA = NULL;
+#include "assets/renderable.h"
 
 static float PROJ_MATRIX[16];
 static float VIEW_MATRIX[16];
@@ -22,14 +14,14 @@ static float WORLD_MATRIX[16];
 static float LIGHT_VIEW_MATRIX[16];
 static float LIGHT_PROJ_MATRIX[16];
 
-static material* MAT_STATIC;
-static material* MAT_ANIMATED;
-static material* MAT_CLEAR;
-static material* MAT_UI;
-static material* MAT_SSAO;
-static material* MAT_COMPOSE;
-static material* MAT_TONEMAP;
-static material* MAT_POST;
+static asset_hndl MAT_STATIC;
+static asset_hndl MAT_ANIMATED;
+static asset_hndl MAT_CLEAR;
+static asset_hndl MAT_UI;
+static asset_hndl MAT_SSAO;
+static asset_hndl MAT_COMPOSE;
+static asset_hndl MAT_TONEMAP;
+static asset_hndl MAT_POST;
 
 static int NORMAL;
 static int TANGENT;
@@ -64,13 +56,14 @@ static GLuint ldr_fbo;
 static GLuint ldr_buffer;
 static GLuint ldr_texture;
 
-static texture* SHADOW_TEX = NULL;
-static texture* COLOR_CORRECTION = NULL;
-static texture* RANDOM = NULL;
-static texture* ENVIRONMENT = NULL;
-static texture* VIGNETTING = NULL;
-
+static camera* CAMERA = NULL;
 static light* SHADOW_LIGHT = NULL;
+static texture* SHADOW_TEX = NULL;
+
+static asset_hndl COLOR_CORRECTION;
+static asset_hndl RANDOM;
+static asset_hndl ENVIRONMENT;
+static asset_hndl VIGNETTING;
 
 #define DEFERRED_MAX_LIGHTS 32
 
@@ -79,11 +72,11 @@ static int num_lights;
 static light* lights[DEFERRED_MAX_LIGHTS];
 static float light_power[DEFERRED_MAX_LIGHTS];
 static float light_falloff[DEFERRED_MAX_LIGHTS];
-static vector3 light_position[DEFERRED_MAX_LIGHTS];
-static vector3 light_target[DEFERRED_MAX_LIGHTS];
-static vector3 light_diffuse[DEFERRED_MAX_LIGHTS];
-static vector3 light_ambient[DEFERRED_MAX_LIGHTS];
-static vector3 light_specular[DEFERRED_MAX_LIGHTS];
+static vec3 light_position[DEFERRED_MAX_LIGHTS];
+static vec3 light_target[DEFERRED_MAX_LIGHTS];
+static vec3 light_diffuse[DEFERRED_MAX_LIGHTS];
+static vec3 light_ambient[DEFERRED_MAX_LIGHTS];
+static vec3 light_specular[DEFERRED_MAX_LIGHTS];
 
 static float EXPOSURE;
 static float EXPOSURE_SPEED;
@@ -97,24 +90,25 @@ void deferred_renderer_init() {
   EXPOSURE_SPEED = 1.0;
   EXPOSURE_TARGET = 0.4;
   
-  COLOR_CORRECTION = asset_load_get("$CORANGE/resources/identity.lut");
-  RANDOM = asset_load_get("$CORANGE/resources/random.dds");
-  ENVIRONMENT = asset_load_get("$CORANGE/resources/envmap.dds");
-  VIGNETTING = asset_load_get("$CORANGE/resources/vignetting.dds");
+  COLOR_CORRECTION = asset_hndl_new(P("$CORANGE/resources/identity.lut"));
+  RANDOM = asset_hndl_new(P("$CORANGE/resources/random.dds"));
+  ENVIRONMENT = asset_hndl_new(P("$CORANGE/resources/envmap.dds"));
+  VIGNETTING = asset_hndl_new(P("$CORANGE/resources/vignetting.dds"));
   
-  load_folder("$CORANGE/shaders/deferred/");
+  folder_load(P("$CORANGE/shaders/deferred/"));
   
-  MAT_STATIC = asset_get("$CORANGE/shaders/deferred/static.mat");
-  MAT_ANIMATED = asset_get("$CORANGE/shaders/deferred/animated.mat");
-  MAT_CLEAR = asset_get("$CORANGE/shaders/deferred/clear.mat");
-  MAT_SSAO = asset_get("$CORANGE/shaders/deferred/ssao.mat");
-  MAT_TONEMAP = asset_get("$CORANGE/shaders/deferred/tonemap.mat");
-  MAT_COMPOSE = asset_get("$CORANGE/shaders/deferred/compose.mat");
-  MAT_POST = asset_get("$CORANGE/shaders/deferred/post.mat");
-  MAT_UI = asset_get("$CORANGE/shaders/deferred/ui.mat");
+  MAT_STATIC = asset_hndl_new(P("$CORANGE/shaders/deferred/static.mat"));
+  MAT_ANIMATED = asset_hndl_new(P("$CORANGE/shaders/deferred/animated.mat"));
+  MAT_CLEAR = asset_hndl_new(P("$CORANGE/shaders/deferred/clear.mat"));
+  MAT_SSAO = asset_hndl_new(P("$CORANGE/shaders/deferred/ssao.mat"));
+  MAT_TONEMAP = asset_hndl_new(P("$CORANGE/shaders/deferred/tonemap.mat"));
+  MAT_COMPOSE = asset_hndl_new(P("$CORANGE/shaders/deferred/compose.mat"));
+  MAT_POST = asset_hndl_new(P("$CORANGE/shaders/deferred/post.mat"));
+  MAT_UI = asset_hndl_new(P("$CORANGE/shaders/deferred/ui.mat"));
   
-  shader_program* program_static = dictionary_get(MAT_STATIC->properties, "program");
-  shader_program* program_animated = dictionary_get(MAT_ANIMATED->properties, "program");
+  
+  shader_program* program_static = material_get_entry(asset_hndl_ptr(MAT_STATIC), 0)->program;
+  shader_program* program_animated = material_get_entry(asset_hndl_ptr(MAT_ANIMATED), 0)->program;
   
   NORMAL = glGetAttribLocation(shader_program_handle(program_static), "normal");
   TANGENT = glGetAttribLocation(shader_program_handle(program_static), "tangent");
@@ -270,7 +264,7 @@ void deferred_renderer_finish() {
   glDeleteRenderbuffers(1, &ldr_buffer);
   glDeleteTextures(1,&ldr_texture);
   
-  unload_folder("$CORANGE/shaders/deferred/");
+  folder_unload(P("$CORANGE/shaders/deferred/"));
   
 }
 
@@ -314,82 +308,58 @@ void deferred_renderer_set_shadow_texture(texture* t) {
   SHADOW_TEX = t;
 }
 
-void deferred_renderer_set_color_correction(texture* t) {
-  COLOR_CORRECTION = t;
+void deferred_renderer_set_color_correction(asset_hndl ah) {
+  COLOR_CORRECTION = ah;
 }
 
 void deferred_renderer_set_shadow_light(light* l) {
   SHADOW_LIGHT = l;
 }
 
-static void deferred_renderer_use_material(material* mat, shader_program* PROG) {
+static void deferred_renderer_use_material_entry(material_entry* me, shader_program* PROG) {
   
   /* Set material parameters */
   
+  GLint world_matrix_u = glGetUniformLocation(shader_program_handle(PROG), "world_matrix");
+  glUniformMatrix4fv(world_matrix_u, 1, 0, WORLD_MATRIX);
+
+  GLint proj_matrix_u = glGetUniformLocation(shader_program_handle(PROG), "proj_matrix");
+  glUniformMatrix4fv(proj_matrix_u, 1, 0, PROJ_MATRIX);
+  
+  GLint view_matrix_u = glGetUniformLocation(shader_program_handle(PROG), "view_matrix");
+  glUniformMatrix4fv(view_matrix_u, 1, 0, VIEW_MATRIX);
+  
   int tex_counter = 0;
   
-  for(int i = 0; i < mat->keys->num_items; i++) {
-    char* key = list_get(mat->keys, i);
-    
-    int* type = dictionary_get(mat->types, key);
-    void* property = dictionary_get(mat->properties, key);
+  for(int i = 0; i < me->num_items; i++) {
+    char* key = me->names[i];
+    int type = me->types[i];
+    material_item val = me->items[i];
     
     GLint loc = glGetUniformLocation(shader_program_handle(PROG), key);
     
-    GLint world_matrix_u = glGetUniformLocation(shader_program_handle(PROG), "world_matrix");
-    glUniformMatrix4fv(world_matrix_u, 1, 0, WORLD_MATRIX);
-  
-    GLint proj_matrix_u = glGetUniformLocation(shader_program_handle(PROG), "proj_matrix");
-    glUniformMatrix4fv(proj_matrix_u, 1, 0, PROJ_MATRIX);
-    
-    GLint view_matrix_u = glGetUniformLocation(shader_program_handle(PROG), "view_matrix");
-    glUniformMatrix4fv(view_matrix_u, 1, 0, VIEW_MATRIX);
-    
-    if (*type == mat_type_texture) {
-    
+    if (type == mat_item_texture) {
       glUniform1i(loc, tex_counter);
       glActiveTexture(GL_TEXTURE0 + tex_counter);
-      glBindTexture(GL_TEXTURE_2D, texture_handle(property));
+      glBindTexture(GL_TEXTURE_2D, texture_handle(asset_hndl_ptr(val.as_asset)));
       tex_counter++;
-    
-    } else if (*type == mat_type_int) {
-      
-      glUniform1i(loc, *((int*)property));
-    
-    } else if (*type == mat_type_float) {
-    
-      glUniform1f(loc, *((float*)property));
-      
-    } else if (*type == mat_type_vector2) {
-    
-      vector2 v = *((vector2*)property);
-      glUniform2f(loc, v.x, v.y);
-    
-    } else if (*type == mat_type_vector3) {
-    
-      vector3 v = *((vector3*)property);
-      glUniform3f(loc, v.x, v.y, v.z);
-  
-    } else if (*type == mat_type_vector4) {
-    
-      vector4 v = *((vector4*)property);
-      glUniform4f(loc, v.w, v.x, v.y, v.z);
-    
-    } else {
-      /* Do nothing */
     }
-     
+    if (type == mat_item_int)   { glUniform1i(loc, val.as_int); }
+    if (type == mat_item_float) { glUniform1f(loc, val.as_float); }
+    if (type == mat_item_vec2)  { glUniform2f(loc, val.as_vec2.x, val.as_vec2.y); }
+    if (type == mat_item_vec3)  { glUniform3f(loc, val.as_vec3.x, val.as_vec3.y, val.as_vec3.z); }
+    if (type == mat_item_vec4)  { glUniform4f(loc, val.as_vec4.x, val.as_vec4.y, val.as_vec4.z, val.as_vec4.w); }
   }  
 
 }
 
 static void deferred_renderer_setup_camera() {
 
-  matrix_4x4 viewm = camera_view_matrix(CAMERA);
-  matrix_4x4 projm = camera_proj_matrix(CAMERA, graphics_viewport_ratio() );
+  mat4 viewm = camera_view_matrix(CAMERA);
+  mat4 projm = camera_proj_matrix(CAMERA, graphics_viewport_ratio() );
   
-  m44_to_array(viewm, VIEW_MATRIX);
-  m44_to_array(projm, PROJ_MATRIX);
+  mat4_to_array(viewm, VIEW_MATRIX);
+  mat4_to_array(projm, PROJ_MATRIX);
   
   glMatrixMode(GL_MODELVIEW);
   glLoadMatrixf(VIEW_MATRIX);
@@ -397,11 +367,11 @@ static void deferred_renderer_setup_camera() {
   glMatrixMode(GL_PROJECTION);
   glLoadMatrixf(PROJ_MATRIX);
   
-  matrix_4x4 lviewm = light_view_matrix(SHADOW_LIGHT);
-  matrix_4x4 lprojm = light_proj_matrix(SHADOW_LIGHT);
+  mat4 lviewm = light_view_matrix(SHADOW_LIGHT);
+  mat4 lprojm = light_proj_matrix(SHADOW_LIGHT);
   
-  m44_to_array(lviewm, LIGHT_VIEW_MATRIX);
-  m44_to_array(lprojm, LIGHT_PROJ_MATRIX);
+  mat4_to_array(lviewm, LIGHT_VIEW_MATRIX);
+  mat4_to_array(lprojm, LIGHT_PROJ_MATRIX);
 
 }
 
@@ -418,7 +388,7 @@ void deferred_renderer_begin() {
   glClearDepth(1.0f);
   glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
   
-  shader_program* program_clear = dictionary_get(MAT_CLEAR->properties, "program");
+  shader_program* program_clear = material_get_entry(asset_hndl_ptr(MAT_CLEAR), 0)->program;
   
   glUseProgram(shader_program_handle(program_clear));
   
@@ -467,7 +437,7 @@ void deferred_renderer_end() {
   
   glViewport(0, 0, graphics_viewport_width() / 2, graphics_viewport_height() / 2);
   
-  shader_program* program_ssao = dictionary_get(MAT_SSAO->properties, "program");
+  shader_program* program_ssao = material_get_entry(asset_hndl_ptr(MAT_SSAO), 0)->program;
   
   GLuint ssao_handle = shader_program_handle(program_ssao);
   glUseProgram(ssao_handle);
@@ -487,7 +457,7 @@ void deferred_renderer_end() {
   glUniform1i(glGetUniformLocation(ssao_handle, "depth_texture"), 0);
   
   glActiveTexture(GL_TEXTURE0 + 1 );
-  glBindTexture(GL_TEXTURE_2D, texture_handle(RANDOM));
+  glBindTexture(GL_TEXTURE_2D, texture_handle(asset_hndl_ptr(RANDOM)));
   glEnable(GL_TEXTURE_2D);
   glUniform1i(glGetUniformLocation(ssao_handle, "random_texture"), 1);
   
@@ -521,7 +491,7 @@ void deferred_renderer_end() {
   
   glViewport(0, 0, graphics_viewport_width(), graphics_viewport_height());
   
-  shader_program* program_compose = dictionary_get(MAT_COMPOSE->properties, "program");
+  shader_program* program_compose = material_get_entry(asset_hndl_ptr(MAT_COMPOSE), 0)->program;
   
   GLuint screen_handle = shader_program_handle(program_compose);
   glUseProgram(screen_handle);
@@ -567,7 +537,7 @@ void deferred_renderer_end() {
   glUniform1i(glGetUniformLocation(screen_handle, "ssao_texture"), 5);
   
   glActiveTexture(GL_TEXTURE0 + 6 );
-  glBindTexture(GL_TEXTURE_2D, texture_handle(ENVIRONMENT));
+  glBindTexture(GL_TEXTURE_2D, texture_handle(asset_hndl_ptr(ENVIRONMENT)));
   glEnable(GL_TEXTURE_2D);
   glUniform1i(glGetUniformLocation(screen_handle, "env_texture"), 6);
   
@@ -648,7 +618,7 @@ void deferred_renderer_end() {
   
   glBindFramebuffer(GL_FRAMEBUFFER, ldr_fbo);
   
-  shader_program* program_tonemap = dictionary_get(MAT_TONEMAP->properties, "program");
+  shader_program* program_tonemap = material_get_entry(asset_hndl_ptr(MAT_TONEMAP), 0)->program;
   
   GLuint screen_tonemap_handle = shader_program_handle(program_tonemap);
   glUseProgram(screen_tonemap_handle);
@@ -722,7 +692,7 @@ void deferred_renderer_end() {
   
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   
-  shader_program* program_post = dictionary_get(MAT_POST->properties, "program");
+  shader_program* program_post = material_get_entry(asset_hndl_ptr(MAT_POST), 0)->program;
   
   GLuint screen_post_handle = shader_program_handle(program_post);
   glUseProgram(screen_post_handle);
@@ -742,12 +712,12 @@ void deferred_renderer_end() {
   glUniform1i(glGetUniformLocation(screen_post_handle, "diffuse_texture"), 0);
   
   glActiveTexture(GL_TEXTURE0 + 1 );
-  glBindTexture(GL_TEXTURE_2D, texture_handle(VIGNETTING));
+  glBindTexture(GL_TEXTURE_2D, texture_handle(asset_hndl_ptr(VIGNETTING)));
   glEnable(GL_TEXTURE_2D);
   glUniform1i(glGetUniformLocation(screen_post_handle, "vignetting_texture"), 1);
   
   glActiveTexture(GL_TEXTURE0 + 2 );
-  glBindTexture(GL_TEXTURE_3D, texture_handle(COLOR_CORRECTION));
+  glBindTexture(GL_TEXTURE_3D, texture_handle(asset_hndl_ptr(COLOR_CORRECTION)));
   glEnable(GL_TEXTURE_3D);
   glUniform1i(glGetUniformLocation(screen_post_handle, "lut"), 2);
   
@@ -791,10 +761,10 @@ void deferred_renderer_set_exposure(float exposure) {
 
 void deferred_renderer_render_static(static_object* so) {
 
-  matrix_4x4 r_world_matrix = m44_world( so->position, so->scale, so->rotation );
-  m44_to_array(r_world_matrix, WORLD_MATRIX);
+  mat4 r_world_matrix = mat4_world( so->position, so->scale, so->rotation );
+  mat4_to_array(r_world_matrix, WORLD_MATRIX);
   
-  renderable* r = so->renderable;
+  renderable* r = asset_hndl_ptr(so->renderable);
   
   for(int i=0; i < r->num_surfaces; i++) {
     
@@ -803,12 +773,12 @@ void deferred_renderer_render_static(static_object* so) {
       error("Renderable for static object is rigged!");
     }
     
-    shader_program* program_static = dictionary_get(MAT_STATIC->properties, "program");
+    shader_program* program_static = material_get_entry(asset_hndl_ptr(MAT_STATIC), 0)->program;
     
     GLuint program_handle = shader_program_handle(program_static);
     glUseProgram(program_handle);
     
-    deferred_renderer_use_material(s->base, program_static);
+    deferred_renderer_use_material_entry(material_get_entry(asset_hndl_ptr(s->material), 0), program_static);
     
     GLsizei stride = sizeof(float) * 18;
     
@@ -849,48 +819,51 @@ void deferred_renderer_render_static(static_object* so) {
 }
 
 #define MAX_BONES 32
-static matrix_4x4 bone_matrices[MAX_BONES];
+static mat4 bone_matrices[MAX_BONES];
 static float bone_matrix_data[4 * 4 * MAX_BONES];
 
 void deferred_renderer_render_animated(animated_object* ao) {
 
-  if (ao->skeleton->num_bones > MAX_BONES) {
+  skeleton* skel = asset_hndl_ptr(ao->skeleton);
+  skeleton* pose = ao->pose;
+
+  if (skel->num_bones > MAX_BONES) {
     error("animated object skeleton has too many bones (over %i)", MAX_BONES);
   }
 
-  matrix_4x4 r_world_matrix = m44_world( ao->position, ao->scale, ao->rotation );
-  m44_to_array(r_world_matrix, WORLD_MATRIX);
+  mat4 r_world_matrix = mat4_world( ao->position, ao->scale, ao->rotation );
+  mat4_to_array(r_world_matrix, WORLD_MATRIX);
   
-  skeleton_gen_transforms(ao->pose);
+  skeleton_gen_transforms(pose);
   
-  for(int i = 0; i < ao->skeleton->num_bones; i++) {
-    matrix_4x4 base, ani;
-    base = ao->skeleton->inv_transforms[i];
-    ani = ao->pose->transforms[i];
+  for(int i = 0; i < skel->num_bones; i++) {
+    mat4 base, ani;
+    base = skel->inv_transforms[i];
+    ani = pose->transforms[i];
     
-    bone_matrices[i] = m44_mul_m44(ani, base);
-    m44_to_array(bone_matrices[i], bone_matrix_data + (i * 4 * 4));
+    bone_matrices[i] = mat4_mul_mat4(ani, base);
+    mat4_to_array(bone_matrices[i], bone_matrix_data + (i * 4 * 4));
   }
   
-  renderable* r = ao->renderable;
+  renderable* r = asset_hndl_ptr(ao->renderable);
   
   for(int i = 0; i < r->num_surfaces; i++) {
     
     renderable_surface* s = r->surfaces[i];
     if(s->is_rigged) {
       
-      shader_program* program_animated = dictionary_get(MAT_ANIMATED->properties, "program");
+      shader_program* program_animated = material_get_entry(asset_hndl_ptr(MAT_ANIMATED), 0)->program;
       
       GLuint program_animated_handle = shader_program_handle(program_animated);
       glUseProgram(program_animated_handle);
       
-      deferred_renderer_use_material(s->base, program_animated);
+      deferred_renderer_use_material_entry(material_get_entry(asset_hndl_ptr(s->material),0), program_animated);
       
       GLint bone_world_matrices_u = glGetUniformLocation(program_animated_handle, "bone_world_matrices");
-      glUniformMatrix4fv(bone_world_matrices_u, ao->skeleton->num_bones, GL_FALSE, bone_matrix_data);
+      glUniformMatrix4fv(bone_world_matrices_u, skel->num_bones, GL_FALSE, bone_matrix_data);
       
       GLint bone_count_u = glGetUniformLocation(program_animated_handle, "bone_count");
-      glUniform1i(bone_count_u, ao->skeleton->num_bones);
+      glUniform1i(bone_count_u, skel->num_bones);
       
       GLsizei stride = sizeof(float) * 24;
       
@@ -946,16 +919,16 @@ void deferred_renderer_render_animated(animated_object* ao) {
 
 void deferred_renderer_render_light(light* l) {
   
-  matrix_4x4 viewm = camera_view_matrix(CAMERA);
-  matrix_4x4 projm = camera_proj_matrix(CAMERA, graphics_viewport_ratio() );
+  mat4 viewm = camera_view_matrix(CAMERA);
+  mat4 projm = camera_proj_matrix(CAMERA, graphics_viewport_ratio() );
   
-  vector4 light_pos = v4(l->position.x, l->position.y, l->position.z, 1);
-  light_pos = m44_mul_v4(viewm, light_pos);
-  light_pos = m44_mul_v4(projm, light_pos);
+  vec4 light_pos = vec4_new(l->position.x, l->position.y, l->position.z, 1);
+  light_pos = mat4_mul_vec4(viewm, light_pos);
+  light_pos = mat4_mul_vec4(projm, light_pos);
   
-  light_pos = v4_div(light_pos, light_pos.w);
+  light_pos = vec4_div(light_pos, light_pos.w);
   
-  shader_program* program_ui = dictionary_get(MAT_UI->properties, "program");
+  shader_program* program_ui = material_get_entry(asset_hndl_ptr(MAT_UI), 0)->program;
   
   glUseProgram(shader_program_handle(program_ui));
   
@@ -973,7 +946,7 @@ void deferred_renderer_render_light(light* l) {
   float left = ((light_pos.x + 1) / 2) * graphics_viewport_width() - 8;
   float right = ((light_pos.x + 1) / 2) * graphics_viewport_width() + 8;
   
-  texture* lightbulb = asset_load_get("$CORANGE/ui/lightbulb.dds");
+  texture* lightbulb = asset_hndl_ptr(asset_hndl_new(P("$CORANGE/ui/lightbulb.dds")));
   glActiveTexture(GL_TEXTURE0 + 0 );
   glBindTexture(GL_TEXTURE_2D, texture_handle(lightbulb));
   glEnable(GL_TEXTURE_2D);
@@ -1001,17 +974,17 @@ void deferred_renderer_render_light(light* l) {
 
 }
 
-void deferred_renderer_render_axis(matrix_4x4 world) {
+void deferred_renderer_render_axis(mat4 world) {
 
-  vector4 x_pos = m44_mul_v4(world, v4(2,0,0,1));
-  vector4 y_pos = m44_mul_v4(world, v4(0,2,0,1));
-  vector4 z_pos = m44_mul_v4(world, v4(0,0,2,1));
-  vector4 base_pos = m44_mul_v4(world, v4(0,0,0,1));
+  vec4 x_pos = mat4_mul_vec4(world, vec4_new(2,0,0,1));
+  vec4 y_pos = mat4_mul_vec4(world, vec4_new(0,2,0,1));
+  vec4 z_pos = mat4_mul_vec4(world, vec4_new(0,0,2,1));
+  vec4 base_pos = mat4_mul_vec4(world, vec4_new(0,0,0,1));
   
-  x_pos = v4_div(x_pos, x_pos.w);
-  y_pos = v4_div(y_pos, y_pos.w);
-  z_pos = v4_div(z_pos, z_pos.w);
-  base_pos = v4_div(base_pos, base_pos.w);
+  x_pos = vec4_div(x_pos, x_pos.w);
+  y_pos = vec4_div(y_pos, y_pos.w);
+  z_pos = vec4_div(z_pos, z_pos.w);
+  base_pos = vec4_div(base_pos, base_pos.w);
   
   glDisable(GL_DEPTH_TEST);
   

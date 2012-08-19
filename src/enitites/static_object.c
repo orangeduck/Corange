@@ -3,16 +3,16 @@
 static_object* static_object_new() {
   static_object* s = malloc(sizeof(static_object));
   
-  s->position = v3_zero();
-  s->rotation = v4_quaternion_id();
-  s->scale = v3_one();
+  s->position = vec3_zero();
+  s->rotation = quaternion_id();
+  s->scale = vec3_one();
   
   s->active = true;
   s->recieve_shadows = true;
   s->cast_shadows = true;
   
-  s->renderable = NULL;
-  s->collision_body = NULL;
+  s->renderable = asset_hndl_null();
+  s->collision_body = asset_hndl_null();
   
   return s;
 }

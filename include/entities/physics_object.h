@@ -1,24 +1,22 @@
 #ifndef physics_object_h
 #define physics_object_h
 
-#include "assets/renderable.h"
-#include "assets/collision_body.h"
-
+#include "cengine.h"
 #include "entities/static_object.h"
 
 typedef struct {
   
-  vector3 position;
-  vector3 scale;
-  vector4 rotation;
+  vec3 position;
+  vec3 scale;
+  vec4 rotation;
   
-  vector3 velocity;
-  vector4 angular_velocity;
+  vec3 velocity;
+  vec4 angular_velocity;
   
-  vector3 acceleration;
-  vector4 angular_acceleration;
+  vec3 acceleration;
+  vec4 angular_acceleration;
   
-  vector3 previous_position;
+  vec3 previous_position;
   
   float elasticity;
   float friction;
@@ -27,8 +25,8 @@ typedef struct {
   bool recieve_shadows;
   bool cast_shadows;
 
-  renderable* renderable;
-  collision_body* collision_body;
+  asset_hndl renderable;
+  asset_hndl collision_body;
 
 } physics_object;
 

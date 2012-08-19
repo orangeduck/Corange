@@ -1,17 +1,15 @@
-#include "timing.h"
-#include "matrix.h"
+#include "ui/ui_spinner.h"
 
 #include "graphics_manager.h"
-#include "asset_manager.h"
 
-#include "ui/ui_spinner.h"
+#include "assets/texture.h"
 
 ui_spinner* ui_spinner_new() {
   ui_spinner* s = malloc(sizeof(ui_spinner));
-  s->top_left = v2_zero();
-  s->bottom_right = v2(32, 32);
-  s->color = v4_black();
-  s->texture = asset_load_get("$CORANGE/ui/spinner.dds");
+  s->top_left = vec2_zero();
+  s->bottom_right = vec2_new(32, 32);
+  s->color = vec4_black();
+  s->texture = asset_hndl_new(P("$CORANGE/ui/spinner.dds"));
   s->speed = 5;
   s->rotation = 0;
   s->active = true;
@@ -31,31 +29,31 @@ void ui_spinner_render(ui_spinner* s) {
   
   if (!s->active) return;
   
-  vector2 top_left = s->top_left;
-  vector2 top_right = v2(s->bottom_right.x, s->top_left.y);
-  vector2 bot_left = v2(s->top_left.x, s->bottom_right.y);
-  vector2 bot_right = s->bottom_right;
+  vec2 top_left = s->top_left;
+  vec2 top_right = vec2_new(s->bottom_right.x, s->top_left.y);
+  vec2 bot_left = vec2_new(s->top_left.x, s->bottom_right.y);
+  vec2 bot_right = s->bottom_right;
   
-  vector2 center;
+  vec2 center;
   center.x = (top_left.x + top_right.x) / 2;
   center.y = (top_left.y + bot_left.y) / 2;
   
-  top_left = v2_sub(top_left, center);
-  top_right = v2_sub(top_right, center);
-  bot_left = v2_sub(bot_left, center);
-  bot_right = v2_sub(bot_right, center);
+  top_left = vec2_sub(top_left, center);
+  top_right = vec2_sub(top_right, center);
+  bot_left = vec2_sub(bot_left, center);
+  bot_right = vec2_sub(bot_right, center);
   
-  matrix_2x2 rot = m22_rotation(s->rotation);
+  mat2 rot = mat2_rotation(s->rotation);
   
-  top_left = m22_mul_v2(rot, top_left);
-  top_right = m22_mul_v2(rot, top_right);
-  bot_left = m22_mul_v2(rot, bot_left);
-  bot_right = m22_mul_v2(rot, bot_right);
+  top_left = mat2_mul_vec2(rot, top_left);
+  top_right = mat2_mul_vec2(rot, top_right);
+  bot_left = mat2_mul_vec2(rot, bot_left);
+  bot_right = mat2_mul_vec2(rot, bot_right);
   
-  top_left = v2_add(top_left, center);
-  top_right = v2_add(top_right, center);
-  bot_left = v2_add(bot_left, center);
-  bot_right = v2_add(bot_right, center);
+  top_left = vec2_add(top_left, center);
+  top_right = vec2_add(top_right, center);
+  bot_left = vec2_add(bot_left, center);
+  bot_right = vec2_add(bot_right, center);
   
 	glMatrixMode(GL_PROJECTION);
   glPushMatrix();
@@ -67,12 +65,12 @@ void ui_spinner_render(ui_spinner* s) {
 	glLoadIdentity();
   
   glEnable(GL_TEXTURE_2D);
-  glBindTexture(GL_TEXTURE_2D, *(s->texture) );
+  glBindTexture(GL_TEXTURE_2D, texture_handle(asset_hndl_ptr(s->texture)) );
   
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   
-  glColor4f(s->color.r, s->color.g, s->color.b, s->color.a);
+  glColor4f(s->color.x, s->color.y, s->color.z, s->color.w);
   
   glBegin(GL_QUADS);
     glTexCoord2f(0, 1); glVertex3f(top_left.x, top_left.y, 0);

@@ -1,7 +1,3 @@
-#include <math.h>
-
-#include "error.h"
-
 #include "assets/terrain.h"
 
 void terrain_chunk_delete(terrain_chunk* tc) {
@@ -35,8 +31,8 @@ static void terrain_new_chunk(terrain* ter, int i) {
     float gx = tc->x * ter->chunk_width + (float)x/SUBDIVISIONS;
     float gy = tc->y * ter->chunk_height + (float)y/SUBDIVISIONS;
     
-    float offset = terrain_height(ter, v2(gx, gy));
-    vector3 pos = v3(gx, offset, gy);
+    float offset = terrain_height(ter, vec2_new(gx, gy));
+    vec3 pos = vec3_new(gx, offset, gy);
     
     vertex_buffer[index] = pos.x; index++;
     vertex_buffer[index] = pos.y; index++;
@@ -51,8 +47,8 @@ static void terrain_new_chunk(terrain* ter, int i) {
     int gx = tc->x * ter->chunk_width + 0;
     int gy = tc->y * ter->chunk_height + (float)y/SUBDIVISIONS;
     
-    float offset = terrain_height(ter, v2(gx, gy)) - FIN_DEPTH;
-    vector3 pos = v3(gx, offset, gy);
+    float offset = terrain_height(ter, vec2_new(gx, gy)) - FIN_DEPTH;
+    vec3 pos = vec3_new(gx, offset, gy);
     
     vertex_buffer[index] = pos.x; index++;
     vertex_buffer[index] = pos.y; index++;
@@ -63,8 +59,8 @@ static void terrain_new_chunk(terrain* ter, int i) {
     int gx = tc->x * ter->chunk_width + ter->chunk_width;
     int gy = tc->y * ter->chunk_height + (float)y/SUBDIVISIONS;
     
-    float offset = terrain_height(ter, v2(gx, gy)) - FIN_DEPTH;
-    vector3 pos = v3(gx, offset, gy);
+    float offset = terrain_height(ter, vec2_new(gx, gy)) - FIN_DEPTH;
+    vec3 pos = vec3_new(gx, offset, gy);
     
     vertex_buffer[index] = pos.x; index++;
     vertex_buffer[index] = pos.y; index++;
@@ -75,8 +71,8 @@ static void terrain_new_chunk(terrain* ter, int i) {
     int  gx = tc->x * ter->chunk_width + (float)x/SUBDIVISIONS;
     int  gy = tc->y * ter->chunk_height + 0;
     
-    float offset = terrain_height(ter, v2(gx, gy)) - FIN_DEPTH;
-    vector3 pos = v3(gx, offset, gy);
+    float offset = terrain_height(ter, vec2_new(gx, gy)) - FIN_DEPTH;
+    vec3 pos = vec3_new(gx, offset, gy);
     
     vertex_buffer[index] = pos.x; index++;
     vertex_buffer[index] = pos.y; index++;
@@ -87,8 +83,8 @@ static void terrain_new_chunk(terrain* ter, int i) {
     int  gx = tc->x * ter->chunk_width + (float)x/SUBDIVISIONS;
     int  gy = tc->y * ter->chunk_height + ter->chunk_height;
     
-    float offset = terrain_height(ter, v2(gx, gy)) - FIN_DEPTH;
-    vector3 pos = v3(gx, offset, gy);
+    float offset = terrain_height(ter, vec2_new(gx, gy)) - FIN_DEPTH;
+    vec3 pos = vec3_new(gx, offset, gy);
     
     vertex_buffer[index] = pos.x; index++;
     vertex_buffer[index] = pos.y; index++;
@@ -260,14 +256,14 @@ void terrain_delete(terrain* ter) {
   
 }
 
-float terrain_height(terrain* ter, vector2 position) {
+float terrain_height(terrain* ter, vec2 position) {
   
-  vector2 amount = v2_fmod(position, 1.0);
+  vec2 amount = vec2_fmod(position, 1.0);
   
-  vector2 top_left = v2(floor(position.x), floor(position.y));
-  vector2 top_right = v2(ceil(position.x), floor(position.y));
-  vector2 bot_left = v2(floor(position.x), ceil(position.y));
-  vector2 bot_right = v2(ceil(position.x), ceil(position.y));
+  vec2 top_left = vec2_new(floor(position.x), floor(position.y));
+  vec2 top_right = vec2_new(ceil(position.x), floor(position.y));
+  vec2 bot_left = vec2_new(floor(position.x), ceil(position.y));
+  vec2 bot_right = vec2_new(ceil(position.x), ceil(position.y));
   
   top_left.x = clamp(top_left.x, 0, ter->width-1);
   top_left.y = clamp(top_left.y, 0, ter->height-1);
@@ -283,20 +279,20 @@ float terrain_height(terrain* ter, vector2 position) {
   float s2 = ter->heightmap[(int)bot_left.x + (int)bot_left.y * ter->width];
   float s3 = ter->heightmap[(int)bot_right.x + (int)bot_right.y * ter->width];
   
-  return bilinear_interpolation(s1, s0, s3, s2, amount.x, amount.y);
+  return bilinear_interp(s1, s0, s3, s2, amount.x, amount.y);
   
 }
 
-vector3 terrain_normal(terrain* ter, vector2 position) {
+vec3 terrain_normal(terrain* ter, vec2 position) {
   
   float base = terrain_height(ter, position);
-  float base_x = terrain_height(ter, v2_add(position, v2(1,0)));
-  float base_y = terrain_height(ter, v2_add(position, v2(0,-1)));
+  float base_x = terrain_height(ter, vec2_add(position, vec2_new(1,0)));
+  float base_y = terrain_height(ter, vec2_add(position, vec2_new(0,-1)));
   
-  vector3 basev = v3(position.x, base, position.y);
-  vector3 base_xv = v3(position.x+1, base_x, position.y);
-  vector3 base_yv = v3(position.x, base_y, position.y+1);
+  vec3 basev = vec3_new(position.x, base, position.y);
+  vec3 base_xv = vec3_new(position.x+1, base_x, position.y);
+  vec3 base_yv = vec3_new(position.x, base_y, position.y+1);
   
-  return v3_normalize(v3_cross(v3_sub(base_yv, basev), v3_sub(base_xv, basev)));
+  return vec3_normalize(vec3_cross(vec3_sub(base_yv, basev), vec3_sub(base_xv, basev)));
   
 }

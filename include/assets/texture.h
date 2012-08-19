@@ -1,11 +1,8 @@
 #ifndef texture_h
 #define texture_h
 
-#include "SDL/SDL.h"
-#include "SDL/SDL_opengl.h"
-#include "SDL/SDL_local.h"
-
-#include "image.h"
+#include "cengine.h"
+#include "assets/image.h"
 
 typedef GLuint texture;
 

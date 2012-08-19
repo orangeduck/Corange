@@ -1,12 +1,3 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-
-#include "SDL/SDL_rwops.h"
-#include "SDL/SDL_local.h"
-
-#include "error.h"
-
 #include "assets/animation.h"
 
 animation* animation_new() {
@@ -122,17 +113,17 @@ animation* ani_load_file(char* filename) {
       if (sscanf(line, "%i %f %f %f %f %f %f", &id, &x, &y, &z, &rx, &ry, &rz) > 0) {
         bone* b = skeleton_bone_id(frame, id);
         /* Swap z and y */
-        b->position = v3(x, z, y);
+        b->position = vec3_new(x, z, y);
         
-        matrix_4x4 rotation = m44_rotation_euler(rx, ry, rz);
-        matrix_4x4 handedflip = m44(1,0,0,0,
-                                    0,0,1,0,
-                                    0,1,0,0,
-                                    0,0,0,1);
+        mat4 rotation = mat4_rotation_euler(rx, ry, rz);
+        mat4 handedflip = mat4_new(1,0,0,0,
+                                   0,0,1,0,
+                                   0,1,0,0,
+                                   0,0,0,1);
         
-        rotation = m44_mul_m44(handedflip, rotation);
-        rotation = m44_mul_m44(rotation, handedflip);
-        rotation = m44_transpose(rotation);
+        rotation = mat4_mul_mat4(handedflip, rotation);
+        rotation = mat4_mul_mat4(rotation, handedflip);
+        rotation = mat4_transpose(rotation);
         b->rotation = rotation;
         
       }

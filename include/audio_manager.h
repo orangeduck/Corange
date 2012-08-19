@@ -1,6 +1,14 @@
+/**
+*** :: Audio Manager ::
+***
+***   Manages the playing of sounds.
+***
+**/
+
 #ifndef audio_manager_h
 #define audio_manager_h
 
+#include "cengine.h"
 #include "assets/sound.h"
 
 void audio_manager_init();

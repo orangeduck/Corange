@@ -1,32 +1,30 @@
 #ifndef landscape_h
 #define landscape_h
 
-#include "vector.h"
-
-#include "assets/texture.h"
-#include "assets/terrain.h"
+#include "cengine.h"
+#include "asset_manager.h"
 
 typedef struct {
   
-  terrain* terrain;
+  asset_hndl terrain;
   
-  texture* normalmap;
-  texture* colormap;
-  texture* attributemap;
+  asset_hndl normalmap;
+  asset_hndl colormap;
+  asset_hndl attributemap;
   
-  vector3 position;
-  vector4 rotation;
-  vector3 scale;
+  vec3 position;
+  vec4 rotation;
+  vec3 scale;
   
-  texture* near_texture;
-  texture* near_texture_bump;
-  texture* far_texture;
-  texture* far_texture_bump;
+  asset_hndl near_texture;
+  asset_hndl near_texture_bump;
+  asset_hndl far_texture;
+  asset_hndl far_texture_bump;
   
 } landscape;
 
 landscape* landscape_new();
 void landscape_delete(landscape* l);
-void landscape_set_textures(landscape* l, texture* near_texture, texture* near_texture_bump, texture* far_texture, texture* far_texture_bump);
+void landscape_set_textures(landscape* l, asset_hndl near_texture, asset_hndl near_texture_bump, asset_hndl far_texture, asset_hndl far_texture_bump);
 
 #endif

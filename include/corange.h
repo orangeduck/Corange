@@ -1,21 +1,12 @@
 #ifndef corange_h
 #define corange_h
 
+#include "cengine.h"
+
 /* Corange Functions */
 
-void corange_init(char* core_assets_path);
+void corange_init(const char* core_assets_path);
 void corange_finish();
-
-/* Include SDL, OpenGL */
-
-#include "SDL/SDL.h"
-#include "SDL/SDL_opengl.h"
-#include "SDL/SDL_local.h"
-
-/* Info and Utilities */
-
-#include "error.h"
-#include "timing.h"
 
 /* Audio and Graphics */
 
@@ -68,16 +59,10 @@ void corange_finish();
 
 /* Data Structures */
 
-#include "list.h"
-#include "int_list.h"
-#include "vertex_list.h"
-#include "vertex_hashtable.h"
-#include "dictionary.h"
-
-/* Maths */
-
-#include "vector.h"
-#include "matrix.h"
-#include "geometry.h"
+#include "data/dict.h"
+#include "data/list.h"
+#include "data/int_list.h"
+#include "data/vertex_list.h"
+#include "data/vertex_hashtable.h"
 
 #endif

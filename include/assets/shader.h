@@ -1,9 +1,14 @@
+/**
+*** :: Shader ::
+***
+***   GLSL shader program.
+***
+**/
+
 #ifndef shader_h
 #define shader_h
 
-#include "SDL/SDL.h"
-#include "SDL/SDL_opengl.h"
-#include "SDL/SDL_local.h"
+#include "cengine.h"
 
 typedef GLuint shader;
 typedef GLuint shader_program;

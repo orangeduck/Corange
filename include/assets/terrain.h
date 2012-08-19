@@ -1,11 +1,7 @@
 #ifndef terrain_h
 #define terrain_h
 
-#include "SDL/SDL_opengl.h"
-#include "SDL/SDL_local.h"
-
-#include "error.h"
-#include "texture.h"
+#include "cengine.h"
 
 #define NUM_TERRAIN_SUBDIVISIONS 0
 #define NUM_TERRAIN_BUFFERS 4
@@ -55,7 +51,7 @@ void terrain_delete(terrain* ter);
 
 terrain_chunk* terrain_get_chunk(terrain* ter, int x, int y);
 
-float terrain_height(terrain* ter, vector2 position);
-vector3 terrain_normal(terrain* ter, vector2 position);
+float terrain_height(terrain* ter, vec2 position);
+vec3 terrain_normal(terrain* ter, vec2 position);
 
 #endif

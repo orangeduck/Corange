@@ -1,21 +1,12 @@
-#include <string.h>
-#include <math.h>
-
-#include "SDL/SDL.h"
-#include "SDL/SDL_opengl.h"
-#include "SDL/SDL_local.h"
-
-#include "error.h"
-#include "matrix.h"
-#include "dictionary.h"
-#include "timing.h"
-
-#include "assets/shader.h"
+#include "rendering/forward_renderer.h"
 
 #include "graphics_manager.h"
 #include "asset_manager.h"
 
-#include "rendering/forward_renderer.h"
+#include "assets/material.h"
+#include "assets/shader.h"
+#include "assets/renderable.h"
+#include "assets/terrain.h"
 
 static bool use_shadows;
 
@@ -24,12 +15,13 @@ static light* SHADOW_LIGHT = NULL;
 
 static texture* SHADOW_TEX = NULL;
 static texture* DEPTH_TEX = NULL;
-static texture* COLOR_CORRECTION = NULL;
-static texture* VIGNETTING = NULL;
 
-static material* GRADIENT = NULL;
-static material* SCREEN_TONEMAP = NULL;
-static material* SCREEN_POST = NULL;
+static asset_hndl COLOR_CORRECTION;
+static asset_hndl VIGNETTING;
+
+static asset_hndl GRADIENT;
+static asset_hndl SCREEN_TONEMAP;
+static asset_hndl SCREEN_POST;
 
 static float proj_matrix[16];
 static float view_matrix[16];
@@ -39,7 +31,7 @@ static float lproj_matrix[16];
 
 static float world_matricies[16*MAX_INSTANCES];
 
-static float timer = 0.0;
+static float shader_timer = 0.0;
 
 static int ATTR_POSITION;
 static int ATTR_NORMAL;
@@ -70,11 +62,11 @@ static int num_lights;
 static light* lights[FORWARD_MAX_LIGHTS];
 static float light_power[FORWARD_MAX_LIGHTS];
 static float light_falloff[FORWARD_MAX_LIGHTS];
-static vector3 light_position[FORWARD_MAX_LIGHTS];
-static vector3 light_target[FORWARD_MAX_LIGHTS];
-static vector3 light_diffuse[FORWARD_MAX_LIGHTS];
-static vector3 light_ambient[FORWARD_MAX_LIGHTS];
-static vector3 light_specular[FORWARD_MAX_LIGHTS];
+static vec3 light_position[FORWARD_MAX_LIGHTS];
+static vec3 light_target[FORWARD_MAX_LIGHTS];
+static vec3 light_diffuse[FORWARD_MAX_LIGHTS];
+static vec3 light_ambient[FORWARD_MAX_LIGHTS];
+static vec3 light_specular[FORWARD_MAX_LIGHTS];
 
 static float EXPOSURE;
 static float EXPOSURE_SPEED;
@@ -93,15 +85,15 @@ void forward_renderer_init() {
   EXPOSURE_SPEED = 1.0;
   EXPOSURE_TARGET = 0.4;
   
-  COLOR_CORRECTION = asset_load_get("$CORANGE/resources/identity.lut");
-  VIGNETTING = asset_load_get("$CORANGE/resources/vignetting.dds");
+  COLOR_CORRECTION = asset_hndl_new(P("$CORANGE/resources/identity.lut"));
+  VIGNETTING = asset_hndl_new(P("$CORANGE/resources/vignetting.dds"));
   
-  GRADIENT = asset_load_get("$CORANGE/shaders/gradient.mat");
+  GRADIENT = asset_hndl_new(P("$CORANGE/shaders/gradient.mat"));
   
-  load_folder("$CORANGE/shaders/forward/");
+  folder_load(P("$CORANGE/shaders/forward/"));
   
-  SCREEN_TONEMAP = asset_load_get("$CORANGE/shaders/forward/tonemap.mat");
-  SCREEN_POST = asset_load_get("$CORANGE/shaders/forward/post.mat");
+  SCREEN_TONEMAP = asset_hndl_new(P("$CORANGE/shaders/forward/tonemap.mat"));
+  SCREEN_POST = asset_hndl_new(P("$CORANGE/shaders/forward/post.mat"));
   
   glClearColor(0.2, 0.2, 0.2, 1.0f);
   glClearDepth(1.0f);
@@ -165,7 +157,7 @@ void forward_renderer_finish() {
   glDeleteRenderbuffers(1, &ldr_buffer);
   glDeleteTextures(1,&ldr_texture);
   
-  unload_folder("$CORANGE/shaders/forward/");
+  folder_unload(P("$CORANGE/shaders/forward/"));
   
 }
 
@@ -225,13 +217,13 @@ void forward_renderer_set_depth_texture(texture* t) {
 }
 
 
-void forward_renderer_set_color_correction(texture* t) {
-  COLOR_CORRECTION = t;
+void forward_renderer_set_color_correction(asset_hndl ah) {
+  COLOR_CORRECTION = ah;
 }
 
 static void render_gradient() {
 
-  shader_program* gradient_prog = dictionary_get(GRADIENT->properties, "program");
+  shader_program* gradient_prog = material_get_entry(asset_hndl_ptr(GRADIENT), 0)->program;
 
   GLuint gradient_handle = shader_program_handle(gradient_prog);
   glUseProgram(gradient_handle);
@@ -271,7 +263,7 @@ void forward_renderer_begin() {
   
   SDL_GL_CheckError();
   
-  timer += frame_time();
+  shader_timer += frame_time();
   
   glBindFramebuffer(GL_FRAMEBUFFER, hdr_fbo);
   
@@ -286,11 +278,11 @@ void forward_renderer_begin() {
     error("Light not set yet!");
   }
 
-  matrix_4x4 viewm = camera_view_matrix(CAMERA);
-  matrix_4x4 projm = camera_proj_matrix(CAMERA, graphics_viewport_ratio() );
+  mat4 viewm = camera_view_matrix(CAMERA);
+  mat4 projm = camera_proj_matrix(CAMERA, graphics_viewport_ratio() );
   
-  m44_to_array(viewm, view_matrix);
-  m44_to_array(projm, proj_matrix);
+  mat4_to_array(viewm, view_matrix);
+  mat4_to_array(projm, proj_matrix);
 
   glMatrixMode(GL_MODELVIEW);
   glLoadMatrixf(view_matrix);
@@ -300,11 +292,11 @@ void forward_renderer_begin() {
   
   /* Setup light stuff */
   
-  matrix_4x4 lviewm = light_view_matrix(SHADOW_LIGHT);
-  matrix_4x4 lprojm = light_proj_matrix(SHADOW_LIGHT);
+  mat4 lviewm = light_view_matrix(SHADOW_LIGHT);
+  mat4 lprojm = light_proj_matrix(SHADOW_LIGHT);
   
-  m44_to_array(lviewm, lview_matrix);
-  m44_to_array(lprojm, lproj_matrix);
+  mat4_to_array(lviewm, lview_matrix);
+  mat4_to_array(lprojm, lproj_matrix);
   
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);
@@ -330,7 +322,7 @@ void forward_renderer_end() {
   
   glBindFramebuffer(GL_FRAMEBUFFER, ldr_fbo);
   
-  shader_program* tonemap_prog = dictionary_get(SCREEN_TONEMAP->properties, "program");
+  shader_program* tonemap_prog = material_get_entry(asset_hndl_ptr(SCREEN_TONEMAP), 0)->program;
   
   GLuint tonemap_handle = shader_program_handle(tonemap_prog);
   glUseProgram(tonemap_handle);
@@ -405,7 +397,7 @@ void forward_renderer_end() {
   
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   
-  shader_program* post_prog = dictionary_get(SCREEN_POST->properties, "program");
+  shader_program* post_prog = material_get_entry(asset_hndl_ptr(SCREEN_POST), 0)->program;
   
   GLuint post_handle = shader_program_handle(post_prog);
   glUseProgram(post_handle);
@@ -425,12 +417,12 @@ void forward_renderer_end() {
   glUniform1i(glGetUniformLocation(post_handle, "diffuse_texture"), 0);
   
   glActiveTexture(GL_TEXTURE0 + 1 );
-  glBindTexture(GL_TEXTURE_2D, texture_handle(VIGNETTING));
+  glBindTexture(GL_TEXTURE_2D, texture_handle(asset_hndl_ptr(VIGNETTING)));
   glEnable(GL_TEXTURE_2D);
   glUniform1i(glGetUniformLocation(post_handle, "vignetting_texture"), 1);
   
   glActiveTexture(GL_TEXTURE0 + 2 );
-  glBindTexture(GL_TEXTURE_3D, texture_handle(COLOR_CORRECTION));
+  glBindTexture(GL_TEXTURE_3D, texture_handle(asset_hndl_ptr(COLOR_CORRECTION)));
   glEnable(GL_TEXTURE_3D);
   glUniform1i(glGetUniformLocation(post_handle, "lut"), 2);
   
@@ -482,7 +474,7 @@ void forward_renderer_set_exposure(float exposure) {
 static int tex_counter = 0;
 static void forward_renderer_use_material(material* mat) {
   
-  shader_program* prog = dictionary_get(mat->properties, "program");
+  shader_program* prog = material_get_entry(mat, 0)->program;
   GLuint prog_handle = shader_program_handle(prog);
   
   glUseProgram(prog_handle);
@@ -508,7 +500,7 @@ static void forward_renderer_use_material(material* mat) {
   
   GLint camera_direction = glGetUniformLocation(prog_handle, "camera_direction");
   if (camera_direction != -1) {
-    vector3 direction = v3_normalize(v3_sub(CAMERA->target, CAMERA->position));
+    vec3 direction = vec3_normalize(vec3_sub(CAMERA->target, CAMERA->position));
     glUniform3f(camera_direction, direction.x, direction.y, direction.z);
   }
   
@@ -547,7 +539,7 @@ static void forward_renderer_use_material(material* mat) {
   SDL_GL_CheckError();
   
   GLint time = glGetUniformLocation(prog_handle, "time");
-  glUniform1f(time,timer);
+  glUniform1f(time, shader_timer);
   
   GLint world_matrix_u = glGetUniformLocation(prog_handle, "world_matrix");
   glUniformMatrix4fv(world_matrix_u, 1, 0, world_matrix);
@@ -579,48 +571,26 @@ static void forward_renderer_use_material(material* mat) {
   
   tex_counter = 0;
   
-  for(int i = 0; i < mat->keys->num_items; i++) {
-    char* key = list_get(mat->keys, i);
-    
-    int* type = dictionary_get(mat->types, key);
-    void* property = dictionary_get(mat->properties, key);
+  material_entry* me = material_get_entry(mat, 0);
+  
+  for(int i = 0; i < me->num_items; i++) {
+    char* key = me->names[i];
+    int type = me->types[i];
+    material_item val = me->items[i];
     
     GLint loc = glGetUniformLocation(prog_handle, key);
     
-    if (*type == mat_type_texture) {
-    
+    if (type == mat_item_texture) {
       glUniform1i(loc, tex_counter);
       glActiveTexture(GL_TEXTURE0 + tex_counter);
-      glBindTexture(GL_TEXTURE_2D, texture_handle(property));
-      glEnable(GL_TEXTURE_2D);
+      glBindTexture(GL_TEXTURE_2D, texture_handle(asset_hndl_ptr(val.as_asset)));
       tex_counter++;
-    
-    } else if (*type == mat_type_int) {
-    
-      glUniform1i(loc, *((int*)property));
-    
-    } else if (*type == mat_type_float) {
-    
-      glUniform1f(loc, *((float*)property));
-      
-    } else if (*type == mat_type_vector2) {
-    
-      vector2 v = *((vector2*)property);
-      glUniform2f(loc, v.x, v.y);
-    
-    } else if (*type == mat_type_vector3) {
-    
-      vector3 v = *((vector3*)property);
-      glUniform3f(loc, v.x, v.y, v.z);
-  
-    } else if (*type == mat_type_vector4) {
-    
-      vector4 v = *((vector4*)property);
-      glUniform4f(loc, v.w, v.x, v.y, v.z);
-    
-    } else {
-      /* Do nothing */
     }
+    if (type == mat_item_int)   { glUniform1i(loc, val.as_int); }
+    if (type == mat_item_float) { glUniform1f(loc, val.as_float); }
+    if (type == mat_item_vec2)  { glUniform2f(loc, val.as_vec2.x, val.as_vec2.y); }
+    if (type == mat_item_vec3)  { glUniform3f(loc, val.as_vec3.x, val.as_vec3.y, val.as_vec3.z); }
+    if (type == mat_item_vec4)  { glUniform4f(loc, val.as_vec4.x, val.as_vec4.y, val.as_vec4.z, val.as_vec4.w); }
      
     SDL_GL_CheckError();
      
@@ -717,10 +687,10 @@ static void unbind_attributes_static() {
 
 void forward_renderer_render_static(static_object* so) {
   
-  matrix_4x4 r_world_matrix = m44_world( so->position, so->scale, so->rotation );
-  m44_to_array(r_world_matrix, world_matrix);
+  mat4 r_world_matrix = mat4_world( so->position, so->scale, so->rotation );
+  mat4_to_array(r_world_matrix, world_matrix);
   
-  renderable* r = so->renderable;
+  renderable* r = asset_hndl_ptr(so->renderable);
   
   for(int i=0; i < r->num_surfaces; i++) {
     
@@ -729,10 +699,10 @@ void forward_renderer_render_static(static_object* so) {
       error("Renderable for static object is rigged!");
     }
     
-    forward_renderer_use_material(s->base);
+    forward_renderer_use_material(asset_hndl_ptr(s->material));
     SDL_GL_CheckError();
     
-    shader_program* prog = dictionary_get(s->base->properties, "program");
+    shader_program* prog = material_get_entry(asset_hndl_ptr(s->material), 0)->program;
     GLint recieve_shadows = glGetUniformLocation(shader_program_handle(prog), "recieve_shadows");
     if (recieve_shadows != -1) {
       glUniform1i(recieve_shadows, so->recieve_shadows);
@@ -766,10 +736,10 @@ void forward_renderer_render_static(static_object* so) {
 
 void forward_renderer_render_static_tess(static_object* so) {
 
-  matrix_4x4 r_world_matrix = m44_world( so->position, so->scale, so->rotation );
-  m44_to_array(r_world_matrix, world_matrix);
+  mat4 r_world_matrix = mat4_world( so->position, so->scale, so->rotation );
+  mat4_to_array(r_world_matrix, world_matrix);
   
-  renderable* r = so->renderable;
+  renderable* r = asset_hndl_ptr(so->renderable);
   
   for(int i=0; i < r->num_surfaces; i++) {
     
@@ -778,9 +748,9 @@ void forward_renderer_render_static_tess(static_object* so) {
       error("Renderable for static object is rigged!");
     }
     
-    forward_renderer_use_material(s->base);
+    forward_renderer_use_material(asset_hndl_ptr(s->material));
     
-    shader_program* prog = dictionary_get(s->base->properties, "program");
+    shader_program* prog = material_get_entry(asset_hndl_ptr(s->material), 0)->program;
     GLint recieve_shadows = glGetUniformLocation(shader_program_handle(prog), "recieve_shadows");
     if (recieve_shadows != -1) {
       glUniform1i(recieve_shadows, so->recieve_shadows);
@@ -807,15 +777,15 @@ void forward_renderer_render_static_tess(static_object* so) {
 
 void forward_renderer_render_instance(instance_object* io) {
   
-  matrix_4x4 r_world_matrix = m44_world(io->instances[0].position, io->instances[0].scale, io->instances[0].rotation);
-  m44_to_array(r_world_matrix, world_matrix);
+  mat4 r_world_matrix = mat4_world(io->instances[0].position, io->instances[0].scale, io->instances[0].rotation);
+  mat4_to_array(r_world_matrix, world_matrix);
   
   for(int i = 0; i < io->num_instances; i++) {
-    matrix_4x4 r_world_matrix = m44_world(io->instances[i].position, io->instances[i].scale, io->instances[i].rotation);
-    m44_to_array(r_world_matrix, world_matricies+(i*16));
+    mat4 r_world_matrix = mat4_world(io->instances[i].position, io->instances[i].scale, io->instances[i].rotation);
+    mat4_to_array(r_world_matrix, world_matricies+(i*16));
   }
   
-  renderable* r = io->renderable;
+  renderable* r = asset_hndl_ptr(io->renderable);
   
   for(int i=0; i < r->num_surfaces; i++) {
     
@@ -824,9 +794,9 @@ void forward_renderer_render_instance(instance_object* io) {
       error("Renderable for static object is rigged!");
     }
     
-    forward_renderer_use_material(s->base);
+    forward_renderer_use_material(asset_hndl_ptr(s->material));
     
-    shader_program* prog = dictionary_get(s->base->properties, "program");
+    shader_program* prog = material_get_entry(asset_hndl_ptr(s->material), 0)->program;
     GLint recieve_shadows = glGetUniformLocation(shader_program_handle(prog), "recieve_shadows");
     if (recieve_shadows != -1) {
       glUniform1i(recieve_shadows, io->recieve_shadows);
@@ -852,21 +822,21 @@ void forward_renderer_render_instance(instance_object* io) {
 
 void forward_renderer_render_physics(physics_object* po) {
 
-  matrix_4x4 r_world_matrix = m44_world( po->position, po->scale, po->rotation );
-  m44_to_array(r_world_matrix, world_matrix);
+  mat4 r_world_matrix = mat4_world( po->position, po->scale, po->rotation );
+  mat4_to_array(r_world_matrix, world_matrix);
   
-  renderable* r = po->renderable;
+  renderable* r = asset_hndl_ptr(po->renderable);
   
   for(int i=0; i < r->num_surfaces; i++) {
     
     renderable_surface* s = r->surfaces[i];
     if(s->is_rigged) {
-      error("Physics object is rigged!")
+      error("Physics object is rigged!");
     } 
     
-    forward_renderer_use_material(s->base);
+    forward_renderer_use_material(asset_hndl_ptr(s->material));
     
-    shader_program* prog = dictionary_get(s->base->properties, "program");
+    shader_program* prog = material_get_entry(asset_hndl_ptr(s->material), 0)->program;
     GLint recieve_shadows = glGetUniformLocation(shader_program_handle(prog), "recieve_shadows");
     glUniform1i(recieve_shadows, po->recieve_shadows);
     
@@ -885,54 +855,51 @@ void forward_renderer_render_physics(physics_object* po) {
     forward_renderer_disuse_material();
 
   }
-  
-  //if (po->collision_body != NULL) {
-  //  bsp_counter = 0;
-  //  render_bsp_mesh(po->collision_body->collision_mesh);
-  //}
 
 }
 
 #define MAX_BONES 32
-static matrix_4x4 bone_matrices[MAX_BONES];
+static mat4 bone_matrices[MAX_BONES];
 static float bone_matrix_data[4 * 4 * MAX_BONES];
 
 void forward_renderer_render_animated(animated_object* ao) {
 
-  if (ao->skeleton->num_bones > MAX_BONES) {
+  skeleton* skel = asset_hndl_ptr(ao->skeleton);
+
+  if (skel->num_bones > MAX_BONES) {
     error("animated object skeleton has too many bones (over %i)", MAX_BONES);
   }
   
-  matrix_4x4 r_world_matrix = m44_world( ao->position, ao->scale, ao->rotation );
-  m44_to_array(r_world_matrix, world_matrix);
+  mat4 r_world_matrix = mat4_world( ao->position, ao->scale, ao->rotation );
+  mat4_to_array(r_world_matrix, world_matrix);
   
   skeleton_gen_transforms(ao->pose);
   
-  for(int i = 0; i < ao->skeleton->num_bones; i++) {
-    matrix_4x4 base, ani;
-    base = ao->skeleton->inv_transforms[i];
+  for(int i = 0; i < skel->num_bones; i++) {
+    mat4 base, ani;
+    base = skel->inv_transforms[i];
     ani = ao->pose->transforms[i];
     
-    bone_matrices[i] = m44_mul_m44(ani, base);
-    m44_to_array(bone_matrices[i], bone_matrix_data + (i * 4 * 4));
+    bone_matrices[i] = mat4_mul_mat4(ani, base);
+    mat4_to_array(bone_matrices[i], bone_matrix_data + (i * 4 * 4));
   }
   
-  renderable* r = ao->renderable;
+  renderable* r = asset_hndl_ptr(ao->renderable);
   
   for(int i = 0; i < r->num_surfaces; i++) {
     
     renderable_surface* s = r->surfaces[i];
     if(s->is_rigged) {
 
-      forward_renderer_use_material(s->base);    
+      forward_renderer_use_material(asset_hndl_ptr(s->material));
       
-      shader_program* prog = dictionary_get(s->base->properties, "program");
+      shader_program* prog = material_get_entry(asset_hndl_ptr(s->material), 0)->program;
       
       GLint bone_world_matrices_u = glGetUniformLocation(shader_program_handle(prog), "bone_world_matrices");
-      glUniformMatrix4fv(bone_world_matrices_u, ao->skeleton->num_bones, GL_FALSE, bone_matrix_data);
+      glUniformMatrix4fv(bone_world_matrices_u, skel->num_bones, GL_FALSE, bone_matrix_data);
       
       GLint bone_count_u = glGetUniformLocation(shader_program_handle(prog), "bone_count");
-      glUniform1i(bone_count_u, ao->skeleton->num_bones);
+      glUniform1i(bone_count_u, skel->num_bones);
       
       GLint recieve_shadows = glGetUniformLocation(shader_program_handle(prog), "recieve_shadows");
       glUniform1i(recieve_shadows, ao->recieve_shadows);
@@ -997,11 +964,11 @@ void forward_renderer_render_skeleton(skeleton* s) {
   
   for(int i = 0; i < s->num_bones; i++) {
     bone* main_bone = s->bones[i];
-    vector4 pos = m44_mul_v4(s->transforms[i], v4(0,0,0,1));
+    vec4 pos = mat4_mul_vec4(s->transforms[i], vec4_new(0,0,0,1));
     forward_renderer_render_axis(s->transforms[i]);
     
     if (main_bone->parent != NULL) {
-      vector4 par_pos = m44_mul_v4(s->transforms[main_bone->parent->id], v4(0,0,0,1));
+      vec4 par_pos = mat4_mul_vec4(s->transforms[main_bone->parent->id], vec4_new(0,0,0,1));
       glDisable(GL_DEPTH_TEST);
       glColor3f(0.0,0.0,0.0);
       glBegin(GL_LINES);
@@ -1016,17 +983,17 @@ void forward_renderer_render_skeleton(skeleton* s) {
   
 }
 
-void forward_renderer_render_axis(matrix_4x4 world) {
+void forward_renderer_render_axis(mat4 world) {
   
-  vector4 x_pos = m44_mul_v4(world, v4(2,0,0,1));
-  vector4 y_pos = m44_mul_v4(world, v4(0,2,0,1));
-  vector4 z_pos = m44_mul_v4(world, v4(0,0,2,1));
-  vector4 base_pos = m44_mul_v4(world, v4(0,0,0,1));
+  vec4 x_pos = mat4_mul_vec4(world, vec4_new(2,0,0,1));
+  vec4 y_pos = mat4_mul_vec4(world, vec4_new(0,2,0,1));
+  vec4 z_pos = mat4_mul_vec4(world, vec4_new(0,0,2,1));
+  vec4 base_pos = mat4_mul_vec4(world, vec4_new(0,0,0,1));
   
-  x_pos = v4_div(x_pos, x_pos.w);
-  y_pos = v4_div(y_pos, y_pos.w);
-  z_pos = v4_div(z_pos, z_pos.w);
-  base_pos = v4_div(base_pos, base_pos.w);
+  x_pos = vec4_div(x_pos, x_pos.w);
+  y_pos = vec4_div(y_pos, y_pos.w);
+  z_pos = vec4_div(z_pos, z_pos.w);
+  base_pos = vec4_div(base_pos, base_pos.w);
   
   glDisable(GL_DEPTH_TEST);
   
@@ -1063,14 +1030,14 @@ void forward_renderer_render_axis(matrix_4x4 world) {
 
 void forward_renderer_render_light(light* l) {
   
-  matrix_4x4 viewm = camera_view_matrix(CAMERA);
-  matrix_4x4 projm = camera_proj_matrix(CAMERA, graphics_viewport_ratio() );
+  mat4 viewm = camera_view_matrix(CAMERA);
+  mat4 projm = camera_proj_matrix(CAMERA, graphics_viewport_ratio() );
   
-  vector4 light_pos = v4(l->position.x, l->position.y, l->position.z, 1);
-  light_pos = m44_mul_v4(viewm, light_pos);
-  light_pos = m44_mul_v4(projm, light_pos);
+  vec4 light_pos = vec4_new(l->position.x, l->position.y, l->position.z, 1);
+  light_pos = mat4_mul_vec4(viewm, light_pos);
+  light_pos = mat4_mul_vec4(projm, light_pos);
   
-  light_pos = v4_div(light_pos, light_pos.w);
+  light_pos = vec4_div(light_pos, light_pos.w);
   
 	glMatrixMode(GL_PROJECTION);
   glPushMatrix();
@@ -1092,7 +1059,7 @@ void forward_renderer_render_light(light* l) {
   glEnable(GL_ALPHA_TEST);
   glAlphaFunc(GL_GREATER, 0.25);
   
-  texture* lightbulb = asset_load_get("$CORANGE/ui/lightbulb.dds");
+  texture* lightbulb = asset_hndl_ptr(asset_hndl_new(P("$CORANGE/ui/lightbulb.dds")));
   glActiveTexture(GL_TEXTURE0 + 0 );
   glBindTexture(GL_TEXTURE_2D, texture_handle(lightbulb));
   glEnable(GL_TEXTURE_2D);
@@ -1120,13 +1087,13 @@ void forward_renderer_render_light(light* l) {
 
 void forward_renderer_render_landscape(landscape* ls) {
   
-  matrix_4x4 r_world_matrix = m44_world(ls->position, ls->scale, ls->rotation);
-  m44_to_array(r_world_matrix, world_matrix);
+  mat4 r_world_matrix = mat4_world(ls->position, ls->scale, ls->rotation);
+  mat4_to_array(r_world_matrix, world_matrix);
   
-  material* terrain_mat = asset_get("$CORANGE/shaders/forward/terrain.mat");
+  material* terrain_mat = asset_hndl_ptr(asset_hndl_new(P("$CORANGE/shaders/forward/terrain.mat")));
   
-  shader_program* terrain = dictionary_get(terrain_mat->properties, "program");
-  GLuint terrain_handle = shader_program_handle(terrain);
+  shader_program* terrain_prog = material_get_entry(terrain_mat, 0)->program;
+  GLuint terrain_handle = shader_program_handle(terrain_prog);
   glUseProgram(terrain_handle);
   
   GLint world_matrix_u = glGetUniformLocation(terrain_handle, "world_matrix");
@@ -1142,7 +1109,7 @@ void forward_renderer_render_landscape(landscape* ls) {
   glUniform3f(camera_position, CAMERA->position.x, CAMERA->position.y, CAMERA->position.z);
   
   GLint camera_direction = glGetUniformLocation(terrain_handle, "camera_direction");
-  vector3 direction = v3_normalize(v3_sub(CAMERA->target, CAMERA->position));
+  vec3 direction = vec3_normalize(vec3_sub(CAMERA->target, CAMERA->position));
   glUniform3f(camera_direction, direction.x, direction.y, direction.z);
   
   for(int i = 0; i < num_lights; i++) {
@@ -1174,21 +1141,21 @@ void forward_renderer_render_landscape(landscape* ls) {
   glUniform3fv(light_specular_u, num_lights, (const GLfloat*)light_specular);
   
   glActiveTexture(GL_TEXTURE0 + 0 );
-  glBindTexture(GL_TEXTURE_2D, texture_handle(ls->normalmap));
+  glBindTexture(GL_TEXTURE_2D, texture_handle(asset_hndl_ptr(ls->normalmap)));
   glEnable(GL_TEXTURE_2D);
   glUniform1i(glGetUniformLocation(terrain_handle, "normals"), 0);
   
   glActiveTexture(GL_TEXTURE0 + 1 );
-  glBindTexture(GL_TEXTURE_2D, texture_handle(ls->colormap));
+  glBindTexture(GL_TEXTURE_2D, texture_handle(asset_hndl_ptr(ls->colormap)));
   glEnable(GL_TEXTURE_2D);
   glUniform1i(glGetUniformLocation(terrain_handle, "color"), 1);
   
   glActiveTexture(GL_TEXTURE0 + 2 );
-  glBindTexture(GL_TEXTURE_2D, texture_handle(ls->attributemap));
+  glBindTexture(GL_TEXTURE_2D, texture_handle(asset_hndl_ptr(ls->attributemap)));
   glEnable(GL_TEXTURE_2D);
   glUniform1i(glGetUniformLocation(terrain_handle, "attribs"), 2);
   
-  texture* random = asset_load_get("$CORANGE/resources/random.dds");
+  texture* random = asset_hndl_ptr(asset_hndl_new(P("$CORANGE/resources/random.dds")));
   
   glActiveTexture(GL_TEXTURE0 + 3 );
   glBindTexture(GL_TEXTURE_2D, texture_handle(random));
@@ -1196,38 +1163,40 @@ void forward_renderer_render_landscape(landscape* ls) {
   glUniform1i(glGetUniformLocation(terrain_handle, "random"), 3);
   
   glActiveTexture(GL_TEXTURE0 + 4 );
-  glBindTexture(GL_TEXTURE_2D, texture_handle(ls->near_texture));
+  glBindTexture(GL_TEXTURE_2D, texture_handle(asset_hndl_ptr(ls->near_texture)));
   glEnable(GL_TEXTURE_2D);
   glUniform1i(glGetUniformLocation(terrain_handle, "surface_diffuse"), 4);
   
   glActiveTexture(GL_TEXTURE0 + 5 );
-  glBindTexture(GL_TEXTURE_2D, texture_handle(ls->near_texture_bump));
+  glBindTexture(GL_TEXTURE_2D, texture_handle(asset_hndl_ptr(ls->near_texture_bump)));
   glEnable(GL_TEXTURE_2D);
   glUniform1i(glGetUniformLocation(terrain_handle, "surface_bump"), 5);
   
   glActiveTexture(GL_TEXTURE0 + 6 );
-  glBindTexture(GL_TEXTURE_2D, texture_handle(ls->far_texture));
+  glBindTexture(GL_TEXTURE_2D, texture_handle(asset_hndl_ptr(ls->far_texture)));
   glEnable(GL_TEXTURE_2D);
   glUniform1i(glGetUniformLocation(terrain_handle, "surface_diffuse_far"), 6);
   
   glActiveTexture(GL_TEXTURE0 + 7 );
-  glBindTexture(GL_TEXTURE_2D, texture_handle(ls->far_texture_bump));
+  glBindTexture(GL_TEXTURE_2D, texture_handle(asset_hndl_ptr(ls->far_texture_bump)));
   glEnable(GL_TEXTURE_2D);
   glUniform1i(glGetUniformLocation(terrain_handle, "surface_bump_far"), 7);
   
-  for(int i = 0; i < ls->terrain->num_chunks; i++) {
+  terrain* terr = asset_hndl_ptr(ls->terrain);
+  
+  for(int i = 0; i < terr->num_chunks; i++) {
     
-    terrain_chunk* tc = ls->terrain->chunks[i];
+    terrain_chunk* tc = terr->chunks[i];
     
-    vector3 position = v3_add(v3((tc->x+0.5) * ls->terrain->chunk_width, 0, (tc->y+0.5) * ls->terrain->chunk_height), ls->position);
+    vec3 position = vec3_add(vec3_new((tc->x+0.5) * terr->chunk_width, 0, (tc->y+0.5) * terr->chunk_height), ls->position);
     
-    vector3 camera_pos = v3_normalize(v3_sub(position, CAMERA->position));
-    vector3 camera_dir = v3_normalize(v3_sub(CAMERA->target, CAMERA->position));
-    float angle = v3_dot(camera_pos, camera_dir);
+    vec3 camera_pos = vec3_normalize(vec3_sub(position, CAMERA->position));
+    vec3 camera_dir = vec3_normalize(vec3_sub(CAMERA->target, CAMERA->position));
+    float angle = vec3_dot(camera_pos, camera_dir);
     
     if (angle < -CAMERA->fov) continue;
     
-    int index_id = min(0.01 * v3_dist_manhattan(position, CAMERA->position), NUM_TERRAIN_BUFFERS-1);
+    int index_id = min(0.01 * vec3_dist_manhattan(position, CAMERA->position), NUM_TERRAIN_BUFFERS-1);
     
     glBindBuffer(GL_ARRAY_BUFFER, tc->vertex_buffer);
   

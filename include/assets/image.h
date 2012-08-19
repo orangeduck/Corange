@@ -1,13 +1,12 @@
 #ifndef image_h
 #define image_h
 
-#include "vector.h"
+#include "cengine.h"
 
 typedef struct {
   int width;
   int height;
   unsigned char* data;
-  
   int repeat_type;
   int sample_type;
 } image;
@@ -25,7 +24,7 @@ image* image_blank(int width, int height);
 
 image* image_duplicate(image* src);
 image* image_subimage(image* src, int left, int top, int width, int height);
-image* image_subsample(image* src, vector2 top_left, vector2 bottom_right);
+image* image_subsample(image* src, vec2 top_left, vec2 bottom_right);
 
 image* image_red_channel(image* src);
 image* image_green_channel(image* src);
@@ -34,15 +33,15 @@ image* image_alpha_channel(image* src);
 
 image* image_flood_fill_mask(image* src, int base_u, int base_v, float tolerance);
 image* image_intensity_mask(image* src, float boundry);
-image* image_difference_mask(image* src, vector4 color, float tolerance);
+image* image_difference_mask(image* src, vec4 color, float tolerance);
 
 void image_delete(image* i);
 
-vector4 image_get_pixel(image* i, int u, int v);
-void image_set_pixel(image* i, int u, int v, vector4 color);
+vec4 image_get_pixel(image* i, int u, int v);
+void image_set_pixel(image* i, int u, int v, vec4 color);
 
-vector4 image_sample(image* i, vector2 uv);
-void image_paint(image* i, vector2 uv, vector4 color);
+vec4 image_sample(image* i, vec2 uv);
+void image_paint(image* i, vec2 uv, vec4 color);
 
 void image_bgr_to_rgb(image* i);
 
@@ -53,15 +52,15 @@ void image_rotate_180(image* i);
 void image_flip_horizontal(image* i);
 void image_flip_vertical(image* i);
 
-void image_scale(image* i, vector2 scale);
+void image_scale(image* i, vec2 scale);
 
-void image_fill(image* i, vector4 color);
+void image_fill(image* i, vec4 color);
 void image_fill_black(image* i);
 void image_fill_white(image* i);
 
 void image_copy(image* dst, image* src);
-void image_copy_sub(image* dst, image* src, vector2 top_left);
-void image_paste_sub(image* dst, image* src, vector2 top_left);
+void image_copy_sub(image* dst, image* src, vec2 top_left);
+void image_paste_sub(image* dst, image* src, vec2 top_left);
 
 float image_intensity(image* i);
 

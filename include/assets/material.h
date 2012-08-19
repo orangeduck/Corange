@@ -1,47 +1,58 @@
+/**
+*** :: Material ::
+***
+***   Material in system. Provides shader.
+***   Also provides shader "uniform values
+***
+**/
+
 #ifndef material_h
 #define material_h
 
-#include "dictionary.h"
-#include "list.h"
+#include "cengine.h"
+#include "asset_manager.h"
 
-#define mat_type_program 1
-#define mat_type_shader 2
-#define mat_type_texture 3
-#define mat_type_string 4
-#define mat_type_int 5
-#define mat_type_float 6
-#define mat_type_vector2 7
-#define mat_type_vector3 8
-#define mat_type_vector4 9
+#include "assets/shader.h"
+
+typedef union {
+  int as_int;
+  float as_float;
+  vec2 as_vec2;
+  vec3 as_vec3;
+  vec4 as_vec4;
+  asset_hndl as_asset;
+} material_item;
+
+static const int mat_item_int = 0;
+static const int mat_item_float = 1;
+static const int mat_item_vec2 = 2;
+static const int mat_item_vec3 = 3;
+static const int mat_item_vec4 = 4;
+static const int mat_item_shader = 5;
+static const int mat_item_texture = 6;
 
 typedef struct {
+  shader_program* program;
+  int num_items;
+  int* types;
+  char** names;
+  material_item* items;
+} material_entry;
 
-  char* name;
-  list* keys;
-  dictionary* properties;
-  dictionary* types;
-  
+void material_entry_delete(material_entry* me);
+material_item material_entry_item(material_entry* me, char* name);
+bool material_entry_has_item(material_entry* me, char* name);
+
+typedef struct {
+  int num_entries;
+  material_entry** entries;
 } material;
 
 material* material_new();
-void material_delete(material* mat);
+void material_delete(material* m);
 
 material* mat_load_file(char* filename);
 
-void material_print(material* mat);
-
-void* material_get_property(material* mat, char* name);
-int material_get_type(material* mat, char* name);
-void material_set_property(material* mat, char* name, void* value, int type);
-
-typedef struct {
-
-  int num_materials;
-  material** materials;
-  
-} multi_material;
-
-multi_material* mmat_load_file(char* filename);
-void multi_material_delete(multi_material* mmat);
+material_entry* material_get_entry(material* m, int index);
 
 #endif

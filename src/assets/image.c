@@ -1,17 +1,6 @@
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#include <math.h>
-
-#include "SDL/SDL.h"
-
-#include "error.h"
-#include "int_list.h"
-
-#include "asset_manager.h"
-
 #include "assets/image.h"
 
+#include "data/int_list.h"
 
 image* image_new(int width, int height, unsigned char* data) {
   
@@ -77,8 +66,8 @@ image* image_red_channel(image* src) {
   
   for( x = 0; x < src->width; x++)
   for( y = 0; y < src->height; y++) {
-    float c = image_get_pixel( src, x, y ).r;
-    image_set_pixel( new, x, y, v4(c,c,c,c) );
+    float c = image_get_pixel( src, x, y ).x;
+    image_set_pixel( new, x, y, vec4_new(c,c,c,c) );
   }
   
   return new;
@@ -93,8 +82,8 @@ image* image_green_channel(image* src) {
   
   for( x = 0; x < src->width; x++)
   for( y = 0; y < src->height; y++) {
-    float c = image_get_pixel( src, x, y ).g;
-    image_set_pixel( new, x, y, v4(c,c,c,c) );
+    float c = image_get_pixel( src, x, y ).y;
+    image_set_pixel( new, x, y, vec4_new(c,c,c,c) );
   }
   
   return new;
@@ -109,8 +98,8 @@ image* image_blue_channel(image* src) {
   
   for( x = 0; x < src->width; x++)
   for( y = 0; y < src->height; y++) {
-    float c = image_get_pixel( src, x, y ).b;
-    image_set_pixel( new, x, y, v4(c,c,c,c) );
+    float c = image_get_pixel( src, x, y ).z;
+    image_set_pixel( new, x, y, vec4_new(c,c,c,c) );
   }
   
   return new;
@@ -125,8 +114,8 @@ image* image_alpha_channel(image* src) {
   
   for( x = 0; x < src->width; x++)
   for( y = 0; y < src->height; y++) {
-    float c = image_get_pixel( src, x, y ).a;
-    image_set_pixel( new, x, y, v4(c,c,c,c) );
+    float c = image_get_pixel( src, x, y ).w;
+    image_set_pixel( new, x, y, vec4_new(c,c,c,c) );
   }
   
   return new;
@@ -135,10 +124,10 @@ image* image_alpha_channel(image* src) {
 
 image* image_subimage(image* src, int left, int top, int width, int height) {
   
-  assert(left >= 0, "Image Out of Bounds");
-  assert(top >= 0, "Image Out of Bounds");
-  assert(left + width < src->width, "Image Out of Bounds");
-  assert(top + height < src->height, "Image Out of Bounds");
+  if (left < 0) { error("Image Out of Bounds"); } 
+  if (top < 0) { error("Image Out of Bounds"); } 
+  if (left + width >= src->width) { error("Image Out of Bounds"); } 
+  if (top + height >= src->height) { error("Image Out of Bounds"); } 
   
   image* i = malloc(sizeof(image));
   i->width = width;
@@ -151,14 +140,14 @@ image* image_subimage(image* src, int left, int top, int width, int height) {
   int x,y;
   for( x=0; x < i->width; x++)
   for( y=0; y < i->height; y++){
-    vector4 pix = image_get_pixel( src, left+x, top+y );
+    vec4 pix = image_get_pixel( src, left+x, top+y );
     image_set_pixel( i, x, y, pix );
   }
   
   return i;
 }
 
-image* image_subsample(image* src, vector2 top_left, vector2 bottom_right) {
+image* image_subsample(image* src, vec2 top_left, vec2 bottom_right) {
 
   image* i = malloc(sizeof(image));
   
@@ -179,7 +168,7 @@ image* image_subsample(image* src, vector2 top_left, vector2 bottom_right) {
     float u = ((float)x / src->width) + top_left.x;
     float v = ((float)y / src->height) + top_left.y;
     
-    vector4 pix = image_sample( src, v2(u,v) );
+    vec4 pix = image_sample( src, vec2_new(u,v) );
     image_set_pixel(i, x, y, pix);
     
   }
@@ -192,11 +181,11 @@ image* image_flood_fill_mask(image* src, int base_u, int base_v, float tolerance
   
   image* mask = image_blank(src->width, src->height);
   
-  int_list* q_x = int_list_new_blocksize(256);
-  int_list* q_y = int_list_new_blocksize(256);
+  int_list* q_x = int_list_new();
+  int_list* q_y = int_list_new();
   
-  vector4 base = image_get_pixel(src, base_u, base_v);
-  float base_val = (base.r + base.g + base.b + base.a) / 4;
+  vec4 base = image_get_pixel(src, base_u, base_v);
+  float base_val = (base.x + base.y + base.z + base.w) / 4;
   
   int_list_push_back(q_x, base_u);
   int_list_push_back(q_y, base_v);
@@ -206,47 +195,47 @@ image* image_flood_fill_mask(image* src, int base_u, int base_v, float tolerance
     int u = int_list_pop_back(q_x);
     int v = int_list_pop_back(q_y);
     
-    image_set_pixel(mask, u, v, v4_one() );
+    image_set_pixel(mask, u, v, vec4_one() );
     
     if (u > 0) {
-      vector4 left = image_get_pixel(src, u-1, v);
-      vector4 left_mask = image_get_pixel(mask, u-1, v);
-      float left_val = (left.r + left.g + left.b + left.a) / 4;
+      vec4 left = image_get_pixel(src, u-1, v);
+      vec4 left_mask = image_get_pixel(mask, u-1, v);
+      float left_val = (left.x + left.y + left.z + left.w) / 4;
       
-      if ( ( fabs( base_val - left_val ) <= tolerance ) && (left_mask.r != 1.0) ) {
+      if ( ( fabs( base_val - left_val ) <= tolerance ) && (left_mask.x != 1.0) ) {
         int_list_push_back(q_x, u-1);
         int_list_push_back(q_y, v);
       }
     }
     
     if (u < src->width-1) {
-      vector4 right = image_get_pixel(src, u+1, v);
-      vector4 right_mask = image_get_pixel(mask, u+1, v);
-      float right_val = (right.r + right.g + right.b + right.a) / 4;
+      vec4 right = image_get_pixel(src, u+1, v);
+      vec4 right_mask = image_get_pixel(mask, u+1, v);
+      float right_val = (right.x + right.y + right.z + right.w) / 4;
       
-      if ( ( fabs( base_val - right_val ) <= tolerance ) && (right_mask.r != 1.0) ) {
+      if ( ( fabs( base_val - right_val ) <= tolerance ) && (right_mask.x != 1.0) ) {
         int_list_push_back(q_x, u+1);
         int_list_push_back(q_y, v);
       }
     }
     
     if (v > 0) {
-      vector4 top = image_get_pixel(src, u, v-1);
-      vector4 top_mask = image_get_pixel(mask, u, v-1);
-      float top_val = (top.r + top.g + top.b + top.a) / 4;
+      vec4 top = image_get_pixel(src, u, v-1);
+      vec4 top_mask = image_get_pixel(mask, u, v-1);
+      float top_val = (top.x + top.y + top.z + top.w) / 4;
       
-      if ( ( fabs( base_val - top_val ) <= tolerance ) && (top_mask.r != 1.0) ) {
+      if ( ( fabs( base_val - top_val ) <= tolerance ) && (top_mask.x != 1.0) ) {
         int_list_push_back(q_x, u);
         int_list_push_back(q_y, v-1);
       }
     }
     
     if (v < src->height-1) {
-      vector4 bottom = image_get_pixel(src, u, v+1);
-      vector4 bottom_mask = image_get_pixel(mask, u, v+1);
-      float bottom_val = (bottom.r + bottom.g + bottom.b + bottom.a) / 4;
+      vec4 bottom = image_get_pixel(src, u, v+1);
+      vec4 bottom_mask = image_get_pixel(mask, u, v+1);
+      float bottom_val = (bottom.x + bottom.y + bottom.z + bottom.w) / 4;
       
-      if ( ( fabs( base_val - bottom_val ) <= tolerance ) && (bottom_mask.r != 1.0) ) {
+      if ( ( fabs( base_val - bottom_val ) <= tolerance ) && (bottom_mask.x != 1.0) ) {
         int_list_push_back(q_x, u);
         int_list_push_back(q_y, v+1);
       }
@@ -269,11 +258,11 @@ image* image_intensity_mask(image* src, float boundry) {
   for (x = 0; x < src->width; x++)
   for (y = 0; y < src->height; y++) {
     
-    vector4 col = image_get_pixel(src, x, y);
-    float val = (col.r + col.g + col.b + col.a) / 4;
+    vec4 col = image_get_pixel(src, x, y);
+    float val = (col.x + col.y + col.z + col.w) / 4;
     
     if (val > boundry) {
-      image_set_pixel( mask, x, y, v4_one() );
+      image_set_pixel( mask, x, y, vec4_one() );
     }
     
   }
@@ -282,21 +271,21 @@ image* image_intensity_mask(image* src, float boundry) {
 
 }
 
-image* image_difference_mask(image* src, vector4 color, float tolerance){
+image* image_difference_mask(image* src, vec4 color, float tolerance){
 
   image* mask = image_blank(src->width, src->height);
   
-  float base_val = (color.r + color.g + color.b + color.a) / 4;
+  float base_val = (color.x + color.y + color.z + color.w) / 4;
   
   int x,y;
   for (x = 0; x < src->width; x++)
   for (y = 0; y < src->height; y++) {
   
-    vector4 col = image_get_pixel(src, x, y);
-    float val = (col.r + col.g + col.b + col.a) / 4;
+    vec4 col = image_get_pixel(src, x, y);
+    float val = (col.x + col.y + col.z + col.w) / 4;
     
     if ( fabs(val - base_val) > tolerance) {
-      image_set_pixel( mask, x, y, v4_one() );
+      image_set_pixel( mask, x, y, vec4_one() );
     }
   
   }
@@ -310,42 +299,42 @@ void image_delete(image* i) {
   free(i);
 }
 
-vector4 image_get_pixel(image* i, int u, int v) {
+vec4 image_get_pixel(image* i, int u, int v) {
   
   v = i->height - v - 1;
   
-  assert( u >= 0, "Image Out of Bounds" );
-  assert( v >= 0, "Image Out of Bounds" );
-  assert( u < i->width, "Image Out of Bounds" );
-  assert( v < i->height, "Image Out of Bounds" );
+  if (u < 0) { error("Image Out of Bounds"); } 
+  if (v < 0) { error("Image Out of Bounds"); } 
+  if (u >= i->width) { error("Image Out of Bounds"); } 
+  if (v >= i->height) { error("Image Out of Bounds"); } 
   
   float r = (float)i->data[u * 4 + v * i->width * 4 + 0] / 255;
   float g = (float)i->data[u * 4 + v * i->width * 4 + 1] / 255;
   float b = (float)i->data[u * 4 + v * i->width * 4 + 2] / 255;
   float a = (float)i->data[u * 4 + v * i->width * 4 + 3] / 255;
 
-  return v4(r,g,b,a);
+  return vec4_new(r,g,b,a);
   
 }
 
-void image_set_pixel(image* i, int u, int v, vector4 color) {
+void image_set_pixel(image* i, int u, int v, vec4 color) {
   
   v = i->height - v - 1;
-  i->data[u * 4 + v * i->width * 4 + 0] = (color.r * 255);
-  i->data[u * 4 + v * i->width * 4 + 1] = (color.g * 255);
-  i->data[u * 4 + v * i->width * 4 + 2] = (color.b * 255);
-  i->data[u * 4 + v * i->width * 4 + 3] = (color.a * 255);
+  i->data[u * 4 + v * i->width * 4 + 0] = (color.x * 255);
+  i->data[u * 4 + v * i->width * 4 + 1] = (color.y * 255);
+  i->data[u * 4 + v * i->width * 4 + 2] = (color.z * 255);
+  i->data[u * 4 + v * i->width * 4 + 3] = (color.w * 255);
   
 }
 
-vector4 image_sample(image* i, vector2 uv) {
+vec4 image_sample(image* i, vec2 uv) {
 
   if ( i->repeat_type == image_repeat_tile ) {
-    uv = v2_fmod(uv, 1.0);
+    uv = vec2_fmod(uv, 1.0);
     if (uv.x < 0) { uv.x = 1 + uv.x; }
     if (uv.y < 0) { uv.y = 1 + uv.y; }
   } else if ( i->repeat_type == image_repeat_clamp ) {
-    uv = v2_saturate(uv);
+    uv = vec2_saturate(uv);
   } else if ( i->repeat_type == image_repeat_mirror) {
     
     if ( ((int)floor(uv.x) % 2) == 1) {
@@ -391,7 +380,7 @@ vector4 image_sample(image* i, vector2 uv) {
   float amount_x = fmod(u, 1.0);
   float amount_y = fmod(v, 1.0);
   
-  vector4 s1, s2, s3, s4;
+  vec4 s1, s2, s3, s4;
   
   s1 = image_get_pixel(i, s1_u, s1_v);
   s2 = image_get_pixel(i, s2_u, s2_v);
@@ -399,24 +388,24 @@ vector4 image_sample(image* i, vector2 uv) {
   s4 = image_get_pixel(i, s4_u, s4_v);
   
   if ( i->sample_type == image_sample_linear ) {
-    return v4_bilinear_interpolation(s1, s2, s3, s4, amount_x, amount_y);
+    return vec4_bilinear_interp(s1, s2, s3, s4, amount_x, amount_y);
   } else if ( i->sample_type == image_sample_nearest ) {
-    return v4_binearest_neighbor_interpolation(s1, s2, s3, s4, amount_x, amount_y);
+    return vec4_binearest_interp(s1, s2, s3, s4, amount_x, amount_y);
   } else {
     error("Unknown Sampling type %i\n", i->sample_type);
   }
   
-  return v4_zero();
+  return vec4_zero();
 }
 
-void image_paint(image* i, vector2 uv, vector4 color) {
+void image_paint(image* i, vec2 uv, vec4 color) {
   
   if ( i->repeat_type == image_repeat_tile ) {
-    uv = v2_fmod(uv, 1.0);
+    uv = vec2_fmod(uv, 1.0);
     if (uv.x < 0) { uv.x = 1 - uv.x; }
     if (uv.y < 0) { uv.y = 1 - uv.y; }
   } else if ( i->repeat_type == image_repeat_clamp ) {
-    uv = v2_saturate(uv);
+    uv = vec2_saturate(uv);
   } else if ( i->repeat_type == image_repeat_mirror) {
     
     if ( ((int)floor(uv.x) % 2) == 1) {
@@ -462,7 +451,7 @@ void image_paint(image* i, vector2 uv, vector4 color) {
   float amount_x = fmod(u, 1.0);
   float amount_y = fmod(v, 1.0);
   
-  vector4 s1, s2, s3, s4;
+  vec4 s1, s2, s3, s4;
   
   s1 = image_get_pixel(i, s1_u, s1_v);
   s2 = image_get_pixel(i, s2_u, s2_v);
@@ -471,10 +460,10 @@ void image_paint(image* i, vector2 uv, vector4 color) {
   
   if ( i->sample_type == image_sample_linear ) {
   
-    s1 = v4_lerp(s1, color, (1-amount_x + 1-amount_y)/2);
-    s2 = v4_lerp(s2, color, (amount_x + 1-amount_y)/2);
-    s3 = v4_lerp(s3, color, (amount_x + amount_y)/2);
-    s3 = v4_lerp(s4, color, (1-amount_x + amount_y)/2);
+    s1 = vec4_lerp(s1, color, (1-amount_x + 1-amount_y)/2);
+    s2 = vec4_lerp(s2, color, (amount_x + 1-amount_y)/2);
+    s3 = vec4_lerp(s3, color, (amount_x + amount_y)/2);
+    s3 = vec4_lerp(s4, color, (1-amount_x + amount_y)/2);
     
     image_set_pixel(i, s1_u, s1_v, s1);
     image_set_pixel(i, s2_u, s2_v, s2);
@@ -483,10 +472,10 @@ void image_paint(image* i, vector2 uv, vector4 color) {
   
   } else if ( i->sample_type == image_sample_nearest ) {
 
-    s1 = v4_nearest_neighbor_interpolation(s1, color, (1-amount_x + 1-amount_y)/2);
-    s2 = v4_nearest_neighbor_interpolation(s2, color, (amount_x + 1-amount_y)/2);
-    s3 = v4_nearest_neighbor_interpolation(s3, color, (amount_x + amount_y)/2);
-    s3 = v4_nearest_neighbor_interpolation(s4, color, (1-amount_x + amount_y)/2);
+    s1 = vec4_nearest_interp(s1, color, (1-amount_x + 1-amount_y)/2);
+    s2 = vec4_nearest_interp(s2, color, (amount_x + 1-amount_y)/2);
+    s3 = vec4_nearest_interp(s3, color, (amount_x + amount_y)/2);
+    s3 = vec4_nearest_interp(s4, color, (1-amount_x + amount_y)/2);
     
     image_set_pixel(i, s1_u, s1_v, s1);
     image_set_pixel(i, s2_u, s2_v, s2);
@@ -511,7 +500,7 @@ void image_rotate_90_clockwise(image* i) {
   int x, y;
   for( x = 0; x < new->width; x++)
   for( y = 0; y < new->height; y++) {
-    vector4 p = image_get_pixel(i, (new->height-1) - y, x);
+    vec4 p = image_get_pixel(i, (new->height-1) - y, x);
     image_set_pixel( new, x, y, p );
   }
   
@@ -528,8 +517,8 @@ void image_bgr_to_rgb(image* i) {
   int x, y;
   for (x = 0; x < i->width; x++)
   for (y = 0; y < i->height; y++) {
-    vector4 pix = image_get_pixel(i, x, y);
-    vector4 rev = v4(pix.b, pix.g, pix.r, pix.a);
+    vec4 pix = image_get_pixel(i, x, y);
+    vec4 rev = vec4_new(pix.z, pix.y, pix.x, pix.w);
     
     image_set_pixel(i, x, y, rev);
   }
@@ -544,7 +533,7 @@ void image_rotate_90_counterclockwise(image* i) {
   int x, y;
   for( x = 0; x < new->width; x++)
   for( y = 0; y < new->height; y++) {
-    vector4 p = image_get_pixel(i, y, (new->width-1) - x);
+    vec4 p = image_get_pixel(i, y, (new->width-1) - x);
     image_set_pixel( new, x, y, p );
   }
   
@@ -569,8 +558,8 @@ void image_flip_horizontal(image* i) {
   for (y = 0; y < i->height; y++)
   for (x = 0; x < i->width / 2; x++) {
      
-     vector4 left = image_get_pixel(i, x, y);
-     vector4 right = image_get_pixel(i, (i->width-1) - x, y);
+     vec4 left = image_get_pixel(i, x, y);
+     vec4 right = image_get_pixel(i, (i->width-1) - x, y);
      
      image_set_pixel(i, x, y, right);
      image_set_pixel(i, (i->width-1) - x, y, left);
@@ -584,8 +573,8 @@ void image_flip_vertical(image* i) {
   for (x = 0; x < i->width; x++)
   for (y = 0; y < i->height / 2; y++) {
      
-     vector4 top = image_get_pixel(i, x, y);
-     vector4 bottom = image_get_pixel(i, x, (i->height-1) - y);
+     vec4 top = image_get_pixel(i, x, y);
+     vec4 bottom = image_get_pixel(i, x, (i->height-1) - y);
      
      image_set_pixel(i, x, y, bottom);
      image_set_pixel(i, x, (i->height-1) - y, top);
@@ -593,14 +582,14 @@ void image_flip_vertical(image* i) {
 
 }
 
-void image_scale(image* i, vector2 scale) {
+void image_scale(image* i, vec2 scale) {
   
   image* new = image_empty( i->width * scale.x , i->height * scale.y );
   
   int x, y;
   for (x = 0; x < new->width; x++)
   for (y = 0; y < new->height; y++) {
-     vector4 sample = image_sample( i, v2((float)x / new->width, (float)y / new->height) );
+     vec4 sample = image_sample( i, vec2_new((float)x / new->width, (float)y / new->height) );
      image_set_pixel(new, x, y, sample);
   }
   
@@ -611,7 +600,7 @@ void image_scale(image* i, vector2 scale) {
   image_delete(new);
 }
 
-void image_fill(image* i, vector4 color) {
+void image_fill(image* i, vec4 color) {
   int x, y;
   for (x = 0; x < i->width; x++)
   for (y = 0; y < i->height; y++) {
@@ -629,34 +618,34 @@ void image_fill_white(image* i) {
 
 void image_copy(image* dst, image* src) {
   
-  assert( dst->width == src->width, "Image Out of Bounds" );
-  assert( dst->height == src->height, "Image Out of Bounds" );
+  if( dst->width != src->width) { error("Image widths not equal"); }
+  if( dst->height != src->height) { error("Image heights not equal"); }
   
   memcpy( dst->data, src->data, dst->width * dst->height * 4 );
 }
 
-void image_copy_sub(image* dst, image* src, vector2 top_left) {
+void image_copy_sub(image* dst, image* src, vec2 top_left) {
   
   int x, y;
   for (x = 0; x < dst->width; x++)
   for (y = 0; y < dst->height; y++) {
     
-    vector2 uv = v2_add( v2_new( (float)x / src->width, (float)y / src->height ), top_left);
-    vector4 pix = image_sample(src, uv);
+    vec2 uv = vec2_add( vec2_new( (float)x / src->width, (float)y / src->height ), top_left);
+    vec4 pix = image_sample(src, uv);
     
     image_set_pixel(dst, x, y, pix);
   
   }  
 }
 
-void image_paste_sub(image* dst, image* src, vector2 top_left) {
+void image_paste_sub(image* dst, image* src, vec2 top_left) {
   
   int x, y;
   for (x = 0; x < src->width; x++)
   for (y = 0; y < src->height; y++) {
     
-    vector2 uv = v2_add( v2_new( (float)x / dst->width, (float)y / dst->height ), top_left);
-    vector4 col = image_get_pixel(src, x, y);
+    vec2 uv = vec2_add( vec2_new( (float)x / dst->width, (float)y / dst->height ), top_left);
+    vec4 col = image_get_pixel(src, x, y);
     
     image_paint(src, uv, col);
   
@@ -672,8 +661,8 @@ float image_intensity(image* i) {
   for (x = 0; x < i->width; x++)
   for (y = 0; y < i->height; y++) {
     
-    vector4 col = image_get_pixel(i, x, y);
-    total += (col.r + col.g + col.b + col.a) / 4;
+    vec4 col = image_get_pixel(i, x, y);
+    total += (col.x + col.y + col.z + col.w) / 4;
   
   }
   
@@ -689,8 +678,8 @@ int image_mask_area_width(image* i) {
   for (x = 0; x < i->width; x++)
   for (y = 0; y < i->height; y++) {
     
-    vector4 col = image_get_pixel(i, x, y);
-    if (col.a == 1.0) {
+    vec4 col = image_get_pixel(i, x, y);
+    if (col.w == 1.0) {
       x_min = min(x, x_min);
       x_max = max(x, x_max);
     }
@@ -710,8 +699,8 @@ int image_mask_area_height(image* i) {
   for (x = 0; x < i->width; x++)
   for (y = 0; y < i->height; y++) {
     
-    vector4 col = image_get_pixel(i, x, y);
-    if (col.a == 1) {
+    vec4 col = image_get_pixel(i, x, y);
+    if (col.w == 1) {
       y_min = min(y, y_min);
       y_max = max(y, y_max);
     }
@@ -726,31 +715,31 @@ void image_mask_not(image* i) {
   int x, y;
   for( x = 0; x < i->width; x++) 
   for( y = 0; y < i->height; y++) {
-    vector4 p = image_get_pixel(i, x, y);
-    if ( p.a == 1.0 ) {
-      image_set_pixel(i, x, y, v4_zero() );
+    vec4 p = image_get_pixel(i, x, y);
+    if ( p.w == 1.0 ) {
+      image_set_pixel(i, x, y, vec4_zero() );
     } else {
-      image_set_pixel(i, x, y, v4_one() );
+      image_set_pixel(i, x, y, vec4_one() );
     }
   }
 }
 
 void image_mask_or(image* i, image* i2) {
   
-  assert(i2->width >= i->width, "Images different size");
-  assert(i2->height >= i->height, "Images different size");
+  if(i2->width != i->width) { error("Image widths different"); }
+  if(i2->height != i->height) { error("Image heights different"); }
   
   int x, y;
   for( x = 0; x < i->width; x++) 
   for( y = 0; y < i->height; y++) {
     
-    vector4 p1 = image_get_pixel(i, x, y);
-    vector4 p2 = image_get_pixel(i2, x, y);
+    vec4 p1 = image_get_pixel(i, x, y);
+    vec4 p2 = image_get_pixel(i2, x, y);
     
-    if( (p1.a == 1.0) || (p2.a == 1.0) ) {
-      image_set_pixel( i, x, y, v4_one() );
+    if( (p1.w == 1.0) || (p2.w == 1.0) ) {
+      image_set_pixel( i, x, y, vec4_one() );
     } else {
-      image_set_pixel( i, x, y, v4_zero() );
+      image_set_pixel( i, x, y, vec4_zero() );
     }
   
   }
@@ -759,20 +748,20 @@ void image_mask_or(image* i, image* i2) {
 
 void image_mask_and(image* i, image* i2) {
 
-  assert(i2->width >= i->width, "Images different size");
-  assert(i2->height >= i->height, "Images different size");
+  if(i2->width != i->width) { error("Image widths different"); }
+  if(i2->height != i->height) { error("Image heights different"); }
   
   int x, y;
   for( x = 0; x < i->width; x++) 
   for( y = 0; y < i->height; y++) {
     
-    vector4 p1 = image_get_pixel(i, x, y);
-    vector4 p2 = image_get_pixel(i2, x, y);
+    vec4 p1 = image_get_pixel(i, x, y);
+    vec4 p2 = image_get_pixel(i2, x, y);
   
-    if( (p1.a == 1.0) && (p2.a == 1.0) ) {
-      image_set_pixel( i, x, y, v4_one() );
+    if( (p1.w == 1.0) && (p2.w == 1.0) ) {
+      image_set_pixel( i, x, y, vec4_one() );
     } else {
-      image_set_pixel( i, x, y, v4_zero() );
+      image_set_pixel( i, x, y, vec4_zero() );
     }
   
   }
@@ -790,20 +779,20 @@ static int xor( float a, float b ) {
 
 void image_mask_xor(image* i, image* i2) {
 
-  assert(i2->width >= i->width, "Images different size");
-  assert(i2->height >= i->height, "Images different size");
+  if(i2->width != i->width) { error("Image widths different"); }
+  if(i2->height != i->height) { error("Image heights different"); }
   
   int x, y;
   for( x = 0; x < i->width; x++) 
   for( y = 0; y < i->height; y++) {
     
-    vector4 p1 = image_get_pixel(i, x, y);
-    vector4 p2 = image_get_pixel(i2, x, y);
+    vec4 p1 = image_get_pixel(i, x, y);
+    vec4 p2 = image_get_pixel(i2, x, y);
   
-    if( xor( p1.a, p2.a ) ) {
-      image_set_pixel( i, x, y, v4_one() );
+    if( xor( p1.w, p2.w ) ) {
+      image_set_pixel( i, x, y, vec4_one() );
     } else {
-      image_set_pixel( i, x, y, v4_zero() );
+      image_set_pixel( i, x, y, vec4_zero() );
     }
   
   }
@@ -812,20 +801,20 @@ void image_mask_xor(image* i, image* i2) {
 
 void image_mask_nor(image* i, image* i2) {
 
-  assert(i2->width >= i->width, "Images different size");
-  assert(i2->height >= i->height, "Images different size");
+  if(i2->width != i->width) { error("Image widths different"); }
+  if(i2->height != i->height) { error("Image heights different"); }
   
   int x, y;
   for( x = 0; x < i->width; x++) 
   for( y = 0; y < i->height; y++) {
     
-    vector4 p1 = image_get_pixel(i, x, y);
-    vector4 p2 = image_get_pixel(i2, x, y);
+    vec4 p1 = image_get_pixel(i, x, y);
+    vec4 p2 = image_get_pixel(i2, x, y);
   
-    if( (p1.a == 1.0) || (p2.a == 1.0) ) {
-      image_set_pixel( i, x, y, v4_zero() );
+    if( (p1.w == 1.0) || (p2.w == 1.0) ) {
+      image_set_pixel( i, x, y, vec4_zero() );
     } else {
-      image_set_pixel( i, x, y, v4_one() );
+      image_set_pixel( i, x, y, vec4_one() );
     }
   
   }
@@ -834,20 +823,20 @@ void image_mask_nor(image* i, image* i2) {
 
 void image_mask_nand(image* i, image* i2) {
 
-  assert(i2->width >= i->width, "Images different size");
-  assert(i2->height >= i->height, "Images different size");
+  if(i2->width != i->width) { error("Image widths different"); }
+  if(i2->height != i->height) { error("Image heights different"); }
   
   int x, y;
   for( x = 0; x < i->width; x++) 
   for( y = 0; y < i->height; y++) {
     
-    vector4 p1 = image_get_pixel(i, x, y);
-    vector4 p2 = image_get_pixel(i2, x, y);
+    vec4 p1 = image_get_pixel(i, x, y);
+    vec4 p2 = image_get_pixel(i2, x, y);
   
-    if( (p1.a == 1.0) && (p2.a == 1.0) ) {
-      image_set_pixel( i, x, y, v4_zero() );
+    if( (p1.w == 1.0) && (p2.w == 1.0) ) {
+      image_set_pixel( i, x, y, vec4_zero() );
     } else {
-      image_set_pixel( i, x, y, v4_one() );
+      image_set_pixel( i, x, y, vec4_one() );
     }
   
   }
@@ -856,20 +845,20 @@ void image_mask_nand(image* i, image* i2) {
 
 void image_mask_xnor(image* i, image* i2) {
 
-  assert(i2->width >= i->width, "Images different size");
-  assert(i2->height >= i->height, "Images different size");
+  if(i2->width != i->width) { error("Image widths different"); }
+  if(i2->height != i->height) { error("Image heights different"); }
   
   int x, y;
   for( x = 0; x < i->width; x++) 
   for( y = 0; y < i->height; y++) {
     
-    vector4 p1 = image_get_pixel(i, x, y);
-    vector4 p2 = image_get_pixel(i2, x, y);
+    vec4 p1 = image_get_pixel(i, x, y);
+    vec4 p2 = image_get_pixel(i2, x, y);
   
-    if( xor( p1.a, p2.a ) ) {
-      image_set_pixel( i, x, y, v4_zero() );
+    if( xor( p1.w, p2.w ) ) {
+      image_set_pixel( i, x, y, vec4_zero() );
     } else {
-      image_set_pixel( i, x, y, v4_one() );
+      image_set_pixel( i, x, y, vec4_one() );
     }
   
   }
@@ -902,15 +891,14 @@ void tga_save_file(image* i, char* filename) {
 
 void image_write_to_file(image* i, char* filename) {
   
-  char* ext = asset_name_extension(filename);
+  fpath ext;
+  SDL_PathFileExtension(ext.ptr, filename);
   
-  if ( strcmp(ext, "tga") == 0 ) {
+  if ( strcmp(ext.ptr, "tga") == 0 ) {
     tga_save_file(i, filename);
   } else {
-    warning("Cannot save texture to %s, unknown file extension %s. Try .tga!\n", filename, ext);
+    warning("Cannot save texture to %s, unknown file extension %s. Try .tga!\n", filename, ext.ptr);
   }
-  
-  free(ext);
 }
 
 image* tga_load_file(char* filename) {

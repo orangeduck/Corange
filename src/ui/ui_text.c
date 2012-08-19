@@ -1,19 +1,9 @@
-#include <string.h>
-
-#include "SDL/SDL.h"
-#include "SDL/SDL_opengl.h"
-#include "SDL/SDL_local.h"
-
-#include "error.h"
-#include "matrix.h"
-
-#include "assets/font.h"
-#include "assets/texture.h"
+#include "ui/ui_text.h"
 
 #include "graphics_manager.h"
-#include "asset_manager.h"
 
-#include "ui/ui_text.h"
+#include "assets/texture.h"
+#include "assets/font.h"
 
 ui_text* ui_text_new() {
 
@@ -28,24 +18,24 @@ ui_text* ui_text_new() {
   
   text->num_positions = 0;
   text->num_texcoords = 0;
-  text->top_left = v2_zero();
-  text->bottom_right = v2_zero();
+  text->top_left = vec2_zero();
+  text->bottom_right = vec2_zero();
   
-  text->font = asset_load_get("$CORANGE/fonts/console_font.fnt");
+  text->font = asset_hndl_new(P("$CORANGE/fonts/console_font.fnt"));
   
-  text->position = v2(0.0,0.0);
-  text->scale = v2(1.0,1.0);
-  text->color = v4_black();
+  text->position = vec2_new(0.0,0.0);
+  text->scale = vec2_new(1.0,1.0);
+  text->color = vec4_black();
   
-  text->alignment = text_align_left;
-  text->vertical_alignment = text_align_top;
+  text->halign = text_align_left;
+  text->valign = text_align_top;
   text->line_spacing = 0.0;
   text->char_spacing = 0.0;
   text->rotation = 0.0;
   
   text->active = true;
   
-  ui_text_update_properties(text);
+  ui_text_draw(text);
   
   return text;
 
@@ -54,7 +44,7 @@ ui_text* ui_text_new() {
 ui_text* ui_text_new_string(char* string) {
   
   ui_text* text = ui_text_new();
-  ui_text_update_string(text, string);
+  ui_text_draw_string(text, string);
   
   return text;
 }
@@ -74,7 +64,7 @@ void ui_text_update(ui_text* text) {
 
 }
 
-void ui_text_update_string(ui_text* text, char* string) {
+void ui_text_draw_string(ui_text* text, char* string) {
   
   int buflen = strlen(string) + 1;
   
@@ -84,15 +74,15 @@ void ui_text_update_string(ui_text* text, char* string) {
   }
   
   strcpy(text->string, string);
-  ui_text_update_properties(text);
+  ui_text_draw(text);
   
 }
 
-void ui_text_update_properties(ui_text* text) {
+void ui_text_draw(ui_text* text) {
   
   const float base_scale = 250;
   
-  font* f = text->font;
+  font* f = asset_hndl_ptr(text->font);
   
   int pos_i = 0;
   int uv_i = 0;
@@ -127,7 +117,7 @@ void ui_text_update_properties(ui_text* text) {
     
     } else if ((ord == (int)'\n') || (ord == (int)'\0')) {
       
-      if (text->alignment == text_align_center) {
+      if (text->halign == text_align_center) {
         float total_length = x - text->position.x;
         float offset_x = total_length / 2;
         
@@ -200,13 +190,13 @@ void ui_text_update_properties(ui_text* text) {
   float offset_x = 0;
   float offset_y = 0;
   
-  if (text->alignment == text_align_right) {
+  if (text->halign == text_align_right) {
     offset_x = total_length;
   }
   
-  if (text->vertical_alignment == text_align_bottom) {
+  if (text->valign == text_align_bottom) {
     offset_y = total_height;
-  } else if (text->vertical_alignment == text_align_center) {
+  } else if (text->valign == text_align_center) {
     offset_y = total_height / 2;
   }
     
@@ -230,31 +220,31 @@ void ui_text_update_properties(ui_text* text) {
   
   if (text->rotation > 0) {
     
-    matrix_2x2 rot = m22_rotation(text->rotation);
-    m22_print(rot);
+    mat2 rot = mat2_rotation(text->rotation);
+    mat2_print(rot);
     
     int i = 0;
     while( i * 12 < text->num_positions ) {
       
-      vector2 v1_pos = v2(vert_positions[i * 12 + 0], vert_positions[i * 12 + 1]);
-      vector2 v2_pos = v2(vert_positions[i * 12 + 3], vert_positions[i * 12 + 4]);
-      vector2 v3_pos = v2(vert_positions[i * 12 + 6], vert_positions[i * 12 + 7]);
-      vector2 v4_pos = v2(vert_positions[i * 12 + 9], vert_positions[i * 12 + 10]);
+      vec2 v1_pos = vec2_new(vert_positions[i * 12 + 0], vert_positions[i * 12 + 1]);
+      vec2 v2_pos = vec2_new(vert_positions[i * 12 + 3], vert_positions[i * 12 + 4]);
+      vec2 v3_pos = vec2_new(vert_positions[i * 12 + 6], vert_positions[i * 12 + 7]);
+      vec2 v4_pos = vec2_new(vert_positions[i * 12 + 9], vert_positions[i * 12 + 10]);
       
-      v1_pos = v2_sub(v1_pos, text->position);
-      v2_pos = v2_sub(v2_pos, text->position);
-      v3_pos = v2_sub(v3_pos, text->position);
-      v4_pos = v2_sub(v4_pos, text->position);
+      v1_pos = vec2_sub(v1_pos, text->position);
+      v2_pos = vec2_sub(v2_pos, text->position);
+      v3_pos = vec2_sub(v3_pos, text->position);
+      v4_pos = vec2_sub(v4_pos, text->position);
       
-      v1_pos = m22_mul_v2(rot, v1_pos);
-      v2_pos = m22_mul_v2(rot, v2_pos);
-      v3_pos = m22_mul_v2(rot, v3_pos);
-      v4_pos = m22_mul_v2(rot, v4_pos);
+      v1_pos = mat2_mul_vec2(rot, v1_pos);
+      v2_pos = mat2_mul_vec2(rot, v2_pos);
+      v3_pos = mat2_mul_vec2(rot, v3_pos);
+      v4_pos = mat2_mul_vec2(rot, v4_pos);
       
-      v1_pos = v2_add(v1_pos, text->position);
-      v2_pos = v2_add(v2_pos, text->position);
-      v3_pos = v2_add(v3_pos, text->position);
-      v4_pos = v2_add(v4_pos, text->position);
+      v1_pos = vec2_add(v1_pos, text->position);
+      v2_pos = vec2_add(v2_pos, text->position);
+      v3_pos = vec2_add(v3_pos, text->position);
+      v4_pos = vec2_add(v4_pos, text->position);
       
       vert_positions[i * 12 + 0] = v1_pos.x;
       vert_positions[i * 12 + 1] = v1_pos.y;
@@ -343,11 +333,13 @@ void ui_text_render(ui_text* text) {
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   
+  font* font = asset_hndl_ptr(text->font);
+  
   glActiveTexture(GL_TEXTURE0 + 0);
-  glBindTexture(GL_TEXTURE_2D, *(text->font->texture_map) );
+  glBindTexture(GL_TEXTURE_2D, texture_handle(asset_hndl_ptr(font->texture_map)) );
   glEnable(GL_TEXTURE_2D);
   
-  glColor4f(text->color.r, text->color.g, text->color.b, text->color.a);
+  glColor4f(text->color.x, text->color.y, text->color.z, text->color.w);
   
   glEnableClientState(GL_VERTEX_ARRAY);
   glEnableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -380,7 +372,7 @@ void ui_text_render(ui_text* text) {
   
 }
 
-bool ui_text_contains_position(ui_text* text, vector2 position) {
+bool ui_text_contains_position(ui_text* text, vec2 position) {
   
   if(!text->active) {
     return false;

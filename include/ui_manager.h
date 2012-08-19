@@ -1,11 +1,14 @@
+/**
+*** :: UI Manager ::
+***
+***   Manages UI objects much like the entity manager
+***
+**/
+
 #ifndef ui_manager_h
 #define ui_manager_h
 
-#include <stdbool.h>
-
-#include "SDL/SDL.h"
-
-#include "type.h"
+#include "cengine.h"
 
 typedef void ui_elem;
 
@@ -22,7 +25,11 @@ void ui_render();
                                       (void(*)(ui_elem*))update, \
                                       (void(*)(ui_elem*))render)
                                       
-void ui_manager_handler_cast(int type_id, void* ui_elem_new_func(), void ui_elem_del_func(void* ui_elem), void ui_elem_update_func(void* ui_elem), void ui_elem_render_func(void* ui_elem));
+void ui_manager_handler_cast(int type_id,
+  void* ui_elem_new_func(), 
+  void ui_elem_del_func(void* ui_elem), 
+  void ui_elem_update_func(void* ui_elem), 
+  void ui_elem_render_func(void* ui_elem));
 
 bool ui_elem_exists(char* name);
 

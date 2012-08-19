@@ -1,10 +1,5 @@
-#include <string.h>
-#include <stdlib.h>
-
-#include "error.h"
-
-#include "SDL/SDL_rwops.h"
 #include "SDL/SDL_local.h"
+#include "SDL/SDL_rwops.h"
 
 #ifdef _WIN32
   #include "SDL/SDL_syswm.h"
@@ -89,20 +84,12 @@ void SDL_PathFileLocation(char* dst, char* path) {
  
 static char curr_dir[MAX_PATH];
 char* SDL_GetWorkingDir() {
-
-  if (!getcwd(curr_dir, sizeof(curr_dir))) {
-    error("Could not get working directory!");
-  }
-  
+  getcwd(curr_dir, sizeof(curr_dir));
   return curr_dir;
 }
 
 void SDL_SetWorkingDir(char* dir) {
-  
-  if (chdir(dir)) {
-    error("Could not change working directory!");
-  }
-  
+  chdir(dir);
 }
 
 void SDL_RWsize(SDL_RWops* file, int* size) {
@@ -120,8 +107,8 @@ int SDL_RWreadline(SDL_RWops* file, char* buffer, int buffersize) {
     
     status = SDL_RWread(file, &c, 1, 1);
     
-    if (status == -1) error("Error reading file.");
-    if (i == buffersize-1) error("Buffer not large enough to read line!");
+    if (status == -1) return -1;
+    if (i == buffersize-1) return -1;
     if (status == 0) break;
     
     buffer[i] = c;
@@ -151,7 +138,7 @@ static HICON icon;
   #define GCL_HICONSM -34
 #endif
 
-void SDL_WM_UseResourceIcon() {
+int SDL_WM_UseResourceIcon() {
 
   HINSTANCE handle = GetModuleHandle(NULL);
   icon = LoadIcon(handle, "icon");
@@ -159,12 +146,13 @@ void SDL_WM_UseResourceIcon() {
   SDL_SysWMinfo wminfo;
   SDL_VERSION(&wminfo.version)
   if (SDL_GetWMInfo(&wminfo) != 1) {
-    error("Incorrect SDL version!");
+    return 0;
   }
 
   SetClassLong(wminfo.window, GCL_HICON, (LONG)icon);
   SetClassLong(wminfo.window, GCL_HICONSM, (LONG)icon);
   
+  return 1;
 }
 
 void SDL_WM_DeleteResourceIcon() {
@@ -183,49 +171,58 @@ void SDL_WM_DeleteResourceIcon() {}
 static HDC temp_device;
 static HGLRC temp_context;
 
-void SDL_WM_CreateTempContext() {
+int SDL_WM_CreateTempContext() {
   
   SDL_SysWMinfo info;
   SDL_VERSION(&info.version);
   if (SDL_GetWMInfo(&info) == -1) {
-    error("Could not get SDL version info.");
+    // Could not get SDL version info.
+    return 1;
   }
   
   temp_device = GetDC(info.window);
 
   temp_context = wglCreateContext(temp_device);
   if (temp_context == NULL) {
-    error("Could not create OpenGL context");
+    // Could not create OpenGL context
+    return 2;
   }
 
   if (!wglShareLists(info.hglrc, temp_context)) {
-    error("Could not share lists with temp context.");
+    // Could not share lists with temp context.
+    return 3;
   }
+  
+  return 0;
   
 }
 
-void SDL_WM_DeleteTempContext() {
+int SDL_WM_DeleteTempContext() {
 
   SDL_SysWMinfo info;
   SDL_VERSION(&info.version);
   if (SDL_GetWMInfo(&info) == -1) {
-    error("Could not get SDL version info.");
+    // Could not get SDL version info
+    return 1;
   }
 
   if (!wglShareLists(temp_context, info.hglrc)) {
-    error("Could share lists with OpenGL context");
+    // Could share lists with OpenGL context
+    return 2;
   }
 
   if (!wglDeleteContext(temp_context)) {
-    error("Could delete OpenGL context");
+    // Could delete OpenGL context
+    return 3;
   }
-
+  
+  return 0;
 }
 
 #else
 
-void SDL_WM_CreateTempContext() {}
-void SDL_WM_DeleteTempContext() {}
+int SDL_WM_CreateTempContext() {}
+int SDL_WM_DeleteTempContext() {}
 
 #endif
 
@@ -236,16 +233,16 @@ void SDL_GL_PrintInfo() {
   const char* version = (const char*)glGetString(GL_VERSION);
   const char* shader_version = (const char*)glGetString(GL_SHADING_LANGUAGE_VERSION);
   
-  debug("OpenGL Info");
-  debug("Vendor: %s", vendor);
-  debug("Renderer: %s", renderer);
-  debug("Version: %s", version);
-  debug("Shader Version: %s", shader_version);
+  printf("OpenGL Info");
+  printf("Vendor: %s", vendor);
+  printf("Renderer: %s", renderer);
+  printf("Version: %s", version);
+  printf("Shader Version: %s", shader_version);
 }
 
 void SDL_GL_PrintExtensions() {
   const char* extensions = (const char*)glGetString(GL_EXTENSIONS);
-  debug("OpenGL Extensions: %s\n", extensions);
+  printf("OpenGL Extensions: %s\n", extensions);
 }
 
 static const char* gl_error_string_invalid_enum = "Invalid Enum";
@@ -291,21 +288,24 @@ static int gl_thread_create(void* unused) {
   
   BOOL err = wglMakeCurrent(gl_thread_device, gl_thread_context);
   if (err == 0) {
-    error("Could not make context current");
+    // Could not make context current
+    return -1;
   }
   
   int status = gl_thread_func(gl_thread_data);
   
   HGLRC context = wglGetCurrentContext();
   if (context == NULL) {
-    error("Could not get current context");
+    // Could not get current context
+    return -2;
   }
   
   wglMakeCurrent(NULL, NULL);
   
   err = wglDeleteContext(context);
   if (err == 0) {
-    error("Could not delete context");
+    // Could not delete context
+    return -3;
   }
   
   return status;
@@ -316,20 +316,23 @@ SDL_Thread* SDL_GL_CreateThread(int (*fn)(void *), void *data) {
   SDL_SysWMinfo info;
   SDL_VERSION(&info.version);
   if (SDL_GetWMInfo(&info) == -1) {
-    error("Could not get SDL version info.");
+    // Could not get SDL version info.
+    return NULL;
   }
   
   gl_thread_device = GetDC(info.window);
 
   gl_thread_context = wglCreateContext(gl_thread_device);
   if (gl_thread_context == NULL) {
-    error("Could not create new OpenGL context");
+    // Could not create new OpenGL context
+    return NULL;
   }
   
   BOOL err = wglShareLists(info.hglrc, gl_thread_context);
   if (err == 0) {
     int code = GetLastError();
-    error("Could not get OpenGL share lists: %i", code);
+    //Could not get OpenGL share lists: %i
+    return NULL;
   }
   
   gl_thread_func = fn;
@@ -353,24 +356,28 @@ static int gl_thread_create(void* unused) {
   
   int err = glXMakeCurrent(gl_thread_display, gl_thread_drawable, gl_thread_context);
   if (err == 0) {
-    error("Could not make context current");
+    // Could not make context current
+    return -1
   }
   
   int status = gl_thread_func(gl_thread_data);
   
   Display* display = glXGetCurrentDisplay();
   if (display == NULL) {
-    error("Could not get current display");
+    // Could not get current display
+    return -2;
   }
   
   GLXContext context = glXGetCurrentContext();
   if (context == NULL) {
-    error("Could not get current context");
+    // Could not get current context
+    return -3;
   }
   
   err = glXMakeCurrent(display, None, NULL);
   if (err == 0) {
-    error("Could not make context current");
+    // Could not make context current
+    return -4;
   }
   
   glXDestroyContext(display, context);
@@ -384,23 +391,27 @@ SDL_Thread* SDL_GL_CreateThread(int (*fn)(void *), void *data) {
   
   GLXContext context = glXGetCurrentContext();
   if (context == NULL) {
-    error("Could not get current context");
+    // Could not get current context
+    return NULL;
   }
   
   Display* display = glXGetCurrentDisplay();
   if (display == NULL) {
-    error("Could not get current display");
+    // Could not get current display
+    return NULL;
   }
   
   GLXDrawable drawable = glXGetCurrentDrawable();
   if (drawable == None) {
-    error("Could not get current drawable");
+    // Could not get current drawable
+    return NULL;
   }
   
   XVisualInfo* info = malloc(sizeof(XVisualInfo));
   info = glXChooseVisual(display, 0, attribs);
   if (info == NULL) {
-    error("Could not create thread with required visuals.");
+    // Could not create thread with required visuals.
+    return NULL;
   }
   
   gl_thread_display = display;
@@ -498,18 +509,16 @@ GLBROKENEXTENSIONFN glBrokenExtension = NULL;
 #define SDL_GL_LoadExtension(type, name) \
 name = (type)SDL_GL_GetProcAddress(#name); \
 if (name == NULL) { \
-  warning("Failed to load function '%s', looking for function '%s'...", #name, #name"EXT"); \
+  fprintf(stderr, "Failed to load function '%s', looking for function '%s'...", #name, #name"EXT"); \
   name = (type)SDL_GL_GetProcAddress(#name"EXT"); \
 } \
 if (name == NULL) { \
-  warning("Failed to load function '%s', looking for function '%s'...", #name"EXT", #name"ARB"); \
+  fprintf(stderr, "Failed to load function '%s', looking for function '%s'...", #name"EXT", #name"ARB"); \
   name = (type)SDL_GL_GetProcAddress(#name"ARB"); \
 } \
-if (name == NULL) { warning("Completely failed to load OpenGL extension function '%s'. Use of this function will crash Corange", #name); }
+if (name == NULL) { fprintf(stderr, "Completely failed to load OpenGL extension function '%s'. Use of this function will crash Corange", #name); }
   
 void SDL_GL_LoadExtensions() {
-
-  debug("Loading OpenGL Extensions...");
 
   /* Shaders */
   

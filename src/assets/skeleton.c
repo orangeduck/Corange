@@ -1,13 +1,3 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <math.h>
-
-#include "SDL/SDL_rwops.h"
-#include "SDL/SDL_local.h"
-
-#include "error.h"
-
 #include "assets/skeleton.h"
 
 skeleton* skeleton_new() {
@@ -15,8 +5,8 @@ skeleton* skeleton_new() {
   s->num_bones = 0;
   s->bones = malloc(sizeof(bone*) * s->num_bones);
   
-  s->transforms = malloc(sizeof(matrix_4x4) * s->num_bones);
-  s->inv_transforms = malloc(sizeof(matrix_4x4) * s->num_bones);
+  s->transforms = malloc(sizeof(mat4) * s->num_bones);
+  s->inv_transforms = malloc(sizeof(mat4) * s->num_bones);
   
   return s;
 }
@@ -40,8 +30,8 @@ skeleton* skeleton_copy(skeleton* old) {
     }
   }
   
-  new->transforms = malloc(sizeof(matrix_4x4) * new->num_bones);
-  new->inv_transforms = malloc(sizeof(matrix_4x4) * new->num_bones);
+  new->transforms = malloc(sizeof(mat4) * new->num_bones);
+  new->inv_transforms = malloc(sizeof(mat4) * new->num_bones);
   
   for(int i = 0; i < new->num_bones; i++) {
     new->transforms[i] = old->transforms[i];
@@ -72,11 +62,11 @@ void skeleton_add_bone(skeleton* s, char* name, int id, int parent_id) {
   s->bones = realloc(s->bones, sizeof(bone*) * s->num_bones);
   s->bones[s->num_bones-1] = b;
   
-  s->transforms = realloc(s->transforms, sizeof(matrix_4x4) * s->num_bones);
-  s->transforms[s->num_bones-1] = m44_id();
+  s->transforms = realloc(s->transforms, sizeof(mat4) * s->num_bones);
+  s->transforms[s->num_bones-1] = mat4_id();
   
-  s->inv_transforms = realloc(s->inv_transforms, sizeof(matrix_4x4) * s->num_bones);
-  s->inv_transforms[s->num_bones-1] = m44_id();
+  s->inv_transforms = realloc(s->inv_transforms, sizeof(mat4) * s->num_bones);
+  s->inv_transforms[s->num_bones-1] = mat4_id();
   
 }
 
@@ -84,7 +74,7 @@ void skeleton_print(skeleton* s) {
   for(int i = 0; i < s->num_bones; i++) {
     bone* b = s->bones[i];
     printf("Bone %i: %i %s ", i, b->id, b->name);
-    v3_print(b->position);printf(" ");
+    vec3_print(b->position);printf(" ");
     //v4_print(b->rotation);
     if (b->parent == NULL) {
       printf(" ROOT\n");
@@ -128,8 +118,8 @@ bone* bone_new(int id, char* name) {
   b->name = malloc(strlen(name) + 1);
   strcpy(b->name, name);
   b->id = id;
-  b->position = v3_zero();
-  b->rotation = m44_id();
+  b->position = vec3_zero();
+  b->rotation = mat4_id();
   b->parent = NULL;
   return b;
 }
@@ -139,33 +129,33 @@ void bone_delete(bone* b) {
   free(b);
 }
 
-matrix_4x4 bone_transform(bone* b) {
+mat4 bone_transform(bone* b) {
   
   if (b->parent == NULL) {
-    matrix_4x4 ret = m44_id();
-    matrix_4x4 trans = m44_translation(b->position);
-    matrix_4x4 rot = b->rotation;
+    mat4 ret = mat4_id();
+    mat4 trans = mat4_translation(b->position);
+    mat4 rot = b->rotation;
     
-    ret = m44_mul_m44(ret, trans);
-    ret = m44_mul_m44(ret, rot);
+    ret = mat4_mul_mat4(ret, trans);
+    ret = mat4_mul_mat4(ret, rot);
     
     return ret;
   } else {
-    matrix_4x4 prev = bone_transform(b->parent);
+    mat4 prev = bone_transform(b->parent);
     
-    matrix_4x4 ret = m44_id();
-    matrix_4x4 trans = m44_translation(b->position);
-    matrix_4x4 rot = b->rotation;
+    mat4 ret = mat4_id();
+    mat4 trans = mat4_translation(b->position);
+    mat4 rot = b->rotation;
     
-    ret = m44_mul_m44(ret, prev);
-    ret = m44_mul_m44(ret, trans);
-    ret = m44_mul_m44(ret, rot);
+    ret = mat4_mul_mat4(ret, prev);
+    ret = mat4_mul_mat4(ret, trans);
+    ret = mat4_mul_mat4(ret, rot);
     
     return ret;
   }
 }
 
-void inverse_kinematics_solve(bone* base, bone* end, vector3 target) {
+void inverse_kinematics_solve(bone* base, bone* end, vec3 target) {
   
   if (end->parent->parent != base) {
     error("Can only solve two-joint inverse kinematics!");
@@ -173,45 +163,45 @@ void inverse_kinematics_solve(bone* base, bone* end, vector3 target) {
   
   bone* mid = end->parent;
   
-  vector3 base_pos = m44_mul_v3(bone_transform(base), v3_zero());
-  vector3 end_pos = m44_mul_v3(bone_transform(end), v3_zero());
-  vector3 mid_pos = m44_mul_v3(bone_transform(mid), v3_zero());
-  vector3 tar_pos = target;
+  vec3 base_pos = mat4_mul_vec3(bone_transform(base), vec3_zero());
+  vec3 end_pos = mat4_mul_vec3(bone_transform(end), vec3_zero());
+  vec3 mid_pos = mat4_mul_vec3(bone_transform(mid), vec3_zero());
+  vec3 tar_pos = target;
   
-  float base_target_dist = v3_dist(base_pos, target);
-  float base_mid_dist = v3_dist(base_pos, mid_pos);
-  float mid_end_dist = v3_dist(mid_pos, end_pos);
+  float base_target_dist = vec3_dist(base_pos, target);
+  float base_mid_dist = vec3_dist(base_pos, mid_pos);
+  float mid_end_dist = vec3_dist(mid_pos, end_pos);
   
   if (base_target_dist >= base_mid_dist + mid_end_dist - 0.01) {
-    vector3 target_dir = v3_normalize(v3_sub(target, base_pos));
-    tar_pos = v3_add(base_pos, v3_mul(target_dir, base_mid_dist + mid_end_dist - 0.01));
+    vec3 target_dir = vec3_normalize(vec3_sub(target, base_pos));
+    tar_pos = vec3_add(base_pos, vec3_mul(target_dir, base_mid_dist + mid_end_dist - 0.01));
   }
   
-  matrix_4x4 inv_trans = m44_inverse(bone_transform(base));
-  base_pos = m44_mul_v3(inv_trans, base_pos);
-  end_pos = m44_mul_v3(inv_trans, end_pos);
-  mid_pos = m44_mul_v3(inv_trans, mid_pos);
-  tar_pos = m44_mul_v3(inv_trans, tar_pos);
+  mat4 inv_trans = mat4_inverse(bone_transform(base));
+  base_pos = mat4_mul_vec3(inv_trans, base_pos);
+  end_pos = mat4_mul_vec3(inv_trans, end_pos);
+  mid_pos = mat4_mul_vec3(inv_trans, mid_pos);
+  tar_pos = mat4_mul_vec3(inv_trans, tar_pos);
   
-  vector3 base_tar = v3_normalize(v3_sub(tar_pos, base_pos));
-  vector3 base_end = v3_normalize(v3_sub(end_pos, base_pos));
-  vector3 rot_axis =  v3_normalize(v3_cross(base_tar, base_end));
+  vec3 base_tar = vec3_normalize(vec3_sub(tar_pos, base_pos));
+  vec3 base_end = vec3_normalize(vec3_sub(end_pos, base_pos));
+  vec3 rot_axis =  vec3_normalize(vec3_cross(base_tar, base_end));
   
-  matrix_4x4 plane_view = m44_view_look_at(v3_zero(), rot_axis, v3(0,1,0));
+  mat4 plane_view = mat4_view_look_at(vec3_zero(), rot_axis, vec3_new(0,1,0));
   
   /* Project onto rotation plane and convert to 2D */
-  base_pos = m44_mul_v3(plane_view, base_pos);
-  end_pos = m44_mul_v3(plane_view, end_pos);
-  mid_pos = m44_mul_v3(plane_view, mid_pos);
-  tar_pos = m44_mul_v3(plane_view, tar_pos);
+  base_pos = mat4_mul_vec3(plane_view, base_pos);
+  end_pos = mat4_mul_vec3(plane_view, end_pos);
+  mid_pos = mat4_mul_vec3(plane_view, mid_pos);
+  tar_pos = mat4_mul_vec3(plane_view, tar_pos);
   
-  vector2 base_plane = v2(base_pos.x, base_pos.y);
-  vector2 end_plane = v2(end_pos.x, end_pos.y);
-  vector2 mid_plane = v2(mid_pos.x, mid_pos.y);
-  vector2 tar_plane = v2(tar_pos.x, tar_pos.y);
+  vec2 base_plane = vec2_new(base_pos.x, base_pos.y);
+  vec2 end_plane = vec2_new(end_pos.x, end_pos.y);
+  vec2 mid_plane = vec2_new(mid_pos.x, mid_pos.y);
+  vec2 tar_plane = vec2_new(tar_pos.x, tar_pos.y);
   
-  float l1 = v2_dist(base_plane, mid_plane);
-  float l2 = v2_dist(mid_plane, end_plane);
+  float l1 = vec2_dist(base_plane, mid_plane);
+  float l2 = vec2_dist(mid_plane, end_plane);
   
   /* Now we can calculate rotations */
   float px = tar_plane.x;
@@ -237,7 +227,7 @@ void inverse_kinematics_solve(bone* base, bone* end, vector3 target) {
   
   /* Apply Rotations */
   
-  matrix_4x4 mid_rotation = m44_rotation_axis_angle(rot_axis, r2);
+  mat4 mid_rotation = mat4_rotation_axis_angle(rot_axis, r2);
   mid->rotation = mid_rotation;
   
   /*
@@ -247,20 +237,20 @@ void inverse_kinematics_solve(bone* base, bone* end, vector3 target) {
   */
   float base_rotation = 0;
   
-  matrix_4x4 base_rotation0 = m44_mul_m44(base->rotation, m44_rotation_axis_angle(base_tar, base_rotation));
-  matrix_4x4 base_rotation1 = m44_rotation_axis_angle(rot_axis, r1);
-  matrix_4x4 base_rotation2 = m44_rotation_axis_angle(rot_axis, r1 + 3.14);
+  mat4 base_rotation0 = mat4_mul_mat4(base->rotation, mat4_rotation_axis_angle(base_tar, base_rotation));
+  mat4 base_rotation1 = mat4_rotation_axis_angle(rot_axis, r1);
+  mat4 base_rotation2 = mat4_rotation_axis_angle(rot_axis, r1 + 3.14);
   
-  base->rotation = m44_mul_m44(base_rotation0, base_rotation1);
-  vector3 end_position1 = m44_mul_v3(bone_transform(end), v3_zero());
+  base->rotation = mat4_mul_mat4(base_rotation0, base_rotation1);
+  vec3 end_position1 = mat4_mul_vec3(bone_transform(end), vec3_zero());
   
-  base->rotation = m44_mul_m44(base_rotation0, base_rotation2);
-  vector3 end_position2 = m44_mul_v3(bone_transform(end), v3_zero());
+  base->rotation = mat4_mul_mat4(base_rotation0, base_rotation2);
+  vec3 end_position2 = mat4_mul_vec3(bone_transform(end), vec3_zero());
   
-  if (v3_dist_sqrd(end_position1, target) < v3_dist_sqrd(end_position2, target)) {
-    base->rotation = m44_mul_m44(base_rotation0, base_rotation1);
+  if (vec3_dist_sqrd(end_position1, target) < vec3_dist_sqrd(end_position2, target)) {
+    base->rotation = mat4_mul_mat4(base_rotation0, base_rotation1);
   } else {
-    base->rotation = m44_mul_m44(base_rotation0, base_rotation2);
+    base->rotation = mat4_mul_mat4(base_rotation0, base_rotation2);
   }
   
 }
@@ -275,7 +265,7 @@ void skeleton_gen_transforms(skeleton* s) {
 void skeleton_gen_inv_transforms(skeleton* s) {
   for(int i = 0; i < s->num_bones; i++) {
     s->transforms[i] = bone_transform(s->bones[i]);
-    s->inv_transforms[i] = m44_inverse(s->transforms[i]);
+    s->inv_transforms[i] = mat4_inverse(s->transforms[i]);
   }
 }
 
@@ -341,17 +331,17 @@ skeleton* skl_load_file(char* filename) {
       if (sscanf(line, "%i %f %f %f %f %f %f", &id, &x, &y, &z, &rx, &ry, &rz) == 7) {
         bone* b = skeleton_bone_id(s, id);
         /* Swap z and y */
-        b->position = v3(x, z, y);
+        b->position = vec3_new(x, z, y);
         
-        matrix_4x4 rotation = m44_rotation_euler(rx, ry, rz);
-        matrix_4x4 handedflip = m44(1,0,0,0,
-                                    0,0,1,0,
-                                    0,1,0,0,
-                                    0,0,0,1);
-        
-        rotation = m44_mul_m44(handedflip, rotation);
-        rotation = m44_mul_m44(rotation, handedflip);
-        rotation = m44_transpose(rotation);
+        mat4 rotation = mat4_rotation_euler(rx, ry, rz);
+        mat4 handedflip = mat4_new(1,0,0,0,
+                                   0,0,1,0,
+                                   0,1,0,0,
+                                   0,0,0,1);
+      
+        rotation = mat4_mul_mat4(handedflip, rotation);
+        rotation = mat4_mul_mat4(rotation, handedflip);
+        rotation = mat4_transpose(rotation);
         b->rotation = rotation;
         
       }

@@ -1,13 +1,11 @@
+#include "graphics_manager.h"
+
 #ifdef _WIN32
   #include "SDL/SDL_syswm.h"
 #endif
 
-#include "error.h"
-#include "timing.h"
-
 #include "assets/image.h"
 
-#include "graphics_manager.h"
 
 #define DEFAULT_WIDTH 800
 #define DEFAULT_HEIGHT 600
@@ -174,7 +172,7 @@ void graphics_viewport_screenshot() {
   
   free(image_data);
   
-  timestamp_sm(timestamp_string);
+  timestamp(timestamp_string);
 
   screenshot_string[0] = '\0';
   strcat(screenshot_string, "./corange_");

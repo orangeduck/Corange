@@ -1,7 +1,7 @@
 #ifndef sound_h
 #define sound_h
 
-#include "SDL/SDL.h"
+#include "cengine.h"
 
 typedef struct {
   char* data;

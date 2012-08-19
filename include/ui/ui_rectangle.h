@@ -1,23 +1,20 @@
 #ifndef ui_rectangle_h
 #define ui_rectangle_h
 
-#include <stdbool.h>
-
-#include "assets/texture.h"
+#include "cengine.h"
+#include "asset_manager.h"
 
 typedef struct {
-
-  vector2 top_left;
-  vector2 bottom_right;
+  vec2 top_left;
+  vec2 bottom_right;
   
-  vector4 color;
-  texture* texture;
+  vec4 color;
+  asset_hndl texture;
   
   float border_size;
-  vector4 border_color;
+  vec4 border_color;
   
   bool active;
-  
 } ui_rectangle;
 
 ui_rectangle* ui_rectangle_new();
@@ -26,10 +23,9 @@ void ui_rectangle_delete(ui_rectangle* rect);
 void ui_rectangle_update(ui_rectangle* rect);
 void ui_rectangle_render(ui_rectangle* rect);
 
-void ui_rectangle_move(ui_rectangle* rect, vector2 pos);
-void ui_rectangle_resize(ui_rectangle* rect, vector2 size);
-void ui_rectangle_set_texture(ui_rectangle* rect, texture* t);
+void ui_rectangle_move(ui_rectangle* rect, vec2 pos);
+void ui_rectangle_resize(ui_rectangle* rect, vec2 size);
 
-bool ui_rectangle_contains_position(ui_rectangle* rect, vector2 pos);
+bool ui_rectangle_contains_position(ui_rectangle* rect, vec2 pos);
 
 #endif

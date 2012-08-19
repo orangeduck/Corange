@@ -1,9 +1,7 @@
 #ifndef entity_manager_h
 #define entity_manager_h
 
-#include <stdbool.h>
-
-#include "type.h"
+#include "cengine.h"
 
 typedef void entity;
 

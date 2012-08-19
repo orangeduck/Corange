@@ -1,6 +1,15 @@
 TODO List
 =========
 
+Main Objectives
+---------------
+
+* All path management should be replaced with const char of size max path.
+* Move all path objects to end of structs.
+* Make sure nobody is storing assets when they need handles
+* Document code properly
+* Make multi material behaviour default.
+
 To Finish Demos
 ---------------
 
@@ -10,15 +19,5 @@ Tweaks/Cleanup
 --------------
 
 * Optimise SDL_ReadLine to read more than one character at once.
-* const stuff where needed (including asset stuff)
 * Convert skeleton stuff to quaternions - though not sure if I trust my quaternion code. Slerp them nicely.
 * Remove all fixed function stuff inc builtins from all shaders.
-
-In the Future
--------------
-
-* Make multi material behaviour default.
-* Remove shader program assets - merge into material?
-* PLY loader
-* Other UI elements
-* LUA wrappers for asset, entity, ui managers

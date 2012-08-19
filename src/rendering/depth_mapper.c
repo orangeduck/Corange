@@ -1,20 +1,16 @@
-#include <math.h>
-
-#include "SDL/SDL.h"
-#include "SDL/SDL_opengl.h"
-#include "SDL/SDL_local.h"
-
-#include "error.h"
-
-#include "assets/shader.h"
+#include "rendering/depth_mapper.h"
 
 #include "graphics_manager.h"
 #include "asset_manager.h"
 
-#include "rendering/depth_mapper.h"
+#include "assets/material.h"
+#include "assets/shader.h"
+#include "assets/renderable.h"
+#include "assets/terrain.h"
 
-static material* depth_mat;
-static material* depth_mat_animated;
+static asset_hndl depth_mat;
+static asset_hndl depth_mat_animated;
+
 static texture* texture_ptr;
 
 static GLuint fbo;
@@ -34,10 +30,10 @@ void depth_mapper_init(camera* c) {
 
   CAMERA = c;
   
-  depth_mat = asset_load_get("$CORANGE/shaders/depth.mat");
-  depth_mat_animated = asset_load_get("$CORANGE/shaders/depth_animated.mat");
+  depth_mat = asset_hndl_new(P("$CORANGE/shaders/depth.mat"));
+  depth_mat_animated = asset_hndl_new(P("$CORANGE/shaders/depth_animated.mat"));
   
-  shader_program* depth_shader_animated = dictionary_get(depth_mat_animated->properties, "program");
+  shader_program* depth_shader_animated = material_get_entry(asset_hndl_ptr(depth_mat_animated), 0)->program;
   
   BONE_INDICIES = glGetAttribLocation(*depth_shader_animated, "bone_indicies");
   BONE_WEIGHTS = glGetAttribLocation(*depth_shader_animated, "bone_weights");
@@ -89,11 +85,11 @@ void depth_mapper_begin() {
   
   glViewport( 0, 0, graphics_viewport_width(), graphics_viewport_height());
   
-  matrix_4x4 viewm = camera_view_matrix(CAMERA);
-  matrix_4x4 projm = camera_proj_matrix(CAMERA, graphics_viewport_ratio());
+  mat4 viewm = camera_view_matrix(CAMERA);
+  mat4 projm = camera_proj_matrix(CAMERA, graphics_viewport_ratio());
   
-  m44_to_array(viewm, view_matrix);
-  m44_to_array(projm, proj_matrix);
+  mat4_to_array(viewm, view_matrix);
+  mat4_to_array(projm, proj_matrix);
   
   glMatrixMode(GL_MODELVIEW);
   glLoadMatrixf(view_matrix);
@@ -121,10 +117,10 @@ void depth_mapper_end() {
 
 void depth_mapper_render_static(static_object* s) {
   
-  matrix_4x4 r_world_matrix = m44_world( s->position, s->scale, s->rotation );
-  m44_to_array(r_world_matrix, world_matrix);
+  mat4 r_world_matrix = mat4_world( s->position, s->scale, s->rotation );
+  mat4_to_array(r_world_matrix, world_matrix);
   
-  shader_program* depth_shader = dictionary_get(depth_mat->properties, "program");
+  shader_program* depth_shader = material_get_entry(asset_hndl_ptr(depth_mat), 0)->program;
   
   glUseProgram(*depth_shader);
   
@@ -140,7 +136,7 @@ void depth_mapper_render_static(static_object* s) {
   GLint alpha_test_u = glGetUniformLocation(*depth_shader, "alpha_test");
   GLint diffuse_u = glGetUniformLocation(*depth_shader, "diffuse");
   
-  renderable* r = s->renderable;
+  renderable* r = asset_hndl_ptr(s->renderable);
   
   for(int i=0; i < r->num_surfaces; i++) {
     
@@ -150,14 +146,16 @@ void depth_mapper_render_static(static_object* s) {
       error("Static Object is rigged!");
     }
     
-    float* alpha_test = dictionary_get(s->base->properties, "alpha_test");
-    if (alpha_test != NULL) {
-      glUniform1f(alpha_test_u, *alpha_test);
+    material_entry* me = material_get_entry(asset_hndl_ptr(depth_mat), 0);
+    
+    if (material_entry_has_item(me, "alpha_test")) {
+      float alpha_test = material_entry_item(me, "alpha_test").as_float;
+      glUniform1f(alpha_test_u, alpha_test);
     } else {
       glUniform1f(alpha_test_u, 0.0);
     }
     
-    texture* diffuse_texture = dictionary_get(s->base->properties, "diffuse_texture");
+    texture* diffuse_texture = asset_hndl_ptr(material_entry_item(me, "diffuse_texture").as_asset);
     if (diffuse_texture != NULL) {
       glUniform1i(diffuse_u, 0);
       glActiveTexture(GL_TEXTURE0 + 0);
@@ -192,36 +190,38 @@ void depth_mapper_render_static(static_object* s) {
 }
 
 #define MAX_BONES 32
-static matrix_4x4 bone_matrices[MAX_BONES];
+static mat4 bone_matrices[MAX_BONES];
 static float bone_matrix_data[4 * 4 * MAX_BONES];
 
 void depth_mapper_render_animated(animated_object* ao) {
   
-  if (ao->skeleton->num_bones > MAX_BONES) {
+  skeleton* skel = asset_hndl_ptr(ao->skeleton);
+  
+  if (skel->num_bones > MAX_BONES) {
     error("animated object skeleton has too many bones (over %i)", MAX_BONES);
   }
   
-  matrix_4x4 r_world_matrix = m44_world( ao->position, ao->scale, ao->rotation );
-  m44_to_array(r_world_matrix, world_matrix);
+  mat4 r_world_matrix = mat4_world( ao->position, ao->scale, ao->rotation );
+  mat4_to_array(r_world_matrix, world_matrix);
   
-  for(int i = 0; i < ao->skeleton->num_bones; i++) {
-    matrix_4x4 base, ani;
-    base = bone_transform(ao->skeleton->bones[i]);
+  for(int i = 0; i < skel->num_bones; i++) {
+    mat4 base, ani;
+    base = bone_transform(skel->bones[i]);
     ani = bone_transform(ao->pose->bones[i]);
     
-    bone_matrices[i] = m44_mul_m44(ani, m44_inverse(base));
-    m44_to_array(bone_matrices[i], bone_matrix_data + (i * 4 * 4));
+    bone_matrices[i] = mat4_mul_mat4(ani, mat4_inverse(base));
+    mat4_to_array(bone_matrices[i], bone_matrix_data + (i * 4 * 4));
   }
   
-  shader_program* depth_shader_animated = dictionary_get(depth_mat_animated->properties, "program");
+  shader_program* depth_shader_animated = material_get_entry(asset_hndl_ptr(depth_mat_animated), 0)->program;
   
   glUseProgram(*depth_shader_animated);
   
   GLint bone_world_matrices_u = glGetUniformLocation(*depth_shader_animated, "bone_world_matrices");
-  glUniformMatrix4fv(bone_world_matrices_u, ao->skeleton->num_bones, GL_FALSE, bone_matrix_data);
+  glUniformMatrix4fv(bone_world_matrices_u, skel->num_bones, GL_FALSE, bone_matrix_data);
   
   GLint bone_count_u = glGetUniformLocation(*depth_shader_animated, "bone_count");
-  glUniform1i(bone_count_u, ao->skeleton->num_bones);
+  glUniform1i(bone_count_u, skel->num_bones);
   
   GLint world_matrix_u = glGetUniformLocation(*depth_shader_animated, "world_matrix");
   glUniformMatrix4fv(world_matrix_u, 1, 0, world_matrix);
@@ -232,7 +232,7 @@ void depth_mapper_render_animated(animated_object* ao) {
   GLint view_matrix_u = glGetUniformLocation(*depth_shader_animated, "view_matrix");
   glUniformMatrix4fv(view_matrix_u, 1, 0, view_matrix);
   
-  renderable* r = ao->renderable;
+  renderable* r = asset_hndl_ptr(ao->renderable);
   
   for(int i = 0; i < r->num_surfaces; i++) {
     
@@ -274,10 +274,10 @@ void depth_mapper_render_animated(animated_object* ao) {
 
 void depth_mapper_render_landscape(landscape* ls) {
   
-  matrix_4x4 r_world_matrix = m44_world( ls->position, ls->scale, ls->rotation );
-  m44_to_array(r_world_matrix, world_matrix);
+  mat4 r_world_matrix = mat4_world( ls->position, ls->scale, ls->rotation );
+  mat4_to_array(r_world_matrix, world_matrix);
   
-  shader_program* depth_shader = dictionary_get(depth_mat->properties, "program");
+  shader_program* depth_shader = material_get_entry(asset_hndl_ptr(depth_mat), 0)->program;
   
   glUseProgram(*depth_shader);
   
@@ -293,9 +293,11 @@ void depth_mapper_render_landscape(landscape* ls) {
   GLint alpha_test_u = glGetUniformLocation(*depth_shader, "alpha_test");
   glUniform1f(alpha_test_u, 0.0);
   
-  for(int i = 0; i < ls->terrain->num_chunks; i++) {
+  terrain* terrain = asset_hndl_ptr(ls->terrain);
+  
+  for(int i = 0; i < terrain->num_chunks; i++) {
     
-    terrain_chunk* tc = ls->terrain->chunks[i];
+    terrain_chunk* tc = terrain->chunks[i];
     
     glBindBuffer(GL_ARRAY_BUFFER, tc->vertex_buffer);
   

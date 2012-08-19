@@ -1,18 +1,14 @@
-#include <string.h>
-#include <dirent.h>
-#include <stdio.h>
+#include "asset_manager.h"
 
-#include "corange.h"
+#include "data/dict.h"
 
-static dictionary* asset_dictionary;
+static dict* asset_dict;
 
 typedef struct {
-
   type_id type;
   char* extension;
-  void* (*load_func)();
+  void* (*load_func)(const char*);
   void (*del_func)();
-
 } asset_handler;
 
 #define MAX_ASSET_HANDLERS 512
@@ -20,81 +16,101 @@ static asset_handler asset_handlers[MAX_ASSET_HANDLERS];
 static int num_asset_handlers = 0;
 
 typedef struct {
-  char* variable;
-  char* mapping;
+  fpath variable;
+  fpath mapping;
 } path_variable;
 
 #define MAX_PATH_VARIABLES 512
 static path_variable path_variables[MAX_PATH_VARIABLES];
 static int num_path_variables = 0;
 
-void asset_manager_add_path_variable(char* variable, char* mapping) {
+void asset_manager_add_path_variable(fpath variable, fpath mapping) {
   
   if (num_path_variables == MAX_PATH_VARIABLES) {
     error("Already reached maximum num of path variables (%i)", MAX_PATH_VARIABLES);
   }
   
-  if (variable[0] != '$') {
+  if (variable.ptr[0] != '$') {
     error("Variables must start with a dollar sign e.g '$CORANGE'");
   }
   
-  path_variable pv;
-  pv.variable = malloc(strlen(variable) + 1);
-  strcpy(pv.variable, variable);
-  pv.mapping = malloc(strlen(mapping) + 1);
-  strcpy(pv.mapping, mapping);
+  path_variable pv = { variable, mapping }; 
   
   path_variables[num_path_variables] = pv;
   num_path_variables++;
   
 }
 
-static char* asset_map_realpath(char* filename) {
-
-  char* actualpath = malloc(MAX_PATH);
-  
-  SDL_PathFullName(actualpath, filename);
-  free(filename);
-  
-  return actualpath;
+asset_hndl asset_hndl_null() {
+  asset_hndl ah;
+  ah.path = P("");
+  ah.ptr = NULL;
+  return ah;
 }
 
-char* asset_map_filename(char* filename) {
+asset_hndl asset_hndl_new(fpath path) {
+  asset_hndl ah;
+  ah.path = path;
+  ah.ptr = NULL;
+  return ah;
+}
+
+asset_hndl asset_hndl_new_ptr(asset* as) {
+  asset_hndl ah;
+  ah.path = P(asset_ptr_path(as));
+  ah.ptr = as;
+  return ah;
+}
+
+bool asset_hndl_isnull(asset_hndl ah) {
+  return (strcmp(ah.path.ptr, "") == 0);
+}
+
+fpath asset_hndl_path(asset_hndl ah) {
+  return ah.path;
+}
+
+asset* asset_hndl_ptr(asset_hndl ah) {
+  if (strcmp(ah.path.ptr, "") == 0) return NULL;
+  ah.ptr = dict_get(asset_dict, ah.path.ptr);
+  return ah.ptr;
+}
+
+static fpath asset_map_realpath(fpath filename) {
+  fpath out;
+  SDL_PathFullName(out.ptr, filename.ptr);
+  return out;
+}
+
+static fpath asset_map_filename(fpath filename) {
+  
+  fpath out = filename;
   
   for(int i = 0; i < num_path_variables; i++) {
   
-    char* variable = path_variables[i].variable;
-    char* mapping = path_variables[i].mapping;
+    fpath variable = path_variables[i].variable;
+    fpath mapping = path_variables[i].mapping;
   
-    char* sub = strstr(filename, variable);
+    char* sub = strstr(filename.ptr, variable.ptr);
     
     if (sub) {
-      int replace_len = strlen(mapping);
-      int start_len = strlen(filename) - strlen(sub);
-      int ext_len = strlen(sub) - strlen(variable);
+      int replace_len = strlen(mapping.ptr);
+      int start_len = strlen(filename.ptr) - strlen(sub);
+      int ext_len = strlen(sub) - strlen(variable.ptr);
       
-      char* new_filename = malloc(replace_len + ext_len + start_len + 1);
-      new_filename[0] = '\0';
-      
-      strncpy(new_filename, filename, start_len);
-      strcat(new_filename, mapping);
-      strcat(new_filename, sub + strlen(variable));
-      
-      return asset_map_realpath(new_filename);
+      strncpy(out.ptr, filename.ptr, start_len);
+      strcat(out.ptr, mapping.ptr);
+      strcat(out.ptr, sub + strlen(variable.ptr));
     }
   
   }
-  
-  char* new_filename = malloc(strlen(filename) + 1);
-  strcpy(new_filename, filename);
 
-  return asset_map_realpath(new_filename);
-  
+  return asset_map_realpath(out);
 }
 
 void asset_manager_init(char* game_name) {
 
-  asset_dictionary = dictionary_new(1024);
+  asset_dict = dict_new(1024);
 
 }
 
@@ -105,7 +121,7 @@ void asset_handler_delete(asset_handler* h) {
 
 }
 
-static void delete_bucket_list(bucket* b) {
+static void delete_bucket_list(struct bucket* b) {
   
   if(b == NULL) {
     return;
@@ -115,12 +131,13 @@ static void delete_bucket_list(bucket* b) {
   
   debug("Unloading: '%s'", b->string);
   
-  char* ext = asset_name_extension(b->string);
+  fpath ext;
+  SDL_PathFileExtension(ext.ptr, b->string);
   
   for(int i = 0; i < num_asset_handlers; i++) {
   
     asset_handler handler = asset_handlers[i];
-    if (strcmp(ext, handler.extension) == 0) {
+    if (strcmp(ext.ptr, handler.extension) == 0) {
       
       bucket_delete_with(b, handler.del_func);
       
@@ -129,14 +146,12 @@ static void delete_bucket_list(bucket* b) {
     
   }
   
-  free(ext);
-  
 }
 
 void asset_manager_finish() {
 
-  for(int i=0; i <asset_dictionary->table_size; i++) {
-    bucket* b = asset_dictionary->buckets[i];
+  for(int i=0; i <asset_dict->size; i++) {
+    struct bucket* b = asset_dict->buckets[i];
     delete_bucket_list(b);
   }
   
@@ -144,14 +159,9 @@ void asset_manager_finish() {
     free(asset_handlers[num_asset_handlers].extension);
   }
   
-  for(int i = 0; i < num_path_variables; i++) {
-    free(path_variables[i].variable);
-    free(path_variables[i].mapping);
-  }
-  
 }
 
-void asset_manager_handler_cast(type_id type, char* extension, void* asset_loader(char* filename) , void asset_deleter(void* asset) ) {
+void asset_manager_handler_cast(type_id type, const char* extension, void* asset_loader(const char* filename) , void asset_deleter(void* asset) ) {
   
   if(num_asset_handlers == MAX_ASSET_HANDLERS) {
     warning("Max number of asset handlers reached. Handler for extension '%s' not added.", extension);
@@ -171,169 +181,132 @@ void asset_manager_handler_cast(type_id type, char* extension, void* asset_loade
   
 }
 
-void load_file(char* filename) {
+void file_load(fpath filename) {
   
-  char* filename_map = asset_map_filename(filename);
+  filename = asset_map_filename(filename);
   
-  if (dictionary_contains(asset_dictionary, filename_map)) {
-    error("Asset '%s' already loaded", filename_map);
+  if (dict_contains(asset_dict, filename.ptr)) {
+    error("Asset '%s' already loaded", filename.ptr);
   }
   
-  char* ext = asset_name_extension(filename_map);
+  fpath ext;
+  SDL_PathFileExtension(ext.ptr, filename.ptr);
   
   for(int i=0; i < num_asset_handlers; i++) {
     asset_handler handler = asset_handlers[i];
-    if (strcmp(ext, handler.extension) == 0) {
-      debug("Loading: '%s'", filename_map);
-      void* asset = handler.load_func(filename_map);
-      dictionary_set(asset_dictionary, filename_map, asset);
-      break;
-    }
-  }
-  
-  free(ext);
-  free(filename_map);
-
-}
-
-void load_folder(char* folder) {
-  
-  char* folder_map = asset_map_filename(folder);
-  
-  debug("Loading Folder: '%s'", folder_map);
-  
-  DIR* dir = opendir(folder_map);
-  struct dirent* ent;
-  
-  if (dir == NULL) {
-    error("Could not open directory '%s' to load.", folder_map);
-  }
     
-  while ((ent = readdir(dir)) != NULL) {
-  
-    if ((strcmp(ent->d_name,".") != 0) && (strcmp(ent->d_name,"..") != 0)) {
-    
-      char* filename = malloc(MAX_PATH);
-      strcpy(filename, folder_map);
-      if (folder_map[strlen(folder_map)-1] != '/') {
-        strcat(filename, "/");
-      }
-      strcat(filename, ent->d_name);
-      
-      if (!asset_loaded(filename)) {
-        load_file(filename);
-      }
-      
-      free(filename);
-    } 
-  }
-  closedir(dir);
-  
-  free(folder_map);
-  
-}
-
-void reload_file(char* filename) {
-  unload_file(filename);
-  load_file(filename);
-}
-
-void reload_folder(char* folder) {
-  unload_folder(folder);
-  load_folder(folder);
-}
-
-void unload_file(char* filename) {
-  
-  char* filename_map = asset_map_filename(filename);
-  
-  char* ext = asset_name_extension(filename_map);
-  
-  for(int i=0; i < num_asset_handlers; i++) {
-  
-    asset_handler handler = asset_handlers[i];
-    if (strcmp(ext, handler.extension) == 0) {
-      debug("Unloading: '%s'", filename_map);
-      dictionary_remove_with(asset_dictionary, filename_map, handler.del_func);
+    if (strcmp(ext.ptr, handler.extension) == 0) {
+      debug("Loading: '%s'", filename.ptr);
+      asset* a = handler.load_func(filename.ptr);
+      dict_set(asset_dict, filename.ptr, a);
       break;
     }
     
   }
-  
-  free(ext);
-  free(filename_map);
+
 }
 
-void unload_folder(char* folder) {
-    
-  char* folder_map = asset_map_filename(folder);
+void folder_load(fpath folder) {
   
-  debug("Unloading Folder: '%s'", folder_map);
+  folder = asset_map_filename(folder);
+  debug("Loading Folder: '%s'", folder.ptr);
   
-  DIR* dir = opendir(folder_map);
-  struct dirent* ent;
-  
+  DIR* dir = opendir(folder.ptr);
   if (dir == NULL) {
-    error("Could not open directory '%s' to unload.\n", folder_map);
+    error("Could not open directory '%s' to load.", folder.ptr);
   }
   
+  struct dirent* ent;
   while ((ent = readdir(dir)) != NULL) {
   
-    if ((strcmp(ent->d_name,".") != 0) && (strcmp(ent->d_name,"..") != 0)) {
+    if ((strcmp(ent->d_name,".") != 0) && 
+        (strcmp(ent->d_name,"..") != 0)) {
     
-      char* filename = malloc(strlen(folder_map) + strlen(ent->d_name) + 1);
-      strcpy(filename, folder_map);
-      strcat(filename, ent->d_name);
+      fpath filename = folder;
       
-      if(dictionary_contains(asset_dictionary, filename) ) {
-        unload_file(filename);
+      // If does not end in "/" then copy it.
+      if (folder.ptr[strlen(folder.ptr)-1] != '/') {
+        strcat(filename.ptr, "/");
       }
       
-      free(filename);
+      strcat(filename.ptr, ent->d_name);
+      
+      if (!file_isloaded(filename)) {
+        file_load(filename);
+      }
+    } 
+  }
+  
+  closedir(dir);
+}
+
+void file_reload(fpath filename) {
+  file_unload(filename);
+  file_load(filename);
+}
+
+void folder_reload(fpath folder) {
+  folder_unload(folder);
+  folder_load(folder);
+}
+
+void file_unload(fpath filename) {
+  
+  filename = asset_map_filename(filename);
+  
+  fpath ext;
+  SDL_PathFileExtension(ext.ptr, filename.ptr);
+  
+  for(int i=0; i < num_asset_handlers; i++) {
+  
+    asset_handler handler = asset_handlers[i];
+    if (strcmp(ext.ptr, handler.extension) == 0) {
+      debug("Unloading: '%s'", filename.ptr);
+      dict_remove_with(asset_dict, filename.ptr, handler.del_func);
+      break;
+    }
+    
+  }
+}
+
+void folder_unload(fpath folder) {
+    
+  folder = asset_map_filename(folder);
+  
+  debug("Unloading Folder: '%s'", folder.ptr);
+  DIR* dir = opendir(folder.ptr);
+  
+  if (dir == NULL) {
+    error("Could not open directory '%s' to unload.\n", folder.ptr);
+  }
+  
+  struct dirent* ent;
+  while ((ent = readdir(dir)) != NULL) {
+  
+    if ((strcmp(ent->d_name,".") != 0) && 
+        (strcmp(ent->d_name,"..") != 0)) {
+    
+      fpath filename = folder;
+      strcat(filename.ptr, ent->d_name);
+      
+      if(dict_contains(asset_dict, filename.ptr) ) {
+        file_unload(filename);
+      }
+      
     } 
   }
   closedir(dir);
-  
-  free(folder_map);
 }
 
-void* asset_get(char* path) {
-  char* path_map = asset_map_filename(path);
-  void* val = dictionary_get(asset_dictionary, path_map);
-  
-  if (val == NULL) {
-    error("Could not find asset '%s'. Perhaps it is not loaded yet?", path_map);
-  }
-  
-  free(path_map);
-  return val;
-}
-
-void* asset_load_get(char* path) {
-  
-  if (!asset_loaded(path)) {
-    load_file(path);
-  }
-  
-  return asset_get(path);
-  
-}
-
-bool asset_loaded(char* path) {
-  char* path_map = asset_map_filename(path);
-  bool contains = dictionary_contains(asset_dictionary, path_map);
-  free(path_map);
-  return contains;
-}
-
-void asset_state_print() {
-  dictionary_print(asset_dictionary);
+bool file_isloaded(fpath path) {
+  path = asset_map_filename(path);
+  return dict_contains(asset_dict, path.ptr);
 }
 
 char* asset_ptr_path(asset* a) {
-  char* path = dictionary_find(asset_dictionary, a);
+  char* path = dict_find(asset_dict, a);
   if (path == NULL) {
-    error("Asset dictionary doesn't contain asset pointer %p", a);
+    error("Asset dict doesn't contain asset pointer %p", a);
     return NULL;
   } else {
     return path; 
@@ -341,26 +314,23 @@ char* asset_ptr_path(asset* a) {
 }
 
 char* asset_ptr_typename(asset* a) {
-  char* path = dictionary_find(asset_dictionary, a);
+  char* path = dict_find(asset_dict, a);
   if (path == NULL) {
-    error("Asset dictionary doesn't contain asset pointer %p", a);
+    error("Asset dict doesn't contain asset pointer %p", a);
     return NULL;
-  } else {
+  }
   
-    char* ext = asset_name_extension(path);
-    
-    for(int i=0; i < num_asset_handlers; i++) {
-      asset_handler handler = asset_handlers[i];
-      if (strcmp(ext, handler.extension) == 0) {
-        return type_id_name(handler.type);
-      }
+  fpath ext;
+  SDL_PathFileExtension(ext.ptr, path);
+  
+  for(int i=0; i < num_asset_handlers; i++) {
+    asset_handler handler = asset_handlers[i];
+    if (strcmp(ext.ptr, handler.extension) == 0) {
+      return type_id_name(handler.type);
     }
-    
-    free(ext);
   }
   
   return NULL;
-  
 }
 
 /* Asset Loader helper commands */

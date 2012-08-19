@@ -8,14 +8,6 @@
 #include "SDL/SDL_opengl.h"
 #include "SDL/SDL_thread.h"
 
-#ifndef MAX_PATH
-  #ifdef PATH_MAX
-    #define MAX_PATH PATH_MAX
-  #else
-    #error "Can't find define for MAX_PATH/PATH_MAX"
-  #endif
-#endif
-
 void SDL_PrintStackTrace();
 
 void SDL_PathFullName(char* dst, char* path);
@@ -29,11 +21,11 @@ void SDL_SetWorkingDir(char* dir);
 void SDL_RWsize(SDL_RWops* file, int* size);
 int SDL_RWreadline(SDL_RWops* file, char* buffer, int buffersize);
 
-void SDL_WM_UseResourceIcon();
+int SDL_WM_UseResourceIcon();
 void SDL_WM_DeleteResourceIcon();
 
-void SDL_WM_CreateTempContext();
-void SDL_WM_DeleteTempContext();
+int SDL_WM_CreateTempContext();
+int SDL_WM_DeleteTempContext();
 
 SDL_Thread* SDL_GL_CreateThread(int (*fn)(void *), void *data);
 

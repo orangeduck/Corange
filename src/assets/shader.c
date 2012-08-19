@@ -1,7 +1,3 @@
-#include "error.h"
-
-#include "asset_manager.h"
-
 #include "assets/shader.h"
 
 static void trim(char * s) {

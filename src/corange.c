@@ -14,7 +14,7 @@ static void corange_signal(int sig) {
   }
 }
 
-void corange_init(char* core_assets_path) {
+void corange_init(const char* core_assets_path) {
   
   /* Stop stdout redirect on windows */
   #ifdef _WIN32
@@ -31,7 +31,7 @@ void corange_init(char* core_assets_path) {
   signal(SIGSEGV, corange_signal);
   signal(SIGTERM, corange_signal);
   
-  aterror(SDL_PrintStackTrace);
+  at_error(SDL_PrintStackTrace);
   
   /* Starting Corange */
   debug("Starting Corange...");
@@ -48,7 +48,7 @@ void corange_init(char* core_assets_path) {
   debug("Creating Asset Manager...");
   
   asset_manager_init();
-  asset_manager_add_path_variable("$CORANGE", core_assets_path);
+  asset_manager_add_path_variable(P("$CORANGE"), P(core_assets_path));
   
   asset_manager_handler(renderable, "bmf", bmf_load_file, renderable_delete);
   asset_manager_handler(renderable, "obj", obj_load_file, renderable_delete);
@@ -71,7 +71,6 @@ void corange_init(char* core_assets_path) {
   
   asset_manager_handler(font, "fnt", font_load_file, font_delete);
   asset_manager_handler(material, "mat", mat_load_file, material_delete);
-  asset_manager_handler(multi_material, "mmat", mmat_load_file, multi_material_delete);
   
   asset_manager_handler(sound, "wav", wav_load_file, sound_delete);
   
