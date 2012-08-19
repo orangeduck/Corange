@@ -37,11 +37,17 @@ static void swap_renderer() {
     SDL_GL_CheckError();
     
     deferred_renderer_init();
+    SDL_GL_CheckError();
     deferred_renderer_set_camera(cam);
+    SDL_GL_CheckError();
     deferred_renderer_set_shadow_light(sun);
+    SDL_GL_CheckError();
     deferred_renderer_set_shadow_texture( shadow_mapper_depth_texture() );
+    SDL_GL_CheckError();
     deferred_renderer_add_light(sun);
+    SDL_GL_CheckError();
     deferred_renderer_add_light(backlight);
+    SDL_GL_CheckError();
     
     use_deferred = true;
     SDL_GL_CheckError();
