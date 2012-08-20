@@ -64,8 +64,6 @@ static void material_generate_programs(material* m) {
       if (me->types[j] == mat_item_shader) {
         asset_hndl ah = me->items[j].as_asset;
         
-        if (!file_isloaded(ah.path)) { file_load(ah.path); }
-        
         SDL_GL_CheckError();
         shader_program_attach_shader(me->program, asset_hndl_ptr(ah));
         SDL_GL_CheckError();
@@ -149,12 +147,12 @@ material* mat_load_file(char* filename) {
     
     if (strcmp(type, "shader") == 0) {
     
-      mi.as_asset = asset_hndl_new(P(value));
+      mi.as_asset = asset_hndl_new_load(P(value));
       me->types[me->num_items-1] = mat_item_shader;
-    
+      
     } else if (strcmp(type, "texture") == 0) {
     
-      mi.as_asset = asset_hndl_new(P(value));
+      mi.as_asset = asset_hndl_new_load(P(value));
       me->types[me->num_items-1] = mat_item_texture;
     
     } else if (strcmp(type, "int") == 0) {

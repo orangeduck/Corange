@@ -45,9 +45,9 @@ void main() {
   
   mat3 world_rot = mat3(world_matrix);
   
-  vec3 w_tangent = world_rot * tangent;
-  vec3 w_binormal = world_rot * binormal;
-  vec3 w_normal = world_rot * gl_Normal;
+  vec3 w_tangent = world_rot * blendtang;
+  vec3 w_binormal = world_rot * blendbinorm;
+  vec3 w_normal = world_rot * blendnorm;
   
   TBN = mat4(vec4(w_tangent,  0.0),
              vec4(w_binormal, 0.0),

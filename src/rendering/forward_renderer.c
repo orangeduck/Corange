@@ -619,9 +619,7 @@ static void forward_renderer_disuse_material() {
 
 }
 
-static void bind_attributes_static() {
-
-  GLsizei stride = sizeof(float) * 18;
+static void bind_attributes(GLsizei stride) {
   
   glVertexPointer(3, GL_FLOAT, stride, (void*)0);
   glEnableClientState(GL_VERTEX_ARRAY);
@@ -664,10 +662,20 @@ static void bind_attributes_static() {
     glVertexAttribPointer(ATTR_BINORMAL, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 9));
     glEnableVertexAttribArray(ATTR_BINORMAL);
   }
-
+  
+  if (ATTR_BONE_INDICIES != -1) {
+    glVertexAttribPointer(ATTR_BONE_INDICIES, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 18));
+    glEnableVertexAttribArray(ATTR_BONE_INDICIES);
+  }
+  
+  if (ATTR_BONE_WEIGHTS != -1) {
+    glVertexAttribPointer(ATTR_BONE_WEIGHTS, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 21));
+    glEnableVertexAttribArray(ATTR_BONE_WEIGHTS);
+  }
+  
 }
 
-static void unbind_attributes_static() {
+static void unbind_attributes() {
 
   glDisableClientState(GL_VERTEX_ARRAY);
   glDisableClientState(GL_NORMAL_ARRAY);
@@ -680,6 +688,8 @@ static void unbind_attributes_static() {
   if (ATTR_COLOR != -1) { glDisableVertexAttribArray(ATTR_COLOR); }
   if (ATTR_TANGENT != -1) { glDisableVertexAttribArray(ATTR_TANGENT); }
   if (ATTR_BINORMAL != -1) { glDisableVertexAttribArray(ATTR_BINORMAL);  }
+  if (ATTR_BONE_INDICIES != -1) { glDisableVertexAttribArray(ATTR_BONE_INDICIES);  }
+  if (ATTR_BONE_WEIGHTS != -1) { glDisableVertexAttribArray(ATTR_BONE_WEIGHTS); }
 
 }
 
@@ -716,11 +726,11 @@ void forward_renderer_render_static(static_object* so) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
     SDL_GL_CheckError();
     
-    bind_attributes_static();
+    bind_attributes(sizeof(float) * 18);
     
       glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
     
-    unbind_attributes_static();
+    unbind_attributes();
     
     SDL_GL_CheckError();
     
@@ -766,12 +776,12 @@ void forward_renderer_render_static_tess(static_object* so) {
     glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
     
-    bind_attributes_static();
+    bind_attributes(sizeof(float) * 18);
       
       glPatchParameteri(GL_PATCH_VERTICES, 3);
       glDrawElements(GL_PATCHES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
     
-    unbind_attributes_static();
+    unbind_attributes();
     
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -816,11 +826,11 @@ void forward_renderer_render_instance(instance_object* io) {
     glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
     
-    bind_attributes_static();
+    bind_attributes(sizeof(float) * 18);
     
       glDrawElementsInstanced(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0, io->num_instances);
     
-    unbind_attributes_static();
+    unbind_attributes();
     
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -858,11 +868,11 @@ void forward_renderer_render_physics(physics_object* po) {
     glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
         
-    bind_attributes_static();
+    bind_attributes(sizeof(float) * 18);
     
       glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
     
-    unbind_attributes_static();
+    unbind_attributes();
     
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -917,54 +927,28 @@ void forward_renderer_render_animated(animated_object* ao) {
     shader_program* prog = me->program;
     
     GLint bone_world_matrices_u = glGetUniformLocation(shader_program_handle(prog), "bone_world_matrices");
-    glUniformMatrix4fv(bone_world_matrices_u, skel->num_bones, GL_FALSE, bone_matrix_data);
+    if (bone_world_matrices_u != -1) {
+      glUniformMatrix4fv(bone_world_matrices_u, skel->num_bones, GL_FALSE, bone_matrix_data);
+    }
     
     GLint bone_count_u = glGetUniformLocation(shader_program_handle(prog), "bone_count");
-    glUniform1i(bone_count_u, skel->num_bones);
+    if (bone_count_u != -1) {
+      glUniform1i(bone_count_u, skel->num_bones);
+    }
     
     GLint recieve_shadows = glGetUniformLocation(shader_program_handle(prog), "recieve_shadows");
-    glUniform1i(recieve_shadows, ao->recieve_shadows);
-    
-    GLsizei stride = sizeof(float) * 24;
+    if (recieve_shadows != -1) {
+      glUniform1i(recieve_shadows, ao->recieve_shadows);
+    }
     
     glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
-        
-    glVertexPointer(3, GL_FLOAT, stride, (void*)0);
-    glEnableClientState(GL_VERTEX_ARRAY);
-    
-    glNormalPointer(GL_FLOAT, stride, (void*)(sizeof(float) * 3));
-    glEnableClientState(GL_NORMAL_ARRAY);
-    
-    glVertexAttribPointer(ATTR_TANGENT, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 6));
-    glEnableVertexAttribArray(ATTR_TANGENT);
-    
-    glVertexAttribPointer(ATTR_BINORMAL, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 9));
-    glEnableVertexAttribArray(ATTR_BINORMAL);
-    
-    glTexCoordPointer(2, GL_FLOAT, stride, (void*)(sizeof(float) * 12));
-    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-    
-    glColorPointer(4, GL_FLOAT, stride, (void*)(sizeof(float) * 14));
-    glEnableClientState(GL_COLOR_ARRAY);
-    
-    glVertexAttribPointer(ATTR_BONE_INDICIES, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 18));
-    glEnableVertexAttribArray(ATTR_BONE_INDICIES);
-    
-    glVertexAttribPointer(ATTR_BONE_WEIGHTS, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 21));
-    glEnableVertexAttribArray(ATTR_BONE_WEIGHTS);
-    
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
-    glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
     
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glDisableClientState(GL_NORMAL_ARRAY);
-    glDisableClientState(GL_TEXTURE_COORD_ARRAY);  
-    glDisableClientState(GL_COLOR_ARRAY);  
+    bind_attributes(sizeof(float) * 24);
     
-    glDisableVertexAttribArray(ATTR_TANGENT);
-    glDisableVertexAttribArray(ATTR_BINORMAL);
-    glDisableVertexAttribArray(ATTR_BONE_INDICIES);  
-    glDisableVertexAttribArray(ATTR_BONE_WEIGHTS);  
+      glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
+    
+    unbind_attributes();
     
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);

@@ -66,6 +66,10 @@ void folder_load(fpath folder);
 void folder_unload(fpath folder);
 void folder_reload(fpath folder);
 
+#define asset_reload_type(type) asset_reload_type_id(typeid(type))
+void asset_reload_type_id(type_id type);
+void asset_reload_all();
+
 /* Get path or typename of asset at ptr */
 char* asset_ptr_path(asset* a);
 char* asset_ptr_typename(asset* a);

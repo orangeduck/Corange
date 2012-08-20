@@ -1,6 +1,7 @@
 #include "casset.h"
 
 #include "data/dict.h"
+#include "data/list.h"
 
 static dict* asset_dict;
 
@@ -321,6 +322,43 @@ bool file_isloaded(fpath path) {
   return dict_contains(asset_dict, path.ptr);
 }
 
+void asset_reload_type_id(type_id type) {
+
+}
+
+void asset_reload_all() {
+  
+  debug("Reloading All Assets...");
+  
+  list* asset_names = list_new();
+  
+  for(int i = 0; i < asset_dict->size; i++) {
+    struct bucket* b = asset_dict->buckets[i];
+    while(b != NULL) {
+      char* new_name = malloc(strlen(b->string)+1);
+      strcpy(new_name, b->string);
+      list_push_back(asset_names, new_name);
+      b = b->next;
+    }
+  }
+  
+  for(int i = 0; i < asset_names->num_items; i++) {
+    file_unload(P(list_get(asset_names, i)));
+  }
+  
+  for(int i = 0; i < asset_names->num_items; i++) {
+    /*
+    ** Assets can reload their child assets before we do
+    ** So it is important we check before loading again
+    */
+    if (!file_isloaded(P(list_get(asset_names, i)))) {
+      file_load(P(list_get(asset_names, i)));
+    }
+  }
+  
+  list_delete_with(asset_names, free);
+}
+
 char* asset_ptr_path(asset* a) {
   char* path = dict_find(asset_dict, a);
   if (path == NULL) {
@@ -349,48 +387,4 @@ char* asset_ptr_typename(asset* a) {
   }
   
   return NULL;
-}
-
-/* Asset Loader helper commands */
-
-char* asset_name_extension(char* filename) {
-  
-  int ext_len = 0;
-  int i = strlen(filename);
-  while( i >= 0) {
-    
-    if (filename[i] != '.') { ext_len++; }
-    if (filename[i] == '.') { break; }
-  
-    i--;
-  }
-  
-  char* ext = malloc(ext_len);
-  
-  int prev = strlen(filename) - ext_len + 1;
-  char* f_ext = filename + prev;
-  strcpy(ext, f_ext);
-  
-  return ext;
-}
-
-char* asset_name_location(char* filename) {
-  
-  int i = strlen(filename);
-  while( i > 0) {
-    
-    if (filename[i] != '/') { i--; }
-    if (filename[i] == '/') { break; }
-    if (filename[i] == '\\') { break; }
-  
-    i--;
-  }
-  i++;
-  
-  char* loc = malloc(i+1);
-  memcpy(loc, filename, i);
-  loc[i] = '\0';
-  
-  return loc;
-  
 }

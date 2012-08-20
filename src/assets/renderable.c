@@ -887,6 +887,7 @@ renderable* smd_load_file(char* filename) {
   renderable* r = renderable_new();
   renderable_add_mesh_rigged(r, smd_mesh, weights);
   r->is_rigged = true;
+  r->material = asset_hndl_new_load(P("$CORANGE/shaders/basic_animated.mat"));
   
   vertex_hashtable_delete(hashes);
   vertex_list_delete(vert_list);

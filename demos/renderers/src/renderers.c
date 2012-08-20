@@ -583,6 +583,10 @@ int main(int argc, char **argv) {
       case SDL_KEYUP:
         if (event.key.keysym.sym == SDLK_ESCAPE) { running = 0; }
         if (event.key.keysym.sym == SDLK_PRINT) { graphics_viewport_screenshot(); }
+        if ((event.key.keysym.sym == SDLK_r) &&
+            (event.key.keysym.mod == KMOD_LCTRL)) {
+              asset_reload_all();
+          }
         break;
       case SDL_QUIT:
         running = 0;
