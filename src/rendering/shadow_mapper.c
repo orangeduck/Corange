@@ -33,7 +33,11 @@ void shadow_mapper_init(light* l) {
   depth_mat = asset_hndl_new_load(P("$CORANGE/shaders/depth.mat"));
   depth_mat_animated = asset_hndl_new_load(P("$CORANGE/shaders/depth_animated.mat"));
   
+  SDL_GL_CheckError();
+  
   shader_program* depth_shader_animated = material_get_entry(asset_hndl_ptr(depth_mat_animated), 0)->program;
+  
+  SDL_GL_CheckError();
   
   BONE_INDICIES = glGetAttribLocation(shader_program_handle(depth_shader_animated), "bone_indicies");
   BONE_WEIGHTS = glGetAttribLocation(shader_program_handle(depth_shader_animated), "bone_weights");
@@ -41,13 +45,22 @@ void shadow_mapper_init(light* l) {
   glGenFramebuffers(1, &fbo);
   glBindFramebuffer(GL_FRAMEBUFFER, fbo);
   
+  glDrawBuffer(GL_NONE);
+  glReadBuffer(GL_NONE);
+  
+  SDL_GL_CheckError();
+  
   int width = l->shadow_map_width;
   int height = l->shadow_map_height;
+  
+  SDL_GL_CheckError();
   
   glGenRenderbuffers(1, &depth_buffer);
   glBindRenderbuffer(GL_RENDERBUFFER, depth_buffer);
   glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_buffer);  
+  
+  SDL_GL_CheckError();
   
   glGenTextures(1, &depth_texture);
   glBindTexture(GL_TEXTURE_2D, depth_texture);
@@ -56,12 +69,21 @@ void shadow_mapper_init(light* l) {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+  glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE, GL_INTENSITY);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth_texture, 0);
+  
+  SDL_GL_CheckFrameBuffer();
+  
+  SDL_GL_CheckError();
   
   texture_ptr = malloc(sizeof(texture));
   *texture_ptr = depth_texture;
   
+  SDL_GL_CheckError();
+  
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  
+  SDL_GL_CheckError();
   
 }
 
@@ -94,18 +116,33 @@ static void shadow_mapper_setup_camera() {
 
 void shadow_mapper_begin() {
   
+  SDL_GL_CheckError();
+  
   glBindFramebuffer(GL_FRAMEBUFFER, fbo);
   
+  SDL_GL_CheckError();
+  
   glClearDepth(1.0f);
+  
+  SDL_GL_CheckError();
+  
   glClear(GL_DEPTH_BUFFER_BIT);
+  
+  SDL_GL_CheckError();
   
   glViewport( 0, 0, LIGHT->shadow_map_width, LIGHT->shadow_map_height);
   
+  SDL_GL_CheckError();
+  
   shadow_mapper_setup_camera();
+  
+  SDL_GL_CheckError();
   
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);
   glCullFace(GL_FRONT);
+  
+  SDL_GL_CheckError();
   
 }
 

@@ -110,7 +110,9 @@ void forward_renderer_init() {
   glBindRenderbuffer(GL_RENDERBUFFER, hdr_depth_buffer);
   glRenderbufferStorageMultisample(GL_RENDERBUFFER, MULTISAMPLES, GL_DEPTH_COMPONENT24, graphics_viewport_width(), graphics_viewport_height());
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, hdr_depth_buffer);  
-
+  
+  SDL_GL_CheckFrameBuffer();
+  
   glGenFramebuffers(1, &hdr_res_fbo);
   glBindFramebuffer(GL_FRAMEBUFFER, hdr_res_fbo);
   
@@ -123,6 +125,8 @@ void forward_renderer_init() {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, hdr_res_texture, 0);
   
+  SDL_GL_CheckFrameBuffer();
+    
   glGenFramebuffers(1, &ldr_fbo);
   glBindFramebuffer(GL_FRAMEBUFFER, ldr_fbo);
   
@@ -139,6 +143,8 @@ void forward_renderer_init() {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ldr_texture, 0);
+  
+  SDL_GL_CheckFrameBuffer();
   
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   

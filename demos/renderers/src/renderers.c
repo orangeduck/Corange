@@ -322,6 +322,8 @@ void renderers_event(SDL_Event event) {
   light* sun = entity_get("sun");
   static_object* s_cello = entity_get("cello");
 
+  camera_control_orbit(cam, event);
+  
   switch(event.type){
   case SDL_KEYDOWN:
     if (event.key.keysym.sym == SDLK_g) g_down = true;
@@ -332,22 +334,11 @@ void renderers_event(SDL_Event event) {
     if (event.key.keysym.sym == SDLK_g) g_down = false;
     if (event.key.keysym.sym == SDLK_t) t_down = false;
   break;
-
-  case SDL_MOUSEBUTTONDOWN:
-    if (event.button.button == SDL_BUTTON_WHEELUP) {
-      cam->position = vec3_sub(cam->position, vec3_normalize(cam->position));
-    }
-    if (event.button.button == SDL_BUTTON_WHEELDOWN) {
-      cam->position = vec3_add(cam->position, vec3_normalize(cam->position));
-    }
-  break;
   
   case SDL_MOUSEBUTTONUP:
-    
     if (event.button.button == SDL_BUTTON_RIGHT) {
       select_light(event.motion.x, event.motion.y);
     }
-    
   break;
   
   case SDL_MOUSEMOTION:
@@ -364,19 +355,6 @@ void renderers_update() {
   
   camera* cam = entity_get("camera");
   light* sun = entity_get("sun");
-
-  Uint8 keystate = SDL_GetMouseState(NULL, NULL);
-  if (keystate & SDL_BUTTON(1)) {
-  
-    float a1 = -(float)mouse_x * 0.005;
-    float a2 = (float)mouse_y * 0.005;
-    
-    cam->position = mat3_mul_vec3(mat3_rotation_y( a1 ), cam->position );
-    
-    vec3 rotation_axis = vec3_normalize(vec3_cross( vec3_sub(cam->position, cam->target) , vec3_new(0,1,0) ));
-    
-    cam->position = mat3_mul_vec3(mat3_rotation_axis_angle(rotation_axis, a2 ), cam->position );
-  }
   
   /*
   if (keystate & SDL_BUTTON(3)) {
@@ -452,22 +430,16 @@ void renderers_render() {
   
   shadow_mapper_begin();
   shadow_mapper_render_static(s_podium);
-  SDL_GL_CheckError();
   if (object_id == 0) {
     shadow_mapper_render_static(s_cello);
-    SDL_GL_CheckError();
   } else if (object_id == 1) { 
     shadow_mapper_render_static(s_piano);
-    SDL_GL_CheckError();
   } else if (object_id == 2) {
     shadow_mapper_render_animated(a_imrod);
-    SDL_GL_CheckError();
   } else if (object_id == 3) {
     shadow_mapper_render_static(s_dino);
-    SDL_GL_CheckError();
   }
   shadow_mapper_end();
-  SDL_GL_CheckError();
   
   if (use_deferred) {
     
@@ -495,22 +467,14 @@ void renderers_render() {
     
   } else {
     
-    SDL_GL_CheckError();
     forward_renderer_begin();
-    SDL_GL_CheckError();
-    
     forward_renderer_render_static(s_podium);
-    SDL_GL_CheckError();
-    
     if (object_id == 0) {
       forward_renderer_render_static(s_cello);
-      SDL_GL_CheckError();
     } else if (object_id == 1) {
       forward_renderer_render_static(s_piano);
-      SDL_GL_CheckError();
     } else if (object_id == 2) {
       forward_renderer_render_animated(a_imrod);
-      SDL_GL_CheckError();
       
       mat4 foot_pos = bone_transform(skeleton_bone_name(a_imrod->pose, "foot_r"));
       
@@ -533,21 +497,16 @@ void renderers_render() {
       
     } else if (object_id == 3) {
       forward_renderer_render_static(s_dino);
-      SDL_GL_CheckError();
     }
     
     forward_renderer_render_light(sun);
-    SDL_GL_CheckError();
     forward_renderer_render_light(backlight);
-    SDL_GL_CheckError();
     
     if (selected_light != NULL) {
       forward_renderer_render_axis(mat4_world(selected_light->position, vec3_one(), quaternion_id()));
-      SDL_GL_CheckError();
     }
     
     forward_renderer_end();
-    SDL_GL_CheckError();
   }
   
 }

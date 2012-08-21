@@ -29,7 +29,7 @@ int SDL_WM_DeleteTempContext();
 
 SDL_Thread* SDL_GL_CreateThread(int (*fn)(void *), void *data);
 
-#define SDL_GL_CheckError() { GLenum __glerror = glGetError(); if (__glerror) { error("OpenGL Error: %s", SDL_GL_ErrorString(__glerror)); } }
+const char* SDL_GL_FrameBufferErrorString(GLenum error);
 const char* SDL_GL_ErrorString(GLenum error);
 
 void SDL_GL_PrintInfo();
@@ -193,6 +193,16 @@ extern GLBROKENEXTENSIONFN glBrokenExtension;
 #define GL_DRAW_FRAMEBUFFER 0x8CA9
 #define GL_ARRAY_BUFFER 0x8892
 #define GL_ELEMENT_ARRAY_BUFFER 0x8893
+
+#define GL_FRAMEBUFFER_COMPLETE 0x8CD5
+#define GL_FRAMEBUFFER_UNDEFINED 0x8219
+#define GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT 0x8CD6
+#define GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT 0x8CD7
+#define GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER 0x8CDB
+#define GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER 0x8CDC
+#define GL_FRAMEBUFFER_UNSUPPORTED 0x8CDD
+#define GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE 0x8D56
+#define GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS 0x8DA8
 
 #define GL_STATIC_DRAW 0x88E4
 #define GL_DYNAMIC_COPY 0x88EA

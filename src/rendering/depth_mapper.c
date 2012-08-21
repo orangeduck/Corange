@@ -41,6 +41,9 @@ void depth_mapper_init(camera* c) {
   glGenFramebuffers(1, &fbo);
   glBindFramebuffer(GL_FRAMEBUFFER, fbo);
   
+  glDrawBuffer(GL_NONE);
+  glReadBuffer(GL_NONE);
+  
   int width = graphics_viewport_width();
   int height = graphics_viewport_height();
   
@@ -56,7 +59,10 @@ void depth_mapper_init(camera* c) {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+  glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE, GL_INTENSITY);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth_texture, 0);
+  
+  SDL_GL_CheckFrameBuffer();
   
   texture_ptr = malloc(sizeof(texture));
   *texture_ptr = depth_texture;
