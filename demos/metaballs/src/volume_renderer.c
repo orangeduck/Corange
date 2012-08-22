@@ -101,7 +101,7 @@ void volume_renderer_init() {
   
   free(volume_data);
   
-  kernel_program* volume_rendering = asset_get("./kernels/volume_rendering.cl");
+  kernel_program* volume_rendering = asset_hndl_ptr(asset_hndl_new_load(P("./kernels/volume_rendering.cl")));
   
   k_write_point = kernel_program_get_kernel(volume_rendering, "write_point");
   k_write_metaballs = kernel_program_get_kernel(volume_rendering, "write_metaballs");
@@ -115,11 +115,12 @@ void volume_renderer_init() {
   k_generate_positions = kernel_program_get_kernel(volume_rendering, "generate_positions");
   k_generate_normals = kernel_program_get_kernel(volume_rendering, "generate_normals");
   
-  env_map = asset_load_get("./resources/metaballs_env.dds");
   
-  material* metaballs_mat = asset_load_get("./shaders/metaballs_def.mat");
+  env_map = asset_hndl_ptr(asset_hndl_new_load(P("./resources/metaballs_env.dds")));
   
-  metaballs_def = dictionary_get(metaballs_mat->properties, "program");
+  material* metaballs_mat = asset_hndl_ptr(asset_hndl_new_load(P("./shaders/metaballs_def.mat")));
+  
+  metaballs_def = material_get_entry(metaballs_mat, 0)->program;
 }
 
 void volume_renderer_finish() {
@@ -149,26 +150,26 @@ void volume_renderer_update() {
   
   int size[3] = {WIDTH, HEIGHT, DEPTH};
   
-  matrix_4x4 view_matrix = camera_view_matrix(cam);
-  matrix_4x4 proj_matrix = camera_proj_matrix(cam, graphics_viewport_ratio());
+  mat4 view_matrix = camera_view_matrix(cam);
+  mat4 proj_matrix = camera_proj_matrix(cam, graphics_viewport_ratio());
   
-  matrix_4x4 inv_view_matrix = m44_inverse(view_matrix);
-  matrix_4x4 inv_proj_matrix = m44_inverse(proj_matrix);
+  mat4 inv_view_matrix = mat4_inverse(view_matrix);
+  mat4 inv_proj_matrix = mat4_inverse(proj_matrix);
   
-  vector4 point = v4(sun->position.x, sun->position.y, sun->position.z, 1);
+  vec4 point = vec4_new(sun->position.x, sun->position.y, sun->position.z, 1);
   
     kernel_set_argument(k_clear_volume, 0, sizeof(kernel_memory), &k_volume);
     kernel_set_argument(k_clear_volume, 1, sizeof(cl_int3), &size);
     kernel_run(k_clear_volume, WIDTH * HEIGHT * DEPTH);
   
   int tex_size[2] = {WIDTH, HEIGHT};
-  vector4 black = v4_black();
+  vec4 black = vec4_black();
   
   kernel_memory_gl_aquire(k_stencil_texture);
   
     kernel_set_argument(k_clear_texture, 0, sizeof(kernel_memory), &k_stencil_texture);
     kernel_set_argument(k_clear_texture, 1, sizeof(cl_int2), &tex_size);
-    kernel_set_argument(k_clear_texture, 2, sizeof(vector4), &black);
+    kernel_set_argument(k_clear_texture, 2, sizeof(vec4), &black);
     kernel_run(k_clear_texture, WIDTH * HEIGHT);
   
   kernel_memory_gl_release(k_stencil_texture);
@@ -178,9 +179,9 @@ void volume_renderer_update() {
     kernel_set_argument(k_write_point, 0, sizeof(kernel_memory), &k_volume);
     kernel_set_argument(k_write_point, 1, sizeof(cl_int3), &size);
     kernel_set_argument(k_write_point, 2, sizeof(kernel_memory), &k_stencil_texture);
-    kernel_set_argument(k_write_point, 3, sizeof(matrix_4x4), &view_matrix);
-    kernel_set_argument(k_write_point, 4, sizeof(matrix_4x4), &proj_matrix);
-    kernel_set_argument(k_write_point, 5, sizeof(vector4), &point);
+    kernel_set_argument(k_write_point, 3, sizeof(mat4), &view_matrix);
+    kernel_set_argument(k_write_point, 4, sizeof(mat4), &proj_matrix);
+    kernel_set_argument(k_write_point, 5, sizeof(vec4), &point);
     kernel_run(k_write_point, 1);
   
   kernel_memory_gl_release(k_stencil_texture);
@@ -191,8 +192,8 @@ void volume_renderer_update() {
     kernel_set_argument(k_write_particles, 0, sizeof(kernel_memory), &k_volume);
     kernel_set_argument(k_write_particles, 1, sizeof(cl_int3), &size);
     kernel_set_argument(k_write_particles, 2, sizeof(kernel_memory), &k_stencil_texture);
-    kernel_set_argument(k_write_particles, 3, sizeof(matrix_4x4), &view_matrix);
-    kernel_set_argument(k_write_particles, 4, sizeof(matrix_4x4), &proj_matrix);
+    kernel_set_argument(k_write_particles, 3, sizeof(mat4), &view_matrix);
+    kernel_set_argument(k_write_particles, 4, sizeof(mat4), &proj_matrix);
     kernel_set_argument(k_write_particles, 5, sizeof(kernel_memory), &metaball_positions);
     kernel_run(k_write_particles, num_metaballs);
   
@@ -205,8 +206,8 @@ void volume_renderer_update() {
     kernel_set_argument(k_write_metaballs, 0, sizeof(kernel_memory), &k_volume);
     kernel_set_argument(k_write_metaballs, 1, sizeof(cl_int3), &size);
     kernel_set_argument(k_write_metaballs, 2, sizeof(kernel_memory), &k_stencil_texture);
-    kernel_set_argument(k_write_metaballs, 3, sizeof(matrix_4x4), &inv_view_matrix);
-    kernel_set_argument(k_write_metaballs, 4, sizeof(matrix_4x4), &inv_proj_matrix);
+    kernel_set_argument(k_write_metaballs, 3, sizeof(mat4), &inv_view_matrix);
+    kernel_set_argument(k_write_metaballs, 4, sizeof(mat4), &inv_proj_matrix);
     kernel_set_argument(k_write_metaballs, 5, sizeof(kernel_memory), &metaball_positions);
     kernel_set_argument(k_write_metaballs, 6, sizeof(cl_int), &num_metaballs);
     kernel_run(k_write_metaballs, WIDTH * HEIGHT * DEPTH);
@@ -222,11 +223,11 @@ void volume_renderer_render() {
   
   int screen_size[2] = {SCREEN_WIDTH, SCREEN_HEIGHT};
   
-  matrix_4x4 view_matrix = camera_view_matrix(cam);
-  matrix_4x4 proj_matrix = camera_proj_matrix(cam, graphics_viewport_ratio());
+  mat4 view_matrix = camera_view_matrix(cam);
+  mat4 proj_matrix = camera_proj_matrix(cam, graphics_viewport_ratio());
   
-  matrix_4x4 inv_view_matrix = m44_inverse(view_matrix);
-  matrix_4x4 inv_proj_matrix = m44_inverse(proj_matrix);
+  mat4 inv_view_matrix = mat4_inverse(view_matrix);
+  mat4 inv_proj_matrix = mat4_inverse(proj_matrix);
   
   kernel_memory_gl_aquire(k_stencil_texture);
   kernel_memory_gl_aquire(k_depth_texture);
@@ -243,8 +244,8 @@ void volume_renderer_render() {
 
     kernel_set_argument(k_generate_positions, 0, sizeof(kernel_memory), &k_depth_texture);
     kernel_set_argument(k_generate_positions, 1, sizeof(kernel_memory), &k_positions_texture);
-    kernel_set_argument(k_generate_positions, 2, sizeof(matrix_4x4), &inv_view_matrix);
-    kernel_set_argument(k_generate_positions, 3, sizeof(matrix_4x4), &inv_proj_matrix);
+    kernel_set_argument(k_generate_positions, 2, sizeof(mat4), &inv_view_matrix);
+    kernel_set_argument(k_generate_positions, 3, sizeof(mat4), &inv_proj_matrix);
     kernel_set_argument(k_generate_positions, 4, sizeof(cl_int2), &screen_size);
     kernel_run(k_generate_positions, SCREEN_WIDTH * SCREEN_HEIGHT);
 

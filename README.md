@@ -1,7 +1,7 @@
 Corange game engine
 ===================
 	
-Version 0.5.7
+Version 0.7.0
 
 Written in Pure C (Because it is beautiful)
 

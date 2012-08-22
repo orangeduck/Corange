@@ -44,8 +44,8 @@ void* list_pop_at(list* l, int index) {
   
   void* item = l->items[ index ];
   
-  memmove(l->items + sizeof(void*) * index, 
-          l->items + sizeof(void*) * (index+1), 
+  memmove(&l->items[index], 
+          &l->items[index+1], 
           sizeof(void*) * ((l->num_items-1) - index));
   
   l->num_items--;

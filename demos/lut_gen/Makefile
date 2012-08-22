@@ -16,6 +16,13 @@ ifeq ($(findstring Linux,$(PLATFORM)),Linux)
 	CORANGE_TAR= ./lib/libcorange.a
 endif
 
+ifeq ($(findstring Darwin,$(PLATFORM)),Darwin)
+	OUT=$(DEMO)
+	LFLAGS= -L./lib -lcorange -lGL -lSDLmain -lSDL
+	CORANGE_LIB= ../../libcorange.so
+	CORANGE_TAR= ./lib/libcorange.a
+endif
+
 ifeq ($(findstring MINGW,$(PLATFORM)),MINGW)
 	OUT=$(DEMO).exe
 	LFLAGS= ../../corange.res -L./ -L../../lib -lcorange -lmingw32 -lSDLmain -lSDL -lopengl32

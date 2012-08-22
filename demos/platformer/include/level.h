@@ -59,10 +59,10 @@ level* level_load_file(char* filename);
 void level_delete(level* l);
 
 void level_render_background(level* l);
-void level_render_tiles(level* l, vector2 camera_position);
+void level_render_tiles(level* l, vec2 camera_position);
 
-int level_tile_at(level* l, vector2 position);
-vector2 level_tile_position(level* l, int x, int y);
+int level_tile_at(level* l, vec2 position);
+vec2 level_tile_position(level* l, int x, int y);
 
 bool tile_has_collision(int tiletype);
 

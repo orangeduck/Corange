@@ -1,4 +1,3 @@
-string name = grass
 shader vert = ./resources/vegetation/grass.vs
 shader frag = ./resources/vegetation/grass.fs
 shader colors = $CORANGE/shaders/colors.fs

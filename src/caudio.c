@@ -108,7 +108,7 @@ void audio_finish() {
   
 }
 
-void audio_manager_play_sound(sound* s) {
+void audio_play_sound(sound* s) {
   
   bool slot_free = false;
   
@@ -134,7 +134,7 @@ void audio_manager_play_sound(sound* s) {
   
 }
 
-int audio_manager_active_sounds() {
+int audio_active_sounds() {
   
   int count = 0;
   

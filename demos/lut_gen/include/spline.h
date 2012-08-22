@@ -20,10 +20,10 @@ typedef struct {
 spline* spline_new();
 void spline_delete(spline* s);
 
-void spline_add_point(spline* s, vector2 p);
+void spline_add_point(spline* s, vec2 p);
 
-vector2 spline_get_point(spline* s, int i);
-void spline_set_point(spline* s, int i, vector2 p);
+vec2 spline_get_point(spline* s, int i);
+void spline_set_point(spline* s, int i, vec2 p);
 
 void spline_update(spline* s);
 
@@ -35,7 +35,7 @@ float spline_get_y_between(spline* s, int low, int high, float x);
 
 void spline_print(spline* s);
 
-void spline_render(spline* s, vector2 position, vector2 size, int increments);
+void spline_render(spline* s, vec2 position, vec2 size, int increments);
 
 
 typedef struct {
@@ -51,6 +51,6 @@ void color_curves_delete(color_curves* cc);
 
 void color_curves_write_lut(color_curves* cc, char* filename);
 
-vector3 color_curves_map(color_curves* cc, vector3 in);
+vec3 color_curves_map(color_curves* cc, vec3 in);
 
 #endif

@@ -10,7 +10,7 @@ void marching_cubes_finish();
 
 void marching_cubes_clear();
 void marching_cubes_point(int x, int y, int z, float value);
-void marching_cubes_metaball(vector3 pos, int id);
+void marching_cubes_metaball(vec3 pos, int id);
 
 void marching_cubes_metaball_data(kernel_memory positions, int num_metaballs);
 

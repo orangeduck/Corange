@@ -2,8 +2,8 @@
 
 character* character_new() {
   character* c = malloc(sizeof(character));
-  c->position = v2_zero();
-  c->velocity = v2_zero();
+  c->position = vec2_zero();
+  c->velocity = vec2_zero();
   c->flap_timer = 0.0;
   c->facing_left = false;
   return c;
@@ -15,7 +15,7 @@ void character_delete(character* c) {
 
 void character_update(character* c) {
   c->velocity.x = clamp(c->velocity.x, -7.0, 7.0);
-  c->position = v2_add(c->position, c->velocity);
+  c->position = vec2_add(c->position, c->velocity);
   
   if (c->flap_timer > 0.0) {
     c->flap_timer -= frame_time();
@@ -27,7 +27,7 @@ static float previous_x = 0.0;
 
 /* Renders a simple quad to the screen */
 
-void character_render(character* c, vector2 camera_position) {
+void character_render(character* c, vec2 camera_position) {
 
 	glMatrixMode(GL_PROJECTION);
   glPushMatrix();
@@ -50,9 +50,9 @@ void character_render(character* c, vector2 camera_position) {
   /* Conditional as to if we render flap or normal icon */
   texture* character_tex;
   if (c->flap_timer > 0.0) {
-    character_tex = asset_get("./tiles/character_flap.dds");
+    character_tex = asset_hndl_ptr(asset_hndl_new_load(P("./tiles/character_flap.dds")));
   } else {
-    character_tex = asset_get("./tiles/character.dds");
+    character_tex = asset_hndl_ptr(asset_hndl_new_load(P("./tiles/character.dds")));
   }
   glBindTexture(GL_TEXTURE_2D, *character_tex);
   

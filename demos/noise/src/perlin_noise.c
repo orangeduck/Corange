@@ -19,21 +19,21 @@
 
 */
   
-float perlin_noise2D(vector2 v) {
+float perlin_noise2D(vec2 v) {
   
-  vector2 amount = v2_fmod(v,1.0);
+  vec2 amount = vec2_fmod(v,1.0);
   
-  vector2 p1 = v2_floor(v);
-  vector2 p2 = v2_add(p1, v2(1,0) );
-  vector2 p3 = v2_add(p1, v2(0,1) );
-  vector2 p4 = v2_add(p1, v2(1,1) );
+  vec2 p1 = vec2_floor(v);
+  vec2 p2 = vec2_add(p1, vec2_new(1,0) );
+  vec2 p3 = vec2_add(p1, vec2_new(0,1) );
+  vec2 p4 = vec2_add(p1, vec2_new(1,1) );
   
-  int h1 = v2_mix_hash(p1);
-  int h2 = v2_mix_hash(p2);
-  int h3 = v2_mix_hash(p3);
-  int h4 = v2_mix_hash(p4);
+  int h1 = vec2_mix_hash(p1);
+  int h2 = vec2_mix_hash(p2);
+  int h3 = vec2_mix_hash(p3);
+  int h4 = vec2_mix_hash(p4);
   
-  double result = bismootherstep_interpolation(h2, h1, h4, h3, amount.x, amount.y);
+  double result = bismootherstep_interp(h2, h1, h4, h3, amount.x, amount.y);
   
   return result / INT_MAX;
   
@@ -60,7 +60,7 @@ image* perlin_noise_generate(int x_size, int y_size, int octaves) {
   
     float wavelength = pow( 2, i);
     float amplitude = pow( 0.5, octaves-i );
-    vector2 seed = v2(rand(),rand());
+    vec2 seed = vec2_new(rand(),rand());
     
     debug("Octave: %i Wavelength: %f Amplitude: %f", i, wavelength, amplitude);
 
@@ -69,24 +69,24 @@ image* perlin_noise_generate(int x_size, int y_size, int octaves) {
       
       /* Four positions are required for tiling behaviour */
       
-      vector2 pos, pos_x, pos_y, pos_xy;
+      vec2 pos, pos_x, pos_y, pos_xy;
       
-      pos = v2_div( v2(x, y) , wavelength );
-      pos_x = v2_div( v2(x - x_size, y) , wavelength );
-      pos_y = v2_div( v2(x, y - y_size) , wavelength );
-      pos_xy = v2_div( v2(x - x_size, y - y_size) , wavelength );
+      pos = vec2_div( vec2_new(x, y) , wavelength );
+      pos_x = vec2_div( vec2_new(x - x_size, y) , wavelength );
+      pos_y = vec2_div( vec2_new(x, y - y_size) , wavelength );
+      pos_xy = vec2_div( vec2_new(x - x_size, y - y_size) , wavelength );
       
-      pos = v2_add( pos, seed );
-      pos_x = v2_add( pos_x, seed );
-      pos_y = v2_add( pos_y, seed );
-      pos_xy = v2_add( pos_xy, seed );
+      pos = vec2_add( pos, seed );
+      pos_x = vec2_add( pos_x, seed );
+      pos_y = vec2_add( pos_y, seed );
+      pos_xy = vec2_add( pos_xy, seed );
       
       float val = perlin_noise2D(pos) * amplitude;
       float val_x = perlin_noise2D(pos_x) * amplitude;
       float val_y = perlin_noise2D(pos_y) * amplitude;
       float val_xy = perlin_noise2D(pos_xy) * amplitude;
       
-      val = bilinear_interpolation(val_x, val, val_xy, val_y, (float)x/x_size, (float)y/y_size);
+      val = bilinear_interp(val_x, val, val_xy, val_y, (float)x/x_size, (float)y/y_size);
       
       data[x + (y * x_size)] += val * 128;
     }

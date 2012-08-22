@@ -52,8 +52,6 @@ void material_delete(material* m) {
 
 static void material_generate_programs(material* m) {
   
-  SDL_GL_CheckError();
-  
   for(int i = 0; i < m->num_entries; i++) {
     
     material_entry* me = m->entries[i];
@@ -64,9 +62,7 @@ static void material_generate_programs(material* m) {
       if (me->types[j] == mat_item_shader) {
         asset_hndl ah = me->items[j].as_asset;
         
-        SDL_GL_CheckError();
         shader_program_attach_shader(me->program, asset_hndl_ptr(ah));
-        SDL_GL_CheckError();
         shader_program_print_log(me->program);
         SDL_GL_CheckError();
       }
@@ -74,7 +70,6 @@ static void material_generate_programs(material* m) {
     }
     
     shader_program_link(me->program);
-    SDL_GL_CheckError();
     shader_program_print_log(me->program);
     SDL_GL_CheckError();
     

@@ -3,7 +3,7 @@
 
 #include "corange.h"
 
-float perlin_noise2D(vector2 v);
+float perlin_noise2D(vec2 v);
 
 image* perlin_noise_generate(int x_size, int y_size, int octaves);
 

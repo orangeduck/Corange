@@ -6,19 +6,11 @@
   #include <windows.h>
 #endif
 
-#include "SDL/SDL_rwops.h"
-#include "SDL/SDL_local.h"
-
-#include "asset_manager.h"
-#include "error.h"
-
-#include "CL/cl_gl.h"
-
-#include "kernel.h"
-
 #ifdef __linux__
   #include  <GL/glx.h>
 #endif
+
+#include "kernel.h"
 
 static cl_int error = 0;
 static cl_platform_id platforms[32];

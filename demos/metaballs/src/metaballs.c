@@ -24,52 +24,52 @@ void metaballs_init() {
   kernels_init_with_opengl();
 #endif
   
-  asset_manager_handler(kernel_program, "cl", cl_load_file, kernel_program_delete);
+  asset_handler(kernel_program, "cl", cl_load_file, kernel_program_delete);
   
-  load_folder("./kernels/");
+  folder_load(P("./kernels/"));
   
   particles_init();
   
-  load_folder("./resources/podium/");
-  load_folder("./resources/particles/");
+  folder_load(P("./resources/podium/"));
+  folder_load(P("./resources/particles/"));
   
-  renderable* r_podium = asset_get("./resources/podium/podium.obj");
-  renderable_set_material(r_podium, asset_get("./resources/podium/podium.mat"));
+  asset_hndl r_podium = asset_hndl_new(P("./resources/podium/podium.obj"));
+  ((renderable*)asset_hndl_ptr(r_podium))->material = asset_hndl_new(P("./resources/podium/podium.mat"));
   
   static_object* s_podium = entity_new("podium", static_object);
   s_podium->renderable = r_podium;
-  s_podium->position = v3(32, 10, 32);
+  s_podium->position = vec3_new(32, 10, 32);
   
   camera* cam = entity_new("camera", camera);
-  cam->position = v3(50, 50, 50);
-  cam->target = v3(32, 15, 32);
+  cam->position = vec3_new(50, 50, 50);
+  cam->target = vec3_new(32, 15, 32);
   
   light* sun = entity_new("sun", light);
-  sun->position = v3(50,40,50);
-  sun->ambient_color = v3(0.5, 0.5, 0.5);
-  sun->diffuse_color = v3_mul(v3_one(), 2);
-  sun->specular_color = v3_mul(v3_one(), 5);
+  sun->position = vec3_new(50,40,50);
+  sun->ambient_color = vec3_new(0.5, 0.5, 0.5);
+  sun->diffuse_color = vec3_mul(vec3_one(), 2);
+  sun->specular_color = vec3_mul(vec3_one(), 5);
   light_set_type(sun, light_type_spot);  
   
   ui_button* framerate = ui_elem_new("framerate", ui_button);
-  ui_button_move(framerate, v2(10,10));
-  ui_button_resize(framerate, v2(30,25));
+  ui_button_move(framerate, vec2_new(10,10));
+  ui_button_resize(framerate, vec2_new(30,25));
   ui_button_set_label(framerate, "");
   ui_button_disable(framerate);
   
   ui_button* score = ui_elem_new("score", ui_button);
-  ui_button_move(score, v2(50, 10));
+  ui_button_move(score, vec2_new(50, 10));
 #ifdef VOLUME_RENDERER
-  ui_button_resize(score, v2(125, 25));
+  ui_button_resize(score, vec2_new(125, 25));
   ui_button_set_label(score, "Volume Renderer");
 #endif
 #ifdef MARCHING_CUBES
-  ui_button_resize(score, v2(120, 25));
+  ui_button_resize(score, vec2_new(120, 25));
   ui_button_set_label(score, "Marching Cubes");
 #endif
 #ifndef VOLUME_RENDERER
 #ifndef MARCHING_CUBES
-  ui_button_resize(score, v2(80, 25));
+  ui_button_resize(score, vec2_new(80, 25));
   ui_button_set_label(score, "Particles");
 #endif
 #endif
@@ -101,20 +101,6 @@ void metaballs_update() {
   light* sun = entity_get("sun");
 
   Uint8 keystate = SDL_GetMouseState(NULL, NULL);
-  if(keystate & SDL_BUTTON(1)){
-    float a1 = -(float)mouse_x * frame_time() * 0.25;
-    float a2 = (float)mouse_y * frame_time() * 0.25;
-    
-    cam->position = v3_sub(cam->position, cam->target);
-    cam->position = m33_mul_v3(m33_rotation_y( a1 ), cam->position );
-    cam->position = v3_add(cam->position, cam->target);
-    
-    cam->position = v3_sub(cam->position, cam->target);
-    vector3 rotation_axis = v3_normalize(v3_cross( v3_sub(cam->position, v3_zero()) , v3(0,1,0) ));
-    cam->position = m33_mul_v3(m33_rotation_axis_angle(rotation_axis, a2 ), cam->position );
-    cam->position = v3_add(cam->position, cam->target);
-  }
-  
   if(keystate & SDL_BUTTON(3)){
     sun->position.x += (float)mouse_y / 2;
     sun->position.z -= (float)mouse_x / 2;
@@ -188,6 +174,8 @@ void metaballs_event(SDL_Event event) {
   camera* cam = entity_get("camera");
   light* sun = entity_get("sun");
 
+  //camera_control_orbit(cam);
+  
   switch(event.type){
   
   case SDL_KEYDOWN:
@@ -207,18 +195,6 @@ void metaballs_event(SDL_Event event) {
   break;
   
   case SDL_MOUSEBUTTONUP:
-    
-  break;
-  
-  case SDL_MOUSEBUTTONDOWN:
-
-    if (event.button.button == SDL_BUTTON_WHEELUP) {
-      cam->position = v3_sub(cam->position, v3_normalize(v3_sub(cam->position, cam->target)));
-    }
-    if (event.button.button == SDL_BUTTON_WHEELDOWN) {
-      cam->position = v3_add(cam->position, v3_normalize(v3_sub(cam->position, cam->target)));
-    }
-    
   break;
   
   case SDL_MOUSEMOTION:

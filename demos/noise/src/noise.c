@@ -21,10 +21,10 @@ void noise_render() {
   glPushMatrix();
 	glLoadIdentity();
   
-  material* noise_mat = asset_get("./shaders/noise.mat");
+  material* noise_mat = asset_hndl_ptr(asset_hndl_new_load(P("./shaders/noise.mat")));
   
-  GLuint handle = shader_program_handle(dictionary_get(noise_mat->properties, "program"));
-  GLuint random_tex = texture_handle(asset_get("$CORANGE/resources/random.dds"));
+  GLuint handle = shader_program_handle(material_get_entry(noise_mat, 0)->program);
+  GLuint random_tex = texture_handle(asset_hndl_ptr(asset_hndl_new_load(P("$CORANGE/resources/random.dds"))));
   
   glUseProgram(handle);
   
@@ -65,9 +65,9 @@ static int save_noise_to_file_thread(void* unused) {
   
   ui_spinner* save_spinner = ui_elem_get("save_spinner");
   ui_rectangle* spinner_box = ui_elem_get("spinner_box");
-  save_spinner->color = v4(1,1,1,0);
-  spinner_box->color = v4(0,0,0,0);
-  spinner_box->border_color = v4(1,1,1,0);
+  save_spinner->color = vec4_new(1,1,1,0);
+  spinner_box->color = vec4_new(0,0,0,0);
+  spinner_box->border_color = vec4_new(1,1,1,0);
   
   currently_saving = false;
   
@@ -75,8 +75,7 @@ static int save_noise_to_file_thread(void* unused) {
 }
 
 static SDL_Thread* save_thread = NULL;
-static bool button_pressed = false;
-static void save_noise_to_file(ui_rectangle* rect, SDL_Event event) {
+static void save_noise_to_file(ui_button* b, SDL_Event event) {
   
   if (currently_saving) {
     return;
@@ -84,24 +83,18 @@ static void save_noise_to_file(ui_rectangle* rect, SDL_Event event) {
   
   if (event.type == SDL_MOUSEBUTTONDOWN) {
     
-    if (ui_rectangle_contains_position(rect, v2(event.motion.x, event.motion.y))) {
-      button_pressed = true;
-      rect->color = v4(0.5, 0.5, 0.5, 1);
+    if (ui_button_contains_position(b, vec2_new(event.motion.x, event.motion.y))) {
+      b->pressed = true;
     }
   
   } else if (event.type == SDL_MOUSEBUTTONUP) {
     
-    if (button_pressed) {
-      button_pressed = false;
+    if (b->pressed) {
+      b->pressed = false;
       currently_saving = true;
       
-      rect->color = v4_black();
-      
       ui_spinner* save_spinner = ui_elem_get("save_spinner");
-      ui_rectangle* spinner_box = ui_elem_get("spinner_box");
-      save_spinner->color = v4(1,1,1,1);
-      spinner_box->color = v4_black();
-      spinner_box->border_color = v4_white();
+      save_spinner->color = vec4_new(1,1,1,1);
       
       save_thread = SDL_CreateThread(save_noise_to_file_thread, NULL);
       
@@ -118,47 +111,34 @@ int main(int argc, char **argv) {
   graphics_viewport_set_dimensions(1280, 720);
   graphics_viewport_set_title("Noise");
   
-  load_folder("./shaders/");
-  load_file("$CORANGE/resources/random.dds");
+  folder_load(P("./shaders/"));
+  file_load(P("$CORANGE/resources/random.dds"));
   
   glClearColor(1.0, 0.0, 0.0, 1.0);
   
-  ui_rectangle* info_rect = ui_elem_new("info_rect", ui_rectangle);
-  info_rect->top_left = v2(10, 10);
-  info_rect->bottom_right = v2(470, 35);
-  info_rect->color = v4_black();
-  info_rect->border_color = v4_white();
-  info_rect->border_size = 1;
+  ui_button* info_button = ui_elem_new("info_button", ui_button);
+  ui_button_move(info_button, vec2_new(10, 10));
+  ui_button_resize(info_button, vec2_new(460,25));
+  ui_button_set_label(info_button, "Procedural texture from perlin noise and feedback functions.");
   
-  ui_text* info_text = ui_elem_new("info_text", ui_text);
-  info_text->position = v2(18, 15);
-  info_text->color = v4_white();
-  ui_text_update_string(info_text, "Procedural texture from perlin noise and feedback functions.");
-  
-  ui_rectangle* save_rect = ui_elem_new("save_rect", ui_rectangle);
-  save_rect->top_left = v2(480, 10);
-  save_rect->bottom_right = v2(860, 35);
-  save_rect->color = v4_black();
-  save_rect->border_color = v4_white();
-  save_rect->border_size = 1;
-  ui_elem_add_event("save_rect", save_noise_to_file);
-  
-  ui_text* save_text = ui_elem_new("save_text", ui_text);
-  save_text->position = v2(488, 15);
-  save_text->color = v4_white();
-  ui_text_update_string(save_text, "Click Here to save tileable perlin noise to file.");
+  ui_button* save_button = ui_elem_new("save_button", ui_button);
+  save_button->bottom_right = vec2_new(860, 35);
+  ui_button_move(save_button, vec2_new(480, 10));
+  ui_button_resize(save_button, vec2_new(380,25));
+  ui_button_set_label(save_button, "Click Here to save tileable perlin noise to file.");
+  ui_elem_add_event("save_button", save_noise_to_file);
   
   ui_rectangle* spinner_box = ui_elem_new("spinner_box", ui_rectangle);
-  spinner_box->top_left = v2(870, 7);
-  spinner_box->bottom_right = v2(902, 39);
-  spinner_box->color = v4(0,0,0,0);
-  spinner_box->border_color = v4(1,1,1,0);
+  spinner_box->color = vec4_black();
+  spinner_box->border_color = vec4_white();
   spinner_box->border_size = 1;
+  spinner_box->top_left = vec2_new(870, 7);
+  spinner_box->bottom_right = vec2_new(902, 39);
   
   ui_spinner* save_spinner = ui_elem_new("save_spinner", ui_spinner);
-  save_spinner->color = v4(1,1,1,0);
-  save_spinner->top_left = v2(874, 11);
-  save_spinner->bottom_right = v2_add(save_spinner->top_left, v2(24,24));
+  save_spinner->color = vec4_new(1,1,1,0);
+  save_spinner->top_left = vec2_new(874, 11);
+  save_spinner->bottom_right = vec2_add(save_spinner->top_left, vec2_new(24,24));
   
   srand(time(NULL));
   shader_time = (float)rand() / (RAND_MAX / 1000);

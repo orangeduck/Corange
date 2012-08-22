@@ -22,7 +22,7 @@ void vegetation_init() {
     sprintf(blockname, "vegblock_%i_%i", x, y);
     
     static_object* block = entity_new(blockname, static_object);
-    block->renderable = renderable_new();
+    block->renderable = asset_hndl_null();
     
     blocks[x + y*X_NUM] = block;
   }
@@ -38,7 +38,7 @@ void vegetation_finish() {
     sprintf(blockname, "vegblock_%i_%i", x, y);
     
     static_object* block = entity_get(blockname);
-    renderable_delete(block->renderable);
+    //renderable_delete(block->renderable);
     
     entity_delete(blockname);
   }
@@ -55,8 +55,8 @@ void vegetation_render() {
   
   camera* cam = entity_get("camera");
   
-  vector2 pos = v2_div(v2(cam->position.x, cam->position.z), BLOCK_SIZE);
-  pos = v2_clamp(pos, 1, 1022);
+  vec2 pos = vec2_div(vec2_new(cam->position.x, cam->position.z), BLOCK_SIZE);
+  pos = vec2_clamp(pos, 1, 1022);
   
   char blockname0[512]; char blockname1[512]; char blockname2[512];
   char blockname3[512]; char blockname4[512]; char blockname5[512];
@@ -82,6 +82,7 @@ void vegetation_render() {
   static_object* block7 = entity_get(blockname7);
   static_object* block8 = entity_get(blockname8);
   
+  /*
   forward_renderer_render_static(block0);
   forward_renderer_render_static(block1);
   forward_renderer_render_static(block2);
@@ -91,6 +92,7 @@ void vegetation_render() {
   forward_renderer_render_static(block6);
   forward_renderer_render_static(block7);
   forward_renderer_render_static(block8);
+  */
   
 }
 
@@ -107,13 +109,13 @@ static void block_part_add_template(model* blockpart, model* template, int index
     mesh* bm = blockpart->meshes[i];
   
     int vert_off = index * tm->num_verts;
-    int tri_off = index * tm->num_triangles_3;
+    int tri_off = index * tm->num_triangles * 3;
     
     for(int j = 0; j < tm->num_verts; j++) {
       bm->verticies[vert_off + j] = tm->verticies[j];
     }
     
-    for(int j = 0; j < tm->num_triangles_3; j++) {
+    for(int j = 0; j < tm->num_triangles * 3; j++) {
       bm->triangles[tri_off + j] = tri_off + tm->triangles[j];
     }
     
@@ -128,9 +130,9 @@ static void paint_vegetation(model* m) {
     mesh* me = m->meshes[i];
     for(int j = 0; j < me->num_verts; j++) {
       if (me->verticies[j].position.y < 0) {
-        me->verticies[j].color = v4_black();
+        me->verticies[j].color = vec4_black();
       } else {
-        me->verticies[j].color = v4_white();
+        me->verticies[j].color = vec4_white();
       }
     }
     
@@ -169,31 +171,30 @@ void vegetation_add_type(terrain* t, renderable* r, float density) {
       
       bm->num_verts = tm->num_verts * count;
       bm->num_triangles = tm->num_triangles * count;
-      bm->num_triangles_3 = tm->num_triangles_3 * count;
       
       bm->verticies = realloc(bm->verticies, sizeof(vertex) * bm->num_verts);
-      bm->triangles = realloc(bm->triangles, sizeof(int) * bm->num_triangles_3);
+      bm->triangles = realloc(bm->triangles, sizeof(int) * bm->num_triangles * 3);
     }
     
     for(int i = 0; i < count; i++) {
       
       float pos_x = random_in_range(x * BLOCK_SIZE, (x+1) * BLOCK_SIZE);
       float pos_z = random_in_range(y * BLOCK_SIZE, (y+1) * BLOCK_SIZE);
-      float pos_y = terrain_height(t, v2(pos_x, pos_z));
+      float pos_y = terrain_height(t, vec2_new(pos_x, pos_z));
       
       float scale = random_in_range(0.8, 1.5);
       float rotation = random_in_range(0, 6.282);
       
-      matrix_4x4 world = m44_world( v3(pos_x, pos_y, pos_z), v3(scale, scale, scale), v4_quaternion_yaw(rotation) );
-      matrix_4x4 inv_world = m44_inverse(world);
+      mat4 world = mat4_world( vec3_new(pos_x, pos_y, pos_z), vec3_new(scale, scale, scale), quaternion_yaw(rotation) );
+      mat4 inv_world = mat4_inverse(world);
       
       model_transform(template, world);
       block_part_add_template(block_part, template, i);
       model_transform(template, inv_world);
     }
     
-    renderable_add_model(block->renderable, block_part);
-    renderable_set_material(block->renderable, asset_get("./resources/vegetation/grass.mat"));
+    //renderable_add_model(block->renderable, block_part);
+    //renderable_set_material(block->renderable, asset_get("./resources/vegetation/grass.mat"));
     model_delete(block_part);
   }
   

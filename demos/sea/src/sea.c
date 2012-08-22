@@ -13,24 +13,24 @@ void sea_init() {
   graphics_viewport_set_title("Sea");
 
   camera* cam = entity_new("camera", camera);
-  cam->position = v3(50.0, 50.0, 50.0);
-  cam->target = v3(0, 5, 0);
+  cam->position = vec3_new(50.0, 50.0, 50.0);
+  cam->target = vec3_new(0, 5, 0);
   cam->near_clip = 0.1;
   
   light* sun = entity_new("sun", light);
   light_set_type(sun, light_type_spot);
-  sun->position = v3(20,23,16);
-  sun->ambient_color = v3(0.5, 0.5, 0.5);
-  sun->diffuse_color = v3(1.0,  0.894, 0.811);
-  sun->specular_color = v3_mul(v3(1.0,  0.894, 0.811), 4);
+  sun->position = vec3_new(20,23,16);
+  sun->ambient_color = vec3_new(0.5, 0.5, 0.5);
+  sun->diffuse_color = vec3_new(1.0,  0.894, 0.811);
+  sun->specular_color = vec3_mul(vec3_new(1.0,  0.894, 0.811), 4);
   sun->power = 5;
   
   light* backlight = entity_new("backlight", light);
   light_set_type(backlight, light_type_point);
-  backlight->position = v3(-22,10,-13);
-  backlight->ambient_color = v3(0.2, 0.2, 0.2);
-  backlight->diffuse_color = v3(0.729, 0.729, 1.0);
-  backlight->specular_color = v3_mul(v3(0.729, 0.729, 1.0), 1);
+  backlight->position = vec3_new(-22,10,-13);
+  backlight->ambient_color = vec3_new(0.2, 0.2, 0.2);
+  backlight->diffuse_color = vec3_new(0.729, 0.729, 1.0);
+  backlight->specular_color = vec3_mul(vec3_new(0.729, 0.729, 1.0), 1);
   backlight->power = 2;
   
   shadow_mapper_init(sun);  
@@ -72,13 +72,13 @@ void sea_init() {
   renderable_set_material(r_seaplane, seaplane_mat);
   static_object* s_seaplane = entity_new("seaplane", static_object);
   s_seaplane->renderable = r_seaplane;
-  s_seaplane->scale = v3(3,1,3);
+  s_seaplane->scale = vec3_new(3,1,3);
   
   static_object* skydome = entity_new("skydome", static_object);
   skydome->renderable = asset_get("./resources/skydome.obj");
   renderable_set_material(skydome->renderable, asset_load_get("$CORANGE/shaders/skydome.mat"));
-  skydome->position = v3(0, -512, 0);
-  skydome->scale = v3(1024, 1024, 1024);
+  skydome->position = vec3_new(0, -512, 0);
+  skydome->scale = vec3_new(1024, 1024, 1024);
   
   load_folder("./resources/corvette/");
   
@@ -89,17 +89,17 @@ void sea_init() {
   static_object* s_corvette = entity_new("corvette", static_object);
   s_corvette->renderable = r_corvette;
   s_corvette->collision_body = collision_body_new_mesh(asset_get("./resources/corvette/corvette.col"));
-  s_corvette->scale = v3(1.5, 1.5, 1.5);
-  s_corvette->position = v3(0, 0.5, 0);
+  s_corvette->scale = vec3_new(1.5, 1.5, 1.5);
+  s_corvette->position = vec3_new(0, 0.5, 0);
   
   static_object* center_sphere = entity_new("center_sphere", static_object);
-  center_sphere->position = v3(0, 5, 0);
+  center_sphere->position = vec3_new(0, 5, 0);
   center_sphere->renderable = asset_get("./resources/ball.obj");
   center_sphere->collision_body = collision_body_new_sphere(sphere_new(v3_zero(), 1.0f));
   
   ui_button* framerate = ui_elem_new("framerate", ui_button);
-  ui_button_move(framerate, v2(10,10));
-  ui_button_resize(framerate, v2(30,25));
+  ui_button_move(framerate, vec2_new(10,10));
+  ui_button_resize(framerate, vec2_new(30,25));
   ui_button_set_label(framerate, "FRAMERATE");
   ui_button_disable(framerate);
   

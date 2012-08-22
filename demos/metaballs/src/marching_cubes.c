@@ -41,7 +41,7 @@ void marching_cubes_init() {
   
   /* Point rendering data */
   
-  vector4* point_data = malloc(sizeof(vector4) * full_size);
+  vec4* point_data = malloc(sizeof(vec4) * full_size);
   
   if(point_data == NULL) {
     error("Not enough memory!");
@@ -52,20 +52,20 @@ void marching_cubes_init() {
   for(y = 0; y < height; y++)
   for(z = 0; z < depth; z++) {
     int id = x + y * width + z * width * height;
-    vector4 position = v4(x, y, z, 1);
+    vec4 position = vec4_new(x, y, z, 1);
     point_data[id] = position;
   }
   
   glGenBuffers(1, &point_positions);
   glBindBuffer(GL_ARRAY_BUFFER, point_positions);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vector4) * full_size, point_data, GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(vec4) * full_size, point_data, GL_STATIC_DRAW);
   free(point_data);
   
-  vector4* point_color_data = malloc(sizeof(vector4) * full_size);
-  memset(point_color_data, 0, sizeof(vector4) * full_size);
+  vec4* point_color_data = malloc(sizeof(vec4) * full_size);
+  memset(point_color_data, 0, sizeof(vec4) * full_size);
   glGenBuffers(1, &point_colors);
   glBindBuffer(GL_ARRAY_BUFFER, point_colors);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vector4) * full_size, point_color_data, GL_DYNAMIC_COPY);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(vec4) * full_size, point_color_data, GL_DYNAMIC_COPY);
   free(point_color_data);
   
   point_color_buffer = kernel_memory_from_glbuffer(point_colors);
@@ -76,20 +76,20 @@ void marching_cubes_init() {
   
   /* Vertex stuff */
   
-  vector4* vertex_pos_data = malloc(sizeof(vector4) * MAX_VERTS);
-  memset(vertex_pos_data, 0, sizeof(vector4) * MAX_VERTS);
+  vec4* vertex_pos_data = malloc(sizeof(vec4) * MAX_VERTS);
+  memset(vertex_pos_data, 0, sizeof(vec4) * MAX_VERTS);
   glGenBuffers(1, &vertex_positions);
   glBindBuffer(GL_ARRAY_BUFFER, vertex_positions);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vector4) * MAX_VERTS, vertex_pos_data, GL_DYNAMIC_COPY);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(vec4) * MAX_VERTS, vertex_pos_data, GL_DYNAMIC_COPY);
   free(vertex_pos_data);
   
   vertex_positions_buffer = kernel_memory_from_glbuffer(vertex_positions);
   
-  vector4* vertex_norm_data = malloc(sizeof(vector4) * MAX_VERTS);
-  memset(vertex_norm_data, 0, sizeof(vector4) * MAX_VERTS);
+  vec4* vertex_norm_data = malloc(sizeof(vec4) * MAX_VERTS);
+  memset(vertex_norm_data, 0, sizeof(vec4) * MAX_VERTS);
   glGenBuffers(1, &vertex_normals);
   glBindBuffer(GL_ARRAY_BUFFER, vertex_normals);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vector4) * MAX_VERTS, vertex_norm_data, GL_DYNAMIC_COPY);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(vec4) * MAX_VERTS, vertex_norm_data, GL_DYNAMIC_COPY);
   free(vertex_norm_data);
   
   vertex_normals_buffer = kernel_memory_from_glbuffer(vertex_normals);
@@ -98,7 +98,7 @@ void marching_cubes_init() {
   
   /* Kernels */
   
-  kernel_program* marching_cubes = asset_get("./kernels/marching_cubes.cl");
+  kernel_program* marching_cubes = asset_hndl_ptr(asset_hndl_new_load(P("./kernels/marching_cubes.cl")));
   
   write_point = kernel_program_get_kernel(marching_cubes, "write_point");
   kernel_set_argument(write_point, 0, sizeof(kernel_memory), &volume);
@@ -293,9 +293,10 @@ void marching_cubes_render(bool wireframe, camera* c, light* l) {
     glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
   }
   
-  material* metaballs_mat = asset_load_get("./shaders/metaballs.mat");
   
-  shader_program* metaballs = dictionary_get(metaballs_mat->properties, "program");
+  material* metaballs_mat = asset_hndl_ptr(asset_hndl_new_load(P("./shaders/metaballs.mat")));
+  
+  shader_program* metaballs = material_get_entry(metaballs_mat, 0)->program;
   GLuint NORMALS = glGetAttribLocation(*metaballs, "normals");
   
   glUseProgram(*metaballs);
@@ -306,11 +307,11 @@ void marching_cubes_render(bool wireframe, camera* c, light* l) {
   GLint camera_position_u = glGetUniformLocation(*metaballs, "camera_position");
   glUniform3f(camera_position_u, c->position.x, c->position.y, c->position.z);
   
-  matrix_4x4 lviewm = light_view_matrix(l);
-  matrix_4x4 lprojm = light_proj_matrix(l);
+  mat4 lviewm = light_view_matrix(l);
+  mat4 lprojm = light_proj_matrix(l);
   
-  m44_to_array(lviewm, lview_matrix);
-  m44_to_array(lprojm, lproj_matrix);
+  mat4_to_array(lviewm, lview_matrix);
+  mat4_to_array(lprojm, lproj_matrix);
   
   GLint lproj_matrix_u = glGetUniformLocation(*metaballs, "light_proj");
   glUniformMatrix4fv(lproj_matrix_u, 1, 0, lproj_matrix);
@@ -318,7 +319,8 @@ void marching_cubes_render(bool wireframe, camera* c, light* l) {
   GLint lview_matrix_u = glGetUniformLocation(*metaballs, "light_view");
   glUniformMatrix4fv(lview_matrix_u, 1, 0, lview_matrix);
   
-  texture* env_map = asset_load_get("./resources/metaballs_env.dds");
+  
+  texture* env_map = asset_hndl_ptr(asset_hndl_new_load(P("./resources/metaballs_env.dds")));
   glActiveTexture(GL_TEXTURE0 + 0 );
   glBindTexture(GL_TEXTURE_2D, *env_map);
   glEnable(GL_TEXTURE_2D);
@@ -363,11 +365,11 @@ static float world_matrix[16];
 
 void marching_cubes_render_shadows(light* l) {
   
-  matrix_4x4 viewm = light_view_matrix(l);
-  matrix_4x4 projm = light_proj_matrix(l);
+  mat4 viewm = light_view_matrix(l);
+  mat4 projm = light_proj_matrix(l);
   
-  m44_to_array(viewm, view_matrix);
-  m44_to_array(projm, proj_matrix);
+  mat4_to_array(viewm, view_matrix);
+  mat4_to_array(projm, proj_matrix);
   
   glMatrixMode(GL_MODELVIEW);
   glLoadMatrixf(view_matrix);
@@ -375,11 +377,11 @@ void marching_cubes_render_shadows(light* l) {
   glMatrixMode(GL_PROJECTION);
   glLoadMatrixf(proj_matrix);    
   
-  m44_to_array(m44_id(), world_matrix);
+  mat4_to_array(mat4_id(), world_matrix);
   
-  material* depth_mat = asset_load_get("$CORANGE/shaders/depth.mat");
+  material* depth_mat = asset_hndl_ptr(asset_hndl_new_load(P("$CORANGE/shaders/depth.mat")));
   
-  shader_program* depth_shader = dictionary_get(depth_mat->properties, "program");
+  shader_program* depth_shader = material_get_entry(depth_mat, 0)->program;
   glUseProgram(*depth_shader);
   
   GLint world_matrix_u = glGetUniformLocation(*depth_shader, "world_matrix");

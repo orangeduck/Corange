@@ -16,7 +16,7 @@ static void toggle_wireframe(ui_button* b, SDL_Event event) {
   
   if (event.type == SDL_MOUSEBUTTONDOWN) {
     
-    if (ui_button_contains_position(b, v2(event.motion.x, event.motion.y))) {
+    if (ui_button_contains_position(b, vec2_new(event.motion.x, event.motion.y))) {
       b->pressed = true;
     }
   
@@ -34,7 +34,7 @@ static void toggle_freecam(ui_button* b, SDL_Event event) {
   
   if (event.type == SDL_MOUSEBUTTONDOWN) {
     
-    if (ui_button_contains_position(b, v2(event.motion.x, event.motion.y))) {
+    if (ui_button_contains_position(b, vec2_new(event.motion.x, event.motion.y))) {
       b->pressed = true;
     }
   
@@ -48,10 +48,10 @@ static void toggle_freecam(ui_button* b, SDL_Event event) {
       camera* cam = entity_get("camera");
       landscape* world = entity_get("world");
       
-      vector3 cam_dir = v3_normalize(v3_sub(cam->target, cam->position));
-      float height = terrain_height(world->terrain, v2(cam->position.x, cam->position.z));
+      vec3 cam_dir = vec3_normalize(vec3_sub(cam->target, cam->position));
+      float height = terrain_height(asset_hndl_ptr(world->terrain), vec2_new(cam->position.x, cam->position.z));
       cam->position.y = height + 1;
-      cam->target = v3_add(cam->position, cam_dir);
+      cam->target = vec3_add(cam->position, cam_dir);
     }
   }
 }
@@ -60,25 +60,25 @@ static bool loading_resources = false;
 
 static int load_resources(void* unused) {
   
-  load_folder("./resources/terrain/");
-  load_folder("./resources/vegetation/");
+  folder_load(P("./resources/terrain/"));
+  folder_load(P("./resources/vegetation/"));
   
   static_object* skydome = entity_new("skydome", static_object);
-  skydome->renderable = asset_get("./resources/terrain/skydome.obj");
-  renderable_set_material(skydome->renderable, asset_load_get("$CORANGE/shaders/skydome.mat"));
-  skydome->position = v3(512, 0, 512);
-  skydome->scale = v3(1024, 1024, 1024);
+  skydome->renderable = asset_hndl_new_load(P("./resources/terrain/skydome.obj"));
+  ((renderable*)asset_hndl_ptr(skydome->renderable))->material = asset_hndl_new_load(P("$CORANGE/shaders/skydome.mat"));
+  skydome->position = vec3_new(512, 0, 512);
+  skydome->scale = vec3_new(1024, 1024, 1024);
   
   landscape* world = entity_new("world", landscape);
-  world->terrain = asset_get("./resources/terrain/heightmap.raw");
-  world->normalmap = asset_get("./resources/terrain/normalsmap.dds");
-  world->colormap = asset_get("./resources/terrain/colormap.dds");
-  world->attributemap = asset_get("./resources/terrain/attributemap.dds");
+  world->terrain = asset_hndl_new_load(P("./resources/terrain/heightmap.raw"));
+  world->normalmap = asset_hndl_new_load(P("./resources/terrain/normalsmap.dds"));
+  world->colormap = asset_hndl_new_load(P("./resources/terrain/colormap.dds"));
+  world->attributemap = asset_hndl_new_load(P("./resources/terrain/attributemap.dds"));
 
-  landscape_set_textures(world, asset_get("./resources/terrain/surface.dds"), 
-                                asset_get("./resources/terrain/surface_bump.dds"), 
-                                asset_get("./resources/terrain/surface_far.dds"), 
-                                asset_get("./resources/terrain/surface_far_bump.dds"));
+  landscape_set_textures(world, asset_hndl_new_load(P("./resources/terrain/surface.dds")), 
+                                asset_hndl_new_load(P("./resources/terrain/surface_bump.dds")), 
+                                asset_hndl_new_load(P("./resources/terrain/surface_far.dds")), 
+                                asset_hndl_new_load(P("./resources/terrain/surface_far_bump.dds")));
   
   vegetation_init();
   //vegetation_add_type(asset_get("./resources/terrain/heightmap.raw"), 
@@ -106,34 +106,34 @@ void scotland_init() {
   graphics_viewport_set_title("Scotland");
   
   ui_button* loading = ui_elem_new("loading", ui_button);
-  ui_button_move(loading, v2(graphics_viewport_width() / 2 - 40,graphics_viewport_height() / 2 - 13));
-  ui_button_resize(loading, v2(80,25));
+  ui_button_move(loading, vec2_new(graphics_viewport_width() / 2 - 40,graphics_viewport_height() / 2 - 13));
+  ui_button_resize(loading, vec2_new(80,25));
   ui_button_set_label(loading, "Loading...");
   ui_button_disable(loading);
   
   ui_spinner* load_spinner = ui_elem_new("load_spinner", ui_spinner);
-  load_spinner->color = v4(1,1,1,1);
-  load_spinner->top_left = v2(graphics_viewport_width() / 2 + 50, graphics_viewport_height() / 2 - 13);
-  load_spinner->bottom_right = v2_add(load_spinner->top_left, v2(24,24));
+  load_spinner->color = vec4_white();
+  load_spinner->top_left = vec2_new(graphics_viewport_width() / 2 + 50, graphics_viewport_height() / 2 - 13);
+  load_spinner->bottom_right = vec2_add(load_spinner->top_left, vec2_new(24,24));
   
   ui_button* framerate = ui_elem_new("framerate", ui_button);
-  ui_button_move(framerate, v2(10,10));
-  ui_button_resize(framerate, v2(30,25));
+  ui_button_move(framerate, vec2_new(10,10));
+  ui_button_resize(framerate, vec2_new(30,25));
   ui_button_set_label(framerate, "FRAMERATE");
   ui_button_disable(framerate);
   framerate->active = false;
   
   ui_button* wireframe = ui_elem_new("wireframe", ui_button);
-  ui_button_move(wireframe, v2(50,10));
-  ui_button_resize(wireframe, v2(80,25));
+  ui_button_move(wireframe, vec2_new(50,10));
+  ui_button_resize(wireframe, vec2_new(80,25));
   ui_button_set_label(wireframe, "wireframe");
   wireframe->active = false;
   
   ui_elem_add_event("wireframe", toggle_wireframe);
   
   ui_button* freecam = ui_elem_new("freecam", ui_button);
-  ui_button_move(freecam, v2(140,10));
-  ui_button_resize(freecam, v2(65,25));
+  ui_button_move(freecam, vec2_new(140,10));
+  ui_button_resize(freecam, vec2_new(65,25));
   ui_button_set_label(freecam, "freecam");
   freecam->active = false;
   
@@ -145,13 +145,13 @@ void scotland_init() {
   /* New Camera and light */
   
   camera* cam = entity_new("camera", camera);
-  cam->position = v3(512.0, 200.0, 512.0);
-  cam->target =  v3(0.0, 0.0, 0.0);
+  cam->position = vec3_new(512.0, 200.0, 512.0);
+  cam->target =  vec3_new(0.0, 0.0, 0.0);
   
   light* sun = entity_new("sun", light);
   light_set_type(sun, light_type_sun);
-  sun->position = v3(0, 512, 0);
-  sun->target = v3(512, 0, 512);
+  sun->position = vec3_new(0, 512, 0);
+  sun->target = vec3_new(512, 0, 512);
   
   /* Renderer Setup */
   
@@ -218,26 +218,26 @@ void scotland_update() {
   sun->position.x = 512 + sin(sun_orbit) * 512;
   sun->position.y = cos(sun_orbit) * 512;
   sun->position.z = 512;
-  sun->target = v3(512, 0, 512);
+  sun->target = vec3_new(512, 0, 512);
   
   if (w_held || s_held) {
     
-    vector3 cam_dir = v3_normalize(v3_sub(cam->target, cam->position));
+    vec3 cam_dir = vec3_normalize(vec3_sub(cam->target, cam->position));
     float speed = 0.5;
     if (!freecam) speed = 0.05;
     if (w_held) {
-      cam->position = v3_add(cam->position, v3_mul(cam_dir, speed));
+      cam->position = vec3_add(cam->position, vec3_mul(cam_dir, speed));
     }
     if (s_held) {
-      cam->position = v3_sub(cam->position, v3_mul(cam_dir, speed));
+      cam->position = vec3_sub(cam->position, vec3_mul(cam_dir, speed));
     }
     
     if (!freecam) {
-      float height = terrain_height(world->terrain, v2(cam->position.x, cam->position.z));
+      float height = terrain_height(asset_hndl_ptr(world->terrain), vec2_new(cam->position.x, cam->position.z));
       cam->position.y = height + 1;
     }
     
-    cam->target = v3_add(cam->position, cam_dir);
+    cam->target = vec3_add(cam->position, cam_dir);
   }
   
   Uint8 keystate = SDL_GetMouseState(NULL, NULL);
@@ -246,14 +246,14 @@ void scotland_update() {
     float a1 = -(float)mouse_x * 0.005;
     float a2 = (float)mouse_y * 0.005;
     
-    vector3 cam_dir = v3_normalize(v3_sub(cam->target, cam->position));
+    vec3 cam_dir = vec3_normalize(vec3_sub(cam->target, cam->position));
     
     cam_dir.y += -a2;
-    vector3 side_dir = v3_normalize(v3_cross(cam_dir, v3(0,1,0)));
-    cam_dir = v3_add(cam_dir, v3_mul(side_dir, -a1));
-    cam_dir = v3_normalize(cam_dir);
+    vec3 side_dir = vec3_normalize(vec3_cross(cam_dir, vec3_new(0,1,0)));
+    cam_dir = vec3_add(cam_dir, vec3_mul(side_dir, -a1));
+    cam_dir = vec3_normalize(cam_dir);
     
-    cam->target = v3_add(cam->position, cam_dir);
+    cam->target = vec3_add(cam->position, cam_dir);
   }
   
   mouse_x = 0;

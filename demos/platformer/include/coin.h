@@ -4,13 +4,13 @@
 #include "corange.h"
 
 typedef struct {
-  vector2 position;
+  vec2 position;
 } coin;
 
 coin* coin_new();
 void coin_delete(coin* c);
 
-void coin_render(coin* c, vector2 camera_position);
+void coin_render(coin* c, vec2 camera_position);
 
 
 #endif

@@ -10,32 +10,32 @@ const int MAX_HEIGHT = 512;
 static texture* tile_get_texture(int tiletype) {
   texture* t;
   switch(tiletype) {
-    case tiletype_none: t = asset_get("./tiles/tile_sky.dds"); break;
-    case tiletype_air: t = asset_get("./tiles/tile_sky.dds"); break;
-    case tiletype_dirt: t = asset_get("./tiles/tile_dirt.dds"); break;
-    case tiletype_dirt_rock: t = asset_get("./tiles/tile_dirt_rock.dds"); break;
-    case tiletype_dirt_overhang: t = asset_get("./tiles/tile_dirt_overhang.dds"); break;
-    case tiletype_surface: t = asset_get("./tiles/tile_surface.dds"); break;
-    case tiletype_grass: t = asset_get("./tiles/tile_grass.dds"); break;
-    case tiletype_grass_rock1: t = asset_get("./tiles/tile_grass_rock1.dds"); break;
-    case tiletype_grass_rock2: t = asset_get("./tiles/tile_grass_rock2.dds"); break;
-    case tiletype_grass_tree: t = asset_get("./tiles/tile_grass_tree.dds"); break;
-    case tiletype_tree: t = asset_get("./tiles/tile_tree.dds"); break;
-    case tiletype_tree_top: t = asset_get("./tiles/tile_tree_top.dds"); break;
-    case tiletype_tree_top_left: t = asset_get("./tiles/tile_tree_top_left.dds"); break;
-    case tiletype_tree_top_right: t = asset_get("./tiles/tile_tree_top_right.dds"); break;
-    case tiletype_tree_topest: t = asset_get("./tiles/tile_tree_topest.dds"); break;
-    case tiletype_tree_bot_left: t = asset_get("./tiles/tile_tree_bot_left.dds"); break;
-    case tiletype_tree_bot_right: t = asset_get("./tiles/tile_tree_bot_right.dds"); break;
-    case tiletype_tree_junc_left: t = asset_get("./tiles/tile_tree_junc_left.dds"); break;
-    case tiletype_tree_junc_right: t = asset_get("./tiles/tile_tree_junc_right.dds"); break;
-    case tiletype_tree_turn_left: t = asset_get("./tiles/tile_tree_turn_left.dds"); break;
-    case tiletype_tree_turn_right: t = asset_get("./tiles/tile_tree_turn_right.dds"); break;
-    case tiletype_tree_side: t = asset_get("./tiles/tile_tree_side.dds"); break;
-    case tiletype_house_bot_left: t = asset_get("./tiles/tile_house_bot_left.dds"); break;
-    case tiletype_house_bot_right: t = asset_get("./tiles/tile_house_bot_right.dds"); break;
-    case tiletype_house_top_left: t = asset_get("./tiles/tile_house_top_left.dds"); break;
-    case tiletype_house_top_right: t = asset_get("./tiles/tile_house_top_right.dds"); break;
+    case tiletype_none: t = asset_hndl_ptr(asset_hndl_new_load(P("./tiles/tile_sky.dds"))); break;
+    case tiletype_air: t = asset_hndl_ptr(asset_hndl_new_load(P("./tiles/tile_sky.dds"))); break;
+    case tiletype_dirt: t = asset_hndl_ptr(asset_hndl_new_load(P("./tiles/tile_dirt.dds"))); break;
+    case tiletype_dirt_rock: t = asset_hndl_ptr(asset_hndl_new_load(P("./tiles/tile_dirt_rock.dds"))); break;
+    case tiletype_dirt_overhang: t = asset_hndl_ptr(asset_hndl_new_load(P("./tiles/tile_dirt_overhang.dds"))); break;
+    case tiletype_surface: t = asset_hndl_ptr(asset_hndl_new_load(P("./tiles/tile_surface.dds"))); break;
+    case tiletype_grass: t = asset_hndl_ptr(asset_hndl_new_load(P("./tiles/tile_grass.dds"))); break;
+    case tiletype_grass_rock1: t = asset_hndl_ptr(asset_hndl_new_load(P("./tiles/tile_grass_rock1.dds"))); break;
+    case tiletype_grass_rock2: t = asset_hndl_ptr(asset_hndl_new_load(P("./tiles/tile_grass_rock2.dds"))); break;
+    case tiletype_grass_tree: t = asset_hndl_ptr(asset_hndl_new_load(P("./tiles/tile_grass_tree.dds"))); break;
+    case tiletype_tree: t = asset_hndl_ptr(asset_hndl_new_load(P("./tiles/tile_tree.dds"))); break;
+    case tiletype_tree_top: t = asset_hndl_ptr(asset_hndl_new_load(P("./tiles/tile_tree_top.dds"))); break;
+    case tiletype_tree_top_left: t = asset_hndl_ptr(asset_hndl_new_load(P("./tiles/tile_tree_top_left.dds"))); break;
+    case tiletype_tree_top_right: t = asset_hndl_ptr(asset_hndl_new_load(P("./tiles/tile_tree_top_right.dds"))); break;
+    case tiletype_tree_topest: t = asset_hndl_ptr(asset_hndl_new_load(P("./tiles/tile_tree_topest.dds"))); break;
+    case tiletype_tree_bot_left: t = asset_hndl_ptr(asset_hndl_new_load(P("./tiles/tile_tree_bot_left.dds"))); break;
+    case tiletype_tree_bot_right: t = asset_hndl_ptr(asset_hndl_new_load(P("./tiles/tile_tree_bot_right.dds"))); break;
+    case tiletype_tree_junc_left: t = asset_hndl_ptr(asset_hndl_new_load(P("./tiles/tile_tree_junc_left.dds"))); break;
+    case tiletype_tree_junc_right: t = asset_hndl_ptr(asset_hndl_new_load(P("./tiles/tile_tree_junc_right.dds"))); break;
+    case tiletype_tree_turn_left: t = asset_hndl_ptr(asset_hndl_new_load(P("./tiles/tile_tree_turn_left.dds"))); break;
+    case tiletype_tree_turn_right: t = asset_hndl_ptr(asset_hndl_new_load(P("./tiles/tile_tree_turn_right.dds"))); break;
+    case tiletype_tree_side: t = asset_hndl_ptr(asset_hndl_new_load(P("./tiles/tile_tree_side.dds"))); break;
+    case tiletype_house_bot_left: t = asset_hndl_ptr(asset_hndl_new_load(P("./tiles/tile_house_bot_left.dds"))); break;
+    case tiletype_house_bot_right: t = asset_hndl_ptr(asset_hndl_new_load(P("./tiles/tile_house_bot_right.dds"))); break;
+    case tiletype_house_top_left: t = asset_hndl_ptr(asset_hndl_new_load(P("./tiles/tile_house_top_left.dds"))); break;
+    case tiletype_house_top_right: t = asset_hndl_ptr(asset_hndl_new_load(P("./tiles/tile_house_top_right.dds"))); break;
     default: t = NULL;
   }
   return t;
@@ -230,7 +230,7 @@ void level_render_background(level* l) {
   
   glEnable(GL_TEXTURE_2D);
   
-  texture* background = asset_get("./backgrounds/bluesky.dds");
+  texture* background = asset_hndl_ptr(asset_hndl_new_load(P("./backgrounds/bluesky.dds")));
   glBindTexture(GL_TEXTURE_2D, *background);
   
   glBegin(GL_QUADS);
@@ -258,7 +258,7 @@ void level_render_background(level* l) {
 
 /* Renders each tileset in one go. Uses vertex buffers. */
 
-void level_render_tiles(level* l, vector2 camera_position) {
+void level_render_tiles(level* l, vec2 camera_position) {
   
 	glMatrixMode(GL_PROJECTION);
   glPushMatrix();
@@ -313,21 +313,21 @@ void level_render_tiles(level* l, vector2 camera_position) {
 
 }
 
-int level_tile_at(level* l, vector2 position) {
+int level_tile_at(level* l, vec2 position) {
   
   int x = floor( position.x / TILE_SIZE );
   int y = floor( position.y / TILE_SIZE );
   
-  assert(x >= 0, "Invalid Position, (%0.2f,%0.2f)", position.x, position.y);
-  assert(y >= 0, "Invalid Position, (%0.2f,%0.2f)", position.x, position.y);
-  assert(x < MAX_WIDTH, "Invalid Position, (%0.2f,%0.2f)", position.x, position.y);
-  assert(y < MAX_HEIGHT, "Invalid Position, (%0.2f,%0.2f)", position.x, position.y);
+  assert(x >= 0);
+  assert(y >= 0);
+  assert(x < MAX_WIDTH);
+  assert(y < MAX_HEIGHT);
   
   return l->tile_map[x + y * MAX_WIDTH];
 }
 
-vector2 level_tile_position(level* l, int x, int y) {
+vec2 level_tile_position(level* l, int x, int y) {
   
-  return v2(x * TILE_SIZE, y * TILE_SIZE);
+  return vec2_new(x * TILE_SIZE, y * TILE_SIZE);
   
 }

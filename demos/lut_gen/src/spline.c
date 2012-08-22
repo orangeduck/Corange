@@ -16,7 +16,7 @@ void spline_delete(spline* s) {
   free(s);
 }
 
-void spline_add_point(spline* s, vector2 p) {
+void spline_add_point(spline* s, vec2 p) {
   if (s->num_points == MAX_SPLINE_POINTS) {
     warning("Spline already contains maximum of %i points", MAX_SPLINE_POINTS);
     return;
@@ -27,11 +27,11 @@ void spline_add_point(spline* s, vector2 p) {
   s->num_points++;
 }
 
-vector2 spline_get_point(spline* s, int i) {
-  return v2(s->x[i], s->y[i]);
+vec2 spline_get_point(spline* s, int i) {
+  return vec2_new(s->x[i], s->y[i]);
 }
 
-void spline_set_point(spline* s, int i, vector2 p) {
+void spline_set_point(spline* s, int i, vec2 p) {
   s->x[i] = p.x;
   s->y[i] = p.y;
 }
@@ -197,7 +197,7 @@ float spline_get_x(spline* s, float y) {
   return x;
 }
 
-void spline_render(spline* s, vector2 position, vector2 size, int increments) {
+void spline_render(spline* s, vec2 position, vec2 size, int increments) {
 
 	glMatrixMode(GL_PROJECTION);
   glPushMatrix();
@@ -215,7 +215,7 @@ void spline_render(spline* s, vector2 position, vector2 size, int increments) {
   glBegin(GL_POINTS);
     
     for(int i = 0; i < s->num_points; i++) {
-      vector2 loc = v2( s->x[i], s->y[i] );
+      vec2 loc = vec2_new( s->x[i], s->y[i] );
       glVertex2f(position.x + loc.x * size.x, position.y + loc.y * size.y );
     }
   
@@ -363,11 +363,11 @@ void color_curves_delete(color_curves* cc) {
   free(cc);
 }
 
-vector3 color_curves_map(color_curves* cc, vector3 in) {
+vec3 color_curves_map(color_curves* cc, vec3 in) {
   
-  float r = in.r;
-  float g = in.g;
-  float b = in.b;
+  float r = in.x;
+  float g = in.y;
+  float b = in.z;
   r = spline_get_x(cc->r_spline, r);
   g = spline_get_x(cc->g_spline, g);
   b = spline_get_x(cc->b_spline, b);
@@ -376,7 +376,7 @@ vector3 color_curves_map(color_curves* cc, vector3 in) {
   g = spline_get_x(cc->rgb_spline, g);
   b = spline_get_x(cc->rgb_spline, b);
   
-  return v3(r, g, b);
+  return vec3_new(r, g, b);
 }
 
 void color_curves_write_lut(color_curves* cc, char* filename) {

@@ -11,35 +11,35 @@
 
 /* Some game state variables */
 static level* current_level;
-static vector2 camera_position;
+static vec2 camera_position;
 static int level_score;
 static float level_time;
 
 /* We store all the coin positions here */
 #define COIN_COUNT 45
-static vector2 coin_positions[COIN_COUNT] = {
-  {{16, 23}}, {{33, 28}}, {{41, 22}}, {{20, 19}}, {{18, 28}},
-  {{36, 20}}, {{20, 30}}, {{31, 18}}, {{45, 23}}, {{49, 26}},
-  {{25, 18}}, {{20, 37}}, {{44, 32}}, {{66, 20}}, {{52, 20}},
-  {{63, 11}}, {{52, 12}}, {{39, 13}}, {{27, 11}}, {{73, 20}},
-  {{65, 29}}, {{72, 29}}, {{78, 30}}, {{78, 20}}, {{83, 22}},
-  {{87, 22}}, {{90, 24}}, {{94, 19}}, {{99, 18}}, {{82, 13}},
-  {{79, 14}}, {{106, 22}}, {{102, 30}}, {{100, 35}}, {{93, 27}},
-  {{88, 34}}, {{98, 40}}, {{96, 40}}, {{94, 40}}, {{86, 40}},
-  {{81, 37}}, {{77, 38}}, {{72, 34}}, {{65, 38}}, {{71, 37}}
+static vec2 coin_positions[COIN_COUNT] = {
+  {16, 23}, {33, 28}, {41, 22}, {20, 19}, {18, 28},
+  {36, 20}, {20, 30}, {31, 18}, {45, 23}, {49, 26},
+  {25, 18}, {20, 37}, {44, 32}, {66, 20}, {52, 20},
+  {63, 11}, {52, 12}, {39, 13}, {27, 11}, {73, 20},
+  {65, 29}, {72, 29}, {78, 30}, {78, 20}, {83, 22},
+  {87, 22}, {90, 24}, {94, 19}, {99, 18}, {82, 13},
+  {79, 14}, {106, 22}, {102, 30}, {100, 35}, {93, 27},
+  {88, 34}, {98, 40}, {96, 40}, {94, 40}, {86, 40},
+  {81, 37}, {77, 38}, {72, 34}, {65, 38}, {71, 37}
 };
 
 static void reset_game() {
 
   /* Set the starting level to demo.level */
-  current_level = asset_get("./levels/demo.level");
+  current_level = asset_hndl_ptr(asset_hndl_new_load(P("./levels/demo.level")));
   level_score = 0;
   level_time = 0.0;
   
   /* New main character entity */
   character* main_char = entity_get("main_char");
-  main_char->position = v2_mul( v2(20, 20), TILE_SIZE);
-  main_char->velocity = v2_zero();
+  main_char->position = vec2_mul( vec2_new(20, 20), TILE_SIZE);
+  main_char->velocity = vec2_zero();
   
   /* We can create multiple entities using a name format string like printf */
   entities_new("coin_id_%i", COIN_COUNT, coin);
@@ -50,7 +50,7 @@ static void reset_game() {
   
   /* Set all the coin initial positions */
   for(int i = 0; i < COIN_COUNT; i++) {
-    coins[i]->position = v2_mul(coin_positions[i], TILE_SIZE);
+    coins[i]->position = vec2_mul(coin_positions[i], TILE_SIZE);
   }
   
   /* Deactivate victory and new game UI elements */
@@ -66,7 +66,7 @@ static void disable_audio(ui_button* b, SDL_Event event) {
   
   if (event.type == SDL_MOUSEBUTTONDOWN) {
     
-    if (ui_button_contains_position(b, v2(event.motion.x, event.motion.y))) {
+    if (ui_button_contains_position(b, vec2_new(event.motion.x, event.motion.y))) {
       b->pressed = true;
     }
   
@@ -92,7 +92,7 @@ static void new_game(ui_button* b, SDL_Event event) {
   
   if (event.type == SDL_MOUSEBUTTONDOWN) {
     
-    if (ui_button_contains_position(b, v2(event.motion.x, event.motion.y))) {
+    if (ui_button_contains_position(b, vec2_new(event.motion.x, event.motion.y))) {
       b->pressed = true;
     }
   
@@ -111,56 +111,56 @@ void platformer_init() {
   graphics_viewport_set_title("Platformer");
   
   /* Register functions for loading/unloading files with the extension .level */
-  asset_manager_handler(level, "level", level_load_file, level_delete);
+  asset_handler(level, "level", level_load_file, level_delete);
   
   /* Load Assets */
-  load_folder("./tiles/");
-  load_folder("./backgrounds/");
-  load_folder("./sounds/");
-  load_folder("./levels/");
+  folder_load(P("./tiles/"));
+  folder_load(P("./backgrounds/"));
+  folder_load(P("./sounds/"));
+  folder_load(P("./levels/"));
   
   /* Register some handlers for creating and destroying entity types */
-  entity_manager_handler(character, character_new, character_delete);
-  entity_manager_handler(coin, coin_new, coin_delete);
+  entity_handler(character, character_new, character_delete);
+  entity_handler(coin, coin_new, coin_delete);
   
   /* Create our main character */
   character* main_char = entity_new("main_char", character);
   
   /* Add some UI elements */
   ui_button* framerate = ui_elem_new("framerate", ui_button);
-  ui_button_move(framerate, v2(10,10));
-  ui_button_resize(framerate, v2(30,25));
+  ui_button_move(framerate, vec2_new(10,10));
+  ui_button_resize(framerate, vec2_new(30,25));
   ui_button_set_label(framerate, "");
   ui_button_disable(framerate);
   
   ui_button* score = ui_elem_new("score", ui_button);
-  ui_button_move(score, v2(50, 10));
-  ui_button_resize(score, v2(120, 25));
+  ui_button_move(score, vec2_new(50, 10));
+  ui_button_resize(score, vec2_new(120, 25));
   ui_button_set_label(score, "Score 000000");
   ui_button_disable(score);
   
   ui_button* time = ui_elem_new("time", ui_button);
-  ui_button_move(time, v2(180, 10));
-  ui_button_resize(time, v2(110, 25));
+  ui_button_move(time, vec2_new(180, 10));
+  ui_button_resize(time, vec2_new(110, 25));
   ui_button_set_label(time, "Time 000000");
   ui_button_disable(time);
   
   ui_button* audio = ui_elem_new("audio", ui_button);
-  ui_button_move(audio, v2(300, 10));
-  ui_button_resize(audio, v2(120, 25));
+  ui_button_move(audio, vec2_new(300, 10));
+  ui_button_resize(audio, vec2_new(120, 25));
   ui_button_set_label(audio, "Disable Audio");
   
   ui_elem_add_event("audio", disable_audio);
   
   ui_button* victory = ui_elem_new("victory", ui_button);
-  ui_button_move(victory, v2(365, 200));
-  ui_button_resize(victory, v2(70, 25));
+  ui_button_move(victory, vec2_new(365, 200));
+  ui_button_resize(victory, vec2_new(70, 25));
   ui_button_set_label(victory, "Victory!");
   ui_button_disable(victory);
   
   ui_button* new_game_but = ui_elem_new("new_game", ui_button);
-  ui_button_move(new_game_but, v2(365, 230));
-  ui_button_resize(new_game_but, v2(70, 25));
+  ui_button_move(new_game_but, vec2_new(365, 230));
+  ui_button_resize(new_game_but, vec2_new(70, 25));
   ui_button_set_label(new_game_but, "New Game");
   
   ui_elem_add_event("new_game", new_game);
@@ -218,65 +218,65 @@ static void collision_detection() {
   const float buffer = 4;
   const float bounce = 0.5;
   
-  vector2 diff;
+  vec2 diff;
   
   /* Bottom Collision */
   
-  diff = v2_fmod(main_char->position, TILE_SIZE);
+  diff = vec2_fmod(main_char->position, TILE_SIZE);
   
-  vector2 bottom1 = v2_add(main_char->position, v2(buffer, TILE_SIZE));
-  vector2 bottom2 = v2_add(main_char->position, v2(TILE_SIZE - buffer, TILE_SIZE));
+  vec2 bottom1 = vec2_add(main_char->position, vec2_new(buffer, TILE_SIZE));
+  vec2 bottom2 = vec2_add(main_char->position, vec2_new(TILE_SIZE - buffer, TILE_SIZE));
   
   bool bottom1_col = tile_has_collision(level_tile_at(current_level, bottom1));
   bool bottom2_col = tile_has_collision(level_tile_at(current_level, bottom2));
   
   if (bottom1_col || bottom2_col) {
-    main_char->position = v2_add(main_char->position, v2(0,-diff.y));
+    main_char->position = vec2_add(main_char->position, vec2_new(0,-diff.y));
     main_char->velocity.y *= -bounce;
   }
   
   /* Top Collision */
   
-  diff = v2_fmod(main_char->position, TILE_SIZE);
+  diff = vec2_fmod(main_char->position, TILE_SIZE);
   
-  vector2 top1 = v2_add(main_char->position, v2(buffer, 0));
-  vector2 top2 = v2_add(main_char->position, v2(TILE_SIZE - buffer, 0));
+  vec2 top1 = vec2_add(main_char->position, vec2_new(buffer, 0));
+  vec2 top2 = vec2_add(main_char->position, vec2_new(TILE_SIZE - buffer, 0));
   
   bool top1_col = tile_has_collision(level_tile_at(current_level, top1));
   bool top2_col = tile_has_collision(level_tile_at(current_level, top2));
   
   if (top1_col || top2_col) {
-    main_char->position = v2_add(main_char->position, v2(0, TILE_SIZE - diff.y));
+    main_char->position = vec2_add(main_char->position, vec2_new(0, TILE_SIZE - diff.y));
     main_char->velocity.y *= -bounce;
   }
   
   /* Left Collision */
   
-  diff = v2_fmod(main_char->position, TILE_SIZE);
+  diff = vec2_fmod(main_char->position, TILE_SIZE);
   
-  vector2 left1 = v2_add(main_char->position, v2(0, buffer));
-  vector2 left2 = v2_add(main_char->position, v2(0, TILE_SIZE - buffer));
+  vec2 left1 = vec2_add(main_char->position, vec2_new(0, buffer));
+  vec2 left2 = vec2_add(main_char->position, vec2_new(0, TILE_SIZE - buffer));
   
   bool left1_col = tile_has_collision(level_tile_at(current_level, left1));
   bool left2_col = tile_has_collision(level_tile_at(current_level, left2));
   
   if (left1_col || left2_col) {
-    main_char->position = v2_add(main_char->position, v2(TILE_SIZE - diff.x,0));
+    main_char->position = vec2_add(main_char->position, vec2_new(TILE_SIZE - diff.x,0));
     main_char->velocity.x *= -bounce;
   }
   
   /* Right Collision */
   
-  diff = v2_fmod(main_char->position, TILE_SIZE);
+  diff = vec2_fmod(main_char->position, TILE_SIZE);
   
-  vector2 right1 = v2_add(main_char->position, v2(TILE_SIZE, buffer));
-  vector2 right2 = v2_add(main_char->position, v2(TILE_SIZE, TILE_SIZE - buffer));
+  vec2 right1 = vec2_add(main_char->position, vec2_new(TILE_SIZE, buffer));
+  vec2 right2 = vec2_add(main_char->position, vec2_new(TILE_SIZE, TILE_SIZE - buffer));
   
   bool right1_col = tile_has_collision(level_tile_at(current_level, right1));
   bool right2_col = tile_has_collision(level_tile_at(current_level, right2));
   
   if (right1_col || right2_col) {
-    main_char->position = v2_add(main_char->position, v2(-diff.x,0));
+    main_char->position = vec2_add(main_char->position, vec2_new(-diff.x,0));
     main_char->velocity.x *= -bounce;
   }
   
@@ -288,8 +288,8 @@ static void collision_detection_coins() {
   
   character* main_char = entity_get("main_char");
   
-  vector2 top_left = v2_add(main_char->position, v2(-TILE_SIZE, -TILE_SIZE));
-  vector2 bottom_right = v2_add(main_char->position, v2(TILE_SIZE, TILE_SIZE));
+  vec2 top_left = vec2_add(main_char->position, vec2_new(-TILE_SIZE, -TILE_SIZE));
+  vec2 bottom_right = vec2_add(main_char->position, vec2_new(TILE_SIZE, TILE_SIZE));
   
   /* Again we collect pointers to all the coin type entities */
   int num_coins = 0;
@@ -308,7 +308,8 @@ static void collision_detection_coins() {
       entity_delete(coin_name);
       
       /* Play a nice twinkle sound */
-      audio_manager_play_sound(asset_get_as("./sounds/coin.wav", sound));
+      sound* coin_sound = asset_hndl_ptr(asset_hndl_new_load(P("./sounds/coin.wav")));
+      audio_play_sound(coin_sound);
       
       /* Add some score! */
       level_score += 10;
@@ -316,7 +317,7 @@ static void collision_detection_coins() {
       /* Update the ui text */
       ui_button* score = ui_elem_get("score");
       sprintf(score->label->string, "Score %06i", level_score);
-      ui_text_update_properties(score->label);
+      ui_text_draw(score->label);
     }
   }
   
@@ -358,7 +359,7 @@ void platformer_update() {
   collision_detection_coins();
   
   /* Camera follows main character */
-  camera_position = v2(main_char->position.x, -main_char->position.y);
+  camera_position = vec2_new(main_char->position.x, -main_char->position.y);
   
   /* Update the framerate text */
   ui_button* framerate = ui_elem_get("framerate");
@@ -370,7 +371,7 @@ void platformer_update() {
     level_time += frame_time();
     ui_button* time = ui_elem_get("time");
     sprintf(time->label->string, "Time %06i", (int)level_time);
-    ui_text_update_properties(time->label);
+    ui_text_draw(time->label);
   }
   
 }

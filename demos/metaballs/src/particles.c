@@ -8,10 +8,10 @@
 
 static int particle_count = 64;
 
-vector4* particle_positions;
-vector4* particle_velocities;
+vec4* particle_positions;
+vec4* particle_velocities;
 float* particle_lifetimes;
-vector4* particle_randoms;
+vec4* particle_randoms;
 
 GLuint positions_buffer;
 GLuint velocities_buffer;
@@ -29,35 +29,35 @@ bool reset = 0;
 
 void particles_init() {
 
-  particle_positions = malloc(sizeof(vector4) * particle_count);
-  particle_velocities = malloc(sizeof(vector4) * particle_count);
+  particle_positions = malloc(sizeof(vec4) * particle_count);
+  particle_velocities = malloc(sizeof(vec4) * particle_count);
   particle_lifetimes = malloc(sizeof(float) * particle_count);
-  particle_randoms = malloc(sizeof(vector4) * particle_count);
+  particle_randoms = malloc(sizeof(vec4) * particle_count);
   
   srand(time(NULL));
   
   for(int i = 0; i < particle_count; i++) {
     particle_lifetimes[i] = 999;
-    particle_positions[i] = v4(0,0,0,0);
-    particle_velocities[i] = v4(0,0,0,0);
+    particle_positions[i] = vec4_new(0,0,0,0);
+    particle_velocities[i] = vec4_new(0,0,0,0);
     
     float rx = ((float)rand() / RAND_MAX) * 2 - 1;
     float ry = ((float)rand() / RAND_MAX) * 2 + 0.5;
     float rz = ((float)rand() / RAND_MAX) * 2 - 1;
     float rm = (float)rand() / RAND_MAX;
     
-    vector3 rand = v3_mul(v3_normalize(v3(rx, ry, rz)), rm * 2);
+    vec3 rand = vec3_mul(vec3_normalize(vec3_new(rx, ry, rz)), rm * 2);
     
-    particle_randoms[i] = v4(rand.x, rand.y, rand.z, 0);
+    particle_randoms[i] = vec4_new(rand.x, rand.y, rand.z, 0);
   }
     
   glGenBuffers(1, &positions_buffer);
   glBindBuffer(GL_ARRAY_BUFFER, positions_buffer);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vector4) * particle_count, particle_positions, GL_DYNAMIC_COPY);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(vec4) * particle_count, particle_positions, GL_DYNAMIC_COPY);
   
   glGenBuffers(1, &velocities_buffer);
   glBindBuffer(GL_ARRAY_BUFFER, velocities_buffer);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vector4) * particle_count, particle_velocities, GL_DYNAMIC_COPY);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(vec4) * particle_count, particle_velocities, GL_DYNAMIC_COPY);
   
   glGenBuffers(1, &lifetimes_buffer);
   glBindBuffer(GL_ARRAY_BUFFER, lifetimes_buffer);
@@ -65,19 +65,19 @@ void particles_init() {
   
   glGenBuffers(1, &randoms_buffer);
   glBindBuffer(GL_ARRAY_BUFFER, randoms_buffer);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vector4) * particle_count, particle_randoms, GL_DYNAMIC_COPY);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(vec4) * particle_count, particle_randoms, GL_DYNAMIC_COPY);
  
 #ifdef OPEN_GL_CPU
   #ifndef CPU_ONLY
-  k_particle_positions = kernel_memory_allocate(sizeof(vector4) * particle_count);
-  k_particle_velocities = kernel_memory_allocate(sizeof(vector4) * particle_count);
+  k_particle_positions = kernel_memory_allocate(sizeof(vec4) * particle_count);
+  k_particle_velocities = kernel_memory_allocate(sizeof(vec4) * particle_count);
   k_particle_lifetimes = kernel_memory_allocate(sizeof(float) * particle_count);
-  k_particle_randoms = kernel_memory_allocate(sizeof(vector4) * particle_count);
+  k_particle_randoms = kernel_memory_allocate(sizeof(vec4) * particle_count);
   
-  kernel_memory_write(k_particle_positions, sizeof(vector4) * particle_count, particle_positions);
-  kernel_memory_write(k_particle_velocities, sizeof(vector4) * particle_count, particle_velocities);
+  kernel_memory_write(k_particle_positions, sizeof(vec4) * particle_count, particle_positions);
+  kernel_memory_write(k_particle_velocities, sizeof(vec4) * particle_count, particle_velocities);
   kernel_memory_write(k_particle_lifetimes, sizeof(float) * particle_count, particle_lifetimes);
-  kernel_memory_write(k_particle_randoms, sizeof(vector4) * particle_count, particle_randoms);
+  kernel_memory_write(k_particle_randoms, sizeof(vec4) * particle_count, particle_randoms);
   #endif
 #else
   k_particle_positions = kernel_memory_from_glbuffer(positions_buffer);
@@ -86,7 +86,7 @@ void particles_init() {
   k_particle_randoms = kernel_memory_from_glbuffer(randoms_buffer);
 #endif
   
-  kernel_program* program = asset_get("./kernels/particles.cl");
+  kernel_program* program = asset_hndl_ptr(asset_hndl_new_load(P("./kernels/particles.cl")));
   
   float max_life = 60.0;
   float min_velocity = 0.5;
@@ -223,26 +223,26 @@ void particles_render() {
 #ifdef OPEN_GL_CPU
   
   #ifndef CPU_ONLY
-    kernel_memory_read(k_particle_positions, sizeof(vector4) * particle_count, particle_positions);
+    kernel_memory_read(k_particle_positions, sizeof(vec4) * particle_count, particle_positions);
   #endif
   glBindBuffer(GL_ARRAY_BUFFER, positions_buffer);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vector4) * particle_count, particle_positions, GL_DYNAMIC_COPY);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(vec4) * particle_count, particle_positions, GL_DYNAMIC_COPY);
   
   #ifndef CPU_ONLY
-    kernel_memory_read(k_particle_randoms, sizeof(vector4) * particle_count, particle_randoms);
+    kernel_memory_read(k_particle_randoms, sizeof(vec4) * particle_count, particle_randoms);
   #endif
   glBindBuffer(GL_ARRAY_BUFFER, randoms_buffer);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vector4) * particle_count, particle_randoms, GL_DYNAMIC_COPY);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(vec4) * particle_count, particle_randoms, GL_DYNAMIC_COPY);
 
 #endif
   
   camera* cam = entity_get("camera");
   
-  matrix_4x4 viewm = camera_view_matrix(cam);
-  matrix_4x4 projm = camera_proj_matrix(cam, graphics_viewport_ratio() );
+  mat4 viewm = camera_view_matrix(cam);
+  mat4 projm = camera_proj_matrix(cam, graphics_viewport_ratio() );
   
-  m44_to_array(viewm, view_matrix);
-  m44_to_array(projm, proj_matrix);
+  mat4_to_array(viewm, view_matrix);
+  mat4_to_array(projm, proj_matrix);
 
   glMatrixMode(GL_MODELVIEW);
   glLoadMatrixf(view_matrix);

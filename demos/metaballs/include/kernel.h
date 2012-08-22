@@ -2,6 +2,8 @@
 #define kernel_h
 
 #include "CL/cl.h"
+#include "CL/cl_gl.h"
+#include "corange.h"
 
 typedef cl_program kernel_program;
 typedef cl_kernel kernel;

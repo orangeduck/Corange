@@ -49,24 +49,24 @@ void tessellation_init() {
   
   if (!tessellation_supported) {
     ui_button* not_supported = ui_elem_new("not_supported", ui_button);
-    ui_button_move(not_supported, v2(graphics_viewport_width()/2 - 205, graphics_viewport_height()/2 - 12));
-    ui_button_resize(not_supported, v2(410, 25));
+    ui_button_move(not_supported, vec2_new(graphics_viewport_width()/2 - 205, graphics_viewport_height()/2 - 12));
+    ui_button_resize(not_supported, vec2_new(410, 25));
     ui_button_set_label(not_supported, "Sorry your graphics card doesn't support tessellation!");
     return;
   }
   
-  load_folder("./shaders/");
+  folder_load(P("./shaders/"));
   
   camera* cam = entity_new("cam", camera);
-  cam->position = v3(2,2,2);
+  cam->position = vec3_new(2,2,2);
   
   light* sun = entity_new("sun", light);
   
   create_mesh();
   
   ui_button* controls = ui_elem_new("controls", ui_button);
-  ui_button_move(controls, v2(10,10));
-  ui_button_resize(controls, v2(300, 25));
+  ui_button_move(controls, vec2_new(10,10));
+  ui_button_resize(controls, vec2_new(300, 25));
   ui_button_set_label(controls, "Up/Down Arrows to adjust Tessellation.");
   
 }
@@ -79,20 +79,13 @@ void tesselation_event(SDL_Event event) {
   camera* cam = entity_get("cam");
   light* sun = entity_get("sun");
   
+  //camera_control_orbit(cam);
+  
   switch(event.type){
   
   case SDL_KEYUP:
     if (event.key.keysym.sym == SDLK_UP) { tess_level_inner++; tess_level_outer++; }
     if (event.key.keysym.sym == SDLK_DOWN) { tess_level_inner = max(tess_level_inner-1, 1); tess_level_outer = max(tess_level_outer-1, 1); }
-  break;
-  
-  case SDL_MOUSEBUTTONDOWN:
-    if (event.button.button == SDL_BUTTON_WHEELUP) {
-      cam->position = v3_sub(cam->position, v3_normalize(cam->position));
-    }
-    if (event.button.button == SDL_BUTTON_WHEELDOWN) {
-      cam->position = v3_add(cam->position, v3_normalize(cam->position));
-    }
   break;
   
   case SDL_MOUSEMOTION:
@@ -104,22 +97,6 @@ void tesselation_event(SDL_Event event) {
 }
 
 void tesselation_update() {
-
-  camera* cam = entity_get("cam");
-
-  Uint8 keystate = SDL_GetMouseState(NULL, NULL);
-  if (keystate & SDL_BUTTON(1)) {
-  
-    float a1 = -(float)mouse_x * 0.005;
-    float a2 = (float)mouse_y * 0.005;
-    
-    cam->position = m33_mul_v3(m33_rotation_y( a1 ), cam->position );
-    vector3 rotation_axis = v3_normalize(v3_cross( v3_sub(cam->position, cam->target) , v3(0,1,0) ));
-    cam->position = m33_mul_v3(m33_rotation_axis_angle(rotation_axis, a2 ), cam->position );
-  }
-  
-  mouse_x = 0;
-  mouse_y = 0;
 }
 
 void tessellation_render() {
@@ -132,9 +109,9 @@ void tessellation_render() {
   light* sun = entity_get("sun");
   camera* cam = entity_get("cam");
   
-  material* tess_mat = asset_get("./shaders/tessellation.mat");
+  material* tess_mat = asset_hndl_ptr(asset_hndl_new(P("./shaders/tessellation.mat")));
   
-  GLuint sp_handle = shader_program_handle(dictionary_get(tess_mat->properties, "program"));
+  GLuint sp_handle = shader_program_handle(material_get_entry(tess_mat, 0)->program);
   
   glUseProgram(sp_handle);
   
@@ -143,11 +120,11 @@ void tessellation_render() {
   
   glUniform3f(glGetUniformLocation(sp_handle, "light_position"), sun->position.x, sun->position.y, sun->position.z);
   
-  matrix_4x4 viewm = camera_view_matrix(cam);
-  matrix_4x4 projm = camera_proj_matrix(cam, graphics_viewport_ratio() );
+  mat4 viewm = camera_view_matrix(cam);
+  mat4 projm = camera_proj_matrix(cam, graphics_viewport_ratio() );
   
-  float viewm_f[16]; m44_to_array(viewm, viewm_f);
-  float projm_f[16]; m44_to_array(projm, projm_f);
+  float viewm_f[16]; mat4_to_array(viewm, viewm_f);
+  float projm_f[16]; mat4_to_array(projm, projm_f);
   
   glUniformMatrix4fv(glGetUniformLocation(sp_handle, "view"), 1, 0, viewm_f);
   glUniformMatrix4fv(glGetUniformLocation(sp_handle, "proj"), 1, 0, projm_f);

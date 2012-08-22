@@ -104,8 +104,12 @@ char* type_id_name(int id);
 ** == Floating point Maths ==
 */
 
-float max(float x, float y);
-float min(float x, float y);
+#ifndef max
+  float max(float x, float y);
+#endif
+#ifndef min
+  float min(float x, float y);
+#endif
 float clamp(float x, float bottom, float top);
 float saturate(float x);
 

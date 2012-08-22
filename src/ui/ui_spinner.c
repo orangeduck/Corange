@@ -9,7 +9,7 @@ ui_spinner* ui_spinner_new() {
   s->top_left = vec2_zero();
   s->bottom_right = vec2_new(32, 32);
   s->color = vec4_black();
-  s->texture = asset_hndl_new(P("$CORANGE/ui/spinner.dds"));
+  s->texture = asset_hndl_new_load(P("$CORANGE/ui/spinner.dds"));
   s->speed = 5;
   s->rotation = 0;
   s->active = true;

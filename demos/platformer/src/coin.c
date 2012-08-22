@@ -4,7 +4,7 @@
 
 coin* coin_new() {
   coin* c = malloc(sizeof(coin));
-  c->position = v2_zero();
+  c->position = vec2_zero();
   return c;
 }
 
@@ -14,7 +14,7 @@ void coin_delete(coin* c) {
 
 /* Renders a quad to the screen with coin texture */
 
-void coin_render(coin* c, vector2 camera_position) {
+void coin_render(coin* c, vec2 camera_position) {
 
 	glMatrixMode(GL_PROJECTION);
   glPushMatrix();
@@ -34,7 +34,7 @@ void coin_render(coin* c, vector2 camera_position) {
   
   glEnable(GL_TEXTURE_2D);
   
-  texture* coin_tex = asset_get("./tiles/coin.dds");
+  texture* coin_tex = asset_hndl_ptr(asset_hndl_new_load(P("./tiles/coin.dds")));
   glBindTexture(GL_TEXTURE_2D, *coin_tex);
   
   glBegin(GL_QUADS);
