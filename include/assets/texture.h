@@ -1,3 +1,13 @@
+/**
+*** :: Texture ::
+***
+***   OpenGL stored texture
+***
+***   Supports the loading of LUT files
+***   as 3d textures for color correction
+***
+**/
+
 #ifndef texture_h
 #define texture_h
 

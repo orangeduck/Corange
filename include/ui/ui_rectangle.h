@@ -1,3 +1,10 @@
+/**
+*** :: UI Rectangle ::
+***
+***   Basic rectangle object
+***
+**/
+
 #ifndef ui_rectangle_h
 #define ui_rectangle_h
 

@@ -1,7 +1,11 @@
 /**
 *** :: Audio ::
 ***
-***   Manages the playing of sounds.
+***   Basic Audio layer.
+***
+***   Currently only plays flat sounds.
+***   No support for source manipulation.
+***   Could do with some more love.
 ***
 **/
 

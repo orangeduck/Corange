@@ -1,3 +1,10 @@
+/**
+*** :: UI Spinner ::
+***
+***   Spinning loading icon
+***
+**/
+
 #ifndef ui_spinner_h
 #define ui_spinner_h
 

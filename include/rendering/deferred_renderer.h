@@ -1,3 +1,14 @@
+/**
+*** :: Deferred Renderer ::
+***
+***   A (fairly) simple deferred renderer.
+***
+***   Can render most of the built-in entities.
+***   Does a HDR and tonemapping stage, composition stage
+***   as well as various post-effects and also SSAO.   
+***
+**/
+
 #ifndef deferred_renderer_h
 #define deferred_renderer_h
 

@@ -1,3 +1,11 @@
+/**
+*** :: Instance Object ::
+***
+***   Much like a collection of static objects 
+***   but supports instanced renderering.
+***
+**/
+
 #ifndef instance_object_h
 #define instance_object_h
 

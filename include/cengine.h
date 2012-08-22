@@ -1,7 +1,13 @@
 /**
 *** :: Cengine ::
 ***
-***   Common functions and structs used across the game engine. 
+***   Common functions and structs used across the game engine.
+***
+***   This is the main component of corange and can be
+***   considered a universal include across all files.
+***   
+***   It contains various utilities as well as
+***   vector, matrix and geometry maths.
 **/
 
 #ifndef cengine_h
@@ -26,7 +32,7 @@
 
 
 /*
-** ~ File System Path ~
+** == File System Path ==
 */
 
 typedef struct {
@@ -36,7 +42,7 @@ typedef struct {
 fpath P(const char* path);
 
 /*
-** ~ Errors & Debugging ~
+** == Errors & Debugging ==
 */
 
 /* Register functions for events */
@@ -49,15 +55,16 @@ void error_();
 void warning_();
 void debug_();
 
-#define error(MSG, ...) printf("[ERROR] (%s:%s:%i) ", __FILE__, __func__, __LINE__); printf(MSG, ##__VA_ARGS__); printf("\n"); fflush(stdout); error_(); exit(EXIT_FAILURE)
-#define warning(MSG, ...) printf("[WARNING] (%s:%s:%i) ", __FILE__, __func__, __LINE__); printf(MSG, ##__VA_ARGS__); printf("\n"); fflush(stdout); warning_()
-#define debug(MSG, ...) printf("[DEBUG] (%s:%s:%i) ", __FILE__, __func__, __LINE__); printf(MSG, ##__VA_ARGS__); printf("\n"); fflush(stdout); debug_()
+#define error(MSG, ...) { printf("[ERROR] (%s:%s:%i) ", __FILE__, __func__, __LINE__); printf(MSG, ##__VA_ARGS__); printf("\n"); fflush(stdout); error_(); exit(EXIT_FAILURE); }
+#define warning(MSG, ...) { printf("[WARNING] (%s:%s:%i) ", __FILE__, __func__, __LINE__); printf(MSG, ##__VA_ARGS__); printf("\n"); fflush(stdout); warning_(); }
+#define debug(MSG, ...) { printf("[DEBUG] (%s:%s:%i) ", __FILE__, __func__, __LINE__); printf(MSG, ##__VA_ARGS__); printf("\n"); fflush(stdout); debug_(); }
 
-#define alloc_check(PTR) if((PTR) == NULL) { error("Out of Memory!"); }
+#define alloc_check(PTR) { if((PTR) == NULL) { error("Out of Memory!"); } }
 
 /*
-** ~ Timing ~
+** == Timing ==
 */
+
 typedef struct {
   int id;
   unsigned long start;
@@ -71,6 +78,10 @@ timer timer_stop(timer t);
 
 void timestamp(char* out);
 
+/*
+** == Framerate ==
+*/
+
 void frame_begin();
 void frame_end();
 void frame_end_at_rate(double fps);
@@ -79,7 +90,9 @@ double frame_rate();
 double frame_time();
 char* frame_rate_string();
 
-/* Type Functions */
+/*
+** == Types ==
+*/
 
 typedef int type_id;
 
@@ -87,7 +100,9 @@ typedef int type_id;
 type_id type_find(char* type, size_t size);
 char* type_id_name(int id);
 
-/* Floating point maths */
+/*
+** == Floating point Maths ==
+*/
 
 float max(float x, float y);
 float min(float x, float y);
@@ -106,6 +121,10 @@ float bilinear_interp(float tl, float tr, float bl, float br, float x_amount, fl
 float bicosine_interp(float tl, float tr, float bl, float br, float x_amount, float y_amount);
 float bismoothstep_interp(float tl, float tr, float bl, float br, float x_amount, float y_amount);
 float bismootherstep_interp(float tl, float tr, float bl, float br, float x_amount, float y_amount);
+
+/*
+** == Vector Maths ==
+*/
 
 /* vec2 */
 
@@ -276,7 +295,7 @@ vec4 vec4_nearest_interp(vec4 v1, vec4 vec2, float amount);
 vec4 vec4_binearest_interp(vec4 top_left, vec4 top_right, vec4 bottom_left, vec4 bottom_right, float x_amount, float y_amount);
 vec4 vec4_bilinear_interp(vec4 top_left, vec4 top_right, vec4 bottom_left, vec4 bottom_right, float x_amount, float y_amount);
 
-/* Quaternion */
+/* quaterion */
 
 vec4 quaternion_id();
 vec4 quaternion_mul(vec4 v1, vec4 vec2);
@@ -291,7 +310,11 @@ vec4 quaternion_euler(float roll, float pitch, float yaw);
 
 vec4 quaternion_swap_handedness(vec4 q);
 
-/* Matrix 2x2 */
+/*
+** == Matrix Maths ==
+*/
+
+/* mat2 */
 
 typedef struct {
   float xx; float xy;
@@ -312,7 +335,7 @@ void mat2_to_array(mat2 m, float* out);
 void mat2_print(mat2 m);
 mat2 mat2_rotation(float a);
 
-/* Matrix 3x3 */
+/* mat3 */
 
 typedef struct {
   float xx; float xy; float xz;
@@ -340,7 +363,7 @@ mat3 mat3_rotation_y(float a);
 mat3 mat3_rotation_z(float a);
 mat3 mat3_rotation_axis_angle(vec3 axis, float angle);
 
-/* Matrix 4x4 */
+/* mat4 */
 
 typedef struct {
   float xx; float xy; float xz; float xw;
@@ -393,7 +416,11 @@ mat4 mat4_world(vec3 position, vec3 scale, vec4 rotation);
 mat4 mat4_lerp(mat4 m1, mat4 mat2, float amount);
 mat4 mat4_smoothstep(mat4 m1, mat4 mat2, float amount);
 
-/* Geometry */
+/*
+** == Geometry ==
+*/
+
+/* Plane */
 
 typedef struct {
   vec3 direction;
@@ -405,6 +432,8 @@ plane plane_transform(plane p, mat4 world);
 float plane_signed_distance(plane p, vec3 point);
 
 bool point_behind_plane(vec3 point, plane plane);
+
+/* Box */
 
 typedef struct {
   plane top;
@@ -422,6 +451,8 @@ box box_transform(box b1, mat4 world);
 
 bool box_contains(box b1, vec3 point);
 
+/* Sphere */
+
 typedef struct {
   vec3 center;
   float radius;
@@ -436,6 +467,8 @@ sphere sphere_transform(sphere s, mat4 world);
 bool sphere_contains_point(sphere s1, vec3 point);
 bool sphere_contains_sphere(sphere s1, sphere s2);
 
+/* Vectex */
+
 typedef struct {
   vec3 position;
   vec3 normal;
@@ -448,6 +481,8 @@ typedef struct {
 vertex vertex_new();
 bool vertex_equal(vertex v1, vertex v2);
 void vertex_print(vertex v);
+
+/* Mesh */
 
 typedef struct {
   int num_verts;
@@ -471,6 +506,8 @@ void mesh_transform(mesh* m, mat4 transform);
 void mesh_translate(mesh* m, vec3 translation);
 void mesh_scale(mesh* m, float scale);
 
+/* Model */
+
 typedef struct {
   int num_meshes;
   mesh** meshes;
@@ -490,6 +527,8 @@ float model_surface_area(model* m);
 void model_transform(model* m, mat4 transform);
 void model_translate(model* m, vec3 translation);
 void model_scale(model* m, float scale);
+
+/* Triangle */
 
 vec3 triangle_tangent(vertex v1, vertex v2, vertex v3);
 vec3 triangle_binormal(vertex v1, vertex v2, vertex v3);

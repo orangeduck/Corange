@@ -1,3 +1,10 @@
+/**
+*** :: Int List ::
+***
+***   Dynamically expandable array of ints
+***
+**/
+
 #ifndef int_list_h
 #define int_list_h
 

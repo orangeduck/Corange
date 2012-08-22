@@ -1,3 +1,15 @@
+/**
+*** :: Depth Mapper ::
+***
+***   Similar to the shadow mapper but
+***   renders from the perspective of a
+***   camera.
+***
+***   Meant to be used in effects such as
+***   refractions in water and fog.
+***
+**/
+
 #ifndef depth_mapper_h
 #define depth_mapper_h
 

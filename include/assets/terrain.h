@@ -1,3 +1,14 @@
+/**
+*** :: Terrain ::
+***
+***   - WIP -
+***
+***   Accellerated terrain loaded from heightmap
+***   splits into chunks for faster rendering
+***   builds dynamic LODs into several index buffers
+***
+**/
+
 #ifndef terrain_h
 #define terrain_h
 

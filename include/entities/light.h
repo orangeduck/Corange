@@ -1,10 +1,26 @@
+/**
+*** :: Light ::
+***
+***   Currently this is so large because
+***   it supports all types of light.
+***
+***   This means it holds data for shadow
+***   mapping etc which may not be relevant
+***   for some light types.
+***
+**/
+
 #ifndef light_h
 #define light_h
 
 #include "cengine.h"
 
-typedef struct {
+static const int light_type_point = 0;
+static const int light_type_directional = 1;
+static const int light_type_sun = 2;
+static const int light_type_spot = 3;
 
+typedef struct {
   vec3 position;
   vec3 target;
   
@@ -15,30 +31,31 @@ typedef struct {
   float power;
   float falloff;
   
-  int type;
-  
   bool enabled;
   bool cast_shadows;
   
-  bool orthographic;
-  float ortho_width;
-  float ortho_height;
+  int type;
   
-  float fov;
-  float aspect_ratio;
-  
+  /* Shadow Mapping */
   vec3 shadow_color;
   int shadow_map_width;
   int shadow_map_height;
   
+  /* Orthographic Shadow Mapping */
+  bool orthographic;
+  float ortho_width;
+  float ortho_height;
+  
+  /* Projection Shadow Mapping */
+  float fov;
+  float aspect_ratio;
+  
 } light;
 
-static const int light_type_point = 0;
-static const int light_type_directional = 1;
-static const int light_type_sun = 2;
-static const int light_type_spot = 3;
+light* light_new();
+light* light_new_position(vec3 position);
 
-light* light_new(vec3 position);
+/* Builds light using type's default values */
 light* light_new_type(vec3 position, int type);
 void light_delete(light* l);
 

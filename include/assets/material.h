@@ -2,7 +2,7 @@
 *** :: Material ::
 ***
 ***   Material in system. Provides shader.
-***   Also provides shader "uniform values
+***   Also provides shader "uniform" values
 ***
 **/
 

@@ -1,3 +1,21 @@
+/**
+*** :: Corange ::
+***
+***   Pure and Simple game engine written in C 
+***   
+***   Uses SDL as a bottom layer and OpenGL for rendering
+***   Provides asset, UI and entity management.
+***   As well as deferred and forward renderers.
+***   And a host of small demos.
+***
+***   Suggestions and contributions welcome:
+***
+***     Daniel Holden | contact@theorangeduck.com
+***     
+***     https://github.com/orangeduck/Corange
+***
+**/
+
 #ifndef corange_h
 #define corange_h
 
@@ -16,28 +34,28 @@ void corange_finish();
 
 #include "centity.h"
 
+#include "entities/camera.h"
+#include "entities/light.h"
 #include "entities/static_object.h"
 #include "entities/animated_object.h"
 #include "entities/physics_object.h"
 #include "entities/instance_object.h"
-#include "entities/camera.h"
-#include "entities/light.h"
 #include "entities/landscape.h"
 
 /* Assets */
 
 #include "casset.h"
 
-#include "assets/animation.h"
-#include "assets/skeleton.h"
-#include "assets/renderable.h"
-#include "assets/collision_body.h"
-#include "assets/font.h"
-#include "assets/material.h"
-#include "assets/shader.h"
-#include "assets/texture.h"
 #include "assets/image.h"
 #include "assets/sound.h"
+#include "assets/font.h"
+#include "assets/shader.h"
+#include "assets/texture.h"
+#include "assets/material.h"
+#include "assets/renderable.h"
+#include "assets/collision_body.h"
+#include "assets/skeleton.h"
+#include "assets/animation.h"
 #include "assets/terrain.h"
 
 /* UI */

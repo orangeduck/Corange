@@ -1,3 +1,12 @@
+/**
+*** :: Animated Object ::
+***
+***   A skeletally animated object
+***   holds information about current animation time
+***   Builds a new pose skeleton object on update
+***
+**/
+
 #ifndef animated_object_h
 #define animated_object_h
 

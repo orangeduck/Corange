@@ -1,3 +1,17 @@
+/**
+*** :: Physics Object ::
+***
+***   -- WIP --
+***
+***   An object which also contains
+***   physics and movement data such
+***   as velocity and acceleration
+***
+***   Some WIP functions to collide such
+***   objects with static objects.
+***
+**/
+
 #ifndef physics_object_h
 #define physics_object_h
 
@@ -32,7 +46,6 @@ typedef struct {
 
 physics_object* physics_object_new();
 void physics_object_delete(physics_object* po);
-
 
 void physics_object_collide_static(physics_object* po, static_object* so, float timestep);
 void physics_object_update(physics_object* po, float timestep);

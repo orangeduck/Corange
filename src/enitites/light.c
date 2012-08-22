@@ -4,10 +4,12 @@
 #define DEFAULT_LIGHT_FAR_CLIP 8192.0
 #define DEFAULT_FOV 0.785398163
 
-light* light_new(vec3 position) {
+light* light_new() {
+  return light_new_position(vec3_zero());
+}
 
+light* light_new_position(vec3 position) {
   return light_new_type(position, light_type_point);
-  
 }
 
 light* light_new_type(vec3 position, int type) {

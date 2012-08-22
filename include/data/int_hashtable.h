@@ -1,3 +1,12 @@
+/**
+*** :: Int List ::
+***
+***   Hashtable for integers
+***   used to check duplicates
+***   in various asset loaders.
+***
+**/
+
 #ifndef int_hashtable_h
 #define int_hashtable_h
 

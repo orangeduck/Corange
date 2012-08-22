@@ -1,3 +1,11 @@
+/**
+*** :: Vertex List ::
+***
+***   Dynamically expandable array of verticies
+***   used in various asset loaders.
+***
+**/
+
 #ifndef vertex_list_h
 #define vertex_list_h
 

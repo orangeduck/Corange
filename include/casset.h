@@ -1,19 +1,22 @@
 /**
 *** :: Asset ::
 ***
-***   The Asset Manager is used to load/unload assets.
-***   It specifies the asset using the file system path.
+****  An asset can be considered an external file used in the engine.
+***   Assets are identified using their file system path.
 ***  
 ***     asset_hndl blah_hndl = asset_hndl_new(P("./textures/blah.dds"));
 ***     texture* blah = asset_hndl_ptr(blah_hndl);
 ***
 ***   It is possible to register load and unload functions
-***   for certain file extensions and struct types.
+***   for type via their file extensions.
+***
+***     asset_handler(renderable, "obj", obj_load_file, renderable_delete);
 ***
 ***   Please do not store raw pointers to assets.
-***   Use 'asset_hndl' as on reloading assets the
-***   raw asset pointer will become invalidated.
-***   A 'asset_hndl' value will always remain accurate.
+***   Use an 'asset_hndl' value instead. It is a kind
+***   of smart pointer which will not become invalidated
+***   when assets are reloaded or moved around.
+***
 **/
 
 #ifndef casset_h
@@ -23,7 +26,8 @@
 
 typedef void asset;
 
-/* Handle to Asset pointer */
+/* Storable Asset Handle */
+
 typedef struct {
   fpath path;
   asset* ptr;
@@ -42,10 +46,10 @@ asset* asset_hndl_ptr(asset_hndl ah);
 void asset_init();
 void asset_finish();
 
-/* Map a variable such as '$CORANGE' to a path */
+/* Map a variable such as '$CORANGE' to a path string */
 void asset_add_path_variable(fpath variable, fpath mapping);
 
-/* Create handler for asset type. Requires type, file extension, load and unload functions. */
+/* Create handler for asset type. Requires type, file extension, and load/unload functions. */
 #define asset_handler(type, extension, loader, deleter) \
   asset_handler_cast(typeid(type), extension, \
   (asset*(*)(const char*))loader , \
@@ -66,6 +70,7 @@ void folder_load(fpath folder);
 void folder_unload(fpath folder);
 void folder_reload(fpath folder);
 
+/* Reload all assets of a given type */
 #define asset_reload_type(type) asset_reload_type_id(typeid(type))
 void asset_reload_type_id(type_id type);
 void asset_reload_all();

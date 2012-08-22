@@ -1,7 +1,7 @@
 /**
 *** :: Collision Body ::
 ***
-***   Work in Progress
+***   - WIP -
 ***   
 ***   Represents collision body in system.
 ***   Can be box, sphere or BSP-tree based mesh.

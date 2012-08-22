@@ -1,8 +1,8 @@
 /**
 *** :: Animation ::
 ***  
-***   Contains an array of frames (skeletons).
-***   And frame times.
+***   Contains an array of frames (skeletons)
+***   and frame times.
 ***
 **/
 

@@ -1,3 +1,13 @@
+/**
+*** :: Light ::
+***
+***   -- WIP -- 
+***
+***   Object for rendering an instance of a terrain
+***   asset using particular textures and attributes.
+***
+**/
+
 #ifndef landscape_h
 #define landscape_h
 

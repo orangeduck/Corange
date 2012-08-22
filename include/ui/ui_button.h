@@ -1,3 +1,10 @@
+/**
+*** :: UI Button ::
+***
+***   Clickable UI button that retains state
+***
+**/
+
 #ifndef ui_button_h
 #define ui_button_h
 

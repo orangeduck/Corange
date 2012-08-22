@@ -1,3 +1,15 @@
+/**
+*** :: Shadow Mapper ::
+***
+***   Renders depth textures from a light's
+***   perspective to be used in shadow mapping
+***   passes in a renderer.
+***
+***   Currently only does the most basic shadows.
+***   And supports a single light.
+***
+**/
+
 #ifndef shadow_mapper_h
 #define shadow_mapper_h
 

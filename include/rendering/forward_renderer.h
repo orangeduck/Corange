@@ -1,3 +1,14 @@
+/**
+*** :: Forward Renderer ::
+***
+***   A (fairly) simple forward renderer.
+***
+***   Can render most of the built-in entities.
+***   Does a HDR and tonemapping stage, as well
+***   as various post-effects.   
+***
+**/
+
 #ifndef forward_renderer_h
 #define forward_renderer_h
 

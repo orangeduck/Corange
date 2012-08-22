@@ -1,3 +1,11 @@
+/**
+*** :: Renderable ::
+***
+***   Some model or mesh loaded into vertex buffers
+***   can be rigged or not depending on file type
+***
+**/
+
 #ifndef renderable_h
 #define renderable_h
 

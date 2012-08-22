@@ -324,6 +324,53 @@ bool file_isloaded(fpath path) {
 
 void asset_reload_type_id(type_id type) {
 
+  debug("Reloading Assets of type '%s'...", type_id_name(type));
+  
+  fpath ext;
+  
+  /* Find the file extension for given type */
+  for(int i=0; i < num_asset_handlers; i++) {
+    asset_handler handler = asset_handlers[i];
+    if (handler.type == type) {
+      strcpy(ext.ptr, handler.extension);
+      break;
+    }
+  }
+  
+  list* asset_names = list_new();
+  
+  for(int i = 0; i < asset_dict->size; i++) {
+    struct bucket* b = asset_dict->buckets[i];
+    while(b != NULL) {
+      fpath bucket_ext;
+      SDL_PathFileExtension(bucket_ext.ptr, b->string);
+      
+      if (strcmp(bucket_ext.ptr, ext.ptr) == 0) {
+        char* new_name = malloc(strlen(b->string)+1);
+        strcpy(new_name, b->string);
+        list_push_back(asset_names, new_name);
+      }
+      
+      b = b->next;
+    }
+  }
+
+  for(int i = 0; i < asset_names->num_items; i++) {
+    file_unload(P(list_get(asset_names, i)));
+  }
+  
+  for(int i = 0; i < asset_names->num_items; i++) {
+    /*
+    ** Assets can reload their child assets before we do
+    ** So it is important we check before loading again
+    */
+    if (!file_isloaded(P(list_get(asset_names, i)))) {
+      file_load(P(list_get(asset_names, i)));
+    }
+  }
+  
+  list_delete_with(asset_names, free);
+  
 }
 
 void asset_reload_all() {

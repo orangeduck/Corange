@@ -1,3 +1,10 @@
+/**
+*** :: Camera ::
+***
+***   Basic Camera Entity
+***
+**/
+
 #ifndef camera_h
 #define camera_h
 
@@ -6,9 +13,7 @@
 typedef struct {
   vec3 position;
   vec3 target;
-  
   float fov;
-  
   float near_clip;
   float far_clip;
 } camera;

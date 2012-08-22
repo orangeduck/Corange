@@ -157,10 +157,10 @@ static char main_title[1024];
 static char icon_title[1024];
 char* graphics_viewport_title() {
   SDL_WM_GetCaption((char**)&main_title, (char**)&icon_title);
-  return main_title;  
+  return main_title; 
 }
 
-static char timestamp_string[64];
+static char timestamp_string[256];
 static char screenshot_string[256];
 
 void graphics_viewport_screenshot() {

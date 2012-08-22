@@ -1,3 +1,10 @@
+/**
+*** :: Sound ::
+***
+***   Can be loaded from WAV
+***
+**/
+
 #ifndef sound_h
 #define sound_h
 

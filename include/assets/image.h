@@ -1,3 +1,10 @@
+/**
+*** :: Image ::
+***
+***   Functions to use in CPU side image processing.
+***
+**/
+
 #ifndef image_h
 #define image_h
 

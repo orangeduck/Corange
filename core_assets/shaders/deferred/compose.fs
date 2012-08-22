@@ -109,5 +109,5 @@ void main() {
   //final = apply_fog_blue(final, position.xyz, camera_position);
   
   gl_FragColor.rgb = final;
-	
+  
 } 

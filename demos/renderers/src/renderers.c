@@ -16,9 +16,7 @@ static void swap_renderer() {
   
   if (use_deferred) {
     
-    SDL_GL_CheckError();
     deferred_renderer_finish();
-    SDL_GL_CheckError();
     
     forward_renderer_init();
     forward_renderer_set_camera(cam);
@@ -32,25 +30,16 @@ static void swap_renderer() {
     
   } else {
     
-    SDL_GL_CheckError();
     forward_renderer_finish();
-    SDL_GL_CheckError();
     
     deferred_renderer_init();
-    SDL_GL_CheckError();
     deferred_renderer_set_camera(cam);
-    SDL_GL_CheckError();
     deferred_renderer_set_shadow_light(sun);
-    SDL_GL_CheckError();
     deferred_renderer_set_shadow_texture( shadow_mapper_depth_texture() );
-    SDL_GL_CheckError();
     deferred_renderer_add_light(sun);
-    SDL_GL_CheckError();
     deferred_renderer_add_light(backlight);
-    SDL_GL_CheckError();
     
     use_deferred = true;
-    SDL_GL_CheckError();
     
   }
 
@@ -189,8 +178,6 @@ void renderers_init() {
   ui_button_resize(forward_renderer, vec2_new(65,25));
   ui_button_set_label(forward_renderer, "Forward");
   
-  SDL_GL_CheckError();
-  
   ui_button* deferred_renderer = ui_elem_new("deferred_renderer", ui_button);
   ui_button_move(deferred_renderer, vec2_new(170, graphics_viewport_height() - 35));
   ui_button_resize(deferred_renderer, vec2_new(75,25));
@@ -209,8 +196,6 @@ void renderers_init() {
   ui_button_move(piano, vec2_new(80, graphics_viewport_height() - 70));
   ui_button_resize(piano, vec2_new(50,25));
   ui_button_set_label(piano, "Piano");
-  
-  SDL_GL_CheckError();
   
   ui_button* cello = ui_elem_new("cello", ui_button);
   ui_button_move(cello, vec2_new(140, graphics_viewport_height() - 70));
@@ -232,8 +217,6 @@ void renderers_init() {
   ui_elem_add_event("imrod", switch_object_event);
   ui_elem_add_event("dino", switch_object_event);
   
-  SDL_GL_CheckError();
-  
   /* New Camera and light */
   
   camera* cam = entity_new("camera", camera);
@@ -248,8 +231,6 @@ void renderers_init() {
   sun->specular_color = vec3_mul(vec3_new(1.0,  0.894, 0.811), 4);
   sun->power = 5;
   
-  SDL_GL_CheckError();
-  
   light* backlight = entity_new("backlight", light);
   light_set_type(backlight, light_type_point);
   backlight->position = vec3_new(-22,10,-13);
@@ -259,8 +240,6 @@ void renderers_init() {
   backlight->power = 2;
   
   /* Renderer Setup */
-  
-  SDL_GL_CheckError();
   
   shadow_mapper_init(sun);
   
@@ -586,6 +565,15 @@ int main(int argc, char **argv) {
         if ((event.key.keysym.sym == SDLK_r) &&
             (event.key.keysym.mod == KMOD_LCTRL)) {
               asset_reload_all();
+          }
+        if ((event.key.keysym.sym == SDLK_t) &&
+            (event.key.keysym.mod == KMOD_LCTRL)) {
+              asset_reload_type(texture);
+          }
+        if ((event.key.keysym.sym == SDLK_s) &&
+            (event.key.keysym.mod == KMOD_LCTRL)) {
+              asset_reload_type(material);
+              asset_reload_type(shader);
           }
         break;
       case SDL_QUIT:

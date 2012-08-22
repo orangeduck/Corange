@@ -1,3 +1,12 @@
+/**
+*** :: Vertex List ::
+***
+***   Hashtable for verticies
+***   used to check duplicates
+***   in various asset loaders.
+***
+**/
+
 #ifndef vertex_hashtable_h
 #define vertex_hashtable_h
 

@@ -1,7 +1,9 @@
 /**
 *** :: Graphics ::
 ***
-***   Graphics System
+***   Basic layer to Graphics System
+***
+***   See 'renderers' folder for actual graphical rendering.
 ***
 **/
 
