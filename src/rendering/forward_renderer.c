@@ -110,7 +110,9 @@ void forward_renderer_init() {
   glBindRenderbuffer(GL_RENDERBUFFER, hdr_depth_buffer);
   glRenderbufferStorageMultisample(GL_RENDERBUFFER, MULTISAMPLES, GL_DEPTH_COMPONENT24, graphics_viewport_width(), graphics_viewport_height());
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, hdr_depth_buffer);  
-
+  
+  SDL_GL_CheckFrameBuffer();
+  
   glGenFramebuffers(1, &hdr_res_fbo);
   glBindFramebuffer(GL_FRAMEBUFFER, hdr_res_fbo);
   
@@ -123,6 +125,8 @@ void forward_renderer_init() {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, hdr_res_texture, 0);
   
+  SDL_GL_CheckFrameBuffer();
+    
   glGenFramebuffers(1, &ldr_fbo);
   glBindFramebuffer(GL_FRAMEBUFFER, ldr_fbo);
   
@@ -139,6 +143,8 @@ void forward_renderer_init() {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ldr_texture, 0);
+  
+  SDL_GL_CheckFrameBuffer();
   
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   
@@ -1060,7 +1066,7 @@ void forward_renderer_render_light(light* l) {
   glEnable(GL_ALPHA_TEST);
   glAlphaFunc(GL_GREATER, 0.25);
   
-  texture* lightbulb = asset_hndl_ptr(asset_hndl_new_load(P("$CORANGE/ui/lightbulb.dds")));
+  texture* lightbulb = asset_get_load(P("$CORANGE/ui/lightbulb.dds"));
   glActiveTexture(GL_TEXTURE0 + 0 );
   glBindTexture(GL_TEXTURE_2D, texture_handle(lightbulb));
   glEnable(GL_TEXTURE_2D);
@@ -1091,7 +1097,7 @@ void forward_renderer_render_landscape(landscape* ls) {
   mat4 r_world_matrix = mat4_world(ls->position, ls->scale, ls->rotation);
   mat4_to_array(r_world_matrix, world_matrix);
   
-  material* terrain_mat = asset_hndl_ptr(asset_hndl_new_load(P("$CORANGE/shaders/forward/terrain.mat")));
+  material* terrain_mat = asset_get(P("$CORANGE/shaders/forward/terrain.mat"));
   
   shader_program* terrain_prog = material_get_entry(terrain_mat, 0)->program;
   GLuint terrain_handle = shader_program_handle(terrain_prog);
@@ -1156,7 +1162,7 @@ void forward_renderer_render_landscape(landscape* ls) {
   glEnable(GL_TEXTURE_2D);
   glUniform1i(glGetUniformLocation(terrain_handle, "attribs"), 2);
   
-  texture* random = asset_hndl_ptr(asset_hndl_new_load(P("$CORANGE/resources/random.dds")));
+  texture* random = asset_get_load(P("$CORANGE/resources/random.dds"));
   
   glActiveTexture(GL_TEXTURE0 + 3 );
   glBindTexture(GL_TEXTURE_2D, texture_handle(random));

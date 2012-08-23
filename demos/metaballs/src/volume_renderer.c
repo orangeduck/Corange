@@ -101,7 +101,7 @@ void volume_renderer_init() {
   
   free(volume_data);
   
-  kernel_program* volume_rendering = asset_hndl_ptr(asset_hndl_new_load(P("./kernels/volume_rendering.cl")));
+  kernel_program* volume_rendering = asset_get(P("./kernels/volume_rendering.cl"));
   
   k_write_point = kernel_program_get_kernel(volume_rendering, "write_point");
   k_write_metaballs = kernel_program_get_kernel(volume_rendering, "write_metaballs");
@@ -116,9 +116,9 @@ void volume_renderer_init() {
   k_generate_normals = kernel_program_get_kernel(volume_rendering, "generate_normals");
   
   
-  env_map = asset_hndl_ptr(asset_hndl_new_load(P("./resources/metaballs_env.dds")));
+  env_map = asset_get_load(P("./resources/metaballs_env.dds"));
   
-  material* metaballs_mat = asset_hndl_ptr(asset_hndl_new_load(P("./shaders/metaballs_def.mat")));
+  material* metaballs_mat = asset_get_load(P("./shaders/metaballs_def.mat"));
   
   metaballs_def = material_get_entry(metaballs_mat, 0)->program;
 }

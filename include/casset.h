@@ -4,8 +4,7 @@
 ****  An asset can be considered an external file used in the engine.
 ***   Assets are identified using their file system path.
 ***  
-***     asset_hndl blah_hndl = asset_hndl_new(P("./textures/blah.dds"));
-***     texture* blah = asset_hndl_ptr(blah_hndl);
+***     texture* blah = asset_get(P("./textures/blah.dds"));
 ***
 ***   It is possible to register load and unload functions
 ***   for type via their file extensions.
@@ -69,6 +68,12 @@ bool file_isloaded(fpath path);
 void folder_load(fpath folder);
 void folder_unload(fpath folder);
 void folder_reload(fpath folder);
+
+asset* asset_get_load(fpath path);
+asset* asset_get(fpath path);
+
+#define asset_get_as(path, type) ((type*)asset_get_as_type(path, typeid(type)))
+asset* asset_get_as_type(fpath path, type_id type);
 
 /* Reload all assets of a given type */
 #define asset_reload_type(type) asset_reload_type_id(typeid(type))

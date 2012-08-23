@@ -86,7 +86,7 @@ void particles_init() {
   k_particle_randoms = kernel_memory_from_glbuffer(randoms_buffer);
 #endif
   
-  kernel_program* program = asset_hndl_ptr(asset_hndl_new_load(P("./kernels/particles.cl")));
+  kernel_program* program = asset_get(P("./kernels/particles.cl"));
   
   float max_life = 60.0;
   float min_velocity = 0.5;

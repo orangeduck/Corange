@@ -32,7 +32,7 @@ static vec2 coin_positions[COIN_COUNT] = {
 static void reset_game() {
 
   /* Set the starting level to demo.level */
-  current_level = asset_hndl_ptr(asset_hndl_new_load(P("./levels/demo.level")));
+  current_level = asset_get(P("./levels/demo.level"));
   level_score = 0;
   level_time = 0.0;
   
@@ -308,8 +308,7 @@ static void collision_detection_coins() {
       entity_delete(coin_name);
       
       /* Play a nice twinkle sound */
-      sound* coin_sound = asset_hndl_ptr(asset_hndl_new_load(P("./sounds/coin.wav")));
-      audio_play_sound(coin_sound);
+      audio_play_sound(asset_get_as(P("./sounds/coin.wav"), sound));
       
       /* Add some score! */
       level_score += 10;

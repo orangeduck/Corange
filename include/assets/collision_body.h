@@ -14,7 +14,7 @@
 #include "cengine.h"
 
 /*
-**  ~ Collision Mesh ~
+**  == Collision Mesh ==
 **
 **  Uses BSP-tree for accelerated collision detection.
 **  Still very slow at the moment...
@@ -71,7 +71,7 @@ collision_body* collision_body_new_mesh(collision_mesh* cm);
 void collision_body_delete(collision_body* cb);
 
 /*
-**  ~ Collision Struct ~
+**  == Collision Struct ==
 **
 **  Contains collision data.
 **  Other systems can then decide how to act.

@@ -139,28 +139,20 @@ void deferred_renderer_init() {
   glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, viewport_width, viewport_height);
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, diffuse_buffer);   
   
-  SDL_GL_CheckError();
-  
   glGenRenderbuffers(1, &positions_buffer);
   glBindRenderbuffer(GL_RENDERBUFFER, positions_buffer);
   glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA32F, viewport_width, viewport_height);
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_RENDERBUFFER, positions_buffer);  
-  
-  SDL_GL_CheckError();
   
   glGenRenderbuffers(1, &normals_buffer);  
   glBindRenderbuffer(GL_RENDERBUFFER, normals_buffer);
   glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA16F, viewport_width, viewport_height);
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_RENDERBUFFER, normals_buffer);  
   
-  SDL_GL_CheckError();
-  
   glGenRenderbuffers(1, &depth_buffer);
   glBindRenderbuffer(GL_RENDERBUFFER, depth_buffer);
   glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, viewport_width, viewport_height);
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_buffer);  
-  
-  SDL_GL_CheckError();
   
   glGenTextures(1, &diffuse_texture);
   glBindTexture(GL_TEXTURE_2D, diffuse_texture);
@@ -171,8 +163,6 @@ void deferred_renderer_init() {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, diffuse_texture, 0);
   
-  SDL_GL_CheckError();
-  
   glGenTextures(1, &positions_texture);
   glBindTexture(GL_TEXTURE_2D, positions_texture);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, viewport_width, viewport_height, 0, GL_RGBA, GL_FLOAT, NULL);
@@ -181,8 +171,6 @@ void deferred_renderer_init() {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, positions_texture, 0);
-  
-  SDL_GL_CheckError();
   
   glGenTextures(1, &normals_texture);
   glBindTexture(GL_TEXTURE_2D, normals_texture);
@@ -193,8 +181,6 @@ void deferred_renderer_init() {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, normals_texture, 0);
   
-  SDL_GL_CheckError();
-  
   glGenTextures(1, &depth_texture);
   glBindTexture(GL_TEXTURE_2D, depth_texture);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, viewport_width, viewport_height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
@@ -204,7 +190,7 @@ void deferred_renderer_init() {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth_texture, 0);
   
-  SDL_GL_CheckError();
+  SDL_GL_CheckFrameBuffer();
   
   glGenFramebuffers(1, &ssao_fbo);
   glBindFramebuffer(GL_FRAMEBUFFER, ssao_fbo);
@@ -213,8 +199,6 @@ void deferred_renderer_init() {
   glBindRenderbuffer(GL_RENDERBUFFER, ssao_buffer);
   glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, viewport_width / 2, viewport_height / 2);
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, ssao_buffer);   
-  
-  SDL_GL_CheckError();
   
   glGenTextures(1, &ssao_texture);
   glBindTexture(GL_TEXTURE_2D, ssao_texture);
@@ -225,21 +209,15 @@ void deferred_renderer_init() {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ssao_texture, 0);
   
-  SDL_GL_CheckError();
+  SDL_GL_CheckFrameBuffer();
   
   glGenFramebuffers(1, &hdr_fbo);
   glBindFramebuffer(GL_FRAMEBUFFER, hdr_fbo);
   
-  SDL_GL_CheckError();
-  
   glGenRenderbuffers(1, &hdr_buffer);
-  SDL_GL_CheckError();
   glBindRenderbuffer(GL_RENDERBUFFER, hdr_buffer);
-  SDL_GL_CheckError();
   glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA16F, viewport_width, viewport_height);
-  SDL_GL_CheckError();
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, hdr_buffer);   
-  SDL_GL_CheckError();
   
   glGenTextures(1, &hdr_texture);
   glBindTexture(GL_TEXTURE_2D, hdr_texture);
@@ -250,7 +228,7 @@ void deferred_renderer_init() {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, hdr_texture, 0);
   
-  SDL_GL_CheckError();
+  SDL_GL_CheckFrameBuffer();
   
   glGenFramebuffers(1, &ldr_fbo);
   glBindFramebuffer(GL_FRAMEBUFFER, ldr_fbo);
@@ -269,7 +247,7 @@ void deferred_renderer_init() {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ldr_texture, 0);
   
-  SDL_GL_CheckError();
+  SDL_GL_CheckFrameBuffer();
   
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   
@@ -984,7 +962,7 @@ void deferred_renderer_render_light(light* l) {
   float left = ((light_pos.x + 1) / 2) * graphics_viewport_width() - 8;
   float right = ((light_pos.x + 1) / 2) * graphics_viewport_width() + 8;
   
-  texture* lightbulb = asset_hndl_ptr(asset_hndl_new_load(P("$CORANGE/ui/lightbulb.dds")));
+  texture* lightbulb = asset_get_load(P("$CORANGE/ui/lightbulb.dds"));
   glActiveTexture(GL_TEXTURE0 + 0 );
   glBindTexture(GL_TEXTURE_2D, texture_handle(lightbulb));
   glEnable(GL_TEXTURE_2D);

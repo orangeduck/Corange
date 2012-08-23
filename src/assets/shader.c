@@ -91,11 +91,27 @@ void shader_program_attach_shader(shader_program* program, shader* shader) {
   }
   
   glAttachShader(shader_program_handle(program), shader_handle(shader));
+  
+  shader_program_print_log(program);
+  
 }
 
-
 void shader_program_link(shader_program* program) {
+
+  GLint count = -1;
+  glGetIntegerv(GL_MAX_GEOMETRY_OUTPUT_VERTICES, &count);
+  glProgramParameteri(shader_program_handle(program), GL_GEOMETRY_VERTICES_OUT, count);
+
   glLinkProgram(shader_program_handle(program));
+  
+  shader_program_print_log(program);
+  
+  GLint is_linked = false;
+  glGetProgramiv(shader_program_handle(program), GL_LINK_STATUS, &is_linked);
+  if (!is_linked) {
+    error("Error linking shader program!");
+  }
+  
 }
 
 bool shader_program_has_shader(shader_program* p, shader* s) {

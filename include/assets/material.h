@@ -39,9 +39,11 @@ typedef struct {
   material_item* items;
 } material_entry;
 
+
 void material_entry_delete(material_entry* me);
 material_item material_entry_item(material_entry* me, char* name);
 bool material_entry_has_item(material_entry* me, char* name);
+void material_entry_add_item(material_entry* me, char* name, int type, material_item mi);
 
 typedef struct {
   int num_entries;
@@ -54,5 +56,6 @@ void material_delete(material* m);
 material* mat_load_file(char* filename);
 
 material_entry* material_get_entry(material* m, int index);
+material_entry* material_add_entry(material* m);
 
 #endif

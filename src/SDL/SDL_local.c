@@ -13,19 +13,19 @@
 
 #ifdef _WIN32
 
-void SDL_PathFullName(char* dst, char* path) {
+void SDL_PathFullName(char* dst, const char* path) {
   GetFullPathName(path, MAX_PATH, dst, NULL);
 }
 
 #elif __unix__
 
-void SDL_PathFullName(char* dst, char* path) {
+void SDL_PathFullName(char* dst, const char* path) {
   char* ret = realpath(path, dst);
 }
 
 #endif
 
-void SDL_PathFileName(char* dst, char* path) {
+void SDL_PathFileName(char* dst, const char* path) {
   
   int i = strlen(path);
   int ext_loc = 0;
@@ -36,14 +36,14 @@ void SDL_PathFileName(char* dst, char* path) {
     i--;
   }
   
-  char* file = path + i + 1;
+  const char* file = path + i + 1;
   int len = ext_loc - i - 1;
   
   strncpy(dst, file, len);
   dst[len] = '\0';
 }
 
-void SDL_PathFileExtension(char* dst, char* path) {
+void SDL_PathFileExtension(char* dst, const char* path) {
 
   int ext_len = 0;
   int i = strlen(path);
@@ -54,11 +54,11 @@ void SDL_PathFileExtension(char* dst, char* path) {
   }
   
   int prev = strlen(path) - ext_len + 1;
-  char* f_ext = path + prev;
+  const char* f_ext = path + prev;
   strcpy(dst, f_ext);
 }
 
-void SDL_PathFileLocation(char* dst, char* path) {
+void SDL_PathFileLocation(char* dst, const char* path) {
   
   int i = strlen(path);
   while( i > 0) {
@@ -273,6 +273,40 @@ const char* SDL_GL_ErrorString(GLenum error) {
       return gl_error_string_stack_underflow;
     case GL_TABLE_TOO_LARGE:
       return gl_error_string_table_too_large;
+  }
+  return gl_error_string_no_error;
+}
+
+static const char* gl_error_string_framebuffer_complete = "Framebuffer Complete";
+static const char* gl_error_string_framebuffer_undefined = "Framebuffer Undefined";
+static const char* gl_error_string_framebuffer_incomplete_attach = "Framebuffer Incomplete Attachment";
+static const char* gl_error_string_framebuffer_incomplete_missing_attach = "Framebuffer No Attachments";
+static const char* gl_error_string_framebuffer_incomplete_draw = "Framebuffer Incomplete Draw";
+static const char* gl_error_string_framebuffer_incomplete_read = "Framebuffer Incomplete Read";
+static const char* gl_error_string_framebuffer_unsupported = "Framebuffer Unsupported";
+static const char* gl_error_string_framebuffer_incomplete_multisample = "Framebuffer Badly Configured Multisamples";
+static const char* gl_error_string_framebuffer_incomplete_layer_targets = "Framebuffer Badly Configured Layer Targets";
+
+const char* SDL_GL_FrameBufferErrorString(GLenum error) {
+  switch(error) {
+    case GL_FRAMEBUFFER_COMPLETE:
+      return gl_error_string_framebuffer_complete;
+    case GL_FRAMEBUFFER_UNDEFINED:
+      return gl_error_string_framebuffer_undefined;
+    case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+      return gl_error_string_framebuffer_incomplete_attach;
+    case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+      return gl_error_string_framebuffer_incomplete_missing_attach;
+    case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
+      return gl_error_string_framebuffer_incomplete_draw;
+    case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
+      return gl_error_string_framebuffer_incomplete_read;
+    case GL_FRAMEBUFFER_UNSUPPORTED:
+      return gl_error_string_framebuffer_unsupported;
+    case GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE:
+      return gl_error_string_framebuffer_incomplete_multisample;
+    case GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS:
+      return gl_error_string_framebuffer_incomplete_layer_targets;
   }
   return gl_error_string_no_error;
 }

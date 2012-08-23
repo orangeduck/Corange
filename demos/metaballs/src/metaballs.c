@@ -174,7 +174,7 @@ void metaballs_event(SDL_Event event) {
   camera* cam = entity_get("camera");
   light* sun = entity_get("sun");
 
-  //camera_control_orbit(cam);
+  camera_control_orbit(cam, event);
   
   switch(event.type){
   

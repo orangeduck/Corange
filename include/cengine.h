@@ -41,6 +41,11 @@ typedef struct {
 
 fpath P(const char* path);
 
+fpath fpath_full(fpath path);
+fpath fpath_file(fpath path);
+fpath fpath_file_location(fpath path);
+fpath fpath_file_extension(fpath path);
+
 /*
 ** == Errors & Debugging ==
 */
@@ -60,6 +65,11 @@ void debug_();
 #define debug(MSG, ...) { printf("[DEBUG] (%s:%s:%i) ", __FILE__, __func__, __LINE__); printf(MSG, ##__VA_ARGS__); printf("\n"); fflush(stdout); debug_(); }
 
 #define alloc_check(PTR) { if((PTR) == NULL) { error("Out of Memory!"); } }
+
+/* OpenGL error checking */
+#define SDL_GL_CheckError() { GLenum __glerror = glGetError(); if (__glerror) { error("OpenGL Error: %s", SDL_GL_ErrorString(__glerror)); } }
+
+#define SDL_GL_CheckFrameBuffer() { GLenum __glfbstatus = glCheckFramebufferStatus(GL_FRAMEBUFFER); if(__glfbstatus != GL_FRAMEBUFFER_COMPLETE) { error("OpenGL FrameBuffer Error: %s", SDL_GL_FrameBufferErrorString(__glfbstatus)); } }
 
 /*
 ** == Timing ==

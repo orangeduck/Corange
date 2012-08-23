@@ -42,60 +42,38 @@ void sea_init() {
   forward_renderer_add_light(sun);
   forward_renderer_add_light(backlight);
   
-  load_folder("./resources/");
-   
-  texture* noise1 = asset_get("./resources/noise1.dds");
-  texture* noise2 = asset_get("./resources/noise2.dds");
-  texture* noise3 = asset_get("./resources/noise3.dds");
-  texture* noise4 = asset_get("./resources/noise4.dds");
-  texture* noise5 = asset_get("./resources/noise5.dds");
+  folder_load(P("./resources/"));
   
-  texture* skydome_tex = asset_get("./resources/skybox_cloud_10.dds");
-
-  texture* water_calm = asset_get("./resources/water_calm.dds");
-  texture* water_foam = asset_get("./resources/water_foam.dds");
+  renderable* r_seaplane = asset_get(P("./resources/seaplane.obj"));
+  r_seaplane->material = asset_hndl_new(P("./resources/seaplane.mat"));
   
-  material* seaplane_mat = asset_get("./resources/seaplane.mat");
-  
-  material_set_property(seaplane_mat, "tex_noise1", noise1, mat_type_texture);
-  material_set_property(seaplane_mat, "tex_noise2", noise2, mat_type_texture);
-  material_set_property(seaplane_mat, "tex_noise3", noise3, mat_type_texture);
-  material_set_property(seaplane_mat, "tex_noise4", noise4, mat_type_texture);
-  material_set_property(seaplane_mat, "tex_noise5", noise5, mat_type_texture);
-  
-  material_set_property(seaplane_mat, "tex_skybox", skydome_tex, mat_type_texture);
-
-  material_set_property(seaplane_mat, "tex_calm_water", water_calm, mat_type_texture);
-  material_set_property(seaplane_mat, "tex_foam_water", water_foam, mat_type_texture);
-  
-  renderable* r_seaplane = asset_get("./resources/seaplane.obj");
-  renderable_set_material(r_seaplane, seaplane_mat);
   static_object* s_seaplane = entity_new("seaplane", static_object);
-  s_seaplane->renderable = r_seaplane;
+  s_seaplane->renderable = asset_hndl_new_ptr(r_seaplane);
   s_seaplane->scale = vec3_new(3,1,3);
   
+  renderable* r_skydome = asset_get(P("./resources/skydome.obj"));
+  r_skydome->material = asset_hndl_new_load(P("$CORANGE/shaders/skydome.mat"));
+  
   static_object* skydome = entity_new("skydome", static_object);
-  skydome->renderable = asset_get("./resources/skydome.obj");
-  renderable_set_material(skydome->renderable, asset_load_get("$CORANGE/shaders/skydome.mat"));
+  skydome->renderable = asset_hndl_new_ptr(r_skydome);
   skydome->position = vec3_new(0, -512, 0);
   skydome->scale = vec3_new(1024, 1024, 1024);
   
-  load_folder("./resources/corvette/");
+  folder_load(P("./resources/corvette/"));
   
-  renderable* r_corvette = asset_get("./resources/corvette/corvette.obj");
-  multi_material* m_corvette = asset_get("./resources/corvette/corvette.mmat");
-  renderable_set_multi_material(r_corvette, m_corvette);
+  renderable* r_corvette = asset_get(P("./resources/corvette/corvette.obj"));
+  r_corvette->material = asset_hndl_new_load(P("./resources/corvette/corvette.mat"));
   
   static_object* s_corvette = entity_new("corvette", static_object);
-  s_corvette->renderable = r_corvette;
-  s_corvette->collision_body = collision_body_new_mesh(asset_get("./resources/corvette/corvette.col"));
+  s_corvette->renderable = asset_hndl_new_ptr(r_corvette);
+  //s_corvette->collision_body = collision_body_new_mesh(asset_get("./resources/corvette/corvette.col"));
   s_corvette->scale = vec3_new(1.5, 1.5, 1.5);
   s_corvette->position = vec3_new(0, 0.5, 0);
   
   static_object* center_sphere = entity_new("center_sphere", static_object);
   center_sphere->position = vec3_new(0, 5, 0);
-  center_sphere->renderable = asset_get("./resources/ball.obj");
-  center_sphere->collision_body = collision_body_new_sphere(sphere_new(v3_zero(), 1.0f));
+  //center_sphere->renderable = asset_get("./resources/ball.obj");
+  //center_sphere->collision_body = collision_body_new_sphere(sphere_new(v3_zero(), 1.0f));
   
   ui_button* framerate = ui_elem_new("framerate", ui_button);
   ui_button_move(framerate, vec2_new(10,10));
@@ -115,9 +93,9 @@ void sea_update() {
   wave_time += frame_time();
   static_object* corvette = entity_get("corvette");
   corvette->position.y = (sin(wave_time) + 1) / 2;
-  corvette->rotation = v4_quaternion_pitch(sin(wave_time * 1.123) / 50);
-  corvette->rotation = v4_quaternion_mul(corvette->rotation, v4_quaternion_yaw(sin(wave_time * 1.254) / 25));
-  corvette->rotation = v4_quaternion_mul(corvette->rotation, v4_quaternion_roll(sin(wave_time * 1.355) / 100));
+  corvette->rotation = quaternion_pitch(sin(wave_time * 1.123) / 50);
+  corvette->rotation = quaternion_mul(corvette->rotation, quaternion_yaw(sin(wave_time * 1.254) / 25));
+  corvette->rotation = quaternion_mul(corvette->rotation, quaternion_roll(sin(wave_time * 1.355) / 100));
   
   static_object* center_sphere = entity_get("center_sphere");
   
@@ -131,20 +109,6 @@ void sea_update() {
   }
   
   Uint8 keystate = SDL_GetMouseState(NULL, NULL);
-  if(keystate & SDL_BUTTON(1)){
-    float a1 = -(float)mouse_x * 0.01;
-    float a2 = (float)mouse_y * 0.01;
-    
-    cam->position = v3_sub(cam->position, cam->target);
-    cam->position = m33_mul_v3(m33_rotation_y( a1 ), cam->position );
-    cam->position = v3_add(cam->position, cam->target);
-    
-    cam->position = v3_sub(cam->position, cam->target);
-    vector3 rotation_axis = v3_normalize(v3_cross( v3_sub(cam->position, v3_zero()) , v3(0,1,0) ));
-    cam->position = m33_mul_v3(m33_rotation_axis_angle(rotation_axis, a2 ), cam->position );
-    cam->position = v3_add(cam->position, cam->target);
-    
-  }
   
   if(keystate & SDL_BUTTON(3)){
     sun->position.x += (float)mouse_y / 2;
@@ -182,11 +146,11 @@ void sea_render() {
   int num_balls;
   entities_get(balls, &num_balls, physics_object);
   for(int i = 0; i < num_balls; i++) {
-    forward_renderer_render_physics(balls[i]);
+    //forward_renderer_render_physics(balls[i]);
   }
   
-  static_object* center_sphere = entity_get("center_sphere");
-  forward_renderer_render_static(center_sphere);
+  //static_object* center_sphere = entity_get("center_sphere");
+  //forward_renderer_render_static(center_sphere);
   
   forward_renderer_render_light(sun);
   forward_renderer_render_light(backlight);
@@ -200,35 +164,26 @@ void sea_event(SDL_Event event) {
 
   camera* cam = entity_get("camera");
   light* sun = entity_get("sun");
-
+  
+  camera_control_orbit(cam, event);
+  
   switch(event.type){
   case SDL_KEYUP:
   
     if (event.key.keysym.sym == SDLK_SPACE) {
       
-      char ball_name[20];
-      sprintf(ball_name, "ball_%i", ball_count);
-      ball_count++;
+      //char ball_name[20];
+      //sprintf(ball_name, "ball_%i", ball_count);
+      //ball_count++;
       
-      physics_object* ball = entity_new(ball_name, physics_object);
-      ball->renderable = asset_get("./resources/ball.obj");
-      ball->collision_body = collision_body_new_sphere(sphere_new(v3_zero(), 1));
-      ball->position = cam->position;
-      ball->scale = v3(0.5, 0.5, 0.5);
-      ball->velocity = v3_mul(v3_normalize(v3_sub(cam->target, cam->position)), 75);
+      //physics_object* ball = entity_new(ball_name, physics_object);
+      //ball->renderable = asset_get(P("./resources/ball.obj"));
+      //ball->collision_body = collision_body_new_sphere(sphere_new(v3_zero(), 1));
+      //ball->position = cam->position;
+      //ball->scale = v3(0.5, 0.5, 0.5);
+      //ball->velocity = v3_mul(v3_normalize(v3_sub(cam->target, cam->position)), 75);
       
     }
-  
-  case SDL_MOUSEBUTTONDOWN:
-
-    if (event.button.button == SDL_BUTTON_WHEELUP) {
-      cam->position = v3_sub(cam->position, v3_normalize(cam->position));
-    }
-    if (event.button.button == SDL_BUTTON_WHEELDOWN) {
-      cam->position = v3_add(cam->position, v3_normalize(cam->position));
-    }
-    
-  break;
   
   case SDL_MOUSEMOTION:
     mouse_x = event.motion.xrel;

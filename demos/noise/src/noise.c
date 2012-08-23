@@ -21,10 +21,10 @@ void noise_render() {
   glPushMatrix();
 	glLoadIdentity();
   
-  material* noise_mat = asset_hndl_ptr(asset_hndl_new_load(P("./shaders/noise.mat")));
+  material* noise_mat = asset_get(P("./shaders/noise.mat"));
   
   GLuint handle = shader_program_handle(material_get_entry(noise_mat, 0)->program);
-  GLuint random_tex = texture_handle(asset_hndl_ptr(asset_hndl_new_load(P("$CORANGE/resources/random.dds"))));
+  GLuint random_tex = texture_handle(asset_get(P("$CORANGE/resources/random.dds")));
   
   glUseProgram(handle);
   

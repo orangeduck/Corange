@@ -322,6 +322,19 @@ bool file_isloaded(fpath path) {
   return dict_contains(asset_dict, path.ptr);
 }
 
+asset* asset_get_load(fpath path) {
+  return asset_hndl_ptr(asset_hndl_new_load(path));
+}
+
+asset* asset_get(fpath path) {
+  return asset_hndl_ptr(asset_hndl_new(path));
+}
+
+asset* asset_get_as_type(fpath path, type_id type) {
+  /* TODO: Type checking */
+  return asset_get(path);
+}
+
 void asset_reload_type_id(type_id type) {
 
   debug("Reloading Assets of type '%s'...", type_id_name(type));

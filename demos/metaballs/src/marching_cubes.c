@@ -98,7 +98,7 @@ void marching_cubes_init() {
   
   /* Kernels */
   
-  kernel_program* marching_cubes = asset_hndl_ptr(asset_hndl_new_load(P("./kernels/marching_cubes.cl")));
+  kernel_program* marching_cubes = asset_get(P("./kernels/marching_cubes.cl"));
   
   write_point = kernel_program_get_kernel(marching_cubes, "write_point");
   kernel_set_argument(write_point, 0, sizeof(kernel_memory), &volume);
@@ -294,7 +294,7 @@ void marching_cubes_render(bool wireframe, camera* c, light* l) {
   }
   
   
-  material* metaballs_mat = asset_hndl_ptr(asset_hndl_new_load(P("./shaders/metaballs.mat")));
+  material* metaballs_mat = asset_get_load(P("./shaders/metaballs.mat"));
   
   shader_program* metaballs = material_get_entry(metaballs_mat, 0)->program;
   GLuint NORMALS = glGetAttribLocation(*metaballs, "normals");
@@ -320,7 +320,7 @@ void marching_cubes_render(bool wireframe, camera* c, light* l) {
   glUniformMatrix4fv(lview_matrix_u, 1, 0, lview_matrix);
   
   
-  texture* env_map = asset_hndl_ptr(asset_hndl_new_load(P("./resources/metaballs_env.dds")));
+  texture* env_map = asset_get_load(P("./resources/metaballs_env.dds"));
   glActiveTexture(GL_TEXTURE0 + 0 );
   glBindTexture(GL_TEXTURE_2D, *env_map);
   glEnable(GL_TEXTURE_2D);
@@ -379,7 +379,7 @@ void marching_cubes_render_shadows(light* l) {
   
   mat4_to_array(mat4_id(), world_matrix);
   
-  material* depth_mat = asset_hndl_ptr(asset_hndl_new_load(P("$CORANGE/shaders/depth.mat")));
+  material* depth_mat = asset_get_load(P("$CORANGE/shaders/depth.mat"));
   
   shader_program* depth_shader = material_get_entry(depth_mat, 0)->program;
   glUseProgram(*depth_shader);

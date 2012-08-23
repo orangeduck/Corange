@@ -34,7 +34,7 @@ void coin_render(coin* c, vec2 camera_position) {
   
   glEnable(GL_TEXTURE_2D);
   
-  texture* coin_tex = asset_hndl_ptr(asset_hndl_new_load(P("./tiles/coin.dds")));
+  texture* coin_tex = asset_get(P("./tiles/coin.dds"));
   glBindTexture(GL_TEXTURE_2D, *coin_tex);
   
   glBegin(GL_QUADS);

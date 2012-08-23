@@ -63,20 +63,46 @@ static void material_generate_programs(material* m) {
         asset_hndl ah = me->items[j].as_asset;
         
         shader_program_attach_shader(me->program, asset_hndl_ptr(ah));
-        shader_program_print_log(me->program);
         SDL_GL_CheckError();
       }
       
     }
     
     shader_program_link(me->program);
-    shader_program_print_log(me->program);
     SDL_GL_CheckError();
     
   }
   
   SDL_GL_CheckError();
   
+}
+
+void material_entry_add_item(material_entry* me, char* name, int type, material_item mi) {
+  me->num_items++;
+  
+  me->types = realloc(me->types, sizeof(int) * me->num_items);
+  me->names = realloc(me->names, sizeof(char*) * me->num_items);
+  me->items = realloc(me->items, sizeof(material_item) * me->num_items);
+  
+  me->items[me->num_items-1] = mi;
+  me->types[me->num_items-1] = type;
+  me->names[me->num_items-1] = malloc(strlen(name)+1);
+  strcpy(me->names[me->num_items-1], name);  
+}
+
+material_entry* material_add_entry(material* m) {
+  m->num_entries++;
+  m->entries = realloc(m->entries, sizeof(material_entry*) * m->num_entries);
+  m->entries[m->num_entries-1] = malloc(sizeof(material_entry));
+  
+  material_entry* me = m->entries[m->num_entries-1];
+  me->program = NULL;
+  me->num_items = 0;
+  me->types = malloc(sizeof(int) * me->num_items);
+  me->names = malloc(sizeof(char*) * me->num_items);
+  me->items = malloc(sizeof(material_item) * me->num_items);
+  
+  return me;
 }
 
 material* mat_load_file(char* filename) {
@@ -114,77 +140,60 @@ material* mat_load_file(char* filename) {
         continue;
       }
       
-      m->num_entries++;
-      m->entries = realloc(m->entries, sizeof(material_entry*) * m->num_entries);
-      m->entries[m->num_entries-1] = malloc(sizeof(material_entry));
-      
-      material_entry* me = m->entries[m->num_entries-1];
-      me->program = NULL;
-      me->num_items = 0;
-      me->types = malloc(sizeof(int) * me->num_items);
-      me->names = malloc(sizeof(char*) * me->num_items);
-      me->items = malloc(sizeof(material_item) * me->num_items);
+      me = material_add_entry(m);
       continue;
     }
     
-    material_entry* me = m->entries[m->num_entries-1];
-    me->num_items++;
-    me->types = realloc(me->types, sizeof(int) * me->num_items);
-    me->names = realloc(me->names, sizeof(char*) * me->num_items);
-    me->items = realloc(me->items, sizeof(material_item) * me->num_items);
-    
-    me->names[me->num_items-1] = malloc(strlen(name)+1);
-    strcpy(me->names[me->num_items-1], name);
-    
     material_item mi;
+    int type_id;
     char* end;
     float f0, f1, f2, f3;
     
     if (strcmp(type, "shader") == 0) {
     
       mi.as_asset = asset_hndl_new_load(P(value));
-      me->types[me->num_items-1] = mat_item_shader;
+      type_id = mat_item_shader;
       
     } else if (strcmp(type, "texture") == 0) {
     
       mi.as_asset = asset_hndl_new_load(P(value));
-      me->types[me->num_items-1] = mat_item_texture;
+      type_id = mat_item_texture;
     
     } else if (strcmp(type, "int") == 0) {
     
       mi.as_int = atoi(value);
-      me->types[me->num_items-1] = mat_item_int;
+      type_id = mat_item_int;
     
     } else if (strcmp(type, "float") == 0) {
       
       mi.as_float = atof(value);
-      me->types[me->num_items-1] = mat_item_float;
+      type_id = mat_item_float;
       
     } else if (strcmp(type, "vec2") == 0) {
     
       f0 = strtod(value, &end); f1 = strtod(end, NULL);
       mi.as_vec2 = vec2_new(f0, f1);
-      me->types[me->num_items-1] = mat_item_vec2;
+      type_id = mat_item_vec2;
       
     } else if (strcmp(type, "vec3") == 0) {
       
       f0 = strtod(value, &end); f1 = strtod(end, &end);
       f2 = strtod(end, NULL);
       mi.as_vec3 = vec3_new(f0, f1, f2);
-      me->types[me->num_items-1] = mat_item_vec3;
+      type_id = mat_item_vec3;
       
     } else if (strcmp(type, "vec4") == 0) {
     
       f0 = strtod(value, &end); f1 = strtod(end, &end);
       f2 = strtod(end, &end); f3 = strtod(end, NULL);
       mi.as_vec4 = vec4_new(f0, f1, f2, f3);
-      me->types[me->num_items-1] = mat_item_vec4;
+      type_id = mat_item_vec4;
       
     } else {
       error("Unknown material item type '%s'", type);
     }
     
-    me->items[me->num_items-1] = mi;
+    material_entry_add_item(m->entries[m->num_entries-1], name, type_id, mi);
   
   }
   

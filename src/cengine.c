@@ -6,6 +6,30 @@ fpath P(const char* path) {
   return p;
 }
 
+fpath fpath_full(fpath path) {
+  fpath ret;
+  SDL_PathFullName(ret.ptr, path.ptr);
+  return ret;
+}
+
+fpath fpath_file(fpath path) {
+  fpath ret;
+  SDL_PathFileName(ret.ptr, path.ptr);
+  return ret;
+}
+
+fpath fpath_file_location(fpath path) {
+  fpath ret;
+  SDL_PathFileLocation(ret.ptr, path.ptr);
+  return ret;
+}
+
+fpath fpath_file_extension(fpath path) {
+  fpath ret;
+  SDL_PathFileExtension(ret.ptr, path.ptr);
+  return ret;
+}
+
 /* Error Functions */
 
 typedef void(*error_func_t)(void);

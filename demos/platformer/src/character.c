@@ -50,9 +50,9 @@ void character_render(character* c, vec2 camera_position) {
   /* Conditional as to if we render flap or normal icon */
   texture* character_tex;
   if (c->flap_timer > 0.0) {
-    character_tex = asset_hndl_ptr(asset_hndl_new_load(P("./tiles/character_flap.dds")));
+    character_tex = asset_get(P("./tiles/character_flap.dds"));
   } else {
-    character_tex = asset_hndl_ptr(asset_hndl_new_load(P("./tiles/character.dds")));
+    character_tex = asset_get(P("./tiles/character.dds"));
   }
   glBindTexture(GL_TEXTURE_2D, *character_tex);
   

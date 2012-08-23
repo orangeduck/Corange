@@ -71,26 +71,18 @@ void tessellation_init() {
   
 }
 
-static float mouse_x = 0;
-static float mouse_y = 0;
-
 void tesselation_event(SDL_Event event) {
   
   camera* cam = entity_get("cam");
   light* sun = entity_get("sun");
   
-  //camera_control_orbit(cam);
+  camera_control_orbit(cam, event);
   
   switch(event.type){
   
   case SDL_KEYUP:
     if (event.key.keysym.sym == SDLK_UP) { tess_level_inner++; tess_level_outer++; }
     if (event.key.keysym.sym == SDLK_DOWN) { tess_level_inner = max(tess_level_inner-1, 1); tess_level_outer = max(tess_level_outer-1, 1); }
-  break;
-  
-  case SDL_MOUSEMOTION:
-    mouse_x = event.motion.xrel;
-    mouse_y = event.motion.yrel;
   break;
   }
     
@@ -109,7 +101,7 @@ void tessellation_render() {
   light* sun = entity_get("sun");
   camera* cam = entity_get("cam");
   
-  material* tess_mat = asset_hndl_ptr(asset_hndl_new(P("./shaders/tessellation.mat")));
+  material* tess_mat = asset_get(P("./shaders/tessellation.mat"));
   
   GLuint sp_handle = shader_program_handle(material_get_entry(tess_mat, 0)->program);
   
@@ -149,6 +141,7 @@ void tessellation_render() {
   
   glUseProgram(0);
   
+  SDL_GL_CheckError();
 }
 
 
