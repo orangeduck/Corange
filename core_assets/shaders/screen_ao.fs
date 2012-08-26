@@ -11,8 +11,8 @@ vec3 normal_from_depth(sampler2D depth_texture, vec2 texcoords) {
 
   float depth = texture2D(depth_texture, texcoords).r;
 
-  vec2 offset1 = vec2(0.0,0.01);
-  vec2 offset2 = vec2(0.01,0.0);
+  vec2 offset1 = vec2(0.0,0.001);
+  vec2 offset2 = vec2(0.001,0.0);
   
   float depth1 = texture2D(depth_texture, texcoords + offset1).r;
   float depth2 = texture2D(depth_texture, texcoords + offset2).r;
@@ -39,7 +39,7 @@ float difference_occlusion(float difference) {
   difference = max(difference, 0.0);
   
   /* This is the depth difference at which the maximum occlusion happens */
-  const float target = 0.0002;
+  const float target = 0.00025;
   
   /* This is the length of the falloff after maximum depth difference is reached */
   const float falloff = 5.0;
@@ -52,15 +52,14 @@ float difference_occlusion(float difference) {
   dist = clamp(dist, 0.0, 1.0);
   
   return smoothstep_map(1.0-dist);
-  
 }
 
 float ssao_depth(vec2 texcoords, sampler2D depth_texture, sampler2D random_texture, float seed) {
   
-  const float total_strength = 1.0;
+  const float total_strength = 1.25;
   const float base = 0.0;
   
-  const float radius = 0.025;
+  const float radius = 0.00025;
   
   const int samples = 8;
   
@@ -81,13 +80,13 @@ float ssao_depth(vec2 texcoords, sampler2D depth_texture, sampler2D random_textu
     vec3 ray = radius_depth * reflect(sample_sphere[i], random);
     vec3 projected = position + sign(dot(ray,normal)) * ray;
     
-    float occ_depth = texture2D(depth_texture, clamp(projected.xy,0.0,1.0)).r;
+    float occ_depth = texture2D(depth_texture, projected.xy).r;
     float difference = depth - occ_depth;
     
     occlusion += difference_occlusion(difference);
   }
   
-  float ao = 1.0 - total_strength * occlusion * (1.0 / float(samples));
-  return clamp(ao + base, 0.0, 1.0);
-
+  float ao = total_strength * occlusion * (1.0 / float(samples));
+  return 1.0 - clamp(ao + base, 0.0, 1.0);
+  
 }

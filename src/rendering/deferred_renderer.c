@@ -7,6 +7,7 @@
 #include "assets/material.h"
 #include "assets/renderable.h"
 
+/* Matricies */
 static float PROJ_MATRIX[16];
 static float VIEW_MATRIX[16];
 static float WORLD_MATRIX[16];
@@ -14,6 +15,7 @@ static float WORLD_MATRIX[16];
 static float LIGHT_VIEW_MATRIX[16];
 static float LIGHT_PROJ_MATRIX[16];
 
+/* Materials */
 static asset_hndl MAT_STATIC;
 static asset_hndl MAT_ANIMATED;
 static asset_hndl MAT_CLEAR;
@@ -21,8 +23,10 @@ static asset_hndl MAT_UI;
 static asset_hndl MAT_SSAO;
 static asset_hndl MAT_COMPOSE;
 static asset_hndl MAT_TONEMAP;
-static asset_hndl MAT_POST;
+static asset_hndl MAT_POST0;
+static asset_hndl MAT_POST1;
 
+/* Attributes */
 static int NORMAL;
 static int TANGENT;
 static int BINORMAL;
@@ -33,6 +37,7 @@ static int BINORMAL_ANIMATED;
 static int BONE_INDICIES;
 static int BONE_WEIGHTS;
 
+/* Buffers */
 static GLuint fbo;
 static GLuint depth_buffer;
 static GLuint diffuse_buffer;
@@ -52,23 +57,29 @@ static GLuint hdr_fbo;
 static GLuint hdr_buffer;
 static GLuint hdr_texture;
 
-static GLuint ldr_fbo;
-static GLuint ldr_buffer;
-static GLuint ldr_texture;
+static GLuint ldr_front_fbo;
+static GLuint ldr_front_buffer;
+static GLuint ldr_front_texture;
 
+static GLuint ldr_back_fbo;
+static GLuint ldr_back_buffer;
+static GLuint ldr_back_texture;
+
+/* Inputs */
 static camera* CAMERA = NULL;
 static light* SHADOW_LIGHT = NULL;
 static texture* SHADOW_TEX = NULL;
 
+/* Other Assets */
 static asset_hndl COLOR_CORRECTION;
 static asset_hndl RANDOM;
 static asset_hndl ENVIRONMENT;
 static asset_hndl VIGNETTING;
 
+/* Lights */
+
 #define DEFERRED_MAX_LIGHTS 32
-
 static int num_lights;
-
 static light* lights[DEFERRED_MAX_LIGHTS];
 static float light_power[DEFERRED_MAX_LIGHTS];
 static float light_falloff[DEFERRED_MAX_LIGHTS];
@@ -77,6 +88,8 @@ static vec3 light_target[DEFERRED_MAX_LIGHTS];
 static vec3 light_diffuse[DEFERRED_MAX_LIGHTS];
 static vec3 light_ambient[DEFERRED_MAX_LIGHTS];
 static vec3 light_specular[DEFERRED_MAX_LIGHTS];
+
+/* Variables */
 
 static float EXPOSURE;
 static float EXPOSURE_SPEED;
@@ -97,18 +110,23 @@ void deferred_renderer_init() {
   
   folder_load(P("$CORANGE/shaders/deferred/"));
   
+  /* Materials */
+  
   MAT_STATIC = asset_hndl_new(P("$CORANGE/shaders/deferred/static.mat"));
   MAT_ANIMATED = asset_hndl_new(P("$CORANGE/shaders/deferred/animated.mat"));
   MAT_CLEAR = asset_hndl_new(P("$CORANGE/shaders/deferred/clear.mat"));
   MAT_SSAO = asset_hndl_new(P("$CORANGE/shaders/deferred/ssao.mat"));
   MAT_TONEMAP = asset_hndl_new(P("$CORANGE/shaders/deferred/tonemap.mat"));
   MAT_COMPOSE = asset_hndl_new(P("$CORANGE/shaders/deferred/compose.mat"));
-  MAT_POST = asset_hndl_new(P("$CORANGE/shaders/deferred/post.mat"));
+  MAT_POST0 = asset_hndl_new(P("$CORANGE/shaders/deferred/post0.mat"));
+  MAT_POST1 = asset_hndl_new(P("$CORANGE/shaders/deferred/post1.mat"));
   MAT_UI = asset_hndl_new(P("$CORANGE/shaders/deferred/ui.mat"));
   
   
   shader_program* program_static = material_get_entry(asset_hndl_ptr(MAT_STATIC), 0)->program;
   shader_program* program_animated = material_get_entry(asset_hndl_ptr(MAT_ANIMATED), 0)->program;
+  
+  /* Attributes */
   
   SDL_GL_CheckError();
   
@@ -130,6 +148,8 @@ void deferred_renderer_init() {
   int viewport_height = graphics_viewport_height();
   
   SDL_GL_CheckError();
+  
+  /* Composition Buffer */
   
   glGenFramebuffers(1, &fbo);
   glBindFramebuffer(GL_FRAMEBUFFER, fbo);
@@ -184,13 +204,15 @@ void deferred_renderer_init() {
   glGenTextures(1, &depth_texture);
   glBindTexture(GL_TEXTURE_2D, depth_texture);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, viewport_width, viewport_height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth_texture, 0);
   
   SDL_GL_CheckFrameBuffer();
+  
+  /* SSAO Buffer */
   
   glGenFramebuffers(1, &ssao_fbo);
   glBindFramebuffer(GL_FRAMEBUFFER, ssao_fbo);
@@ -211,6 +233,8 @@ void deferred_renderer_init() {
   
   SDL_GL_CheckFrameBuffer();
   
+  /* HDR Buffer */
+  
   glGenFramebuffers(1, &hdr_fbo);
   glBindFramebuffer(GL_FRAMEBUFFER, hdr_fbo);
   
@@ -230,22 +254,45 @@ void deferred_renderer_init() {
   
   SDL_GL_CheckFrameBuffer();
   
-  glGenFramebuffers(1, &ldr_fbo);
-  glBindFramebuffer(GL_FRAMEBUFFER, ldr_fbo);
+  /* LDR front buffer */
   
-  glGenRenderbuffers(1, &ldr_buffer);
-  glBindRenderbuffer(GL_RENDERBUFFER, ldr_buffer);
+  glGenFramebuffers(1, &ldr_front_fbo);
+  glBindFramebuffer(GL_FRAMEBUFFER, ldr_front_fbo);
+  
+  glGenRenderbuffers(1, &ldr_front_buffer);
+  glBindRenderbuffer(GL_RENDERBUFFER, ldr_front_buffer);
   glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, viewport_width, viewport_height);
-  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, ldr_buffer);   
+  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, ldr_front_buffer);   
   
-  glGenTextures(1, &ldr_texture);
-  glBindTexture(GL_TEXTURE_2D, ldr_texture);
+  glGenTextures(1, &ldr_front_texture);
+  glBindTexture(GL_TEXTURE_2D, ldr_front_texture);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, viewport_width, viewport_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ldr_texture, 0);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ldr_front_texture, 0);
+  
+  SDL_GL_CheckFrameBuffer();
+  
+  /* LDR back buffer */
+  
+  glGenFramebuffers(1, &ldr_back_fbo);
+  glBindFramebuffer(GL_FRAMEBUFFER, ldr_back_fbo);
+  
+  glGenRenderbuffers(1, &ldr_back_buffer);
+  glBindRenderbuffer(GL_RENDERBUFFER, ldr_back_buffer);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, viewport_width, viewport_height);
+  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, ldr_back_buffer);   
+  
+  glGenTextures(1, &ldr_back_texture);
+  glBindTexture(GL_TEXTURE_2D, ldr_back_texture);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, viewport_width, viewport_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ldr_back_texture, 0);
   
   SDL_GL_CheckFrameBuffer();
   
@@ -277,9 +324,15 @@ void deferred_renderer_finish() {
   glDeleteRenderbuffers(1, &hdr_buffer);
   glDeleteTextures(1,&hdr_texture);
   
-  glDeleteFramebuffers(1, &ldr_fbo);
-  glDeleteRenderbuffers(1, &ldr_buffer);
-  glDeleteTextures(1,&ldr_texture);
+  glDeleteFramebuffers(1, &ldr_front_fbo);
+  glDeleteRenderbuffers(1, &ldr_front_buffer);
+  glDeleteTextures(1,&ldr_front_texture);
+  
+  glDeleteFramebuffers(1, &ldr_back_fbo);
+  glDeleteRenderbuffers(1, &ldr_back_buffer);
+  glDeleteTextures(1,&ldr_back_texture);
+  
+  SDL_GL_CheckError();
   
   folder_unload(P("$CORANGE/shaders/deferred/"));
   
@@ -345,6 +398,9 @@ static void deferred_renderer_use_material_entry(material_entry* me, shader_prog
   
   GLint view_matrix_u = glGetUniformLocation(shader_program_handle(PROG), "view_matrix");
   glUniformMatrix4fv(view_matrix_u, 1, 0, VIEW_MATRIX);
+  
+  glUniform1f(glGetUniformLocation(shader_program_handle(PROG), "near"), CAMERA->near_clip);
+  glUniform1f(glGetUniformLocation(shader_program_handle(PROG), "far"), CAMERA->far_clip);
   
   int tex_counter = 0;
   
@@ -441,6 +497,8 @@ void deferred_renderer_begin() {
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);
   
+  SDL_GL_CheckError();
+  
 }
 
 void deferred_renderer_end() {
@@ -500,7 +558,7 @@ void deferred_renderer_end() {
   glMatrixMode(GL_MODELVIEW);
   glPopMatrix();
   
-  /* End */
+  SDL_GL_CheckError();
   
   /* Render full screen quad to hdr fbo */
   
@@ -630,10 +688,12 @@ void deferred_renderer_end() {
   glPopMatrix();
   
   glUseProgram(0);
-
+  
+  SDL_GL_CheckError();
+  
   /* Render HDR to LDR buffer */
   
-  glBindFramebuffer(GL_FRAMEBUFFER, ldr_fbo);
+  glBindFramebuffer(GL_FRAMEBUFFER, ldr_back_fbo);
   
   shader_program* program_tonemap = material_get_entry(asset_hndl_ptr(MAT_TONEMAP), 0)->program;
   
@@ -674,6 +734,8 @@ void deferred_renderer_end() {
   
   glUseProgram(0);
   
+  SDL_GL_CheckError();
+  
   /* Generate Mipmaps, adjust exposure */
   
   unsigned char color[4] = {0,0,0,0};
@@ -682,7 +744,7 @@ void deferred_renderer_end() {
   int height = 0;
   
   glActiveTexture(GL_TEXTURE0 + 0 );
-  glBindTexture(GL_TEXTURE_2D, ldr_texture);
+  glBindTexture(GL_TEXTURE_2D, ldr_back_texture);
   glEnable(GL_TEXTURE_2D);
   
   glGenerateMipmap(GL_TEXTURE_2D);
@@ -691,9 +753,7 @@ void deferred_renderer_end() {
     level++;
     glGetTexLevelParameteriv(GL_TEXTURE_2D, level, GL_TEXTURE_WIDTH, &width);
     glGetTexLevelParameteriv(GL_TEXTURE_2D, level, GL_TEXTURE_WIDTH, &height);
-    
     if (level > 50) { error("Unable to find lowest mip level. Perhaps mipmaps were not generated"); }
-    
   } while ((width > 1) || (height > 1));
   
   glGetTexImage(GL_TEXTURE_2D, level, GL_RGBA, GL_UNSIGNED_BYTE, color);
@@ -705,14 +765,20 @@ void deferred_renderer_end() {
   
   EXPOSURE += (EXPOSURE_TARGET - average) * EXPOSURE_SPEED;
   
-  /* Render final frame */
+  SDL_GL_CheckError();
   
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  /* Render Post Effects 0 */
   
-  shader_program* program_post = material_get_entry(asset_hndl_ptr(MAT_POST), 0)->program;
+  glBindFramebuffer(GL_FRAMEBUFFER, ldr_front_fbo);
+  glClearColor(1.0, 0.0, 0.0, 1.0);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   
-  GLuint screen_post_handle = shader_program_handle(program_post);
-  glUseProgram(screen_post_handle);
+  shader_program* program_post0 = material_get_entry(asset_hndl_ptr(MAT_POST0), 0)->program;
+  
+  GLuint screen_post0_handle = shader_program_handle(program_post0);
+  glUseProgram(screen_post0_handle);
+  
+  SDL_GL_CheckError();
   
 	glMatrixMode(GL_PROJECTION);
   glPushMatrix();
@@ -724,23 +790,99 @@ void deferred_renderer_end() {
 	glLoadIdentity();
   
   glActiveTexture(GL_TEXTURE0 + 0 );
-  glBindTexture(GL_TEXTURE_2D, ldr_texture);
+  glBindTexture(GL_TEXTURE_2D, ldr_back_texture);
   glEnable(GL_TEXTURE_2D);
-  glUniform1i(glGetUniformLocation(screen_post_handle, "diffuse_texture"), 0);
+  glGenerateMipmap(GL_TEXTURE_2D);
+  glUniform1i(glGetUniformLocation(screen_post0_handle, "ldr_texture"), 0);
+  
+  SDL_GL_CheckError();
+  
+  glActiveTexture(GL_TEXTURE0 + 1 );
+  glBindTexture(GL_TEXTURE_2D, depth_texture);
+  glEnable(GL_TEXTURE_2D);
+  glGenerateMipmap(GL_TEXTURE_2D);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 3);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 3);
+  glUniform1i(glGetUniformLocation(screen_post0_handle, "depth_texture"), 1);
+  
+  SDL_GL_CheckError();
+  
+  glActiveTexture(GL_TEXTURE0 + 2 );
+  glBindTexture(GL_TEXTURE_2D, texture_handle(asset_hndl_ptr(RANDOM)));
+  glEnable(GL_TEXTURE_2D);
+  glUniform1i(glGetUniformLocation(screen_post0_handle, "random_texture"), 2);
+  
+  SDL_GL_CheckError();
+  
+  glUniform1i(glGetUniformLocation(screen_post0_handle, "width"), graphics_viewport_width());
+  glUniform1i(glGetUniformLocation(screen_post0_handle, "height"), graphics_viewport_height());
+  
+  SDL_GL_CheckError();
+  
+	glBegin(GL_QUADS);
+		glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0, -1.0,  0.0f);
+		glTexCoord2f(1.0f, 0.0f); glVertex3f(1.0, -1.0,  0.0f);
+		glTexCoord2f(1.0f, 1.0f); glVertex3f(1.0,  1.0,  0.0f);
+		glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0,  1.0,  0.0f);
+	glEnd();
+  
+  glActiveTexture(GL_TEXTURE0 + 2 );
+  glDisable(GL_TEXTURE_2D);
+  
+  glActiveTexture(GL_TEXTURE0 + 1 );
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 1000);
+  glDisable(GL_TEXTURE_2D);
+  
+  glActiveTexture(GL_TEXTURE0 + 0 );
+  glDisable(GL_TEXTURE_2D);
+  
+  glMatrixMode(GL_PROJECTION);
+  glPopMatrix();
+
+  glMatrixMode(GL_MODELVIEW);
+  glPopMatrix();
+  
+  glUseProgram(0);
+  
+  SDL_GL_CheckError();
+  
+  /* Render Post Effects 1 to frame */
+  
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  
+  shader_program* program_post1 = material_get_entry(asset_hndl_ptr(MAT_POST1), 0)->program;
+  GLuint screen_post1_handle = shader_program_handle(program_post1);
+  glUseProgram(screen_post1_handle);
+  
+	glMatrixMode(GL_PROJECTION);
+  glPushMatrix();
+	glLoadIdentity();
+	glOrtho(-1.0, 1.0, -1.0, 1.0, -1, 1);
+  
+	glMatrixMode(GL_MODELVIEW);
+  glPushMatrix();
+	glLoadIdentity();
+  
+  glActiveTexture(GL_TEXTURE0 + 0 );
+  glBindTexture(GL_TEXTURE_2D, ldr_front_texture);
+  glEnable(GL_TEXTURE_2D);
+  glGenerateMipmap(GL_TEXTURE_2D);
+  glUniform1i(glGetUniformLocation(screen_post1_handle, "diffuse_texture"), 0);
   
   glActiveTexture(GL_TEXTURE0 + 1 );
   glBindTexture(GL_TEXTURE_2D, texture_handle(asset_hndl_ptr(VIGNETTING)));
   glEnable(GL_TEXTURE_2D);
-  glUniform1i(glGetUniformLocation(screen_post_handle, "vignetting_texture"), 1);
+  glUniform1i(glGetUniformLocation(screen_post1_handle, "vignetting_texture"), 1);
   
   glActiveTexture(GL_TEXTURE0 + 2 );
   glBindTexture(GL_TEXTURE_3D, texture_handle(asset_hndl_ptr(COLOR_CORRECTION)));
   glEnable(GL_TEXTURE_3D);
-  glUniform1i(glGetUniformLocation(screen_post_handle, "lut"), 2);
+  glUniform1i(glGetUniformLocation(screen_post1_handle, "lut"), 2);
   
-  glUniform1i(glGetUniformLocation(screen_post_handle, "width"), graphics_viewport_width());
-  glUniform1i(glGetUniformLocation(screen_post_handle, "height"), graphics_viewport_height());
-  glUniform1i(glGetUniformLocation(screen_post_handle, "aa_type"), 1);
+  glUniform1i(glGetUniformLocation(screen_post1_handle, "width"), graphics_viewport_width());
+  glUniform1i(glGetUniformLocation(screen_post1_handle, "height"), graphics_viewport_height());
+  glUniform1i(glGetUniformLocation(screen_post1_handle, "aa_type"), 1);
   
 	glBegin(GL_QUADS);
 		glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0, -1.0,  0.0f);
@@ -765,6 +907,8 @@ void deferred_renderer_end() {
   glPopMatrix();
   
   glUseProgram(0);
+  
+  SDL_GL_CheckError();
   
 }
 

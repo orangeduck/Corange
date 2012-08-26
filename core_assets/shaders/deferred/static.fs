@@ -17,6 +17,9 @@ uniform sampler2D diffuse_map;
 uniform sampler2D bump_map;
 uniform sampler2D spec_map;
 
+uniform float near;
+uniform float far;
+
 /* Headers */
 
 float to_gamma(float color);
@@ -26,6 +29,10 @@ vec3 from_gamma(vec3 color);
 vec3 swap_red_green_inv(vec3 color);
 
 /* End */
+
+float linear_depth(float depth, float near, float far){
+  return (2.0 * near) / (far + near - depth * (far - near));
+}
 
 void main( void ) {
   
@@ -52,4 +59,7 @@ void main( void ) {
 	
 	gl_FragData[2] = normal;
 	gl_FragData[2].a = glossiness;
+  
+  gl_FragDepth = linear_depth(gl_FragCoord.z, near, far);
+  //gl_FragDepth = gl_FragCoord.z;
 }

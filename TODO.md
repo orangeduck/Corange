@@ -1,15 +1,6 @@
 TODO List
 =========
 
-Main Objectives
----------------
-
-* All path management should be replaced with const char of size max path.
-* Move all path objects to end of structs.
-* Make sure nobody is storing assets when they need handles
-* Document code properly
-* Make multi material behaviour default.
-
 To Finish Demos
 ---------------
 
