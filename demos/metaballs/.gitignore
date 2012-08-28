@@ -1,3 +1,6 @@
+metaballs
+metaballs.exe
+lib/*.*
 *~
 *.o
 stdout.txt

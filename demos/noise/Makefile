@@ -2,6 +2,7 @@ DEMO=noise
 CC=gcc
 
 INCS= -I ./include -I ../../include
+LIBS= -L ./lib
 
 CFLAGS= $(INCS) -std=gnu99 -Wall -Werror -Wno-unused -O3 -g
 C_FILES= $(wildcard src/*.c)
@@ -11,26 +12,26 @@ PLATFORM = $(shell uname)
 
 ifeq ($(findstring Linux,$(PLATFORM)),Linux)
 	OUT=$(DEMO)
-	LFLAGS= -L./lib -lcorange -lGL -lSDLmain -lSDL
-	CORANGE_LIB= ../../libcorange.so
-	CORANGE_TAR= ./lib/libcorange.a
+	LFLAGS= $(LIBS) -lcorange -lGL -lSDLmain -lSDL
+	CORANGE= ./lib/libcorange.a
+	CORANGE_LIB= ../../libcorange.a
 endif
 
 ifeq ($(findstring Darwin,$(PLATFORM)),Darwin)
-	OUT=libcorange.so
-	CFLAGS= $(INCS) -std=gnu99 -Wall -Werror -Wno-unused -O3 -g -fPIC
-	LFLAGS= -lGL -lSDLmain -lSDL -shared
-	OBJ_FILES= $(addprefix obj/,$(notdir $(C_FILES:.c=.o)))
+	OUT=$(DEMO)
+	LFLAGS= $(LIBS) -lcorange -lGL -lSDLmain -lSDL
+	CORANGE= ./lib/libcorange.a
+	CORANGE_LIB= ../../libcorange.a
 endif
 
 ifeq ($(findstring MINGW,$(PLATFORM)),MINGW)
 	OUT=$(DEMO).exe
-	LFLAGS= ../../corange.res -L./ -L../../lib -lcorange -lmingw32 -lSDLmain -lSDL -lopengl32
-	CORANGE_LIB= ../../corange.dll
-	CORANGE_TAR= ./corange.dll
+	LFLAGS= $(LIBS) -L../../lib ../../corange.res -lcorange -lmingw32 -lSDLmain -lSDL -lopengl32
+	CORANGE= ./lib/corange.lib
+	CORANGE_LIB= ../../corange.lib
 endif
 
-$(OUT): $(OBJ_FILES) corange
+$(OUT): $(OBJ_FILES) $(CORANGE)
 	$(CC) -g $(OBJ_FILES) $(LFLAGS) -o $@
 
 obj/%.o: src/%.c | obj
@@ -39,9 +40,12 @@ obj/%.o: src/%.c | obj
 obj:
 	mkdir obj
 	
-corange: $(CORANGE_LIB)
-	cp $(CORANGE_LIB) $(CORANGE_TAR)
+$(CORANGE): $(CORANGE_LIB) | lib
+	cp $(CORANGE_LIB) $(CORANGE)
+	
+lib:
+	mkdir lib
 	
 clean:
-	rm $(OBJ_FILES)	
+	rm $(OUT) $(CORANGE) $(OBJ_FILES)
 

@@ -1,3 +1,6 @@
+renderers
+renderers.exe
+lib/*.*
 *~
 *.o
 stdout.txt
