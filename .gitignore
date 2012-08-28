@@ -1,3 +1,8 @@
+corange.dll
+corange.lib
+corange.res
+libcorange.so
+libcorange.a
 *~
 *.o
 stdout.txt

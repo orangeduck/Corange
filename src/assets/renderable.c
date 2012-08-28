@@ -261,8 +261,6 @@ void renderable_surface_delete(renderable_surface* s) {
 renderable* bmf_load_file(char* filename) {
 
   renderable* r = malloc(sizeof(renderable));
-  r->material = asset_hndl_new(P("$CORANGE/resources/basic.mat"));
-  r->is_rigged = false;
   
   SDL_RWops* file = SDL_RWFromFile(filename, "rb");
   
@@ -285,19 +283,29 @@ renderable* bmf_load_file(char* filename) {
     error("Only version 1 of bmf format supported. Recieved file of version %i.", version);
   }
   
+  SDL_RWread(file, &r->is_rigged, 1, 1);
+  
+  int mat_len;
+  SDL_RWread(file, &mat_len, 4, 1);
+  SDL_RWread(file, &r->material.path.ptr, mat_len, 1);
+  r->material.path.ptr[mat_len] = '\0';
+  
   SDL_RWread(file, &r->num_surfaces, 4, 1);
   
   r->surfaces = malloc(sizeof(renderable_surface*) * r->num_surfaces);
+  
+  const int vertsize = r->is_rigged ? 24 : 18;
   
   for(int i = 0; i < r->num_surfaces; i++) {
     renderable_surface* s = malloc(sizeof(renderable_surface));
     
     SDL_RWread(file, &s->num_verticies, 4, 1);
-    float* vert_data = malloc(sizeof(float) * 18 * s->num_verticies);
-    SDL_RWread(file, vert_data, sizeof(float) * 18 * s->num_verticies, 1);
+    
+    float* vert_data = malloc(sizeof(float) * vertsize * s->num_verticies);
+    SDL_RWread(file, vert_data, sizeof(float) * vertsize * s->num_verticies, 1);
     glGenBuffers(1, &s->vertex_vbo);
     glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * s->num_verticies * 18, vert_data, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * s->num_verticies * vertsize, vert_data, GL_STATIC_DRAW);
     free(vert_data);
     
     int num_indicies;
@@ -329,13 +337,21 @@ void bmf_save_file(renderable* r, char* filename) {
   
   SDL_RWwrite(file, "BMF", 3, 1);
   SDL_RWwrite(file, &version, 4, 1);
+  SDL_RWwrite(file, &r->is_rigged, 1, 1);
+  
+  int mat_len = strlen(r->material.path.ptr);
+  SDL_RWwrite(file, &mat_len, 4, 1);
+  SDL_RWwrite(file, r->material.path.ptr, mat_len, 1);
+  
   SDL_RWwrite(file, &r->num_surfaces, 4, 1);
+  
+  const int vertsize = r->is_rigged ? 24 : 18;
   
   for(int i = 0; i < r->num_surfaces; i++) {
     renderable_surface* s = r->surfaces[i];
     
     SDL_RWwrite(file, &s->num_verticies, 4, 1);
-    int vert_data_size = sizeof(float) * 18 * s->num_verticies;
+    int vert_data_size = sizeof(float) * vertsize * s->num_verticies;
     float* vert_data = malloc(vert_data_size);
     glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
     glGetBufferSubData(GL_ARRAY_BUFFER, 0, vert_data_size, vert_data);

@@ -1,8 +1,10 @@
 /**
 *** :: Renderable ::
 ***
-***   Some model or mesh loaded into vertex buffers
+***   A model or mesh loaded into vertex buffers
 ***   can be rigged or not depending on file type
+***
+***   Load using .bmf format for best performance.
 ***
 **/
 
@@ -20,7 +22,6 @@ typedef struct {
 typedef struct {
   GLuint vertex_vbo;
   GLuint triangle_vbo;
-  
   int num_verticies;
   int num_triangles;
 } renderable_surface;
