@@ -70,3 +70,41 @@ void camera_control_orbit(camera* c, SDL_Event e) {
   c->target = vec3_add(c->target, translation);
 
 }
+
+void camera_control_freecam(camera* c, float timestep) {
+
+  Uint8* kbstate = SDL_GetKeyState(NULL);
+  if (kbstate[SDLK_w] || kbstate[SDLK_s]) {
+    
+    vec3 cam_dir = vec3_normalize(vec3_sub(c->target, c->position));
+    
+    const float speed = 100 * timestep;
+    
+    if (kbstate[SDLK_w]) {
+      c->position = vec3_add(c->position, vec3_mul(cam_dir, speed));
+    }
+    if (kbstate[SDLK_s]) {
+      c->position = vec3_sub(c->position, vec3_mul(cam_dir, speed));
+    }
+    
+    c->target = vec3_add(c->position, cam_dir);
+  }
+  
+  int mouse_x, mouse_y;
+  Uint8 mstate = SDL_GetRelativeMouseState(&mouse_x, &mouse_y);
+  if(mstate & SDL_BUTTON(1)){
+  
+    float a1 = -(float)mouse_x * 0.005;
+    float a2 = (float)mouse_y * 0.005;
+    
+    vec3 cam_dir = vec3_normalize(vec3_sub(c->target, c->position));
+    
+    cam_dir.y += -a2;
+    vec3 side_dir = vec3_normalize(vec3_cross(cam_dir, vec3_new(0,1,0)));
+    cam_dir = vec3_add(cam_dir, vec3_mul(side_dir, -a1));
+    cam_dir = vec3_normalize(cam_dir);
+    
+    c->target = vec3_add(c->position, cam_dir);
+  }
+
+}

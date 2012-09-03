@@ -449,7 +449,11 @@ static void deferred_renderer_setup_camera() {
 }
 
 void deferred_renderer_begin() {
-
+  
+  if (CAMERA == NULL) { error("Camera Not Set"); };
+  if (SHADOW_LIGHT == NULL) { error("Shadow Light Not Set"); };
+  if (SHADOW_TEX == NULL) { error("Shadow Texture Not Set"); };
+  
   glBindFramebuffer(GL_FRAMEBUFFER, fbo);
   
   deferred_renderer_setup_camera();

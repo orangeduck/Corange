@@ -130,8 +130,12 @@ material* mat_load_file(char* filename) {
   char line[1024];
   while(SDL_RWreadline(file, line, 1024)) {
     
+    if (line[0] == '#') continue;
+    
     char type[512]; char name[512]; char value[512];
-    sscanf(line, "%511s %511s = %511s", type, name, value);
+    int matches = sscanf(line, "%511s %511s = %511s", type, name, value);
+    
+    if (matches != 3) continue;
     
     if (strcmp(type, "submaterial") == 0) {
       

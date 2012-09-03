@@ -287,8 +287,13 @@ renderable* bmf_load_file(char* filename) {
   
   int mat_len;
   SDL_RWread(file, &mat_len, 4, 1);
-  SDL_RWread(file, &r->material.path.ptr, mat_len, 1);
-  r->material.path.ptr[mat_len] = '\0';
+  
+  fpath material_path;
+  SDL_RWread(file, material_path.ptr, mat_len, 1);
+  material_path.ptr[mat_len] = '\0';
+  
+  r->material = asset_hndl_new_load(material_path);
+  
   
   SDL_RWread(file, &r->num_surfaces, 4, 1);
   
