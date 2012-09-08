@@ -335,6 +335,8 @@ void renderers_update() {
   camera* cam = entity_get("camera");
   light* sun = entity_get("sun");
   
+  camera_control_joyorbit(cam, frame_time());
+  
   /*
   if (keystate & SDL_BUTTON(3)) {
     

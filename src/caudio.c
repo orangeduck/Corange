@@ -68,7 +68,7 @@ static void audio_mix(void* unused, char* stream, int stream_size) {
 
 void audio_init() {
   
-  int error = SDL_Init(SDL_INIT_AUDIO);
+  int error = SDL_InitSubSystem(SDL_INIT_AUDIO);
   if (error == -1) {
     error("Cannot start SDL audio!");
   }  
