@@ -18,10 +18,12 @@ void graphics_finish();
 void graphics_set_vsync(bool vsync);
 void graphics_set_multisamples(int samples);
 void graphics_set_fullscreen(bool fullscreen);
+void graphics_set_antialiasing(int quality);
 
 bool graphics_get_vsync();
 int graphics_get_multisamples();
 bool graphics_get_fullscreen();
+int graphics_get_antialiasing();
 
 void graphics_viewport_restart();
 void graphics_viewport_set_title(char* title);

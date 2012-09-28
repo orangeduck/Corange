@@ -14,6 +14,7 @@
 
 #include "cengine.h"
 #include "assets/texture.h"
+#include "assets/shader.h"
 
 #include "entities/camera.h"
 #include "entities/light.h"
@@ -27,16 +28,19 @@ void deferred_renderer_finish();
 void deferred_renderer_set_camera(camera* cam);
 void deferred_renderer_set_shadow_light(light* l);
 void deferred_renderer_set_shadow_texture(texture* t);
-
 void deferred_renderer_set_color_correction(asset_hndl t);
 
 void deferred_renderer_add_light(light* l);
 void deferred_renderer_remove_light(light* l);
 
+void deferred_renderer_enable_skydome();
+void deferred_renderer_disable_skydome();
+
 void deferred_renderer_begin();
 void deferred_renderer_end();
 
 void deferred_renderer_render_static(static_object* s);
+void deferred_renderer_render_static_with(static_object* s, shader_program* p);
 void deferred_renderer_render_animated(animated_object* ao);
 void deferred_renderer_render_light(light* l);
 void deferred_renderer_render_axis(mat4 world);

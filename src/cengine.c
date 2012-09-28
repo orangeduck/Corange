@@ -216,10 +216,10 @@ char* frame_rate_string() {
 typedef char type_string[MAX_TYPE_LEN];
 typedef size_t type_size;
 
-type_string type_names[MAX_NUM_TYPES];
-type_size type_sizes[MAX_NUM_TYPES];
+static type_string type_names[MAX_NUM_TYPES];
+static type_size type_sizes[MAX_NUM_TYPES];
 
-int type_index = 0;
+static int type_index = 0;
 
 int type_find(char* type, size_t size) {
   

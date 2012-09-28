@@ -26,6 +26,11 @@ static asset_hndl MAT_TONEMAP;
 static asset_hndl MAT_POST0;
 static asset_hndl MAT_POST1;
 
+/* Skydome */
+
+static asset_hndl SKYDOME;
+static asset_hndl MAT_SKYDOME;
+
 /* Attributes */
 static int NORMAL;
 static int TANGENT;
@@ -95,6 +100,8 @@ static float EXPOSURE;
 static float EXPOSURE_SPEED;
 static float EXPOSURE_TARGET;
 
+static bool SKYDOME_ENABLED;
+
 void deferred_renderer_init() {
   
   num_lights = 0;
@@ -122,9 +129,14 @@ void deferred_renderer_init() {
   MAT_POST1 = asset_hndl_new(P("$CORANGE/shaders/deferred/post1.mat"));
   MAT_UI = asset_hndl_new(P("$CORANGE/shaders/deferred/ui.mat"));
   
-  
   shader_program* program_static = material_get_entry(asset_hndl_ptr(MAT_STATIC), 0)->program;
   shader_program* program_animated = material_get_entry(asset_hndl_ptr(MAT_ANIMATED), 0)->program;
+  
+  /* Skydome */
+  
+  SKYDOME = asset_hndl_new_load(P("$CORANGE/resources/skydome.obj"));
+  MAT_SKYDOME = asset_hndl_new(P("$CORANGE/shaders/deferred/skydome.mat"));
+  SKYDOME_ENABLED = true;
   
   /* Attributes */
   
@@ -336,6 +348,14 @@ void deferred_renderer_finish() {
   
   folder_unload(P("$CORANGE/shaders/deferred/"));
   
+}
+
+void deferred_renderer_enable_skydome() {
+  SKYDOME_ENABLED = true;
+}
+
+void deferred_renderer_disable_skydome() {
+  SKYDOME_ENABLED = false;
 }
 
 void deferred_renderer_add_light(light* l) {
@@ -695,6 +715,109 @@ void deferred_renderer_end() {
   
   SDL_GL_CheckError();
   
+  /* Render Atmosphereic Effects */
+  
+  if (SKYDOME_ENABLED) {
+  
+    glBindFramebuffer(GL_FRAMEBUFFER, hdr_fbo);
+    
+    SDL_GL_CheckError();
+    
+    glViewport(0, 0, graphics_viewport_width(), graphics_viewport_height());
+    
+    SDL_GL_CheckError();
+    
+    glDepthMask(GL_FALSE);
+    SDL_GL_CheckError();
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    
+    SDL_GL_CheckError();
+    
+    shader_program* program_skydome = material_get_entry(asset_hndl_ptr(MAT_SKYDOME), 0)->program;
+    
+    glUseProgram(shader_program_handle(program_skydome));
+    
+    SDL_GL_CheckError();
+    
+    mat4 skydome_world = mat4_world(CAMERA->position, vec3_new(10, 10, 10), quaternion_id());
+    
+    mat4_to_array(skydome_world, WORLD_MATRIX);
+    
+    SDL_GL_CheckError();
+    
+    GLint world_matrix_u = glGetUniformLocation(shader_program_handle(program_skydome), "world_matrix");
+    SDL_GL_CheckError();
+    glUniformMatrix4fv(world_matrix_u, 1, 0, WORLD_MATRIX);
+
+    SDL_GL_CheckError();
+    
+    GLint proj_matrix_u = glGetUniformLocation(shader_program_handle(program_skydome), "proj_matrix");
+    glUniformMatrix4fv(proj_matrix_u, 1, 0, PROJ_MATRIX);
+    
+    SDL_GL_CheckError();
+    
+    GLint view_matrix_u = glGetUniformLocation(shader_program_handle(program_skydome), "view_matrix");
+    glUniformMatrix4fv(view_matrix_u, 1, 0, VIEW_MATRIX);
+    
+    SDL_GL_CheckError();
+    
+    vec3 light_direction_val = vec3_normalize(vec3_sub(light_position[0], light_target[0]));
+    GLint light_direction_u = glGetUniformLocation(shader_program_handle(program_skydome), "light_direction");
+    glUniform3f(light_direction_u, light_direction_val.x, light_direction_val.y, light_direction_val.z);
+    
+    SDL_GL_CheckError();
+    
+    GLint camera_position_u = glGetUniformLocation(shader_program_handle(program_skydome), "camera_position");
+    glUniform3f(camera_position_u, CAMERA->position.x, CAMERA->position.y, CAMERA->position.z);
+    
+    glActiveTexture(GL_TEXTURE0 + 0 );
+    glBindTexture(GL_TEXTURE_2D, depth_texture);
+    glEnable(GL_TEXTURE_2D);
+    glUniform1i(glGetUniformLocation(shader_program_handle(program_skydome), "depth_texture"), 0);
+    
+    SDL_GL_CheckError();
+    
+    renderable* skybox_r = asset_hndl_ptr(SKYDOME);
+    renderable_surface* s = skybox_r->surfaces[0];
+    
+    GLsizei stride = sizeof(float) * 18;
+    
+    glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
+    
+    SDL_GL_CheckError();
+    
+    glVertexPointer(3, GL_FLOAT, stride, (void*)0);
+    glEnableClientState(GL_VERTEX_ARRAY);
+    
+    SDL_GL_CheckError();
+    
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
+      glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
+    
+    SDL_GL_CheckError();
+    
+    glDisableClientState(GL_VERTEX_ARRAY);
+    
+    SDL_GL_CheckError();
+    
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    
+    glActiveTexture(GL_TEXTURE0 + 0 );
+    glDisable(GL_TEXTURE_2D);
+    
+    SDL_GL_CheckError();
+    
+    glDisable(GL_BLEND);
+    glDepthMask(GL_TRUE);
+    
+    SDL_GL_CheckError();
+    
+    glUseProgram(0);
+  
+  }
+  
   /* Render HDR to LDR buffer */
   
   glBindFramebuffer(GL_FRAMEBUFFER, ldr_back_fbo);
@@ -886,7 +1009,7 @@ void deferred_renderer_end() {
   
   glUniform1i(glGetUniformLocation(screen_post1_handle, "width"), graphics_viewport_width());
   glUniform1i(glGetUniformLocation(screen_post1_handle, "height"), graphics_viewport_height());
-  glUniform1i(glGetUniformLocation(screen_post1_handle, "aa_type"), 1);
+  glUniform1i(glGetUniformLocation(screen_post1_handle, "aa_type"), graphics_get_antialiasing());
   
 	glBegin(GL_QUADS);
 		glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0, -1.0,  0.0f);
@@ -925,6 +1048,13 @@ void deferred_renderer_set_exposure(float exposure) {
 }
 
 void deferred_renderer_render_static(static_object* so) {
+  
+  shader_program* program_static = material_get_entry(asset_hndl_ptr(MAT_STATIC), 0)->program;
+  deferred_renderer_render_static_with(so, program_static);
+  
+}
+
+void deferred_renderer_render_static_with(static_object* so, shader_program* p) {
 
   mat4 r_world_matrix = mat4_world( so->position, so->scale, so->rotation );
   mat4_to_array(r_world_matrix, WORLD_MATRIX);
@@ -939,13 +1069,11 @@ void deferred_renderer_render_static(static_object* so) {
     
     renderable_surface* s = r->surfaces[i];
     
-    shader_program* program_static = material_get_entry(asset_hndl_ptr(MAT_STATIC), 0)->program;
-    
-    GLuint program_handle = shader_program_handle(program_static);
+    GLuint program_handle = shader_program_handle(p);
     glUseProgram(program_handle);
     
     int mat_id = min(i, ((material*)asset_hndl_ptr(r->material))->num_entries-1);
-    deferred_renderer_use_material_entry(material_get_entry(asset_hndl_ptr(r->material), mat_id), program_static);
+    deferred_renderer_use_material_entry(material_get_entry(asset_hndl_ptr(r->material), mat_id), p);
     
     GLsizei stride = sizeof(float) * 18;
     
@@ -982,7 +1110,7 @@ void deferred_renderer_render_static(static_object* so) {
     glUseProgram(0);
 
   }
-  
+
 }
 
 #define MAX_BONES 32

@@ -38,6 +38,7 @@ static void swap_renderer() {
     deferred_renderer_set_shadow_texture( shadow_mapper_depth_texture() );
     deferred_renderer_add_light(sun);
     deferred_renderer_add_light(backlight);
+    deferred_renderer_disable_skydome();
     
     use_deferred = true;
     

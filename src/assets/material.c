@@ -135,7 +135,7 @@ material* mat_load_file(char* filename) {
     char type[512]; char name[512]; char value[512];
     int matches = sscanf(line, "%511s %511s = %511s", type, name, value);
     
-    if (matches != 3) continue;
+    debug("Line: '%s'", line);
     
     if (strcmp(type, "submaterial") == 0) {
       
@@ -147,6 +147,8 @@ material* mat_load_file(char* filename) {
       me = material_add_entry(m);
       continue;
     }
+    
+    if (matches != 3) continue;
     
     material_item mi;
     int type_id;

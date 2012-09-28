@@ -32,6 +32,7 @@ void main() {
   vec3 bloom = bloom_amount * bloom_s.a * pow3(bloom_s.rgb, bloom_color);
   
 	gl_FragColor.rgb = bloom + bokeh_dof(width, height, ldr_texture, depth_texture, random_texture, gl_TexCoord[0].xy, -1.0);
+	//gl_FragColor.rgb = bloom + texture2D(ldr_texture, gl_TexCoord[0].xy).rgb;
 	gl_FragColor.a = 1.0;
   
 } 

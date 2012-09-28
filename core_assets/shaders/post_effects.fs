@@ -117,9 +117,10 @@ vec3 bokeh_dof(int width, int height, sampler2D screen, sampler2D screendepth, s
   
   vec2 texel = vec2(1.0/width,1.0/height);
   
-  const float focalLength = 1.0;
-  const float fstop = 10.0;
-  const float CoC = 0.03;
+  const float focalLength = 10.0;
+  const float fstop = 200.0;
+  const float CoC = 0.003;
+  const float fblur = 5.0;
   
 	float depth = texture2D(screendepth, coords).x;
   float centerDepth = texture2D(screendepth, vec2(0.5, 0.5)).x;
@@ -138,10 +139,8 @@ vec3 bokeh_dof(int width, int height, sampler2D screen, sampler2D screendepth, s
   
 	vec2 noise = texture2D(random, coords * 100 * blur).rg;
 	
-  const float maxblur = 3.0;
-  
 	// getting blur x and y step factor
-  vec2 offset = noise * texel * blur * maxblur;
+  vec2 offset = noise * texel * blur * fblur;
   
 	// calculation of final color
   const int samples = 3; //samples on the first ring

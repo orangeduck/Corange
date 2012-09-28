@@ -19,6 +19,7 @@ static int window_flags;
 static bool window_vsync;
 static int window_multisamples;
 static int window_multisamplesbuffs;
+static int window_antialiasing;
 
 static void graphics_viewport_start() {
   
@@ -51,6 +52,7 @@ void graphics_init() {
   window_vsync = 1;
   window_multisamples = 4;
   window_multisamplesbuffs = 1;
+  window_antialiasing = 1;
   
   graphics_viewport_set_title("Corange");
   graphics_viewport_start();
@@ -60,6 +62,14 @@ void graphics_init() {
   SDL_GL_LoadExtensions();
 
   SDL_WM_UseResourceIcon();
+}
+
+void graphics_set_antialiasing(int quality) {
+  window_antialiasing = quality;
+}
+
+int graphics_get_antialiasing() {
+  return window_antialiasing;
 }
 
 void graphics_finish() {
