@@ -105,7 +105,7 @@ void main() {
     diffuse = mix(diffuse, env, env_amount);
   } 
   
-  vec3 final = to_gamma(diffuse + ambient + specular);  
+  vec3 final = diffuse + ambient + specular;  
   gl_FragColor.rgb = final;
   
 } 

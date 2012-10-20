@@ -17,7 +17,7 @@ varying vec4 screen_position;
 const int nsamples = 2;
 const float fsamples = 2.0;
 
-const vec3 inv_wavelength = vec3(1.0/pow(0.620, 4.0), 1.0/pow(0.495, 4.0),1.0/pow(0.475, 4.0));
+const vec3 inv_wavelength = vec3(1.0/ pow(0.620, 4.0), 1.0/ pow(0.495, 4.0),1.0/ pow(0.475, 4.0));
 
 const float outer_radius = 10.25;
 const float inner_radius = 10.00;

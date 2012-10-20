@@ -11,6 +11,7 @@ uniform sampler3D lut;
 
 /* Headers */
 
+vec3 to_gamma(vec3 color);
 vec3 color_correction(vec3 color, sampler3D lut, int lut_size);
 vec3 fxaa(sampler2D tex, vec2 uvs, int width, int height);
 vec3 fxaa_unsharp(sampler2D tex, vec2 uvs, int width, int height);
@@ -48,6 +49,7 @@ void main() {
   vec3 bloom = BLOOM_AMOUNT * bloom_s.a * pow3(bloom_s.rgb, BLOOM_COLOR);
   
   color = (color + bloom) * mix(vignetting, vec3(1.0,1.0,1.0), 0.5);
+  color = to_gamma(color);
   
 	gl_FragColor.rgb = color_correction(color, lut, 64);
 	gl_FragColor.a = 1.0;

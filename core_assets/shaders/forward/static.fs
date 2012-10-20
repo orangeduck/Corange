@@ -42,7 +42,6 @@ varying float depth;
 
 float shadow_amount_soft_pcf25(vec4 light_pos, sampler2D light_depth, float hardness);
 
-vec3 to_gamma(vec3 color);
 vec3 from_gamma(vec3 color);
 vec3 swap_red_green_inv(vec3 color);
 
@@ -109,7 +108,7 @@ void main() {
   float env_amount = (1.0 - dot(camera_vector, normal)) * spec.r * env_amount;
   diffuse = mix(diffuse, env, env_amount);
   
-  vec3 final = to_gamma(diffuse + ambient + specular);
+  vec3 final = diffuse + ambient + specular;
   //final = apply_fog_blue(final, position, camera_position);
   
   gl_FragColor.rgb = final;
