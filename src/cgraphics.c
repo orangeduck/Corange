@@ -41,7 +41,7 @@ static void graphics_viewport_start() {
 
 void graphics_init() {
 
-  int error = SDL_Init(SDL_INIT_VIDEO);
+  int error = SDL_InitSubSystem(SDL_INIT_VIDEO);
   if (error == -1) {
     error("Cannot initialize SDL video!");
   }

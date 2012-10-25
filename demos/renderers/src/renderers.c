@@ -336,6 +336,8 @@ void renderers_update() {
   camera* cam = entity_get("camera");
   light* sun = entity_get("sun");
   
+  camera_control_joyorbit(cam, frame_time());
+  
   /*
   if (keystate & SDL_BUTTON(3)) {
     
@@ -518,7 +520,7 @@ int main(int argc, char **argv) {
     
     while(SDL_PollEvent(&event)) {
       switch(event.type){
-      case SDL_KEYDOWN:
+      case SDL_KEYDOWN: break;
       case SDL_KEYUP:
         if (event.key.keysym.sym == SDLK_ESCAPE) { running = 0; }
         if (event.key.keysym.sym == SDLK_PRINT) { graphics_viewport_screenshot(); }

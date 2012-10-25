@@ -890,7 +890,8 @@ void deferred_renderer_end() {
   
   float average = (float)(color[0] + color[1] + color[2]) / (3.0 * 255.0);
   
-  EXPOSURE += (EXPOSURE_TARGET - average) * EXPOSURE_SPEED;
+  //EXPOSURE += (EXPOSURE_TARGET - average) * EXPOSURE_SPEED;
+  EXPOSURE = 1.0;
   
   SDL_GL_CheckError();
   

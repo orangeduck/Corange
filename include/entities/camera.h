@@ -9,6 +9,7 @@
 #define camera_h
 
 #include "cengine.h"
+#include "cjoystick.h"
 
 typedef struct {
   vec3 position;
@@ -27,5 +28,6 @@ mat4 camera_view_proj_matrix(camera* c, float aspect_ratio);
 
 void camera_control_orbit(camera* c, SDL_Event e);
 void camera_control_freecam(camera* c, float timestep);
+void camera_control_joyorbit(camera* c, float timestep);
 
 #endif

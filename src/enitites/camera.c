@@ -38,7 +38,8 @@ mat4 camera_view_proj_matrix(camera* c, float aspect_ratio) {
 
 void camera_control_orbit(camera* c, SDL_Event e) {
   
-  float a1, a2;
+  float a1 = 0;
+  float a2 = 0;
   vec3 axis;
   
   vec3 translation = c->target;
@@ -46,6 +47,7 @@ void camera_control_orbit(camera* c, SDL_Event e) {
   c->target = vec3_sub(c->target, translation);
   
   switch(e.type) {
+    
     case SDL_MOUSEMOTION:
       if (e.motion.state & SDL_BUTTON(1)) {
         a1 = e.motion.xrel * -0.005;
@@ -64,6 +66,7 @@ void camera_control_orbit(camera* c, SDL_Event e) {
         c->position = vec3_add(c->position, vec3_normalize(c->position));
       }
     break;
+
   }
   
   c->position = vec3_add(c->position, translation);
@@ -74,6 +77,7 @@ void camera_control_orbit(camera* c, SDL_Event e) {
 void camera_control_freecam(camera* c, float timestep) {
 
   Uint8* kbstate = SDL_GetKeyState(NULL);
+  
   if (kbstate[SDLK_w] || kbstate[SDLK_s]) {
     
     vec3 cam_dir = vec3_normalize(vec3_sub(c->target, c->position));
@@ -92,7 +96,7 @@ void camera_control_freecam(camera* c, float timestep) {
   
   int mouse_x, mouse_y;
   Uint8 mstate = SDL_GetRelativeMouseState(&mouse_x, &mouse_y);
-  if(mstate & SDL_BUTTON(1)){
+  if (mstate & SDL_BUTTON(1)) {
   
     float a1 = -(float)mouse_x * 0.005;
     float a2 = (float)mouse_y * 0.005;
@@ -106,5 +110,32 @@ void camera_control_freecam(camera* c, float timestep) {
     
     c->target = vec3_add(c->position, cam_dir);
   }
+}
+
+void camera_control_joyorbit(camera* c, float timestep) {
+  
+  if (joystick_count() == 0) return;
+  
+  SDL_Joystick* mainstick = joystick_get(0);
+  int x_move = SDL_JoystickGetAxis(mainstick, 0);
+  int y_move = SDL_JoystickGetAxis(mainstick, 1);
+  
+  /* Dead Zone */
+  if (abs(x_move) < 10000) { x_move = 0; };
+  if (abs(y_move) < 10000) { y_move = 0; };
+  
+  float a1 = (x_move / 32768.0) * -0.05;
+  float a2 = (y_move / 32768.0) * 0.05;
+  
+  vec3 translation = c->target;
+  c->position = vec3_sub(c->position, translation);
+  c->target = vec3_sub(c->target, translation);
+  
+  c->position = mat3_mul_vec3(mat3_rotation_y( a1 ), c->position );
+  vec3 axis = vec3_normalize(vec3_cross( vec3_sub(c->position, c->target) , vec3_new(0,1,0) ));
+  c->position = mat3_mul_vec3(mat3_rotation_axis_angle(axis, a2 ), c->position );
+  
+  c->position = vec3_add(c->position, translation);
+  c->target = vec3_add(c->target, translation);
 
 }

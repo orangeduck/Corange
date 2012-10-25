@@ -3,7 +3,6 @@
 uniform vec3 light_direction;
 uniform sampler2D depth_texture;
 
-varying float alpha;
 varying vec3 direction;
 varying vec3 m_color;
 varying vec3 r_color;
@@ -29,5 +28,5 @@ void main() {
 	gl_FragColor.rgb = rayleigh_phase(cos2a) * r_color + 
                      mei_phase(cosa, cos2a) * m_color;
   gl_FragColor.rgb = max(gl_FragColor.rgb, vec3(0.1, 0.1, 0.1));
-	gl_FragColor.a = depth * alpha;
+	gl_FragColor.a = pow(depth, 4.0);
 }

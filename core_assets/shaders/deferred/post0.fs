@@ -31,7 +31,10 @@ void main() {
   vec4 bloom_s = texture2DLod(ldr_texture, gl_TexCoord[0].xy, bloom_size);
   vec3 bloom = bloom_amount * bloom_s.a * pow3(bloom_s.rgb, bloom_color);
   
-	gl_FragColor.rgb = bloom + bokeh_dof(width, height, ldr_texture, depth_texture, random_texture, gl_TexCoord[0].xy, -1.0);
+  //const float focal_depth = 0.0015;
+  const float focal_depth = 0.0;
+  
+	gl_FragColor.rgb = bloom + bokeh_dof(width, height, ldr_texture, depth_texture, random_texture, gl_TexCoord[0].xy, focal_depth);
 	//gl_FragColor.rgb = bloom + texture2D(ldr_texture, gl_TexCoord[0].xy).rgb;
 	gl_FragColor.a = 1.0;
   

@@ -24,6 +24,7 @@
 #include "cengine.h"
 #include "cgraphics.h"
 #include "caudio.h"
+#include "cjoystick.h"
 
 /* Corange Functions */
 

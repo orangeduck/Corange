@@ -8,7 +8,6 @@ uniform vec3 light_direction;
 
 uniform vec3 camera_position;
 
-varying float alpha;
 varying vec3 direction;
 varying vec3 m_color;
 varying vec3 r_color;
@@ -22,7 +21,7 @@ const vec3 inv_wavelength = vec3(1.0/ pow(0.620, 4.0), 1.0/ pow(0.495, 4.0),1.0/
 const float outer_radius = 10.25;
 const float inner_radius = 10.00;
 
-const vec3 esun = vec3(100.0, 100.0, 100.0);
+const vec3 esun = vec3(300.0, 300.0, 300.0);
 const float kr = 0.0010;
 const float km = 0.0010;
 
@@ -52,7 +51,7 @@ void main() {
 	vec3 position;
   position.x = gl_Vertex.x * 4.0 * (outer_radius - inner_radius);
   position.z = gl_Vertex.z * 4.0 * (outer_radius - inner_radius);
-  position.y = inner_radius + (gl_Vertex.y * (outer_radius - inner_radius));
+  position.y = inner_radius + (abs(gl_Vertex.y) * (outer_radius - inner_radius));
   
 	vec3 ray = position - cam_pos;
 	float far = length(ray);
@@ -85,7 +84,6 @@ void main() {
 	r_color = front_color * (inv_wavelength * kresun);
   
   direction = cam_pos - position;
-  alpha = clamp((gl_Vertex.y + 0.3) * 10, 0, 1);
   
   screen_position = proj_matrix * view_matrix * world_matrix * gl_Vertex;
 	gl_Position = screen_position;

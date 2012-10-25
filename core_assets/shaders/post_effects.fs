@@ -113,21 +113,21 @@ vec3 bokeh_color(sampler2D screen, vec2 coords, vec2 texel, float blur) {
 	return col + mix(vec3(0.0, 0.0, 0.0), col, thresh * blur);
 }
 
-vec3 bokeh_dof(int width, int height, sampler2D screen, sampler2D screendepth, sampler2D random, vec2 coords, float focalDepth) {
+vec3 bokeh_dof(int width, int height, sampler2D screen, sampler2D screendepth, sampler2D random, vec2 coords, float focal_depth) {
   
   vec2 texel = vec2(1.0/width,1.0/height);
   
-  const float focalLength = 10.0;
-  const float fstop = 200.0;
-  const float CoC = 0.003;
-  const float fblur = 5.0;
+  const float focal_length = 0.5; // Lower is wider range of sharp focus
+  const float fstop = 1000.0; // Lower increases over exposure
+  const float CoC = 0.003; // Just multiplied by fstop
+  const float fblur = 30.0;
   
 	float depth = texture2D(screendepth, coords).x;
-  float centerDepth = texture2D(screendepth, vec2(0.5, 0.5)).x;
-	float fDepth = focalDepth > 0.0 ? focalDepth : centerDepth;
+  float center_depth = texture2D(screendepth, vec2(0.5, 0.5)).x;
+	float focus_depth = focal_depth > 0.0 ? focal_depth : center_depth;
   
-  float f = focalLength; //focal length in mm
-  float d = fDepth * 1000.0; //focal plane in mm
+  float f = focal_length; //focal length in mm
+  float d = focus_depth * 1000.0; //focal plane in mm
   float o = depth * 1000.0; //depth in mm
   
   float a = (o*f)/(o-f); 
@@ -135,7 +135,7 @@ vec3 bokeh_dof(int width, int height, sampler2D screen, sampler2D screendepth, s
   float c = (d-f)/(d * fstop * CoC); 
   
   float blur = abs(a-b)*c;
-	blur = clamp(blur,0.0,1.0);
+	blur = clamp(blur, 0.0, 1.0);
   
 	vec2 noise = texture2D(random, coords * 100 * blur).rg;
 	
