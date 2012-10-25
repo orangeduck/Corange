@@ -519,7 +519,7 @@ int main(int argc, char **argv) {
     
     while(SDL_PollEvent(&event)) {
       switch(event.type){
-      case SDL_KEYDOWN:
+      case SDL_KEYDOWN: break;
       case SDL_KEYUP:
         if (event.key.keysym.sym == SDLK_ESCAPE) { running = 0; }
         if (event.key.keysym.sym == SDLK_PRINT) { graphics_viewport_screenshot(); }
