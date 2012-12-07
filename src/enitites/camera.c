@@ -78,20 +78,30 @@ void camera_control_freecam(camera* c, float timestep) {
 
   Uint8* kbstate = SDL_GetKeyState(NULL);
   
-  if (kbstate[SDLK_w] || kbstate[SDLK_s]) {
+  if (kbstate[SDLK_w] || kbstate[SDLK_s] || kbstate[SDLK_a] || kbstate[SDLK_d]) {
     
     vec3 cam_dir = vec3_normalize(vec3_sub(c->target, c->position));
-    
+    vec3 side_dir = vec3_normalize(vec3_cross(cam_dir, vec3_new(0,1,0)));
+
     const float speed = 100 * timestep;
     
     if (kbstate[SDLK_w]) {
       c->position = vec3_add(c->position, vec3_mul(cam_dir, speed));
+      c->target = vec3_add(c->target, vec3_mul(cam_dir, speed));
     }
     if (kbstate[SDLK_s]) {
       c->position = vec3_sub(c->position, vec3_mul(cam_dir, speed));
+      c->target = vec3_sub(c->target, vec3_mul(cam_dir, speed));
+    }
+    if (kbstate[SDLK_d]) {
+      c->position = vec3_add(c->position, vec3_mul(side_dir, speed));
+      c->target = vec3_add(c->target, vec3_mul(side_dir, speed));
+    }
+    if (kbstate[SDLK_a]) {
+      c->position = vec3_sub(c->position, vec3_mul(side_dir, speed));
+      c->target = vec3_sub(c->target, vec3_mul(side_dir, speed));
     }
     
-    c->target = vec3_add(c->position, cam_dir);
   }
   
   int mouse_x, mouse_y;

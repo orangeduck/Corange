@@ -14,6 +14,8 @@ void SDL_PathFullName(char* dst, const char* path);
 void SDL_PathFileName(char* dst, const char* path);
 void SDL_PathFileExtension(char* dst, const char* path);
 void SDL_PathFileLocation(char* dst, const char* path);
+void SDL_PathRelative(char* dst, const char* path);
+void SDL_PathForwardSlashes(char* path);
 
 char* SDL_GetWorkingDir();
 void SDL_SetWorkingDir(char* dir);

@@ -213,6 +213,29 @@ void ui_elem_add_event_cast(char* name, void event_func(ui_elem* elem, SDL_Event
   
 }
 
+void ui_elem_remove_event(char* name) {
+  
+  for(int i = 0; i < num_ui_events; i++) {
+    if (strcmp(ui_events[i].name, name) == 0) {
+      free(ui_events[i].name);
+      memmove(&ui_events[i], &ui_events[i+1], sizeof(ui_event_handler) * (num_ui_events-i-1));
+      num_ui_events--;
+      break;
+    };
+  }
+  
+}
+
+bool ui_elem_has_event(char* name) {
+  
+  for(int i = 0; i < num_ui_events; i++) {
+    if (strcmp(ui_events[i].name, name) == 0) return true;
+  }
+  
+  return false;
+  
+}
+
 void ui_elem_update(char* name) {
 
   ui_elem* elem = ui_elem_get(name);
@@ -261,7 +284,18 @@ void ui_elem_delete(char* name) {
   if (ui_elem_exists(name)) {
     error("Don't know how to delete UI element %s. No handler for type %s!", name, type_id_name(type_id));
   }
-
+  
+  for(int i = 0; i < ui_elem_names->num_items; i++) {
+    if (strcmp((char*)list_get(ui_elem_names, i), name) == 0) {
+      list_pop_at(ui_elem_names, i);
+      break;
+    }
+  }
+  
+  if (ui_elem_has_event(name)) {
+    ui_elem_remove_event(name);
+  }
+  
 }
 
 char* ui_elem_name(ui_elem* e) {

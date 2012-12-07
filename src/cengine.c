@@ -620,6 +620,14 @@ vec3 vec3_grey() {
   return vec3_new(0.5, 0.5, 0.5);
 }
 
+vec3 vec3_light_grey() {
+  return vec3_new(0.75,0.75,0.75);
+}
+
+vec3 vec3_dark_grey() {
+  return vec3_new(0.25,0.25,0.25);
+}
+
 vec3 vec3_add(vec3 v1, vec3 v2) {
   vec3 v;
   v.x = v1.x + v2.x;
@@ -853,7 +861,15 @@ vec4 vec4_black() {
 }
 
 vec4 vec4_grey() {
-  return vec4_new(0.5,0.5,0.5,1);
+  return vec4_new(0.5,0.5,0.5, 1);
+}
+
+vec4 vec4_light_grey() {
+  return vec4_new(0.75,0.75,0.75, 1);
+}
+
+vec4 vec4_dark_grey() {
+  return vec4_new(0.25,0.25,0.25, 1);
 }
 
 vec4 vec4_add(vec4 v1, vec4 v2) {
@@ -1099,9 +1115,9 @@ vec4 quaternion_mul(vec4 v1, vec4 v2) {
   
   vec4 quat;
   
-  quat.x = (v1.w * v2.y) - (v1.x * v2.z) + (v1.y * v2.w) + (v1.z * v2.x);
-  quat.y = (v1.w * v2.z) + (v1.x * v2.y) - (v1.y * v2.x) + (v1.z * v2.w);
-  quat.z = (v1.w * v2.x) + (v1.x * v2.w) + (v1.y * v2.z) - (v1.z * v2.y);
+  quat.x = (v1.w * v2.x) + (v1.x * v2.w) + (v1.y * v2.z) - (v1.z * v2.y);
+  quat.y = (v1.w * v2.y) - (v1.x * v2.z) + (v1.y * v2.w) + (v1.z * v2.z);
+  quat.z = (v1.w * v2.z) + (v1.x * v2.y) - (v1.y * v2.x) + (v1.z * v2.w);
   quat.w = (v1.w * v2.w) - (v1.x * v2.x) - (v1.y * v2.y) - (v1.z * v2.z);
   
   return quat;
@@ -1150,6 +1166,15 @@ vec4 quaternion_euler(float roll, float pitch, float yaw) {
   q.y = cos(roll/2)*sin(pitch/2)*cos(yaw/2) + sin(roll/2)*cos(pitch/2)*sin(yaw/2);
   q.z = cos(roll/2)*cos(pitch/2)*sin(yaw/2) - sin(roll/2)*sin(pitch/2)*cos(yaw/2);
   q.w = cos(roll/2)*cos(pitch/2)*cos(yaw/2) + sin(roll/2)*sin(pitch/2)*sin(yaw/2);
+  return q;
+}
+
+vec4 quaternion_normalize(vec4 q) {
+  float length = sqrt(q.x*q.x + q.y*q.y + q.z*q.z + q.w*q.w);
+  q.x /= length;
+  q.y /= length;
+  q.z /= length;
+  q.w /= length;
   return q;
 }
 
@@ -1945,7 +1970,7 @@ mat4 mat4_rotation_euler(float x, float y, float z) {
 
 mat4 mat4_rotation_quaternion(vec4 q) {
 
-  q = vec4_normalize(q);
+  q = quaternion_normalize(q);
   
   mat4 m = mat4_id();
   
@@ -2031,6 +2056,15 @@ mat4 mat4_smoothstep(mat4 m1, mat4 m2, float amount) {
   m.ww = smoothstep(m1.ww, m2.ww, amount);
   
   return m;
+}
+
+vec4 mat4_to_quaternion(mat4 m) {
+  vec4 q;
+  q.w = sqrt(1+ m.xx + m.yy + m.zz) / 2;
+  q.x = (m.zy - m.yz) / (4 * q.w);
+  q.y = (m.xz - m.zx) / (4 * q.w);
+  q.z = (m.yx - m.xy) / (4 * q.w);
+  return q;
 }
 
 /* Geometry Functions */

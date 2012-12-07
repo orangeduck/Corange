@@ -5,7 +5,6 @@ uniform vec3 light_direction;
 varying vec3 direction;
 varying vec3 m_color;
 varying vec3 r_color;
-varying vec3 debug;
 
 float rayleigh_phase(float cos2a) {
   return 0.75 + 0.75*cos2a;

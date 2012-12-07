@@ -49,6 +49,7 @@ void corange_finish();
 
 #include "assets/image.h"
 #include "assets/sound.h"
+#include "assets/lang.h"
 #include "assets/font.h"
 #include "assets/shader.h"
 #include "assets/texture.h"
@@ -67,13 +68,13 @@ void corange_finish();
 #include "ui/ui_rectangle.h"
 #include "ui/ui_spinner.h"
 #include "ui/ui_button.h"
+#include "ui/ui_textbox.h"
 
 /* Rendering */
 
 #include "rendering/forward_renderer.h"
 #include "rendering/deferred_renderer.h"
 #include "rendering/shadow_mapper.h"
-#include "rendering/depth_mapper.h"
 
 /* Data Structures */
 

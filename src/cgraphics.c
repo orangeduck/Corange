@@ -194,3 +194,11 @@ void graphics_viewport_screenshot() {
   image_delete(i);
   
 }
+
+void graphics_set_cursor_hidden(bool hidden) {
+  SDL_ShowCursor(hidden ? SDL_DISABLE : SDL_ENABLE);
+}
+
+bool graphics_get_cursor_hidden() {
+  return (SDL_ShowCursor(SDL_QUERY) == SDL_ENABLE ? false : true);
+}

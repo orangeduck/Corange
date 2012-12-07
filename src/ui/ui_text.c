@@ -33,6 +33,8 @@ ui_text* ui_text_new() {
   text->char_spacing = 0.0;
   text->rotation = 0.0;
   
+  text->line_length = 0.0;
+  
   text->active = true;
   
   ui_text_draw(text);
@@ -58,6 +60,26 @@ void ui_text_delete(ui_text* text) {
   
   free(text);
   
+}
+
+void ui_text_move(ui_text* text, vec2 pos) {
+  text->position = pos;
+  ui_text_draw(text);
+}
+
+void ui_text_set_font(ui_text* text, asset_hndl font) {
+  text->font = font;
+  ui_text_draw(text);
+}
+
+void ui_text_set_color(ui_text* text, vec4 color) {
+  text->color = color;
+  ui_text_draw(text);
+}
+
+void ui_text_align(ui_text* text, int halign, int valign) {
+  text->halign = halign;
+  text->valign = valign;
 }
 
 void ui_text_update(ui_text* text) {
@@ -92,7 +114,7 @@ void ui_text_draw(ui_text* text) {
   
   float space_length = 0.025 * text->scale.x * base_scale;
   float tap_length = space_length * 4;
-  float newline_height = 0.06 * text->scale.y * base_scale;
+  float newline_height = 0.06 * text->scale.y * base_scale + text->line_spacing;
   
   float* vert_texcoords = malloc(sizeof(float) * text->buffersize * 8);
   float* vert_positions = malloc(sizeof(float) * text->buffersize * 12);
@@ -105,20 +127,14 @@ void ui_text_draw(ui_text* text) {
   
     ord = (int)text->string[i];
     
-    if (ord == (int)' ') {
-    
-      x += space_length;
-      x += text->char_spacing;
-    
-    } else if (ord == (int)'\t') {
-    
-      x += tap_length;
-      x += text->char_spacing;
-    
-    } else if ((ord == (int)'\n') || (ord == (int)'\0')) {
+    if ((ord == (int)'\n') || 
+        (ord == (int)'\0') ||
+        ((ord == (int)' ') && 
+         (text->line_length != 0.0) &&
+         (x - text->position.x > text->line_length)) ) {
       
       if (text->halign == text_align_center) {
-        float total_length = x - text->position.x;
+        float total_length = x - text->position.x - text->char_spacing;
         float offset_x = total_length / 2;
         
         int j = newline_at;
@@ -136,45 +152,54 @@ void ui_text_draw(ui_text* text) {
       
       if(ord == (int)'\0') break;
       
+    } else if (ord == (int)' ') {
+    
+      x += space_length;
+      x += text->char_spacing;
+    
+    } else if (ord == (int)'\t') {
+    
+      x += tap_length;
+      x += text->char_spacing;
+    
     } else {
     
-    /* Texcoords */
+      /* Texcoords */
     
-    vert_texcoords[uv_i] = f->locations[ord].x; uv_i++;
-    vert_texcoords[uv_i] = f->locations[ord].y; uv_i++;
-    
-    vert_texcoords[uv_i] = f->locations[ord].x + f->sizes[ord].x; uv_i++;
-    vert_texcoords[uv_i] = f->locations[ord].y; uv_i++;
-    
-    vert_texcoords[uv_i] = f->locations[ord].x + f->sizes[ord].x; uv_i++;
-    vert_texcoords[uv_i] = f->locations[ord].y + f->sizes[ord].y; uv_i++;
-    
-    vert_texcoords[uv_i] = f->locations[ord].x; uv_i++;
-    vert_texcoords[uv_i] = f->locations[ord].y + f->sizes[ord].y; uv_i++;
-    
-    /* Positions */
-    
-    float o_x = x + (f->offsets[ord].x * text->scale.x * base_scale);
-    float o_y = y + (f->offsets[ord].y * text->scale.y * base_scale);
-    
-    vert_positions[pos_i] = o_x; pos_i++;
-    vert_positions[pos_i] = o_y; pos_i++;
-    vert_positions[pos_i] = 0; pos_i++;
-    
-    vert_positions[pos_i] = o_x + (f->sizes[ord].x * text->scale.x * base_scale); pos_i++;
-    vert_positions[pos_i] = o_y; pos_i++;
-    vert_positions[pos_i] = 0; pos_i++;
-    
-    vert_positions[pos_i] = o_x + (f->sizes[ord].x * text->scale.x * base_scale); pos_i++;
-    vert_positions[pos_i] = o_y + (f->sizes[ord].y * text->scale.y * base_scale); pos_i++;
-    vert_positions[pos_i] = 0; pos_i++;
-    
-    vert_positions[pos_i] = o_x; pos_i++;
-    vert_positions[pos_i] = o_y + (f->sizes[ord].y * text->scale.y * base_scale); pos_i++;
-    vert_positions[pos_i] = 0; pos_i++;
-    
-    x = o_x + (f->sizes[ord].x * text->scale.x * base_scale);
-    x += text->char_spacing;
+      vert_texcoords[uv_i] = f->locations[ord].x; uv_i++;
+      vert_texcoords[uv_i] = f->locations[ord].y; uv_i++;
+      
+      vert_texcoords[uv_i] = f->locations[ord].x + f->sizes[ord].x; uv_i++;
+      vert_texcoords[uv_i] = f->locations[ord].y; uv_i++;
+      
+      vert_texcoords[uv_i] = f->locations[ord].x + f->sizes[ord].x; uv_i++;
+      vert_texcoords[uv_i] = f->locations[ord].y + f->sizes[ord].y; uv_i++;
+      
+      vert_texcoords[uv_i] = f->locations[ord].x; uv_i++;
+      vert_texcoords[uv_i] = f->locations[ord].y + f->sizes[ord].y; uv_i++;
+      
+      /* Positions */
+      
+      float o_x = x + (f->offsets[ord].x * text->scale.x * base_scale);
+      float o_y = y + (f->offsets[ord].y * text->scale.y * base_scale);
+      
+      vert_positions[pos_i] = o_x; pos_i++;
+      vert_positions[pos_i] = o_y; pos_i++;
+      vert_positions[pos_i] = 0; pos_i++;
+      
+      vert_positions[pos_i] = o_x + (f->sizes[ord].x * text->scale.x * base_scale); pos_i++;
+      vert_positions[pos_i] = o_y; pos_i++;
+      vert_positions[pos_i] = 0; pos_i++;
+      
+      vert_positions[pos_i] = o_x + (f->sizes[ord].x * text->scale.x * base_scale); pos_i++;
+      vert_positions[pos_i] = o_y + (f->sizes[ord].y * text->scale.y * base_scale); pos_i++;
+      vert_positions[pos_i] = 0; pos_i++;
+      
+      vert_positions[pos_i] = o_x; pos_i++;
+      vert_positions[pos_i] = o_y + (f->sizes[ord].y * text->scale.y * base_scale); pos_i++;
+      vert_positions[pos_i] = 0; pos_i++;
+      
+      x = o_x + (f->sizes[ord].x * text->scale.x * base_scale) + text->char_spacing;
       
     }
     
@@ -185,7 +210,7 @@ void ui_text_draw(ui_text* text) {
   text->num_texcoords = uv_i;
   
   float total_length = x - text->position.x;
-  float total_height = y - text->position.y;
+  float total_height = y - text->position.y + newline_height;
   
   float offset_x = 0;
   float offset_y = 0;
@@ -201,8 +226,6 @@ void ui_text_draw(ui_text* text) {
   }
     
   if ((offset_x != 0) || (offset_y != 0)) {
-  
-    int i = 0;
     int pos_i = 0;
     while( pos_i < text->num_positions ) {
       
@@ -212,9 +235,7 @@ void ui_text_draw(ui_text* text) {
         vert_positions[pos_i] -= offset_y; pos_i++;
         pos_i++;
         
-        }
-    
-      i++;
+      }
     }
   }
   

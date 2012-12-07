@@ -13,16 +13,16 @@ varying vec3 m_color;
 varying vec3 r_color;
 varying vec4 screen_position;
 
-const int nsamples = 2;
-const float fsamples = 2.0;
+const int nsamples = 3;
+const float fsamples = 3.0;
 
 const vec3 inv_wavelength = vec3(1.0/ pow(0.620, 4.0), 1.0/ pow(0.495, 4.0),1.0/ pow(0.475, 4.0));
 
 const float outer_radius = 10.25;
 const float inner_radius = 10.00;
 
-const vec3 esun = vec3(300.0, 300.0, 300.0);
-const float kr = 0.0010;
+const vec3 esun = vec3(75.0, 75.0, 75.0);
+const float kr = 0.0025;
 const float km = 0.0010;
 
 const vec3 kresun = kr * esun;
@@ -43,15 +43,15 @@ float scalefunc(float angle) {
 
 void main() {
   
-  vec3 cam_pos = vec3(0, inner_radius + 0.0, 0);
+  vec3 cam_pos = vec3(0, inner_radius + 0.1, 0);
   //vec3 cam_pos = camera_position;
   //cam_pos.y = cam_pos.y / 2000 + inner_radius;
   //cam_pos.xz = (cam_pos.xz - 1000) / 2000;
   
 	vec3 position;
-  position.x = gl_Vertex.x * 4.0 * (outer_radius - inner_radius);
-  position.z = gl_Vertex.z * 4.0 * (outer_radius - inner_radius);
-  position.y = inner_radius + (abs(gl_Vertex.y) * (outer_radius - inner_radius));
+  position.x = gl_Vertex.x * 1;
+  position.z = gl_Vertex.z * 1;
+  position.y = inner_radius + (abs(gl_Vertex.y) * 0.25);
   
 	vec3 ray = position - cam_pos;
 	float far = length(ray);

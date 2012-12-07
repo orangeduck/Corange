@@ -60,13 +60,13 @@ model* renderable_to_model(renderable* r) {
     renderable_surface* s = r->surfaces[i];
     
     float* vb_data = malloc(sizeof(float) * s->num_verticies * 18);
-    int* ib_data = malloc(sizeof(int) * s->num_triangles * 3);
+    uint32_t* ib_data = malloc(sizeof(uint32_t) * s->num_triangles * 3);
     
     glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
     glGetBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * s->num_verticies * 18, vb_data);
     
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
-    glGetBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeof(int) * s->num_triangles * 3, ib_data);
+    glGetBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeof(uint32_t) * s->num_triangles * 3, ib_data);
     
     m->meshes[i] = mesh_new();
     
@@ -75,7 +75,7 @@ model* renderable_to_model(renderable* r) {
     me->num_verts = s->num_verticies;
     me->num_triangles = s->num_triangles;
     me->verticies = realloc(me->verticies, sizeof(vertex) * me->num_verts);
-    me->triangles = realloc(me->triangles, sizeof(int) * me->num_triangles * 3);
+    me->triangles = realloc(me->triangles, sizeof(uint32_t) * me->num_triangles * 3);
     
     for(int j = 0; j < me->num_verts; j++) {
       me->verticies[j].position.x = vb_data[(j*18)+0];
@@ -170,7 +170,7 @@ renderable_surface* renderable_surface_new(mesh* m) {
   free(vb_data);
   
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * s->num_triangles * 3, m->triangles, GL_STATIC_DRAW);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * s->num_triangles * 3, m->triangles, GL_STATIC_DRAW);
   
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -241,7 +241,7 @@ renderable_surface* renderable_surface_new_rigged(mesh* m, vertex_weight* weight
   free(vb_data);
   
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * s->num_triangles * 3, m->triangles, GL_STATIC_DRAW);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * s->num_triangles * 3, m->triangles, GL_STATIC_DRAW);
   
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -276,27 +276,28 @@ renderable* bmf_load_file(char* filename) {
     error("Badly formed bmf file '%s', missing magic number", filename);
   }  
   
-  int version = 0;
-  SDL_RWread(file, &version, 4, 1);
+  uint32_t version = 0;
+  SDL_RWread(file, &version, sizeof(uint32_t), 1);
   
   if (version != 1) {
     error("Only version 1 of bmf format supported. Recieved file of version %i.", version);
   }
-  
+    
   SDL_RWread(file, &r->is_rigged, 1, 1);
-  
-  int mat_len;
-  SDL_RWread(file, &mat_len, 4, 1);
-  
+    
+  uint32_t mat_len;
+  SDL_RWread(file, &mat_len, sizeof(uint32_t), 1);
+    
   fpath material_path;
   SDL_RWread(file, material_path.ptr, mat_len, 1);
   material_path.ptr[mat_len] = '\0';
-  
+    
   r->material = asset_hndl_new_load(material_path);
   
-  
-  SDL_RWread(file, &r->num_surfaces, 4, 1);
-  
+  uint32_t num_surfaces;
+  SDL_RWread(file, &num_surfaces, sizeof(uint32_t), 1);
+  r->num_surfaces = num_surfaces;
+    
   r->surfaces = malloc(sizeof(renderable_surface*) * r->num_surfaces);
   
   const int vertsize = r->is_rigged ? 24 : 18;
@@ -304,8 +305,10 @@ renderable* bmf_load_file(char* filename) {
   for(int i = 0; i < r->num_surfaces; i++) {
     renderable_surface* s = malloc(sizeof(renderable_surface));
     
-    SDL_RWread(file, &s->num_verticies, 4, 1);
-    
+    uint32_t num_verticies;
+    SDL_RWread(file, &num_verticies, sizeof(uint32_t), 1);
+    s->num_verticies = num_verticies;
+        
     float* vert_data = malloc(sizeof(float) * vertsize * s->num_verticies);
     SDL_RWread(file, vert_data, sizeof(float) * vertsize * s->num_verticies, 1);
     glGenBuffers(1, &s->vertex_vbo);
@@ -313,14 +316,15 @@ renderable* bmf_load_file(char* filename) {
     glBufferData(GL_ARRAY_BUFFER, sizeof(float) * s->num_verticies * vertsize, vert_data, GL_STATIC_DRAW);
     free(vert_data);
     
-    int num_indicies;
-    SDL_RWread(file, &num_indicies, 4, 1);
+    uint32_t num_indicies;
+    SDL_RWread(file, &num_indicies, sizeof(uint32_t), 1);
     s->num_triangles = num_indicies / 3;
-    int* index_data = malloc(sizeof(int) * num_indicies);
-    SDL_RWread(file, index_data, sizeof(int) * num_indicies, 1);
+        
+    uint32_t* index_data = malloc(sizeof(uint32_t) * num_indicies);
+    SDL_RWread(file, index_data, sizeof(uint32_t) * num_indicies, 1);
     glGenBuffers(1, &s->triangle_vbo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * num_indicies, index_data, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * num_indicies, index_data, GL_STATIC_DRAW);
     free(index_data);
     
     r->surfaces[i] = s;
@@ -338,35 +342,43 @@ void bmf_save_file(renderable* r, char* filename) {
   
   SDL_RWops* file = SDL_RWFromFile(filename, "wb");
   
-  int version = 1;
+  uint32_t version = 1;
   
   SDL_RWwrite(file, "BMF", 3, 1);
-  SDL_RWwrite(file, &version, 4, 1);
+  SDL_RWwrite(file, &version, sizeof(uint32_t), 1);
   SDL_RWwrite(file, &r->is_rigged, 1, 1);
   
-  int mat_len = strlen(r->material.path.ptr);
-  SDL_RWwrite(file, &mat_len, 4, 1);
-  SDL_RWwrite(file, r->material.path.ptr, mat_len, 1);
+  fpath matpath;
+  SDL_PathRelative(matpath.ptr, r->material.path.ptr);
+  SDL_PathForwardSlashes(matpath.ptr);
   
-  SDL_RWwrite(file, &r->num_surfaces, 4, 1);
+  uint32_t mat_len = strlen(matpath.ptr);
+  SDL_RWwrite(file, &mat_len, sizeof(uint32_t), 1);
+  SDL_RWwrite(file, matpath.ptr, mat_len, 1);
   
-  const int vertsize = r->is_rigged ? 24 : 18;
+  uint32_t num_surfaces = r->num_surfaces;
+  SDL_RWwrite(file, &num_surfaces, sizeof(uint32_t), 1);
+  
+  const uint32_t vertsize = r->is_rigged ? 24 : 18;
   
   for(int i = 0; i < r->num_surfaces; i++) {
     renderable_surface* s = r->surfaces[i];
     
-    SDL_RWwrite(file, &s->num_verticies, 4, 1);
-    int vert_data_size = sizeof(float) * vertsize * s->num_verticies;
+    uint32_t num_verticies = s->num_verticies;
+    SDL_RWwrite(file, &num_verticies, sizeof(uint32_t), 1);
+    
+    uint32_t vert_data_size = sizeof(float) * vertsize * num_verticies;
     float* vert_data = malloc(vert_data_size);
     glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
     glGetBufferSubData(GL_ARRAY_BUFFER, 0, vert_data_size, vert_data);
     SDL_RWwrite(file, vert_data, vert_data_size, 1);
     free(vert_data);
     
-    int num_indicies = s->num_triangles * 3;
-    SDL_RWwrite(file, &num_indicies, 4, 1);
-    int index_data_size = sizeof(int) * num_indicies;
-    int* index_data = malloc(index_data_size);
+    uint32_t num_indicies = s->num_triangles * 3;
+    SDL_RWwrite(file, &num_indicies, sizeof(uint32_t), 1);
+    
+    uint32_t index_data_size = sizeof(uint32_t) * num_indicies;
+    uint32_t* index_data = malloc(index_data_size);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
     glGetBufferSubData(GL_ARRAY_BUFFER, 0, index_data_size, index_data);
     SDL_RWwrite(file, index_data, index_data_size, 1);
@@ -505,6 +517,21 @@ renderable* obj_load_file(char* filename) {
     }
     
     else if (sscanf(line, "f %i/%i/%i %i/%i/%i %i/%i/%i", &pi1, &ti1, &ni1, &pi2, &ti2, &ni2, &pi3, &ti3, &ni3) == 9) {
+      
+      if (active_mesh == NULL) {
+        vert_index = 0;
+        
+        vertex_hashtable_delete(vert_hashes);
+        vertex_list_delete(vert_list);
+        int_list_delete(tri_list);
+        
+        vert_list = vertex_list_new();
+        tri_list = int_list_new();
+        vert_hashes = vertex_hashtable_new(4096);
+        
+        active_mesh = malloc(sizeof(mesh));
+      }
+      
       has_normal_data = true;
       has_texcoord_data = true;
       
@@ -557,6 +584,21 @@ renderable* obj_load_file(char* filename) {
     }
     
     else if (sscanf(line, "f %i//%i %i//%i %i//%i", &pi1, &ni1, &pi2, &ni2, &pi3, &ni3) == 6) {
+      
+      if (active_mesh == NULL) {
+        vert_index = 0;
+        
+        vertex_hashtable_delete(vert_hashes);
+        vertex_list_delete(vert_list);
+        int_list_delete(tri_list);
+        
+        vert_list = vertex_list_new();
+        tri_list = int_list_new();
+        vert_hashes = vertex_hashtable_new(4096);
+        
+        active_mesh = malloc(sizeof(mesh));
+      }
+      
       has_normal_data = true;
       has_texcoord_data = false;
       
@@ -609,6 +651,21 @@ renderable* obj_load_file(char* filename) {
     }
     
     else if (sscanf(line, "f %i/%i %i/%i %i/%i", &pi1, &ti1, &pi2, &ti2, &pi3, &ti3) == 6) {
+      
+      if (active_mesh == NULL) {
+        vert_index = 0;
+        
+        vertex_hashtable_delete(vert_hashes);
+        vertex_list_delete(vert_list);
+        int_list_delete(tri_list);
+        
+        vert_list = vertex_list_new();
+        tri_list = int_list_new();
+        vert_hashes = vertex_hashtable_new(4096);
+        
+        active_mesh = malloc(sizeof(mesh));
+      }
+      
       has_normal_data = false;
       has_texcoord_data = true;
       
@@ -661,6 +718,21 @@ renderable* obj_load_file(char* filename) {
     }
     
     else if (sscanf(line, "f %i %i %i", &pi1, &pi2, &pi3) == 3) {
+      
+      if (active_mesh == NULL) {
+        vert_index = 0;
+        
+        vertex_hashtable_delete(vert_hashes);
+        vertex_list_delete(vert_list);
+        int_list_delete(tri_list);
+        
+        vert_list = vertex_list_new();
+        tri_list = int_list_new();
+        vert_hashes = vertex_hashtable_new(4096);
+        
+        active_mesh = malloc(sizeof(mesh));
+      }
+      
       has_normal_data = false;
       has_texcoord_data = false;
       
@@ -717,7 +789,7 @@ renderable* obj_load_file(char* filename) {
   SDL_RWclose(file);
   
   if (active_mesh == NULL) {
-    error("Unable to load file '%s', it appears to have no groups in it.", filename);
+    error("Unable to load file '%s', it appears to be empty.", filename);
   }
   
   active_mesh->num_verts = vert_index;
@@ -754,8 +826,26 @@ renderable* obj_load_file(char* filename) {
   
   renderable* renderable = renderable_new();
   renderable_add_model(renderable, obj_model);
-  
   model_delete(obj_model);
+  
+  fpath mat_file;
+  fpath bmf_file;
+  fpath fileid;
+  
+  SDL_PathFileLocation(mat_file.ptr, filename);
+  SDL_PathFileLocation(bmf_file.ptr, filename);
+  SDL_PathFileName(fileid.ptr, filename);
+  
+  strcat(mat_file.ptr, fileid.ptr);
+  strcat(mat_file.ptr, ".mat");
+  
+  if (file_exists(mat_file)) {
+    renderable->material = asset_hndl_new(mat_file);
+  }
+  
+  strcat(bmf_file.ptr, fileid.ptr);
+  strcat(bmf_file.ptr, ".bmf");
+  bmf_save_file(renderable, bmf_file.ptr);
   
   return renderable;
 }

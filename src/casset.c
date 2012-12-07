@@ -225,6 +225,19 @@ void file_load(fpath filename) {
 
 }
 
+bool file_exists(fpath filename) {
+
+  filename = asset_map_filename(filename);
+  SDL_RWops* file = SDL_RWFromFile(filename.ptr, "r");
+  if (file) {
+    SDL_RWclose(file);
+    return true;
+  } else {
+    return false;
+  }
+
+}
+
 void folder_load(fpath folder) {
   
   folder = asset_map_filename(folder);
@@ -257,6 +270,46 @@ void folder_load(fpath folder) {
   }
   
   closedir(dir);
+}
+
+void folder_load_recursive(fpath folder) {
+
+  folder = asset_map_filename(folder);
+  debug("Loading Folder: '%s'", folder.ptr);
+  
+  DIR* dir = opendir(folder.ptr);
+  if (dir == NULL) {
+    error("Could not open directory '%s' to load.", folder.ptr);
+  }
+  
+  struct dirent* ent;
+  while ((ent = readdir(dir)) != NULL) {
+  
+    if ((strcmp(ent->d_name,".") != 0) && 
+        (strcmp(ent->d_name,"..") != 0)) {
+    
+      fpath filename = folder;
+      
+      // If does not end in "/" then copy it.
+      if (folder.ptr[strlen(folder.ptr)-1] != '/') {
+        strcat(filename.ptr, "/");
+      }
+      
+      strcat(filename.ptr, ent->d_name);
+      
+      DIR* sub = opendir(filename.ptr);
+      if (sub) {
+        folder_load_recursive(filename);
+      }
+      
+      if (!file_isloaded(filename)) {
+        file_load(filename);
+      }
+    } 
+  }
+  
+  closedir(dir);
+
 }
 
 void file_reload(fpath filename) {

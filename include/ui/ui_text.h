@@ -15,12 +15,16 @@
 #include "cengine.h"
 #include "casset.h"
 
-static int text_align_left = 0;
-static int text_align_right = 1;
-static int text_align_center = 2;
+enum {
+  text_align_left   = 0,
+  text_align_right  = 1,
+  text_align_center = 2,
+};
 
-static int text_align_top = 0;
-static int text_align_bottom = 1;
+enum {
+  text_align_top    = 0,
+  text_align_bottom = 1,
+};
 
 typedef struct {
   
@@ -51,6 +55,8 @@ typedef struct {
   float char_spacing;
   float rotation;
   
+  float line_length;
+  
   bool active;
   
 } ui_text;
@@ -58,6 +64,11 @@ typedef struct {
 ui_text* ui_text_new();
 ui_text* ui_text_new_string(char* string);
 void ui_text_delete(ui_text* text);
+
+void ui_text_move(ui_text* text, vec2 pos);
+void ui_text_set_font(ui_text* text, asset_hndl font);
+void ui_text_set_color(ui_text* text, vec4 color);
+void ui_text_align(ui_text* text, int halign, int valign);
 
 void ui_text_draw(ui_text* text);
 void ui_text_draw_string(ui_text* text, char* string);

@@ -50,6 +50,8 @@ void ui_elem_add_type_id(char* name, int type, ui_elem* ui_elem);
 ui_elem* ui_elem_get(char* name);
 ui_elem* ui_elem_get_as_type_id(char* name, int type_id);
 void ui_elem_add_event_cast(char* name, void event_func(ui_elem* elem, SDL_Event e));
+bool ui_elem_has_event(char* name);
+void ui_elem_remove_event(char* name);
 
 /* Update, Render, and Delete individual elements */
 void ui_elem_update(char* name);

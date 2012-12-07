@@ -37,5 +37,7 @@ int graphics_viewport_height();
 int graphics_viewport_width();
 float graphics_viewport_ratio();
 
+void graphics_set_cursor_hidden(bool hidden);
+bool graphics_get_cursor_hidden();
 
 #endif

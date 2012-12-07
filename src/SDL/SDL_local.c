@@ -72,6 +72,34 @@ void SDL_PathFileLocation(char* dst, const char* path) {
   dst[i] = '\0';
 }
 
+#ifdef _WIN32
+
+void SDL_PathRelative(char* dst, const char* path) {
+  char* curr = SDL_GetWorkingDir();
+  char* sub = strstr(path, curr);
+  
+  if (sub == NULL) {
+    strcpy(dst, path);
+  } else {
+    strcpy(dst, ".");
+    strcat(dst, path + strlen(curr));
+  }
+  
+}
+
+#else
+
+void SDL_PathRelative(char* dst, const char* path) {
+  error("Unimplemented!");
+}
+
+#endif
+
+void SDL_PathForwardSlashes(char* path) {
+  for(int i = 0; i < strlen(path); i++) {
+    if (path[i] == '\\') { path[i] = '/'; }
+  }
+}
 
 #ifdef _WIN32
   #include <direct.h>

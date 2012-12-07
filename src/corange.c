@@ -70,6 +70,7 @@ void corange_init(const char* core_assets_path) {
   asset_handler(shader, "tcs" , tcs_load_file,  shader_delete);
   asset_handler(shader, "tes" , tes_load_file,  shader_delete);
   
+  asset_handler(lang, "lang", lang_load_file, lang_delete);
   asset_handler(font, "fnt", font_load_file, font_delete);
   asset_handler(material, "mat", mat_load_file, material_delete);
   
@@ -98,6 +99,7 @@ void corange_init(const char* core_assets_path) {
   ui_handler(ui_text, ui_text_new, ui_text_delete, ui_text_update, ui_text_render);
   ui_handler(ui_spinner, ui_spinner_new, ui_spinner_delete, ui_spinner_update, ui_spinner_render);
   ui_handler(ui_button, ui_button_new, ui_button_delete, ui_button_update, ui_button_render);
+  ui_handler(ui_textbox, ui_textbox_new, ui_textbox_delete, ui_textbox_update, ui_textbox_render);
   
   debug("Finished!");
 }

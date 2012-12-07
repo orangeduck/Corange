@@ -64,10 +64,12 @@ void file_load(fpath filename);
 void file_unload(fpath filename);
 void file_reload(fpath filename);
 bool file_isloaded(fpath path);
+bool file_exists(fpath path);
 
 void folder_load(fpath folder);
 void folder_unload(fpath folder);
 void folder_reload(fpath folder);
+void folder_load_recursive(fpath folder);
 
 asset* asset_get_load(fpath path);
 asset* asset_get(fpath path);

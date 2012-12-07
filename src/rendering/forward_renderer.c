@@ -1094,6 +1094,7 @@ void forward_renderer_render_light(light* l) {
 
 void forward_renderer_render_landscape(landscape* ls) {
   
+  /*
   mat4 r_world_matrix = mat4_world(ls->position, ls->scale, ls->rotation);
   mat4_to_array(r_world_matrix, world_matrix);
   
@@ -1228,6 +1229,7 @@ void forward_renderer_render_landscape(landscape* ls) {
   
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
+  */
   
 }
 

@@ -16,25 +16,25 @@
 
 typedef struct {
   
-  asset_hndl terrain;
+  asset_hndl heightmap;
+  asset_hndl attribmap;
   
-  asset_hndl normalmap;
-  asset_hndl colormap;
-  asset_hndl attributemap;
+  float size_x;
+  float size_y;
   
-  vec3 position;
-  vec4 rotation;
-  vec3 scale;
+  asset_hndl ground0;
+  asset_hndl ground1;
+  asset_hndl ground2;
+  asset_hndl ground3;
   
-  asset_hndl near_texture;
-  asset_hndl near_texture_bump;
-  asset_hndl far_texture;
-  asset_hndl far_texture_bump;
+  asset_hndl ground0_nm;
+  asset_hndl ground1_nm;
+  asset_hndl ground2_nm;
+  asset_hndl ground3_nm;
   
 } landscape;
 
 landscape* landscape_new();
 void landscape_delete(landscape* l);
-void landscape_set_textures(landscape* l, asset_hndl near_texture, asset_hndl near_texture_bump, asset_hndl far_texture, asset_hndl far_texture_bump);
 
 #endif

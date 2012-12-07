@@ -339,7 +339,12 @@ void shadow_mapper_render_animated(animated_object* ao) {
 
 void shadow_mapper_render_landscape(landscape* ls) {
   
-  mat4 r_world_matrix = mat4_world( ls->position, ls->scale, ls->rotation );
+  terrain* terr = asset_hndl_ptr(ls->heightmap);
+  vec3 scale = vec3_new(-(1.0 / terr->width) * ls->size_x, 0.25, -(1.0 / terr->height) * ls->size_y);
+  vec3 translation = vec3_new(ls->size_x / 2, 0, ls->size_y / 2);
+  vec4 rotation = quaternion_id();
+  
+  mat4 r_world_matrix = mat4_world(translation, scale, rotation);
   mat4_to_array(r_world_matrix, world_matrix);
   
   shader_program* depth_shader = material_get_entry(asset_hndl_ptr(depth_mat), 0)->program;
@@ -358,7 +363,7 @@ void shadow_mapper_render_landscape(landscape* ls) {
   GLint alpha_test_u = glGetUniformLocation(*depth_shader, "alpha_test");
   glUniform1f(alpha_test_u, 0.0);
   
-  terrain* terrain = asset_hndl_ptr(ls->terrain);
+  terrain* terrain = asset_hndl_ptr(ls->heightmap);
   
   for(int i = 0; i < terrain->num_chunks; i++) {
     

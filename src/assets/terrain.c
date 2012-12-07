@@ -23,7 +23,7 @@ static void terrain_new_chunk(terrain* ter, int i) {
   int y_max = tc->height*SUBDIVISIONS+1;
   
   tc->num_verts = x_max * y_max + x_max * 2 + y_max * 2;
-  float* vertex_buffer = malloc(sizeof(float) * 3 * tc->num_verts);
+  float* vertex_buffer = malloc(sizeof(float) * 12 * tc->num_verts);
   int index = 0;
   
   for(int x = 0; x < x_max; x++)
@@ -37,6 +37,22 @@ static void terrain_new_chunk(terrain* ter, int i) {
     vertex_buffer[index] = pos.x; index++;
     vertex_buffer[index] = pos.y; index++;
     vertex_buffer[index] = pos.z; index++;
+    
+    vec3 normal  = vec3_normalize(terrain_normal(ter, vec2_new(gx, gy)));
+    vec3 tangent = vec3_normalize(vec3_cross(normal, vec3_new(1, 0, 0)));
+    vec3 binorm  = vec3_normalize(vec3_cross(normal, tangent));
+    
+    vertex_buffer[index] = normal.x; index++;
+    vertex_buffer[index] = normal.y; index++;
+    vertex_buffer[index] = normal.z; index++;
+    
+    vertex_buffer[index] = tangent.x; index++;
+    vertex_buffer[index] = tangent.y; index++;
+    vertex_buffer[index] = tangent.z; index++;
+    
+    vertex_buffer[index] = binorm.x; index++;
+    vertex_buffer[index] = binorm.y; index++;
+    vertex_buffer[index] = binorm.z; index++;
   }
   
   /* Adding fins. Don't look, horrible code */
@@ -53,6 +69,18 @@ static void terrain_new_chunk(terrain* ter, int i) {
     vertex_buffer[index] = pos.x; index++;
     vertex_buffer[index] = pos.y; index++;
     vertex_buffer[index] = pos.z; index++;
+    
+    vertex_buffer[index] = 0; index++;
+    vertex_buffer[index] = 1; index++;
+    vertex_buffer[index] = 0; index++;
+    
+    vertex_buffer[index] = 1; index++;
+    vertex_buffer[index] = 0; index++;
+    vertex_buffer[index] = 0; index++;
+    
+    vertex_buffer[index] = 0; index++;
+    vertex_buffer[index] = 0; index++;
+    vertex_buffer[index] = 1; index++;
   }
   
   for(int y = 0; y < y_max; y++) {
@@ -65,6 +93,18 @@ static void terrain_new_chunk(terrain* ter, int i) {
     vertex_buffer[index] = pos.x; index++;
     vertex_buffer[index] = pos.y; index++;
     vertex_buffer[index] = pos.z; index++;
+    
+    vertex_buffer[index] = 0; index++;
+    vertex_buffer[index] = 1; index++;
+    vertex_buffer[index] = 0; index++;
+    
+    vertex_buffer[index] = 1; index++;
+    vertex_buffer[index] = 0; index++;
+    vertex_buffer[index] = 0; index++;
+    
+    vertex_buffer[index] = 0; index++;
+    vertex_buffer[index] = 0; index++;
+    vertex_buffer[index] = 1; index++;
   }
   
   for(int x = 0; x < x_max; x++) {
@@ -77,6 +117,18 @@ static void terrain_new_chunk(terrain* ter, int i) {
     vertex_buffer[index] = pos.x; index++;
     vertex_buffer[index] = pos.y; index++;
     vertex_buffer[index] = pos.z; index++;
+    
+    vertex_buffer[index] = 0; index++;
+    vertex_buffer[index] = 1; index++;
+    vertex_buffer[index] = 0; index++;
+    
+    vertex_buffer[index] = 1; index++;
+    vertex_buffer[index] = 0; index++;
+    vertex_buffer[index] = 0; index++;
+    
+    vertex_buffer[index] = 0; index++;
+    vertex_buffer[index] = 0; index++;
+    vertex_buffer[index] = 1; index++;
   }
   
   for(int x = 0; x < x_max; x++) {
@@ -89,11 +141,23 @@ static void terrain_new_chunk(terrain* ter, int i) {
     vertex_buffer[index] = pos.x; index++;
     vertex_buffer[index] = pos.y; index++;
     vertex_buffer[index] = pos.z; index++;
+    
+    vertex_buffer[index] = 0; index++;
+    vertex_buffer[index] = 1; index++;
+    vertex_buffer[index] = 0; index++;
+    
+    vertex_buffer[index] = 1; index++;
+    vertex_buffer[index] = 0; index++;
+    vertex_buffer[index] = 0; index++;
+    
+    vertex_buffer[index] = 0; index++;
+    vertex_buffer[index] = 0; index++;
+    vertex_buffer[index] = 1; index++;
   }
   
   glGenBuffers(1, &tc->vertex_buffer);
   glBindBuffer(GL_ARRAY_BUFFER, tc->vertex_buffer);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 3 * tc->num_verts, vertex_buffer, GL_DYNAMIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 12 * tc->num_verts, vertex_buffer, GL_STATIC_DRAW);
   free(vertex_buffer);
   
   glGenBuffers(NUM_TERRAIN_BUFFERS, tc->index_buffers);

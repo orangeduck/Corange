@@ -210,6 +210,8 @@ vec3 vec3_blue();
 vec3 vec3_white();
 vec3 vec3_black();
 vec3 vec3_grey();
+vec3 vec3_light_grey();
+vec3 vec3_dark_grey();
 
 vec3 vec3_add(vec3 v1, vec3 vec2);
 vec3 vec3_sub(vec3 v1, vec3 vec2);
@@ -266,6 +268,8 @@ vec4 vec4_blue();
 vec4 vec4_white();
 vec4 vec4_black();
 vec4 vec4_grey();
+vec4 vec4_light_grey();
+vec4 vec4_dark_grey();
 
 vec4 vec4_add(vec4 v1, vec4 vec2);
 vec4 vec4_sub(vec4 v1, vec4 vec2);
@@ -322,6 +326,7 @@ vec4 quaternion_roll(float angle);
 
 vec4 quaternion_euler(float roll, float pitch, float yaw);
 
+vec4 quaternion_normalize(vec4 q);
 vec4 quaternion_swap_handedness(vec4 q);
 
 /*
@@ -430,6 +435,8 @@ mat4 mat4_world(vec3 position, vec3 scale, vec4 rotation);
 mat4 mat4_lerp(mat4 m1, mat4 mat2, float amount);
 mat4 mat4_smoothstep(mat4 m1, mat4 mat2, float amount);
 
+vec4 mat4_to_quaternion(mat4 m);
+
 /*
 ** == Geometry ==
 */
@@ -502,7 +509,7 @@ typedef struct {
   int num_verts;
   int num_triangles;
   vertex* verticies;
-  int* triangles;
+  uint32_t* triangles;
 } mesh;
 
 mesh* mesh_new();

@@ -6,6 +6,7 @@
 #include "assets/texture.h"
 #include "assets/material.h"
 #include "assets/renderable.h"
+#include "assets/terrain.h"
 
 /* Matricies */
 static float PROJ_MATRIX[16];
@@ -18,6 +19,7 @@ static float LIGHT_PROJ_MATRIX[16];
 /* Materials */
 static asset_hndl MAT_STATIC;
 static asset_hndl MAT_ANIMATED;
+static asset_hndl MAT_TERRAIN;
 static asset_hndl MAT_CLEAR;
 static asset_hndl MAT_UI;
 static asset_hndl MAT_SSAO;
@@ -41,6 +43,10 @@ static int TANGENT_ANIMATED;
 static int BINORMAL_ANIMATED;
 static int BONE_INDICIES;
 static int BONE_WEIGHTS;
+
+static int NORMAL_TERRAIN;
+static int TANGENT_TERRAIN;
+static int BINORMAL_TERRAIN;
 
 /* Buffers */
 static GLuint fbo;
@@ -78,6 +84,7 @@ static texture* SHADOW_TEX = NULL;
 /* Other Assets */
 static asset_hndl COLOR_CORRECTION;
 static asset_hndl RANDOM;
+static asset_hndl RANDOM_PERLIN;
 static asset_hndl ENVIRONMENT;
 static asset_hndl VIGNETTING;
 
@@ -96,6 +103,8 @@ static vec3 light_specular[DEFERRED_MAX_LIGHTS];
 
 /* Variables */
 
+static float GLITCH;
+static float TIME;
 static float EXPOSURE;
 static float EXPOSURE_SPEED;
 static float EXPOSURE_TARGET;
@@ -106,12 +115,15 @@ void deferred_renderer_init() {
   
   num_lights = 0;
   
+  GLITCH = 0.0;
+  TIME = 0.0;
   EXPOSURE = 0.0;
   EXPOSURE_SPEED = 1.0;
   EXPOSURE_TARGET = 0.4;
   
   COLOR_CORRECTION = asset_hndl_new_load(P("$CORANGE/resources/identity.lut"));
   RANDOM = asset_hndl_new_load(P("$CORANGE/resources/random.dds"));
+  RANDOM_PERLIN = asset_hndl_new_load(P("$CORANGE/resources/random_perlin.dds"));
   ENVIRONMENT = asset_hndl_new_load(P("$CORANGE/resources/envmap.dds"));
   VIGNETTING = asset_hndl_new_load(P("$CORANGE/resources/vignetting.dds"));
   
@@ -121,6 +133,7 @@ void deferred_renderer_init() {
   
   MAT_STATIC = asset_hndl_new(P("$CORANGE/shaders/deferred/static.mat"));
   MAT_ANIMATED = asset_hndl_new(P("$CORANGE/shaders/deferred/animated.mat"));
+  MAT_TERRAIN = asset_hndl_new(P("$CORANGE/shaders/deferred/terrain.mat"));
   MAT_CLEAR = asset_hndl_new(P("$CORANGE/shaders/deferred/clear.mat"));
   MAT_SSAO = asset_hndl_new(P("$CORANGE/shaders/deferred/ssao.mat"));
   MAT_TONEMAP = asset_hndl_new(P("$CORANGE/shaders/deferred/tonemap.mat"));
@@ -131,6 +144,7 @@ void deferred_renderer_init() {
   
   shader_program* program_static = material_get_entry(asset_hndl_ptr(MAT_STATIC), 0)->program;
   shader_program* program_animated = material_get_entry(asset_hndl_ptr(MAT_ANIMATED), 0)->program;
+  shader_program* program_terrain = material_get_entry(asset_hndl_ptr(MAT_TERRAIN), 0)->program;
   
   /* Skydome */
   
@@ -153,6 +167,12 @@ void deferred_renderer_init() {
   BINORMAL_ANIMATED = glGetAttribLocation(shader_program_handle(program_animated), "binormal");  
   BONE_INDICIES = glGetAttribLocation(shader_program_handle(program_animated), "bone_indicies");
   BONE_WEIGHTS = glGetAttribLocation(shader_program_handle(program_animated), "bone_weights"); 
+  
+  SDL_GL_CheckError();
+  
+  NORMAL_TERRAIN = glGetAttribLocation(shader_program_handle(program_terrain), "normal");
+  TANGENT_TERRAIN = glGetAttribLocation(shader_program_handle(program_terrain), "tangent");
+  BINORMAL_TERRAIN = glGetAttribLocation(shader_program_handle(program_terrain), "binormal");  
   
   SDL_GL_CheckError();
   
@@ -358,6 +378,10 @@ void deferred_renderer_disable_skydome() {
   SKYDOME_ENABLED = false;
 }
 
+void deferred_renderer_set_glitch(float glitch) {
+  GLITCH = glitch;
+}
+
 void deferred_renderer_add_light(light* l) {
   
   if (num_lights == DEFERRED_MAX_LIGHTS) {
@@ -404,6 +428,10 @@ void deferred_renderer_set_color_correction(asset_hndl ah) {
 
 void deferred_renderer_set_shadow_light(light* l) {
   SHADOW_LIGHT = l;
+}
+
+void deferred_renderer_set_vignetting(asset_hndl v) {
+  VIGNETTING = v;
 }
 
 static void deferred_renderer_use_material_entry(material_entry* me, shader_program* PROG) {
@@ -891,7 +919,7 @@ void deferred_renderer_end() {
   float average = (float)(color[0] + color[1] + color[2]) / (3.0 * 255.0);
   
   //EXPOSURE += (EXPOSURE_TARGET - average) * EXPOSURE_SPEED;
-  EXPOSURE = 1.0;
+  EXPOSURE = 5.0;
   
   SDL_GL_CheckError();
   
@@ -1004,10 +1032,19 @@ void deferred_renderer_end() {
   glUniform1i(glGetUniformLocation(screen_post1_handle, "vignetting_texture"), 1);
   
   glActiveTexture(GL_TEXTURE0 + 2 );
+  glBindTexture(GL_TEXTURE_2D, texture_handle(asset_hndl_ptr(RANDOM_PERLIN)));
+  glEnable(GL_TEXTURE_2D);
+  glUniform1i(glGetUniformLocation(screen_post1_handle, "random_perlin"), 2);
+  
+  glActiveTexture(GL_TEXTURE0 + 3 );
   glBindTexture(GL_TEXTURE_3D, texture_handle(asset_hndl_ptr(COLOR_CORRECTION)));
   glEnable(GL_TEXTURE_3D);
-  glUniform1i(glGetUniformLocation(screen_post1_handle, "lut"), 2);
+  glUniform1i(glGetUniformLocation(screen_post1_handle, "lut"), 3);
   
+  TIME += frame_time();
+  
+  glUniform1f(glGetUniformLocation(screen_post1_handle, "glitch"), GLITCH);
+  glUniform1f(glGetUniformLocation(screen_post1_handle, "time"), TIME);
   glUniform1i(glGetUniformLocation(screen_post1_handle, "width"), graphics_viewport_width());
   glUniform1i(glGetUniformLocation(screen_post1_handle, "height"), graphics_viewport_height());
   glUniform1i(glGetUniformLocation(screen_post1_handle, "aa_type"), graphics_get_antialiasing());
@@ -1019,8 +1056,11 @@ void deferred_renderer_end() {
 		glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0,  1.0,  0.0f);
 	glEnd();
   
-  glActiveTexture(GL_TEXTURE0 + 2 );
+  glActiveTexture(GL_TEXTURE0 + 3 );
   glDisable(GL_TEXTURE_3D);
+  
+  glActiveTexture(GL_TEXTURE0 + 2 );
+  glDisable(GL_TEXTURE_2D);
   
   glActiveTexture(GL_TEXTURE0 + 1 );
   glDisable(GL_TEXTURE_2D);
@@ -1210,6 +1250,135 @@ void deferred_renderer_render_animated(animated_object* ao) {
 
 }
 
+void deferred_renderer_render_landscape(landscape* l) {
+
+  shader_program* program_terrain = material_get_entry(asset_hndl_ptr(MAT_TERRAIN), 0)->program;
+  
+  GLuint program_terrain_handle = shader_program_handle(program_terrain);
+  glUseProgram(program_terrain_handle);
+  
+  GLint proj_matrix_u = glGetUniformLocation(program_terrain_handle, "proj_matrix");
+  glUniformMatrix4fv(proj_matrix_u, 1, 0, PROJ_MATRIX);
+  
+  GLint view_matrix_u = glGetUniformLocation(program_terrain_handle, "view_matrix");
+  glUniformMatrix4fv(view_matrix_u, 1, 0, VIEW_MATRIX);
+  
+  GLsizei stride = sizeof(float) * 12;
+  
+  terrain* terr = asset_hndl_ptr(l->heightmap);
+  for(int i = 0; i < terr->num_chunks; i++) {
+        
+    terrain_chunk* tc = terr->chunks[i];
+    
+    vec3 scale = vec3_new(-(1.0 / terr->width) * l->size_x, 0.25, -(1.0 / terr->height) * l->size_y);
+    vec3 translation = vec3_new(l->size_x / 2, 0, l->size_y / 2);
+    vec4 rotation = quaternion_id();
+    
+    mat4 r_world_matrix = mat4_world(translation, scale, rotation);
+    mat4_to_array(r_world_matrix, WORLD_MATRIX);
+    
+    GLint world_matrix_u = glGetUniformLocation(program_terrain_handle, "world_matrix");
+    glUniformMatrix4fv(world_matrix_u, 1, 0, WORLD_MATRIX);
+    
+    glUniform1f(glGetUniformLocation(program_terrain_handle, "near"), CAMERA->near_clip);
+    glUniform1f(glGetUniformLocation(program_terrain_handle, "far"), CAMERA->far_clip);
+    
+    glActiveTexture(GL_TEXTURE0 + 0 );
+    glBindTexture(GL_TEXTURE_2D, texture_handle(asset_hndl_ptr(l->ground0)));
+    glEnable(GL_TEXTURE_2D);
+    glUniform1i(glGetUniformLocation(program_terrain_handle, "ground0"), 0);
+    
+    glActiveTexture(GL_TEXTURE0 + 1 );
+    glBindTexture(GL_TEXTURE_2D, texture_handle(asset_hndl_ptr(l->ground1)));
+    glEnable(GL_TEXTURE_2D);
+    glUniform1i(glGetUniformLocation(program_terrain_handle, "ground1"), 1);
+
+    glActiveTexture(GL_TEXTURE0 + 2 );
+    glBindTexture(GL_TEXTURE_2D, texture_handle(asset_hndl_ptr(l->ground2)));
+    glEnable(GL_TEXTURE_2D);
+    glUniform1i(glGetUniformLocation(program_terrain_handle, "ground2"), 2);
+    
+    glActiveTexture(GL_TEXTURE0 + 3 );
+    glBindTexture(GL_TEXTURE_2D, texture_handle(asset_hndl_ptr(l->ground3)));
+    glEnable(GL_TEXTURE_2D);
+    glUniform1i(glGetUniformLocation(program_terrain_handle, "ground3"), 3);
+    
+    glActiveTexture(GL_TEXTURE0 + 4 );
+    glBindTexture(GL_TEXTURE_2D, texture_handle(asset_hndl_ptr(l->ground0_nm)));
+    glEnable(GL_TEXTURE_2D);
+    glUniform1i(glGetUniformLocation(program_terrain_handle, "ground0_nm"), 4);
+    
+    glActiveTexture(GL_TEXTURE0 + 5 );
+    glBindTexture(GL_TEXTURE_2D, texture_handle(asset_hndl_ptr(l->ground1_nm)));
+    glEnable(GL_TEXTURE_2D);
+    glUniform1i(glGetUniformLocation(program_terrain_handle, "ground1_nm"), 5);
+
+    glActiveTexture(GL_TEXTURE0 + 6 );
+    glBindTexture(GL_TEXTURE_2D, texture_handle(asset_hndl_ptr(l->ground2_nm)));
+    glEnable(GL_TEXTURE_2D);
+    glUniform1i(glGetUniformLocation(program_terrain_handle, "ground2_nm"), 6);
+    
+    glActiveTexture(GL_TEXTURE0 + 7 );
+    glBindTexture(GL_TEXTURE_2D, texture_handle(asset_hndl_ptr(l->ground3_nm)));
+    glEnable(GL_TEXTURE_2D);
+    glUniform1i(glGetUniformLocation(program_terrain_handle, "ground3_nm"), 7);
+    
+    glBindBuffer(GL_ARRAY_BUFFER, tc->vertex_buffer);
+    
+    glVertexPointer(3, GL_FLOAT, stride, (void*)0);
+    glEnableClientState(GL_VERTEX_ARRAY);
+    
+    glVertexAttribPointer(NORMAL, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 3));
+    glEnableVertexAttribArray(NORMAL);
+    
+    glVertexAttribPointer(TANGENT, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 6));
+    glEnableVertexAttribArray(TANGENT);
+    
+    glVertexAttribPointer(BINORMAL, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 9));
+    glEnableVertexAttribArray(BINORMAL);
+    
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tc->index_buffers[0]);
+      glDrawElements(GL_TRIANGLES, tc->num_indicies[0], GL_UNSIGNED_INT, (void*)0);
+    
+    glDisableClientState(GL_VERTEX_ARRAY);
+    
+    glDisableVertexAttribArray(NORMAL);
+    glDisableVertexAttribArray(TANGENT);
+    glDisableVertexAttribArray(BINORMAL);
+    
+    glActiveTexture(GL_TEXTURE0 + 7 );
+    glDisable(GL_TEXTURE_2D);
+    
+    glActiveTexture(GL_TEXTURE0 + 6 );
+    glDisable(GL_TEXTURE_2D);
+    
+    glActiveTexture(GL_TEXTURE0 + 5 );
+    glDisable(GL_TEXTURE_2D);
+    
+    glActiveTexture(GL_TEXTURE0 + 4 );
+    glDisable(GL_TEXTURE_2D);
+    
+    glActiveTexture(GL_TEXTURE0 + 3 );
+    glDisable(GL_TEXTURE_2D);
+    
+    glActiveTexture(GL_TEXTURE0 + 2 );
+    glDisable(GL_TEXTURE_2D);
+    
+    glActiveTexture(GL_TEXTURE0 + 1 );
+    glDisable(GL_TEXTURE_2D);
+    
+    glActiveTexture(GL_TEXTURE0 + 0 );
+    glDisable(GL_TEXTURE_2D);
+    
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+  
+  }
+  
+  glUseProgram(0);
+  
+}
+
 void deferred_renderer_render_light(light* l) {
   
   mat4 viewm = camera_view_matrix(CAMERA);
@@ -1222,7 +1391,6 @@ void deferred_renderer_render_light(light* l) {
   light_pos = vec4_div(light_pos, light_pos.w);
   
   shader_program* program_ui = material_get_entry(asset_hndl_ptr(MAT_UI), 0)->program;
-  
   glUseProgram(shader_program_handle(program_ui));
   
 	glMatrixMode(GL_PROJECTION);
@@ -1278,10 +1446,20 @@ void deferred_renderer_render_axis(mat4 world) {
   y_pos = vec4_div(y_pos, y_pos.w);
   z_pos = vec4_div(z_pos, z_pos.w);
   base_pos = vec4_div(base_pos, base_pos.w);
+
+  shader_program* program_ui = material_get_entry(asset_hndl_ptr(MAT_UI), 0)->program;
+  glUseProgram(shader_program_handle(program_ui));  
+
+  texture* white = asset_get_load(P("$CORANGE/ui/white.dds"));
+  glActiveTexture(GL_TEXTURE0 + 0 );
+  glBindTexture(GL_TEXTURE_2D, texture_handle(white));
+  glEnable(GL_TEXTURE_2D);
+  glUniform1i(glGetUniformLocation(shader_program_handle(program_ui), "diffuse"), 0);
+  glUniform1f(glGetUniformLocation(shader_program_handle(program_ui), "alpha_test"), 0.0);
   
   glDisable(GL_DEPTH_TEST);
   
-  glLineWidth(2.0);
+  glLineWidth(5.0);
   glBegin(GL_LINES);
     glColor3f(1.0,0.0,0.0);
     glVertex3f(x_pos.x, x_pos.y, x_pos.z);
@@ -1295,21 +1473,26 @@ void deferred_renderer_render_axis(mat4 world) {
   glEnd();
   glLineWidth(1.0);
   
-  glPointSize(5.0);
+  glPointSize(10.0);
   glBegin(GL_POINTS);
+    glColor3f(1.0,1.0,1.0);
+    glVertex3f(base_pos.x, base_pos.y, base_pos.z);
     glColor3f(1.0,0.0,0.0);
     glVertex3f(x_pos.x, x_pos.y, x_pos.z);
     glColor3f(0.0,1.0,0.0);
     glVertex3f(y_pos.x, y_pos.y, y_pos.z);
     glColor3f(0.0,0.0,1.0);
     glVertex3f(z_pos.x, z_pos.y, z_pos.z);
-    glColor3f(1.0,1.0,1.0);
-    glVertex3f(base_pos.x, base_pos.y, base_pos.z);
   glEnd();
   glPointSize(1.0);
   
   glEnable(GL_DEPTH_TEST);
 
+  glActiveTexture(GL_TEXTURE0 + 0 );
+  glDisable(GL_TEXTURE_2D);
+  
+  glUseProgram(0);
+  
 }
 
 

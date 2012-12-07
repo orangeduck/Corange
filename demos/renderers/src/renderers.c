@@ -52,7 +52,7 @@ static void switch_renderer_event(ui_button* b, SDL_Event event) {
   
   if (event.type == SDL_MOUSEBUTTONDOWN) {
     
-    if (ui_button_contains_position(b, vec2_new(event.motion.x, event.motion.y))) {
+    if (ui_button_contains_point(b, vec2_new(event.motion.x, event.motion.y))) {
       any_button_pressed = true;
       b->pressed = true;
     }
@@ -77,7 +77,7 @@ static void switch_object_event(ui_button* b, SDL_Event event) {
   
   if (event.type == SDL_MOUSEBUTTONDOWN) {
     
-    if (ui_button_contains_position(b, vec2_new(event.motion.x, event.motion.y))) {
+    if (ui_button_contains_point(b, vec2_new(event.motion.x, event.motion.y))) {
       any_button_pressed = true;
       b->pressed = true;
     }

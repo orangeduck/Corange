@@ -49,7 +49,8 @@ void main() {
   }
   
   vec4 pos_light = light_proj * light_view * vec4(position.xyz,1.0);
-  float shadow = shadow_amount_soft_pcf25(pos_light, shadows_texture, 0.0005);
+  //float shadow = shadow_amount_soft_pcf25(pos_light, shadows_texture, 0.0005);
+  float shadow = 1.0;
 	float ssao = texture2DLod(ssao_texture, gl_TexCoord[0].xy, 1.0).r;
   
 	vec4 diffuse_a = texture2D( diffuse_texture, gl_TexCoord[0].xy );
