@@ -1,189 +1,130 @@
 #include "data/dict.h"
 
-int dict_hash(dict* dict, char* string) {
-  
-  int total = 1;
-  
-  int i = 0;
-  while(  string[i] != '\0' ) {
-    int value = (int)string[i];
-    total = total + value + i;
-    i++;
-  }
-  
-  total = abs(total % dict->size);
-  
-  return total;
-};
+static int hash(const char* s, int size) {
+  int h = 0;
+  while (*s) h = h * 101 + *s++;
+  return abs(h) % size;
+}
 
 dict* dict_new(int size) {
   
-  dict* dict = malloc( sizeof(dict) );
+  dict* d = malloc( sizeof(dict) );
   
-  dict->size = size;
-  dict->buckets = malloc( sizeof(struct bucket*) * dict->size );
+  d->size = size;
+  d->buckets = malloc( sizeof(struct bucket*) * d->size );
   
-  for(int i = 0; i < size; i++) {
-    dict->buckets[i] = NULL;
+  for(int i = 0; i < d->size; i++) {
+    d->buckets[i] = NULL;
   }
   
-  return dict;
+  return d;
   
 }
 
-void dict_delete(dict* dict) {
+void dict_delete(dict* d) {
 
-  for(int i=0; i< dict->size; i++) {
-    if (dict->buckets[i] != NULL) {
-      bucket_delete_recursive(dict->buckets[i]);
-    }
+  for(int i=0; i< d->size; i++) {
+    bucket_delete_recursive(d->buckets[i]);
   }
-  free(dict->buckets);
-  free(dict);
+  
+  free(d->buckets);
+  free(d);
 }
 
-bool dict_contains(dict* dict, char* string) {
+bool dict_contains(dict* d, char* key) {
 
-  int index = dict_hash(dict, string);
-  struct bucket* b = dict->buckets[index];
+  int index = hash(key, d->size);
+  struct bucket* b = d->buckets[index];
   
-  if(b == NULL) { return false;}
-  
-  while(1) {
-    
-    if ( strcmp(b->string, string) == 0 ){ return true; }
-    if (b->next == NULL) { return false; }
-    
-    else { b = b->next; }
-    
+  while(true) {
+    if (b == NULL) { return false;}
+    if ( strcmp(b->key, key) == 0 ){ return true; }
+    b = b->next;
   }
 
 }
 
-void* dict_get(dict* dict, char* string) {
+void* dict_get(dict* d, char* key) {
   
-  int index = dict_hash(dict, string);
-  struct bucket* b = dict->buckets[index];
+  int index = hash(key, d->size);
+  struct bucket* b = d->buckets[index];
   
-  /* If empty (no bucket) return NULL */
-  if (b == NULL) {
-    return NULL;
-  }
-  
-  while(1){
+  while(true){
     
-    /* check if string matches */
-    if ( strcmp(b->string, string) == 0 ){ return b->item; }
-    
-    /* If there is no other buckets return NULL */
-    if (b->next == NULL) { return NULL; }
-    
-    /* Otherwise continue looking in next bucket */
-    else {b = b->next; }
+    if (b == NULL) { return NULL; }
+    if ( strcmp(b->key, key) == 0 ){ return b->item; }
+    b = b->next;
   }
   
   return NULL;
 
 };
 
-void dict_set(dict* dict, char* string, void* item) {
+void dict_set(dict* d, char* key, void* item) {
 
-  int index = dict_hash(dict, string);
-    
-  struct bucket* b = dict->buckets[index];
-    
-  /* If nothing already there add single bucket */
-  if (b == NULL) {
-    struct bucket* new_bucket = bucket_new(string, item);
-    dict->buckets[index] = new_bucket;
-    return;
-  }
+  int index = hash(key, d->size);
+  struct bucket* b = d->buckets[index];
+  struct bucket** p = &d->buckets[index];
   
-  while(1) {
+  while(true) {
     
-    if( strcmp(b->string, string) == 0) {
+    if (b == NULL) {
+      *p = bucket_new(key, item);
+      return;
+    }
+    
+    if( strcmp(b->key, key) == 0) {
       b->item = item;
       return;
     }
-  
-    if( b->next == NULL) {    
-      b->next = bucket_new(string, item);
-      return;
-    }
-  
+    
+    p = &b->next;
     b = b->next;
   }
   
 }
 
-void dict_remove_with(dict* dict, char* string, void func(void*)) {
+void dict_remove_with(dict* d, char* key, void func(void*)) {
   
-  int index = dict_hash(dict, string);
-  struct bucket* b = dict->buckets[index];
+  int index = hash(key, d->size);
+  struct bucket* b = d->buckets[index];
+  struct bucket** p = &d->buckets[index];
   
-  /* No buckets in list */
-  if (b == NULL) {
-    return;
-  }
-  
-  /* First Bucket */
-  if(strcmp(b->string, string) == 0) {
-    if(b->next == NULL) {
-      bucket_delete_with(b, func);
-      dict->buckets[index] = NULL;
-    } else {
-      struct bucket* next = b->next;
-      bucket_delete_with(b, func);
-      dict->buckets[index] = next;
-    }
-    return;
-  }
-  
-  /* One or more Buckets */
-  while(1) {
+  while(true) {
     
-    if(b->next == NULL) {
+    if(b == NULL) { return; }
+    if(strcmp(b->key, key) == 0) {
+      *p = b->next;
+      bucket_delete_with(b, func);
       return;
     }
     
-    if(strcmp(b->next->string, string) == 0) {
-      if (b->next->next == NULL) {
-        bucket_delete_with(b->next, func);
-        b->next = NULL;
-      } else {
-        struct bucket* next_next = b->next->next;
-        bucket_delete_with(b->next, func);
-        b->next = next_next;
-      }
-      return;
-    }
+    p = &b->next;
     b = b->next;
   }
 }
 
-void dict_map(dict* dict, void func(void*)) {
+void dict_map(dict* d, void func(void*)) {
   
-  for(int i = 0; i < dict->size; i++) {
-    struct bucket* b = dict->buckets[i];
-    bucket_map(b, func);
+  for(int i = 0; i < d->size; i++) {
+    bucket_map(d->buckets[i], func);
   }
   
 }
 
-void dict_filter_map(dict* dict, int filter(void*) , void func(void*) ) {
+void dict_filter_map(dict* d, int filter(void*) , void func(void*) ) {
   
-  for(int i = 0; i < dict->size; i++) {
-    struct bucket* b = dict->buckets[i];
-    bucket_filter_map(b, filter, func);
+  for(int i = 0; i < d->size; i++) {
+    bucket_filter_map(d->buckets[i], filter, func);
   }
   
 }
 
-void dict_print(dict* dict) {
+void dict_print(dict* d) {
   int num_bucket_lists = 0;
   
-  for(int i = 0; i < dict->size; i++) {
-    struct bucket* b = dict->buckets[i];
+  for(int i = 0; i < d->size; i++) {
+    struct bucket* b = d->buckets[i];
     if(b != NULL) {
       printf("%i - ", i); bucket_print(b); printf("\n");
       num_bucket_lists++;
@@ -194,12 +135,12 @@ void dict_print(dict* dict) {
   
 }
 
-char* dict_find(dict* dict, void* item) {
+char* dict_find(dict* d, void* item) {
   
-  for(int i = 0; i < dict->size; i++) {
-    struct bucket* b = dict->buckets[i];
+  for(int i = 0; i < d->size; i++) {
+    struct bucket* b = d->buckets[i];
     while (b != NULL) {
-      if (b->item == item) { return b->string; }
+      if (b->item == item) { return b->key; }
       b = b->next;
     }
   }
@@ -208,13 +149,12 @@ char* dict_find(dict* dict, void* item) {
   
 }
 
-struct bucket* bucket_new(char* string, void* item) {
+struct bucket* bucket_new(char* key, void* item) {
   
   struct bucket* b = malloc(sizeof(struct bucket));
   b->item = item;
-  
-  b->string = malloc(strlen(string) + 1);
-  strcpy(b->string, string);
+  b->key = malloc(strlen(key) + 1);
+  strcpy(b->key, key);
   
   b->next = NULL;
   
@@ -222,40 +162,34 @@ struct bucket* bucket_new(char* string, void* item) {
 }
 
 void bucket_map(struct bucket* b, void func(void*) ) {
-  
   if( b == NULL) { return; }
-  
   func(b->item);
   bucket_map(b->next, func);
 }
 
 void bucket_filter_map(struct bucket* b, int filter(void*) , void func(void*) ) {
-
   if( b == NULL) { return; }
-
-  if(filter(b->item) == 1) {
-    func(b->item);
-  }
-  
+  if(filter(b->item)) { func(b->item);}
   bucket_filter_map(b->next, filter, func);
 }
 
 void bucket_delete_with(struct bucket* b, void func(void*) ){
   func(b->item);
-  free(b->string);
+  free(b->key);
   free(b);
 }
 
 void bucket_delete_recursive(struct bucket* b) {
-  if(b->next != NULL) { bucket_delete_recursive(b->next); }
+  if (b == NULL) return;
   
-  free(b->string);
+  bucket_delete_recursive(b->next);
+  free(b->key);
   free(b);
 }
 
 void bucket_print(struct bucket* b) {
   
-  printf("(%s : %p)", b->string, b->item);
+  printf("(%s : %p)", b->key, b->item);
   if (b->next != NULL) {
     printf(" -> "); bucket_print(b->next);
   }
