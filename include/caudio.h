@@ -14,18 +14,19 @@
 
 #include "cengine.h"
 #include "assets/sound.h"
+#include "assets/music.h"
 
 void audio_init();
 void audio_finish();
 
-void audio_disable();
-void audio_enable();
-bool audio_enabled();
+int audio_sound_play(sound* s, int loops);
+void audio_sound_pause(int channel);
+void audio_sound_resume(int channel);
+void audio_sound_stop(int channel);
 
-void audio_set_volume(float vol);
-float audio_get_volume();
-
-void audio_play_sound(sound* s);
-int audio_active_sounds();
+void audio_music_play(music* m);
+void audio_music_pause();
+void audio_music_resume();
+void audio_music_stop();
 
 #endif

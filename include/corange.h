@@ -49,6 +49,7 @@ void corange_finish();
 
 #include "assets/image.h"
 #include "assets/sound.h"
+#include "assets/music.h"
 #include "assets/lang.h"
 #include "assets/font.h"
 #include "assets/shader.h"

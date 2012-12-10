@@ -11,8 +11,7 @@
 #include "cengine.h"
 
 typedef struct {
-  char* data;
-  int length;
+  Mix_Chunk* sample;
 } sound;
 
 sound* wav_load_file(char* filename);
