@@ -76,6 +76,20 @@ void SDL_PathFileLocation(char* dst, const char* path) {
   dst[i] = '\0';
 }
 
+void SDL_PathParentDirectory(char* dst, const char* path) {
+
+  int i = strlen(path)-1;
+  while( i > 0) {
+    if (path[i] == '/') { break; }
+    if (path[i] == '\\') { break; }
+    i--;
+  }
+  
+  strncpy(dst, path, i);
+  dst[i] = '\0';
+  
+}
+
 void SDL_PathRelative(char* dst, const char* path) {
   char* curr = SDL_GetWorkingDir();
   char* sub = strstr(path, curr);

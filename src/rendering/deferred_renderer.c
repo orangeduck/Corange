@@ -584,12 +584,20 @@ void deferred_renderer_end() {
   glUniform1i(glGetUniformLocation(ssao_handle, "depth_texture"), 0);
   
   glActiveTexture(GL_TEXTURE0 + 1 );
+  glBindTexture(GL_TEXTURE_2D, normals_texture);
+  glEnable(GL_TEXTURE_2D);
+  glUniform1i(glGetUniformLocation(ssao_handle, "normals_texture"), 1);
+  
+  glActiveTexture(GL_TEXTURE0 + 2 );
   glBindTexture(GL_TEXTURE_2D, texture_handle(asset_hndl_ptr(RANDOM)));
   glEnable(GL_TEXTURE_2D);
-  glUniform1i(glGetUniformLocation(ssao_handle, "random_texture"), 1);
+  glUniform1i(glGetUniformLocation(ssao_handle, "random_texture"), 2);
   
   float seed = CAMERA->position.x + CAMERA->position.y + CAMERA->position.z;
   glUniform1f(glGetUniformLocation(ssao_handle, "seed"), seed);
+  
+  glUniform1i(glGetUniformLocation(ssao_handle, "width"), graphics_viewport_width());
+  glUniform1i(glGetUniformLocation(ssao_handle, "height"), graphics_viewport_height());
   
 	glBegin(GL_QUADS);
 		glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0, -1.0,  0.0f);
@@ -597,6 +605,9 @@ void deferred_renderer_end() {
 		glTexCoord2f(1.0f, 1.0f); glVertex3f(1.0,  1.0,  0.0f);
 		glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0,  1.0,  0.0f);
 	glEnd();
+  
+  glActiveTexture(GL_TEXTURE0 + 2 );
+  glDisable(GL_TEXTURE_2D);
   
   glActiveTexture(GL_TEXTURE0 + 1 );
   glDisable(GL_TEXTURE_2D);
@@ -1263,6 +1274,12 @@ void deferred_renderer_render_landscape(landscape* l) {
   GLint view_matrix_u = glGetUniformLocation(program_terrain_handle, "view_matrix");
   glUniformMatrix4fv(view_matrix_u, 1, 0, VIEW_MATRIX);
   
+  glUniform1f(glGetUniformLocation(program_terrain_handle, "near"), CAMERA->near_clip);
+  glUniform1f(glGetUniformLocation(program_terrain_handle, "far"), CAMERA->far_clip);
+  
+  glUniform1f(glGetUniformLocation(program_terrain_handle, "size_x"), l->size_x);
+  glUniform1f(glGetUniformLocation(program_terrain_handle, "size_y"), l->size_y);
+  
   GLsizei stride = sizeof(float) * 12;
   
   terrain* terr = asset_hndl_ptr(l->heightmap);
@@ -1270,7 +1287,7 @@ void deferred_renderer_render_landscape(landscape* l) {
         
     terrain_chunk* tc = terr->chunks[i];
     
-    vec3 scale = vec3_new(-(1.0 / terr->width) * l->size_x, 0.25, -(1.0 / terr->height) * l->size_y);
+    vec3 scale = vec3_new(-(1.0 / terr->width) * l->size_x, l->scale, -(1.0 / terr->height) * l->size_y);
     vec3 translation = vec3_new(l->size_x / 2, 0, l->size_y / 2);
     vec4 rotation = quaternion_id();
     
@@ -1279,9 +1296,6 @@ void deferred_renderer_render_landscape(landscape* l) {
     
     GLint world_matrix_u = glGetUniformLocation(program_terrain_handle, "world_matrix");
     glUniformMatrix4fv(world_matrix_u, 1, 0, WORLD_MATRIX);
-    
-    glUniform1f(glGetUniformLocation(program_terrain_handle, "near"), CAMERA->near_clip);
-    glUniform1f(glGetUniformLocation(program_terrain_handle, "far"), CAMERA->far_clip);
     
     glActiveTexture(GL_TEXTURE0 + 0 );
     glBindTexture(GL_TEXTURE_2D, texture_handle(asset_hndl_ptr(l->ground0)));
@@ -1323,6 +1337,11 @@ void deferred_renderer_render_landscape(landscape* l) {
     glEnable(GL_TEXTURE_2D);
     glUniform1i(glGetUniformLocation(program_terrain_handle, "ground3_nm"), 7);
     
+    glActiveTexture(GL_TEXTURE0 + 8 );
+    glBindTexture(GL_TEXTURE_2D, texture_handle(asset_hndl_ptr(l->attribmap)));
+    glEnable(GL_TEXTURE_2D);
+    glUniform1i(glGetUniformLocation(program_terrain_handle, "attribmap"), 8);
+    
     glBindBuffer(GL_ARRAY_BUFFER, tc->vertex_buffer);
     
     glVertexPointer(3, GL_FLOAT, stride, (void*)0);
@@ -1345,6 +1364,9 @@ void deferred_renderer_render_landscape(landscape* l) {
     glDisableVertexAttribArray(NORMAL);
     glDisableVertexAttribArray(TANGENT);
     glDisableVertexAttribArray(BINORMAL);
+    
+    glActiveTexture(GL_TEXTURE0 + 8 );
+    glDisable(GL_TEXTURE_2D);
     
     glActiveTexture(GL_TEXTURE0 + 7 );
     glDisable(GL_TEXTURE_2D);
@@ -1433,6 +1455,58 @@ void deferred_renderer_render_light(light* l) {
 
   glUseProgram(0);
 
+}
+
+void deferred_renderer_render_paint_circle(vec3 position, vec3 normal, float radius) {
+  
+  vec3 axis_x = vec3_cross(normal, vec3_new(1, 0, 0));
+  vec3 axis_z = vec3_cross(normal, axis_x);
+  
+  mat4 world = mat4_new(
+    axis_z.x, axis_z.y, axis_z.z, position.x,
+    normal.x, normal.y, normal.z, position.y,
+    axis_x.x, axis_x.y, axis_x.z, position.z,
+           0,        0,        0,          1);
+  
+  deferred_renderer_render_axis(world);
+  
+  shader_program* program_ui = material_get_entry(asset_hndl_ptr(MAT_UI), 0)->program;
+  glUseProgram(shader_program_handle(program_ui));  
+
+  texture* white = asset_get_load(P("$CORANGE/ui/white.dds"));
+  glActiveTexture(GL_TEXTURE0 + 0 );
+  glBindTexture(GL_TEXTURE_2D, texture_handle(white));
+  glEnable(GL_TEXTURE_2D);
+  glUniform1i(glGetUniformLocation(shader_program_handle(program_ui), "diffuse"), 0);
+  glUniform1f(glGetUniformLocation(shader_program_handle(program_ui), "alpha_test"), 0.0);
+  
+  glDisable(GL_DEPTH_TEST);
+  glLineWidth(1.0);
+  glBegin(GL_LINES);
+  glColor3f(0.75, 0.75, 0.75);
+  
+  for(float i = 0; i < M_PI * 2; i += 0.1) {
+    
+    vec3 point0 = vec3_mul(vec3_new(sin(i+0.0), 0, cos(i+0.0)), radius);
+    vec3 point1 = vec3_mul(vec3_new(sin(i+0.1), 0, cos(i+0.1)), radius);
+    
+    point0 = mat4_mul_vec3(world, point0);
+    point1 = mat4_mul_vec3(world, point1);
+  
+    glVertex3f(point0.x, point0.y, point0.z);
+    glVertex3f(point1.x, point1.y, point1.z);
+  
+  }
+  
+  glEnd();
+  glLineWidth(1.0);
+  glEnable(GL_DEPTH_TEST);
+  
+  glActiveTexture(GL_TEXTURE0 + 0 );
+  glDisable(GL_TEXTURE_2D);
+  
+  glUseProgram(0);
+  
 }
 
 void deferred_renderer_render_axis(mat4 world) {

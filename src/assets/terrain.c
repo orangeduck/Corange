@@ -31,16 +31,21 @@ static void terrain_new_chunk(terrain* ter, int i) {
     float gx = tc->x * ter->chunk_width + (float)x/SUBDIVISIONS;
     float gy = tc->y * ter->chunk_height + (float)y/SUBDIVISIONS;
     
-    float offset = terrain_height(ter, vec2_new(gx, gy));
-    vec3 pos = vec3_new(gx, offset, gy);
+    float offset   = terrain_height(ter, vec2_new(gx, gy));
+    float offset_x = terrain_height(ter, vec2_add(vec2_new(gx, gy), vec2_new(1,0)));
+    float offset_y = terrain_height(ter, vec2_add(vec2_new(gx, gy), vec2_new(0,-1)));
+    
+    vec3 pos    = vec3_new(gx+0, offset,   gy+0);
+    vec3 pos_xv = vec3_new(gx+1, offset_x, gy+0);
+    vec3 pos_yv = vec3_new(gx+0, offset_y, gy+1);
+    
+    vec3 tangent = vec3_normalize(vec3_sub(pos_yv, pos));
+    vec3 binorm  = vec3_normalize(vec3_sub(pos_xv, pos));
+    vec3 normal  = vec3_cross(tangent, binorm);
     
     vertex_buffer[index] = pos.x; index++;
     vertex_buffer[index] = pos.y; index++;
     vertex_buffer[index] = pos.z; index++;
-    
-    vec3 normal  = vec3_normalize(terrain_normal(ter, vec2_new(gx, gy)));
-    vec3 tangent = vec3_normalize(vec3_cross(normal, vec3_new(1, 0, 0)));
-    vec3 binorm  = vec3_normalize(vec3_cross(normal, tangent));
     
     vertex_buffer[index] = normal.x; index++;
     vertex_buffer[index] = normal.y; index++;
@@ -53,6 +58,7 @@ static void terrain_new_chunk(terrain* ter, int i) {
     vertex_buffer[index] = binorm.x; index++;
     vertex_buffer[index] = binorm.y; index++;
     vertex_buffer[index] = binorm.z; index++;
+    
   }
   
   /* Adding fins. Don't look, horrible code */
@@ -236,6 +242,31 @@ static void terrain_new_chunk(terrain* ter, int i) {
 
 }
 
+void terrain_reload_chunk(terrain* ter, int x, int y) {
+
+  if ((x < 0) || (y < 0) || (x >= ter->num_cols) || (y >= ter->num_cols)) {
+    return;
+  }
+  
+  int i = x + y * ter->num_cols;
+
+  terrain_chunk_delete(ter->chunks[i]);
+  terrain_new_chunk(ter, i);
+
+  for(int i = 0; i < ter->num_chunks; i++) {
+    int x = i % ter->num_cols;
+    int y = i / ter->num_cols;
+    
+    ter->chunks[i]->left   = terrain_get_chunk(ter, x-1, y);
+    ter->chunks[i]->right  = terrain_get_chunk(ter, x+1, y);
+    ter->chunks[i]->top    = terrain_get_chunk(ter, x, y-1);
+    ter->chunks[i]->bottom = terrain_get_chunk(ter, x, y+1);
+  }
+
+}
+
+static const float MAX_HEIGHT = 128;
+
 terrain* raw_load_file(char* filename) {
   
   SDL_RWops* file = SDL_RWFromFile(filename, "rb");
@@ -268,8 +299,6 @@ terrain* raw_load_file(char* filename) {
   ter->num_chunks = ter->num_cols * ter->num_rows;
   ter->heightmap = malloc(sizeof(float) * width * height);
   
-  const float MAX_HEIGHT = 128;
-  
   for(int i = 0; i < width * height; i++) {
     ter->heightmap[i] = (double)pixels[i] / (65536.0 / MAX_HEIGHT);
   }
@@ -295,6 +324,26 @@ terrain* raw_load_file(char* filename) {
   free(pixels);
   
   return ter;
+  
+}
+
+void raw_save_file(terrain* t, char* filename) {
+  
+  SDL_RWops* file = SDL_RWFromFile(filename, "wb");
+  
+  if (!file) {
+    error("Could not load file %s\n", filename);
+  }
+  
+  uint16_t* pixels = malloc(sizeof(uint16_t) * t->width * t->height);
+  
+  for(int i = 0; i < t->width * t->height; i++) {
+    pixels[i] = t->heightmap[i] * (65536.0 / MAX_HEIGHT);
+  }
+  
+  SDL_RWwrite(file, pixels, sizeof(uint16_t) * t->width * t->height, 1);
+  
+  SDL_RWclose(file);
   
 }
 
@@ -350,12 +399,12 @@ float terrain_height(terrain* ter, vec2 position) {
 vec3 terrain_normal(terrain* ter, vec2 position) {
   
   float base = terrain_height(ter, position);
-  float base_x = terrain_height(ter, vec2_add(position, vec2_new(1,0)));
+  float base_x = terrain_height(ter, vec2_add(position, vec2_new(-1,0)));
   float base_y = terrain_height(ter, vec2_add(position, vec2_new(0,-1)));
   
   vec3 basev = vec3_new(position.x, base, position.y);
-  vec3 base_xv = vec3_new(position.x+1, base_x, position.y);
-  vec3 base_yv = vec3_new(position.x, base_y, position.y+1);
+  vec3 base_xv = vec3_new(position.x+1, base_x, position.y+0);
+  vec3 base_yv = vec3_new(position.x+0, base_y, position.y+1);
   
   return vec3_normalize(vec3_cross(vec3_sub(base_yv, basev), vec3_sub(base_xv, basev)));
   

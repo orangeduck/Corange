@@ -865,18 +865,26 @@ void image_mask_xnor(image* i, image* i2) {
 
 }
 
-void tga_save_file(image* i, char* filename) {
+void image_write_to_file(image* i, char* filename) {
   
-  image_bgr_to_rgb(i);
+  fpath ext;
+  SDL_PathFileExtension(ext.ptr, filename);
   
-  int xa= i->width % 256;
-  int xb= (i->width-xa)/256;
+       if ( strcmp(ext.ptr, "tga") == 0 ) { image_tga_save_file(i, filename); }
+  else if ( strcmp(ext.ptr, "bmp") == 0 ) { image_bmp_save_file(i, filename); }
+  else { error("Cannot save texture to %s, unknown file extension %s. Try .tga!\n", filename, ext.ptr); }
+}
 
-  int ya= i->height % 256;
-  int yb= (i->height-ya)/256;
-  unsigned char header[18]={0,0,2,0,0,0,0,0,0,0,0,0,(char)xa,(char)xb,(char)ya,(char)yb,32,0};
+void image_tga_save_file(image* i, char* filename) {
+  
+  unsigned char xa= i->width % 256;
+  unsigned char xb= (i->width-xa)/256;
+  unsigned char ya= i->height % 256;
+  unsigned char yb= (i->height-ya)/256;
+  unsigned char header[18] = {0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, xa, xb, ya, yb, 32, 0};
   
   SDL_RWops* file = SDL_RWFromFile(filename, "wb");
+  
   if (file == NULL) {
     error("Could not write to file %s", filename);
   }
@@ -884,31 +892,37 @@ void tga_save_file(image* i, char* filename) {
   SDL_RWwrite(file, header, sizeof(header), 1);
   SDL_RWwrite(file, i->data, i->width * i->height * 4, 1);
   SDL_RWclose(file);
-
-  image_bgr_to_rgb(i);
   
 }
 
-void image_write_to_file(image* i, char* filename) {
+void image_bmp_save_file(image* i, char* filename) {
+  
+  SDL_Surface* surface = SDL_CreateRGBSurfaceFrom(i->data, i->width, i->height, 32, 4 * i->width, 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF);
+  SDL_SaveBMP(surface, filename);
+  SDL_FreeSurface(surface);
+  
+}
+
+image* image_read_from_file(char* filename) {
   
   fpath ext;
   SDL_PathFileExtension(ext.ptr, filename);
   
-  if ( strcmp(ext.ptr, "tga") == 0 ) {
-    tga_save_file(i, filename);
-  } else {
-    warning("Cannot save texture to %s, unknown file extension %s. Try .tga!\n", filename, ext.ptr);
-  }
+       if ( strcmp(ext.ptr, "tga") == 0 ) { return image_tga_load_file(filename); }
+  else if ( strcmp(ext.ptr, "bmp") == 0 ) { return image_bmp_load_file(filename); } 
+  else { error("Cannot save texture to %s, unknown file extension %s. Try .tga!\n", filename, ext.ptr); return NULL; }
 }
 
-image* tga_load_file(char* filename) {
+image* image_tga_load_file(char* filename) {
 
   SDL_RWops* file = SDL_RWFromFile(filename, "rb");
+  
 	if (file == NULL) {
 		error("Cannot open file %s", filename);
 	}
 	
-  uint16_t width, height, depth;
+  uint16_t width, height;
+  char depth;
 	
 	/* Seek to the width */
 	SDL_RWseek(file, 12, SEEK_SET);
@@ -920,38 +934,46 @@ image* tga_load_file(char* filename) {
 	
 	/* Seek to the depth */
 	SDL_RWseek(file, 16, SEEK_SET);
-	SDL_RWread(file, &depth, sizeof(uint16_t), 1);
+	SDL_RWread(file, &depth, sizeof(char), 1);
   
   image* i = image_empty(width, height);
   
   int channels;
-	if(depth == 24) {
+	if (depth == 24) {
 		channels = 3;
-	} else {
+	} else if (depth == 32) {
 		channels = 4;
-	}
+	} else {
+    error("Cannot load file '%s', it has depth of %i", filename, depth);
+  }
 
 	int size = height * width * channels;
 	unsigned char* image_data = malloc(sizeof(unsigned char) * size);
 
 	/* Seek to the image data. */
 	SDL_RWseek(file, 18, SEEK_SET);
-	SDL_RWread(file, image_data, sizeof(unsigned char), size);
-
+	SDL_RWread(file, image_data, sizeof(unsigned char) * size, 1);
   SDL_RWclose(file);
 
-  if(channels == 4) {
+  if (channels == 4) {
     
-    //memcpy(i->data, image_data, size);
+    int x, y;
+    for( x = 0; x < i->width; x++)
+    for( y = 0; y < i->width; y++) {
+      i->data[x * 4 + y * i->width * 4 + 0] = image_data[x * 4 + y * width * 4 + 2];
+      i->data[x * 4 + y * i->width * 4 + 1] = image_data[x * 4 + y * width * 4 + 1];
+      i->data[x * 4 + y * i->width * 4 + 2] = image_data[x * 4 + y * width * 4 + 0];
+      i->data[x * 4 + y * i->width * 4 + 3] = image_data[x * 4 + y * width * 4 + 3];
+    }
     
   } else if (channels == 3) {
     
     int x, y;
     for( x = 0; x < i->width; x++)
     for( y = 0; y < i->width; y++) {
-      i->data[x * 4 + y * i->width * 4 + 0] = image_data[x * 3 + y * width * 3 + 0];
+      i->data[x * 4 + y * i->width * 4 + 0] = image_data[x * 3 + y * width * 3 + 2];
       i->data[x * 4 + y * i->width * 4 + 1] = image_data[x * 3 + y * width * 3 + 1];
-      i->data[x * 4 + y * i->width * 4 + 2] = image_data[x * 3 + y * width * 3 + 2];
+      i->data[x * 4 + y * i->width * 4 + 2] = image_data[x * 3 + y * width * 3 + 0];
       i->data[x * 4 + y * i->width * 4 + 3] = 0;
     }
     
@@ -965,15 +987,13 @@ image* tga_load_file(char* filename) {
   
 }
 
-image* bmp_load_file(char* filename) {
+image* image_bmp_load_file(char* filename) {
   
-  SDL_Surface *surface;
-   
-  surface = SDL_LoadBMP(filename);
-   
-  if (!surface) {
-    error("Could not load file %s\n", filename);
-  }
+  SDL_Surface *surface = SDL_LoadBMP(filename);
+  
+  if (!surface) { error("Could not load file %s\n", filename); }
+  
+  SDL_LockSurface(surface);
   
   unsigned char* image_data = malloc(sizeof(unsigned char) * 4 * surface->w * surface->h);
   
@@ -998,7 +1018,9 @@ image* bmp_load_file(char* filename) {
   
   free(image_data);
   
+  SDL_UnlockSurface(surface);
   SDL_FreeSurface(surface);
   
   return i;
 }
+

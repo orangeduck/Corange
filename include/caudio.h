@@ -29,4 +29,7 @@ void audio_music_pause();
 void audio_music_resume();
 void audio_music_stop();
 
+void audio_music_set_volume(float volume);
+float audio_music_get_volume();
+
 #endif

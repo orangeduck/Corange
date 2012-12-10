@@ -61,4 +61,12 @@ void audio_music_stop() {
   int err = Mix_FadeOutMusic(fade_time);
 }
 
+void audio_music_set_volume(float volume) {
+  Mix_VolumeMusic(volume * MIX_MAX_VOLUME);
+}
+
+float audio_music_get_volume() {
+  return Mix_VolumeMusic(-1) * MIX_MAX_VOLUME;
+}
+
 

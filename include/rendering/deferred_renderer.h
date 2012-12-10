@@ -47,5 +47,6 @@ void deferred_renderer_render_animated(animated_object* ao);
 void deferred_renderer_render_light(light* l);
 void deferred_renderer_render_axis(mat4 world);
 void deferred_renderer_render_landscape(landscape* l);
+void deferred_renderer_render_paint_circle(vec3 position, vec3 normal, float radius);
 
 #endif

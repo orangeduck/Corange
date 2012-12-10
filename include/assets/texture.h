@@ -29,6 +29,8 @@ void texture_set_filtering_nearest(texture* t);
 void texture_set_filtering_linear(texture* t);
 void texture_set_filtering_anisotropic(texture* t);
 
+texture* bmp_load_file( char* filename );
+texture* tga_load_file( char* filename );
 texture* dds_load_file( char* filename );
 texture* lut_load_file( char* filename );
 

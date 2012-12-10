@@ -30,6 +30,7 @@ ui_browser* ui_browser_new() {
   
   b->num_items = 0;
   b->items = NULL;
+  b->onselect = NULL;
   
   ui_browser_chdir(b, b->directory);
   
@@ -57,6 +58,8 @@ void ui_browser_chdir(ui_browser* b, fpath p) {
     ui_text_delete(b->items[i]);
   }
   
+  debug("Setting Directory: '%s'", p.ptr);
+  b->directory = p;
   b->num_items = 0;
   
   vec2 position = vec2_add(b->inner->top_left, vec2_new(5, 5));
@@ -96,9 +99,29 @@ void ui_browser_event(ui_browser* b, SDL_Event e) {
       
       if (ui_text_contains_point(item, vec2_new(e.motion.x, e.motion.y))) {
         
-        if (strcmp(item->string, ".") == 0) {}
+        if (strcmp(item->string, ".") == 0) { continue; }
         if (strcmp(item->string, "..") == 0) {
-          
+          fpath parent;
+          SDL_PathParentDirectory(parent.ptr, b->directory.ptr);
+          ui_browser_chdir(b, parent);
+          continue;
+        }
+        
+        fpath child;
+        strcpy(child.ptr, b->directory.ptr);
+        strcat(child.ptr, "/");
+        strcat(child.ptr, item->string);
+        
+        if (SDL_PathIsDirectory(child.ptr)) {
+          ui_browser_chdir(b, child);
+          continue;
+        }
+        
+        if (SDL_PathIsFile(child.ptr)) {
+          if (b->onselect) {
+            b->onselect(child);
+          }
+          continue;
         }
         
       }
@@ -107,6 +130,10 @@ void ui_browser_event(ui_browser* b, SDL_Event e) {
   
   }
   
+}
+
+void ui_browser_set_onselect(ui_browser* b, void (*onselect)(fpath)) {
+  b->onselect = onselect;
 }
 
 void ui_browser_update(ui_browser* b) {

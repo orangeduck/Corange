@@ -14,7 +14,7 @@ typedef struct {
   int num_items;
   ui_text** items;
   
-  void (*onselect)(fpath file);
+  void (*onselect)(fpath);
 
 } ui_browser;
 
@@ -26,5 +26,6 @@ void ui_browser_chdir(ui_browser* b, fpath dir);
 void ui_browser_event(ui_browser* b, SDL_Event e);
 void ui_browser_update(ui_browser* b);
 void ui_browser_render(ui_browser* b);
+void ui_browser_set_onselect(ui_browser* b, void (*onselect)(fpath));
 
 #endif

@@ -19,6 +19,7 @@ typedef struct {
   asset_hndl heightmap;
   asset_hndl attribmap;
   
+  float scale;
   float size_x;
   float size_y;
   
@@ -36,5 +37,11 @@ typedef struct {
 
 landscape* landscape_new();
 void landscape_delete(landscape* l);
+
+float landscape_height(landscape* l, vec2 pos);
+vec3  landscape_normal(landscape* l, vec2 pos);
+
+void landscape_paint_height(landscape* l, vec2 pos, float radius, float value);
+void landscape_paint_color(landscape* l, vec2 pos, float radius, int type);
 
 #endif
