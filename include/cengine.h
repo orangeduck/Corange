@@ -25,9 +25,10 @@
 #include <signal.h>
 
 /* SDL includes */
-#include "SDL/SDL.h"
-#include "SDL/SDL_opengl.h"
-#include "SDL/SDL_rwops.h"
+#include <SDL/SDL.h>
+#include <SDL/SDL_opengl.h>
+#include <SDL/SDL_rwops.h>
+#include <SDL/SDL_mixer.h>
 #include "SDL/SDL_local.h"
 
 

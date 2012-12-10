@@ -17,8 +17,8 @@
 /* Buckets (Linked List) */
 
 struct bucket {
+  char* key;
   void* item;
-  char* string;
   struct bucket* next;
 };
 
@@ -41,8 +41,6 @@ typedef struct {
 
 dict* dict_new(int size);
 void dict_delete(dict* d);
-
-int dict_hash(dict* d, char* string);
 
 bool dict_contains(dict* d, char* string);
 void* dict_get(dict* d, char* string);

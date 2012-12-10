@@ -75,6 +75,8 @@ void corange_init(const char* core_assets_path) {
   asset_handler(material, "mat", mat_load_file, material_delete);
   
   asset_handler(sound, "wav", wav_load_file, sound_delete);
+  asset_handler(music, "ogg", ogg_load_file, music_delete);
+  asset_handler(music, "mp3", mp3_load_file, music_delete);
   
   /* Entity Manager */
   debug("Creating Entity Manager...");

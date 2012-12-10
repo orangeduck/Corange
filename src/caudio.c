@@ -1,167 +1,64 @@
 #include "caudio.h"
 
-static SDL_AudioSpec system_spec;
-static bool enabled = true;
-static float volume = 1.0f;
-
-typedef struct {
-  bool active;
-	sound* sound;
-	int	position;
-	float	left_volume;
-	float right_volume;
-  int loops;
-} sound_channel;
-
-#define MAX_CHANNELS 8
-sound_channel channels[MAX_CHANNELS];
-
-typedef struct {
-  int16_t left;
-  int16_t right;
-} int16_stereo_t;
-
-typedef int16_t int16_mono_t;
-
-static float volume_to_amplitude(float vol) {
-  return pow(10, vol) / 10;
-}
-
-static void audio_mix(void* unused, char* stream, int stream_size) {
-  
-  int16_stereo_t* samples = (int16_stereo_t*)stream;
-  int samples_num = stream_size / sizeof(int16_stereo_t);
-  
-  int i, j;
-  for(i = 0; i < samples_num; i++) {
-    for(j = 0; j < MAX_CHANNELS; j++) {
-      
-      if (!channels[j].active) continue;
-      
-      int16_mono_t* snd_samples = (int16_mono_t*)channels[j].sound->data;
-      int snd_len = channels[j].sound->length / sizeof(int16_mono_t);
-      
-      if(channels[j].position >= snd_len) {
-        channels[j].active = false;
-        break;
-      }
-      
-      if (enabled) {
-        double left = snd_samples[channels[j].position] / 32768.0;
-        double right = snd_samples[channels[j].position] / 32768.0;
-        
-        left = clamp(left * volume_to_amplitude(volume), -1, 1);
-        right = clamp(right * volume_to_amplitude(volume), -1, 1);
-        
-        samples[i].left += left * 32768;
-        samples[i].right += right * 32768;
-      } else {
-        samples[i].left = 0;
-        samples[i].right = 0;
-      }
-      
-      channels[j].position++;
-    }
-  }
-  
-}
+static int audio_rate = 22050;
+static Uint16 audio_format = AUDIO_S16;
+static int audio_channels = 2;
+static int audio_buffers = 4096;
+static float volume = 1.0;
 
 void audio_init() {
   
-  int error = SDL_InitSubSystem(SDL_INIT_AUDIO);
-  if (error == -1) {
-    error("Cannot start SDL audio!");
-  }  
-
-  SDL_AudioSpec as;
-  as.freq = 44100;
-  as.format = AUDIO_S16SYS;
-  as.channels = 2;
-  as.samples = 1024;
-  as.callback = (void(*)(void*,Uint8*,int))audio_mix;
+  int err;
   
-  if(SDL_OpenAudio(&as, &system_spec) < 0) {
-    error("Cannot start audio");
-  }
-
-	if(system_spec.format != AUDIO_S16SYS) {
-    error("System audio spec must be AUDIO_S16SYS");
-  }
+  err = SDL_InitSubSystem(SDL_INIT_AUDIO);
+  if (err == -1) { error("Could not start audio!"); }
   
-  for(int i = 0; i < MAX_CHANNELS; i++) {
-    channels[i].active = false;
-  }
+  err = Mix_OpenAudio(audio_rate, audio_format, audio_channels, audio_buffers);
+  if(err == -1) { error("Unable to start audio mixer!"); }
   
-	SDL_PauseAudio(0);
+  Mix_QuerySpec(&audio_rate, &audio_format, &audio_channels);
   
 }
 
 void audio_finish() {
-  
-	SDL_PauseAudio(1);
-  
-  for(int i = 0; i < MAX_CHANNELS; i++) {
-    channels[i].active = false;
-  }
-    
-	SDL_CloseAudio();
-  
+  Mix_CloseAudio();
 }
 
-void audio_play_sound(sound* s) {
-  
-  bool slot_free = false;
-  
-  for(int i = 0; i < MAX_CHANNELS; i++) {
-    if (!channels[i].active) {
-      
-      slot_free = true;
-      
-      channels[i].sound = s;
-      channels[i].position = 0;
-      channels[i].left_volume = 1.0;
-      channels[i].right_volume = 1.0;
-      channels[i].loops = 0;
-      
-      channels[i].active = true;
-      break;
-    }
-  }
-  
-  if (!slot_free) {
-    warning("Did not play sound. Reached maximum number of %i active sounds.", MAX_CHANNELS);
-  }
-  
+int audio_sound_play(sound* s, int loops) {
+  int chan = Mix_PlayChannel(-1, s->sample, loops);
+  if (chan == -1) { error("Unable to play sound: %s", Mix_GetError()); }
+  return chan;
 }
 
-int audio_active_sounds() {
-  
-  int count = 0;
-  
-  for(int i = 0; i < MAX_CHANNELS; i++) {
-    if(channels[i].active) { count++; }
-  }
-  
-  return count;
-  
+void audio_sound_pause(int channel) {
+  Mix_Pause(channel);
 }
 
-void audio_disable() {
-  enabled = false;
+void audio_sound_resume(int channel) {
+  Mix_Resume(channel);
 }
 
-void audio_enable() {
-  enabled = true;
+void audio_sound_stop(int channel) {
+  Mix_HaltChannel(channel);
 }
 
-bool audio_enabled() {
-  return enabled;
+static const int fade_time = 5000;
+
+void audio_music_play(music* m) {
+  int err = Mix_FadeInMusic(m->handle, -1, fade_time);
+  if (err == -1) { error("Unable to play music: '%s'", Mix_GetError()); }
 }
 
-void audio_set_volume(float vol) {
-  volume = clamp(vol, 0, 1);
+void audio_music_pause() {
+  Mix_PauseMusic();
 }
 
-float audio_get_volume() {
-  return volume;
+void audio_music_resume() {
+  Mix_ResumeMusic();
 }
+
+void audio_music_stop() {
+  int err = Mix_FadeOutMusic(fade_time);
+}
+
+

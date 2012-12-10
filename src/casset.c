@@ -148,10 +148,10 @@ static void delete_bucket_list(struct bucket* b) {
   
   delete_bucket_list(b->next);
   
-  debug("Unloading: '%s'", b->string);
+  debug("Unloading: '%s'", b->key);
   
   fpath ext;
-  SDL_PathFileExtension(ext.ptr, b->string);
+  SDL_PathFileExtension(ext.ptr, b->key);
   
   for(int i = 0; i < num_asset_handlers; i++) {
   
@@ -409,11 +409,11 @@ void asset_reload_type_id(type_id type) {
     struct bucket* b = asset_dict->buckets[i];
     while(b != NULL) {
       fpath bucket_ext;
-      SDL_PathFileExtension(bucket_ext.ptr, b->string);
+      SDL_PathFileExtension(bucket_ext.ptr, b->key);
       
       if (strcmp(bucket_ext.ptr, ext.ptr) == 0) {
-        char* new_name = malloc(strlen(b->string)+1);
-        strcpy(new_name, b->string);
+        char* new_name = malloc(strlen(b->key)+1);
+        strcpy(new_name, b->key);
         list_push_back(asset_names, new_name);
       }
       
@@ -448,8 +448,8 @@ void asset_reload_all() {
   for(int i = 0; i < asset_dict->size; i++) {
     struct bucket* b = asset_dict->buckets[i];
     while(b != NULL) {
-      char* new_name = malloc(strlen(b->string)+1);
-      strcpy(new_name, b->string);
+      char* new_name = malloc(strlen(b->key)+1);
+      strcpy(new_name, b->key);
       list_push_back(asset_names, new_name);
       b = b->next;
     }

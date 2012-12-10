@@ -8,6 +8,10 @@
 #include "SDL/SDL_opengl.h"
 #include "SDL/SDL_thread.h"
 
+#ifndef MAX_PATH
+  #define MAX_PATH PATH_MAX
+#endif
+
 void SDL_PrintStackTrace();
 
 void SDL_PathFullName(char* dst, const char* path);
@@ -21,12 +25,12 @@ void SDL_PathIsFile(char* path);
 void SDL_PathIsDirectory(char* path);
 
 char* SDL_GetWorkingDir();
-void SDL_SetWorkingDir(char* dir);
+int SDL_SetWorkingDir(char* dir);
 
 void SDL_RWsize(SDL_RWops* file, int* size);
 int SDL_RWreadline(SDL_RWops* file, char* buffer, int buffersize);
 
-int SDL_WM_UseResourceIcon();
+bool SDL_WM_UseResourceIcon();
 void SDL_WM_DeleteResourceIcon();
 
 int SDL_WM_CreateTempContext();
