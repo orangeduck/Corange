@@ -73,6 +73,7 @@ void ui_text_align(ui_text* text, int halign, int valign);
 void ui_text_draw(ui_text* text);
 void ui_text_draw_string(ui_text* text, char* string);
 
+void ui_text_event(ui_text* text, SDL_Event e);
 void ui_text_update(ui_text* text);
 void ui_text_render(ui_text* text);
 

@@ -119,6 +119,65 @@ void ui_textbox_enable(ui_textbox* tb) {
   tb->enabled = true;
 }
 
+void ui_textbox_event(ui_textbox* tb, SDL_Event e) {
+  
+  if (e.type == SDL_MOUSEBUTTONDOWN) {
+    if (ui_textbox_contains_point(tb, vec2_new(e.motion.x, e.motion.y))) {
+      tb->selected = true;
+    } else {
+      tb->selected = false;
+    }
+  }
+  
+  if (tb->selected) {
+    
+    if (e.type == SDL_KEYUP) {
+      
+      if (e.key.keysym.sym == SDLK_BACKSPACE) {
+        ui_textbox_rmchar(tb);
+        return;
+      }
+      
+      char ch;
+      switch (e.key.keysym.sym) {
+        case SDLK_a: ch = 'a'; break;
+        case SDLK_b: ch = 'b'; break;
+        case SDLK_c: ch = 'c'; break;
+        case SDLK_d: ch = 'd'; break;
+        case SDLK_e: ch = 'e'; break;
+        case SDLK_f: ch = 'f'; break;
+        case SDLK_g: ch = 'g'; break;
+        case SDLK_h: ch = 'h'; break;
+        case SDLK_i: ch = 'i'; break;
+        case SDLK_j: ch = 'j'; break;
+        case SDLK_k: ch = 'k'; break;
+        case SDLK_l: ch = 'l'; break;
+        case SDLK_m: ch = 'm'; break;
+        case SDLK_n: ch = 'n'; break;
+        case SDLK_o: ch = 'o'; break;
+        case SDLK_p: ch = 'p'; break;
+        case SDLK_q: ch = 'q'; break;
+        case SDLK_r: ch = 'r'; break;
+        case SDLK_s: ch = 's'; break;
+        case SDLK_t: ch = 't'; break;
+        case SDLK_u: ch = 'u'; break;
+        case SDLK_v: ch = 'v'; break;
+        case SDLK_w: ch = 'w'; break;
+        case SDLK_x: ch = 'x'; break;
+        case SDLK_y: ch = 'y'; break;
+        case SDLK_z: ch = 'z'; break;
+        default: ch = 0; break;
+      }
+      
+      if (ch != 0) {
+        ui_textbox_addchar(tb, ch);
+      }
+    }
+    
+  }
+  
+}
+
 void ui_textbox_update(ui_textbox* tb) {
 
 }

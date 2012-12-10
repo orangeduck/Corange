@@ -95,11 +95,12 @@ void corange_init(const char* core_assets_path) {
   
   ui_init();
   
-  ui_handler(ui_rectangle, ui_rectangle_new, ui_rectangle_delete, ui_rectangle_update, ui_rectangle_render);
-  ui_handler(ui_text, ui_text_new, ui_text_delete, ui_text_update, ui_text_render);
-  ui_handler(ui_spinner, ui_spinner_new, ui_spinner_delete, ui_spinner_update, ui_spinner_render);
-  ui_handler(ui_button, ui_button_new, ui_button_delete, ui_button_update, ui_button_render);
-  ui_handler(ui_textbox, ui_textbox_new, ui_textbox_delete, ui_textbox_update, ui_textbox_render);
+  ui_handler(ui_rectangle, ui_rectangle_new, ui_rectangle_delete, ui_rectangle_event, ui_rectangle_update, ui_rectangle_render);
+  ui_handler(ui_text, ui_text_new, ui_text_delete, ui_text_event, ui_text_update, ui_text_render);
+  ui_handler(ui_spinner, ui_spinner_new, ui_spinner_delete, ui_spinner_event, ui_spinner_update, ui_spinner_render);
+  ui_handler(ui_button, ui_button_new, ui_button_delete, ui_button_event, ui_button_update, ui_button_render);
+  ui_handler(ui_textbox, ui_textbox_new, ui_textbox_delete, ui_textbox_event, ui_textbox_update, ui_textbox_render);
+  ui_handler(ui_browser, ui_browser_new, ui_browser_delete, ui_browser_event, ui_browser_update, ui_browser_render);
   
   debug("Finished!");
 }

@@ -19,6 +19,8 @@ ui_button* ui_button_new() {
   ui_text_align(b->label, text_align_center, text_align_center);
   ui_text_draw(b->label);
   
+  b->onclick = NULL;
+  
   b->up_color = vec4_new(0.1, 0.1, 0.1, 1);
   b->down_color = vec4_grey();
 
@@ -35,6 +37,26 @@ void ui_button_delete(ui_button* b) {
   ui_rectangle_delete(b->back);
   ui_text_delete(b->label);
   free(b);
+  
+}
+
+void ui_button_event(ui_button* b, SDL_Event e) {
+  
+  if (e.type == SDL_MOUSEBUTTONDOWN) {
+    
+    if (ui_button_contains_point(b, vec2_new(e.motion.x, e.motion.y))) {
+      b->pressed = true;
+    }
+  
+  } else if (e.type == SDL_MOUSEBUTTONUP) {
+    
+    if (b->pressed) {
+      b->pressed = false;
+      if (b->onclick) {
+        b->onclick();
+      }
+    }
+  }
   
 }
 
@@ -61,6 +83,10 @@ void ui_button_set_font(ui_button* b, asset_hndl f) {
 
 void ui_button_set_label(ui_button* b, char* label) {
   ui_text_draw_string(b->label, label);
+}
+
+void ui_button_set_onclick(ui_button* b, void(*onclick)(void)) {
+  b->onclick = onclick;
 }
 
 void ui_button_render(ui_button* b) {

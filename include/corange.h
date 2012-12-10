@@ -69,6 +69,7 @@ void corange_finish();
 #include "ui/ui_spinner.h"
 #include "ui/ui_button.h"
 #include "ui/ui_textbox.h"
+#include "ui/ui_browser.h"
 
 /* Rendering */
 

@@ -82,6 +82,10 @@ void ui_text_align(ui_text* text, int halign, int valign) {
   text->valign = valign;
 }
 
+void ui_text_event(ui_text* text, SDL_Event e) {
+
+}
+
 void ui_text_update(ui_text* text) {
 
 }

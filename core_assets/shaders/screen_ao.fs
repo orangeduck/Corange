@@ -61,7 +61,7 @@ float ssao_depth(vec2 texcoords, sampler2D depth_texture, sampler2D random_textu
   
   const float radius = 0.00025;
   
-  const int samples = 8;
+  const int samples = 16;
   
   /* A Higher value will reduce noise but increase banding */
   const float noise_reduce = 100.0;

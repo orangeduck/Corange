@@ -32,6 +32,7 @@ typedef struct {
 ui_rectangle* ui_rectangle_new();
 void ui_rectangle_delete(ui_rectangle* rect);
 
+void ui_rectangle_event(ui_rectangle* rect, SDL_Event e);
 void ui_rectangle_update(ui_rectangle* rect);
 void ui_rectangle_render(ui_rectangle* rect);
 

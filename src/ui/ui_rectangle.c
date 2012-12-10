@@ -33,6 +33,10 @@ void ui_rectangle_delete(ui_rectangle* rect) {
   free(rect);
 }
 
+void ui_rectangle_event(ui_rectangle* rect, SDL_Event e) {
+
+}
+
 void ui_rectangle_update(ui_rectangle* rect) {
   
 }

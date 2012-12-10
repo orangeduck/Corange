@@ -39,6 +39,7 @@ void ui_textbox_set_contents(ui_textbox* tb, char* label);
 void ui_textbox_disable(ui_textbox* tb);
 void ui_textbox_enable(ui_textbox* tb);
 
+void ui_textbox_event(ui_textbox* tb, SDL_Event e);
 void ui_textbox_update(ui_textbox* tb);
 void ui_textbox_render(ui_textbox* tb);
 

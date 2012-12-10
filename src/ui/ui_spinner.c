@@ -20,10 +20,13 @@ void ui_spinner_delete(ui_spinner* s) {
   free(s);
 }
 
+void ui_spinner_event(ui_spinner* s, SDL_Event e) {
+
+}
+
 void ui_spinner_update(ui_spinner* s) {
   s->rotation += s->speed * frame_time();
 }
-
 
 void ui_spinner_render(ui_spinner* s) {
   

@@ -25,35 +25,34 @@ void ui_update();
 void ui_render();
 
 /* Register new UI type */
-#define ui_handler(type, new, delete, update, render) \
-  ui_handler_cast(typeid(type), (ui_elem*(*)())new, \
-                                      (void(*)(ui_elem*))delete, \
-                                      (void(*)(ui_elem*))update, \
-                                      (void(*)(ui_elem*))render)
-                                      
-void ui_handler_cast(int type_id,
-  void* ui_elem_new_func(), 
-  void ui_elem_del_func(void* ui_elem), 
-  void ui_elem_update_func(void* ui_elem), 
-  void ui_elem_render_func(void* ui_elem));
+#define ui_handler(type, new, delete, event, update, render) \
+  ui_handler_cast(typeid(type), \
+  (ui_elem*(*)())new, \
+  (void(*)(ui_elem*))delete, \
+  (void(*)(ui_elem*,SDL_Event))event, \
+  (void(*)(ui_elem*))update, \
+  (void(*)(ui_elem*))render)
 
+void ui_handler_cast(int type_id,
+  void* (*ui_elem_new_func)(), 
+  void (*ui_elem_del_func)(ui_elem*), 
+  void (*ui_elem_event_func)(ui_elem*, SDL_Event), 
+  void (*ui_elem_update_func)(ui_elem*), 
+  void (*ui_elem_render_func)(ui_elem*));
 
 /* Create, add and get UI elements */
 #define ui_elem_new(name, type) (type*)ui_elem_new_type_id(name, typeid(type))
 #define ui_elem_add(name, type, ui_elem) ui_elem_add_type_id(name, typeid(type), ui_elem);
 #define ui_elem_get_as(name, type) (type*)ui_elem_get_as_type_id(name, typeid(type));
-#define ui_elem_add_event(name, func) ui_elem_add_event_cast(name, (void(*)(ui_elem*,SDL_Event))func)
 
 bool ui_elem_exists(char* name);
 ui_elem* ui_elem_new_type_id(char* name, int type_id);
 void ui_elem_add_type_id(char* name, int type, ui_elem* ui_elem);
 ui_elem* ui_elem_get(char* name);
 ui_elem* ui_elem_get_as_type_id(char* name, int type_id);
-void ui_elem_add_event_cast(char* name, void event_func(ui_elem* elem, SDL_Event e));
-bool ui_elem_has_event(char* name);
-void ui_elem_remove_event(char* name);
 
-/* Update, Render, and Delete individual elements */
+/* Event, Update, Render, and Delete individual elements */
+void ui_elem_event(char* name, SDL_Event e);
 void ui_elem_update(char* name);
 void ui_elem_render(char* name);
 void ui_elem_delete(char* name);

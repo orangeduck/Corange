@@ -27,6 +27,7 @@ typedef struct {
 ui_spinner* ui_spinner_new();
 void ui_spinner_delete(ui_spinner* s);
 
+void ui_spinner_event(ui_spinner* s, SDL_Event e);
 void ui_spinner_update(ui_spinner* s);
 void ui_spinner_render(ui_spinner* s);
 
