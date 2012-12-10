@@ -21,8 +21,8 @@ void SDL_PathFileLocation(char* dst, const char* path);
 void SDL_PathRelative(char* dst, const char* path);
 void SDL_PathForwardSlashes(char* path);
 void SDL_PathJoin(char* dst, char* fst, char* snd);
-void SDL_PathIsFile(char* path);
-void SDL_PathIsDirectory(char* path);
+bool SDL_PathIsFile(char* path);
+bool SDL_PathIsDirectory(char* path);
 
 char* SDL_GetWorkingDir();
 int SDL_SetWorkingDir(char* dir);

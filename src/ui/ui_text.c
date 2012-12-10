@@ -397,7 +397,7 @@ void ui_text_render(ui_text* text) {
   
 }
 
-bool ui_text_contains_position(ui_text* text, vec2 position) {
+bool ui_text_contains_point(ui_text* text, vec2 position) {
   
   if(!text->active) {
     return false;

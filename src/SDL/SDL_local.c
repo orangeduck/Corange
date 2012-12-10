@@ -1,6 +1,10 @@
 #include "SDL/SDL_local.h"
 #include "SDL/SDL_rwops.h"
 
+#include <stdlib.h>
+#include <stdio.h>
+#include <dirent.h>
+
 #ifdef _WIN32
   #include "SDL/SDL_syswm.h"
   #include <windows.h>
@@ -95,19 +99,20 @@ void SDL_PathJoin(char* dst, char* fst, char* snd) {
   
 }
 
-void SDL_PathIsFile(char* path) {
-  SDL_RWops* f = SDL_RWopen(path, "r");
+bool SDL_PathIsFile(char* path) {
+  SDL_RWops* f = SDL_RWFromFile(path, "r");
   if (f == NULL) { return false; }
   else { SDL_RWclose(f); return true; }
 }
 
-void SDL_PathIsDirectory(char* path) {
-
+bool SDL_PathIsDirectory(char* path) {
+  DIR* d = opendir(path);
+  if (d == NULL) { return false; }
+  else { closedir(d); return true; }
 }
 
 
 #ifdef _WIN32
-  #include <direct.h>
   #define getcwd _getcwd
   #define chdir _chdir
 #else

@@ -92,9 +92,9 @@ void ui_browser_event(ui_browser* b, SDL_Event e) {
   
     for (int i = 0; i < b->num_items; i++) {
       
-      ui_text* item = b->item[i];
+      ui_text* item = b->items[i];
       
-      if (ui_text_contains_point(item, vec2_new(e.motion.x, e.motion.y)) {
+      if (ui_text_contains_point(item, vec2_new(e.motion.x, e.motion.y))) {
         
         if (strcmp(item->string, ".") == 0) {}
         if (strcmp(item->string, "..") == 0) {

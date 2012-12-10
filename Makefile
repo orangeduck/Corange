@@ -27,7 +27,7 @@ ifeq ($(findstring MINGW,$(PLATFORM)),MINGW)
 	DYNAMIC=corange.dll
 	STATIC=corange.lib
 	CFLAGS= $(INCS) -std=gnu99 -Wall -Werror -Wno-unused -O3 -g
-	LFLAGS= -g -L ./lib -lmingw32 -lopengl32 -lSDLmain -lSDL -shared
+	LFLAGS= -g -L ./lib -lmingw32 -lopengl32 -lSDLmain -lSDL -lSDL_mixer -shared
 	OBJ_FILES= $(addprefix obj/,$(notdir $(C_FILES:.c=.o))) corange.res
 endif
 

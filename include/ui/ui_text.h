@@ -77,6 +77,6 @@ void ui_text_event(ui_text* text, SDL_Event e);
 void ui_text_update(ui_text* text);
 void ui_text_render(ui_text* text);
 
-bool ui_text_contains_position(ui_text* text, vec2 position);
+bool ui_text_contains_point(ui_text* text, vec2 position);
 
 #endif
