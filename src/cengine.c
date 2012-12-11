@@ -1113,26 +1113,26 @@ vec4 quaternion_id() {
 
 vec4 quaternion_mul(vec4 v1, vec4 v2) {
   
-  vec4 quat;
+  vec4 q;
   
-  quat.x = (v1.w * v2.x) + (v1.x * v2.w) + (v1.y * v2.z) - (v1.z * v2.y);
-  quat.y = (v1.w * v2.y) - (v1.x * v2.z) + (v1.y * v2.w) + (v1.z * v2.z);
-  quat.z = (v1.w * v2.z) + (v1.x * v2.y) - (v1.y * v2.x) + (v1.z * v2.w);
-  quat.w = (v1.w * v2.w) - (v1.x * v2.x) - (v1.y * v2.y) - (v1.z * v2.z);
-  
-  return quat;
+  q.x = (v1.w * v2.x) + (v1.x * v2.w) + (v1.y * v2.z) - (v1.z * v2.y);
+  q.y = (v1.w * v2.y) - (v1.x * v2.z) + (v1.y * v2.w) + (v1.z * v2.x);
+  q.z = (v1.w * v2.z) + (v1.x * v2.y) - (v1.y * v2.x) + (v1.z * v2.w);
+  q.w = (v1.w * v2.w) - (v1.x * v2.x) - (v1.y * v2.y) - (v1.z * v2.z);
+ 
+  return q;
 }
 
 vec4 quaternion_angle_axis(float angle, vec3 axis) {
   
-  vec4 quat;
+  vec4 q;
   
-  quat.x = axis.x * sinf(angle / 2);
-  quat.y = axis.y * sinf(angle / 2);
-  quat.z = axis.y * sinf(angle / 2);
-  quat.w = cosf(angle / 2);
+  q.x = axis.x * sinf(angle / 2);
+  q.y = axis.y * sinf(angle / 2);
+  q.z = axis.z * sinf(angle / 2);
+  q.w = cosf(angle / 2);
   
-  return quat;
+  return q;
 }
 
 vec4 quaternion_rot(vec3 from, vec3 to) {
@@ -1140,10 +1140,10 @@ vec4 quaternion_rot(vec3 from, vec3 to) {
   vec3 h = vec3_normalize(vec3_add(from, to));
   
   vec4 q;
-  q.w = vec3_dot(from, h);
   q.x = from.y * h.z - from.z * h.y;
   q.y = from.z * h.x - from.x * h.z;
   q.z = from.x * h.y - from.y * h.x;
+  q.w = vec3_dot(from, h);
   
   return q;
 }
@@ -1971,6 +1971,7 @@ mat4 mat4_rotation_euler(float x, float y, float z) {
 mat4 mat4_rotation_quaternion(vec4 q) {
 
   q = quaternion_normalize(q);
+  q = quaternion_swap_handedness(q);
   
   mat4 m = mat4_id();
   

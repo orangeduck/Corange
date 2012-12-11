@@ -152,10 +152,10 @@ vec2 vec2_new(float x, float y);
 vec2 vec2_zero();
 vec2 vec2_one();
 
-vec2 vec2_add(vec2 v1, vec2 vec2);
-vec2 vec2_sub(vec2 v1, vec2 vec2);
+vec2 vec2_add(vec2 v1, vec2 v2);
+vec2 vec2_sub(vec2 v1, vec2 v2);
 vec2 vec2_mul(vec2 v, float fac);
-vec2 vec2_mul_vec2(vec2 v1, vec2 vec2);
+vec2 vec2_mul_vec2(vec2 v1, vec2 v2);
 vec2 vec2_div(vec2 v, float fac);
 vec2 vec2_pow(vec2 v, float exp);
 vec2 vec2_neg(vec2 v);
@@ -167,17 +167,17 @@ vec2 vec2_max(vec2 v, float x);
 vec2 vec2_min(vec2 v, float x);
 vec2 vec2_clamp(vec2 v, float b, float t);
 
-bool vec2_equ(vec2 v1, vec2 vec2);
+bool vec2_equ(vec2 v1, vec2 v2);
 
-float vec2_dot(vec2 v1, vec2 vec2);
+float vec2_dot(vec2 v1, vec2 v2);
 float vec2_length_sqrd(vec2 v);
 float vec2_length(vec2 v);
-float vec2_dist_sqrd(vec2 v1, vec2 vec2);
-float vec2_dist(vec2 v1, vec2 vec2);
-float vec2_dist_manhattan(vec2 v1, vec2 vec2);
+float vec2_dist_sqrd(vec2 v1, vec2 v2);
+float vec2_dist(vec2 v1, vec2 v2);
+float vec2_dist_manhattan(vec2 v1, vec2 v2);
 vec2 vec2_normalize(vec2 v);
 
-vec2 vec2_reflect(vec2 v1, vec2 vec2);
+vec2 vec2_reflect(vec2 v1, vec2 v2);
 
 vec2 vec2_from_string(char* s);
 void vec2_print(vec2 v);
@@ -188,9 +188,9 @@ int vec2_hash(vec2 v);
 int vec2_mix_hash(vec2 v);
 
 vec2 vec2_saturate(vec2 v);
-vec2 vec2_lerp(vec2 v1, vec2 vec2, float amount);
-vec2 vec2_smoothstep(vec2 v1, vec2 vec2, float amount);
-vec2 vec2_smootherstep(vec2 v1, vec2 vec2, float amount);
+vec2 vec2_lerp(vec2 v1, vec2 v2, float amount);
+vec2 vec2_smoothstep(vec2 v1, vec2 v2, float amount);
+vec2 vec2_smootherstep(vec2 v1, vec2 v2, float amount);
 
 
 /* vec3 */
@@ -214,10 +214,10 @@ vec3 vec3_grey();
 vec3 vec3_light_grey();
 vec3 vec3_dark_grey();
 
-vec3 vec3_add(vec3 v1, vec3 vec2);
-vec3 vec3_sub(vec3 v1, vec3 vec2);
+vec3 vec3_add(vec3 v1, vec3 v2);
+vec3 vec3_sub(vec3 v1, vec3 v2);
 vec3 vec3_mul(vec3 v, float fac);
-vec3 vec3_mul_vec3(vec3 v1, vec3 vec2);
+vec3 vec3_mul_vec3(vec3 v1, vec3 v2);
 vec3 vec3_div(vec3 v, float fac);
 vec3 vec3_pow(vec3 v, float fac);
 vec3 vec3_neg(vec3 v);
@@ -225,18 +225,18 @@ vec3 vec3_abs(vec3 v);
 vec3 vec3_floor(vec3 v);
 vec3 vec3_fmod(vec3 v, float val);
 
-bool vec3_equ(vec3 v1, vec3 vec2);
+bool vec3_equ(vec3 v1, vec3 v2);
 
-float vec3_dot(vec3 v1, vec3 vec2);
+float vec3_dot(vec3 v1, vec3 v2);
 float vec3_length_sqrd(vec3 v);
 float vec3_length(vec3 v);
-float vec3_dist_sqrd(vec3 v1, vec3 vec2);
-float vec3_dist(vec3 v1, vec3 vec2);
-float vec3_dist_manhattan(vec3 v1, vec3 vec2);
-vec3 vec3_cross(vec3 v1, vec3 vec2);
+float vec3_dist_sqrd(vec3 v1, vec3 v2);
+float vec3_dist(vec3 v1, vec3 v2);
+float vec3_dist_manhattan(vec3 v1, vec3 v2);
+vec3 vec3_cross(vec3 v1, vec3 v2);
 vec3 vec3_normalize(vec3 v);
 
-vec3 vec3_reflect(vec3 v1, vec3 vec2);
+vec3 vec3_reflect(vec3 v1, vec3 v2);
 
 vec3 vec3_from_string(char* s);
 void vec3_print(vec3 v);
@@ -246,9 +246,9 @@ void vec3_to_array(vec3 v, float* out);
 int vec3_hash(vec3 v);
 
 vec3 vec3_saturate(vec3 v);
-vec3 vec3_lerp(vec3 v1, vec3 vec2, float amount);
-vec3 vec3_smoothstep(vec3 v1, vec3 vec2, float amount);
-vec3 vec3_smootherstep(vec3 v1, vec3 vec2, float amount);
+vec3 vec3_lerp(vec3 v1, vec3 v2, float amount);
+vec3 vec3_smoothstep(vec3 v1, vec3 v2, float amount);
+vec3 vec3_smootherstep(vec3 v1, vec3 v2, float amount);
 
 /* vec4 */
 
@@ -272,10 +272,10 @@ vec4 vec4_grey();
 vec4 vec4_light_grey();
 vec4 vec4_dark_grey();
 
-vec4 vec4_add(vec4 v1, vec4 vec2);
-vec4 vec4_sub(vec4 v1, vec4 vec2);
+vec4 vec4_add(vec4 v1, vec4 v2);
+vec4 vec4_sub(vec4 v1, vec4 v2);
 vec4 vec4_mul(vec4 v, float fac);
-vec4 vec4_mul_vec4(vec4 v1, vec4 vec2);
+vec4 vec4_mul_vec4(vec4 v1, vec4 v2);
 vec4 vec4_div(vec4 v, float fac);
 vec4 vec4_pow(vec4 v, float fac);
 vec4 vec4_neg(vec4 v);
@@ -285,15 +285,15 @@ vec4 vec4_fmod(vec4 v, float val);
 
 bool vec4_equ(vec4 v1, vec4 vec2);
 
-float vec4_dot(vec4 v1, vec4 vec2);
+float vec4_dot(vec4 v1, vec4 v2);
 float vec4_length_sqrd(vec4 v);
 float vec4_length(vec4 v);
-float vec4_dist_sqrd(vec4 v1, vec4 vec2);
-float vec4_dist(vec4 v1, vec4 vec2);
-float vec4_dist_manhattan(vec4 v1, vec4 vec2);
+float vec4_dist_sqrd(vec4 v1, vec4 v2);
+float vec4_dist(vec4 v1, vec4 v2);
+float vec4_dist_manhattan(vec4 v1, vec4 v2);
 vec4 vec4_normalize(vec4 v);
 
-vec4 vec4_reflect(vec4 v1, vec4 vec2);
+vec4 vec4_reflect(vec4 v1, vec4 v2);
 
 vec4 vec4_from_string(char* s);
 void vec4_print(vec4 v);
@@ -306,10 +306,10 @@ vec3 vec4_from_homogeneous(vec4 v);
 int vec4_hash(vec4 v);
 
 vec4 vec4_saturate(vec4 v);
-vec4 vec4_lerp(vec4 v1, vec4 vec2, float amount);
-vec4 vec4_smoothstep(vec4 v1, vec4 vec2, float amount);
-vec4 vec4_smootherstep(vec4 v1, vec4 vec2, float amount);
-vec4 vec4_nearest_interp(vec4 v1, vec4 vec2, float amount);
+vec4 vec4_lerp(vec4 v1, vec4 v2, float amount);
+vec4 vec4_smoothstep(vec4 v1, vec4 v2, float amount);
+vec4 vec4_smootherstep(vec4 v1, vec4 v2, float amount);
+vec4 vec4_nearest_interp(vec4 v1, vec4 v2, float amount);
 
 vec4 vec4_binearest_interp(vec4 top_left, vec4 top_right, vec4 bottom_left, vec4 bottom_right, float x_amount, float y_amount);
 vec4 vec4_bilinear_interp(vec4 top_left, vec4 top_right, vec4 bottom_left, vec4 bottom_right, float x_amount, float y_amount);
@@ -317,7 +317,7 @@ vec4 vec4_bilinear_interp(vec4 top_left, vec4 top_right, vec4 bottom_left, vec4 
 /* quaterion */
 
 vec4 quaternion_id();
-vec4 quaternion_mul(vec4 v1, vec4 vec2);
+vec4 quaternion_mul(vec4 v1, vec4 v2);
 vec4 quaternion_angle_axis(float angle, vec3 axis);
 vec4 quaternion_rot(vec3 from, vec3 to);
 
