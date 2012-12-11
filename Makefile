@@ -14,7 +14,6 @@ ifeq ($(findstring Linux,$(PLATFORM)),Linux)
 	STATIC = libcorange.a
 	CFLAGS += -fPIC
 	LFLAGS += -lGL
-	LIBS = /usr/lib
 endif
 
 ifeq ($(findstring Darwin,$(PLATFORM)),Darwin)
@@ -22,7 +21,6 @@ ifeq ($(findstring Darwin,$(PLATFORM)),Darwin)
 	STATIC = libcorange.a
 	CFLAGS += -fPIC
 	LFLAGS += -lGL
-	LIBS = /usr/lib
 endif
 
 ifeq ($(findstring MINGW,$(PLATFORM)),MINGW)
@@ -30,7 +28,6 @@ ifeq ($(findstring MINGW,$(PLATFORM)),MINGW)
 	STATIC = libcorange.a
 	LFLAGS = -lmingw32 -lopengl32 -lSDLmain -lSDL -lSDL_mixer -shared
 	OBJ += corange.res
-	LIBS = C:/MinGW64/x86_64-w64-mingw32/lib
 endif
 
 all: $(DYNAMIC) $(STATIC)
@@ -56,5 +53,12 @@ corange.res: corange.rc
 clean:
 	rm $(OBJ)
   
-install: $(STATIC)
-	cp $(STATIC) $(LIBS)/$(STATIC)
+install_unix: $(STATIC)
+	cp $(STATIC) /usr/local/lib/$(STATIC)
+  
+install_win32: $(STATIC)
+	cp $(STATIC) C:/MinGW/lib/$(STATIC)
+  
+install_win64: $(STATIC) $(DYNAMIC)
+	cp $(STATIC) C:/MinGW64/x86_64-w64-mingw32/lib/$(STATIC)
+	cp $(DYNAMIC) C:/MinGW64/x86_64-w64-mingw32/bin/$(DYNAMIC)
