@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <dirent.h>
+#include <unistd.h>
 
 #ifdef _WIN32
   #include "SDL/SDL_syswm.h"
@@ -125,15 +126,6 @@ bool SDL_PathIsDirectory(char* path) {
   else { closedir(d); return true; }
 }
 
-
-#ifdef _WIN32
-  #define getcwd _getcwd
-  #define chdir _chdir
-#else
-  #include <unistd.h>
-#endif
-
- 
 static char curr_dir[MAX_PATH];
 
 char* SDL_GetWorkingDir() {
@@ -203,8 +195,8 @@ bool SDL_WM_UseResourceIcon() {
     return false;
   }
 
-  SetClassLong(wminfo.window, GCL_HICON, (LONG)icon);
-  SetClassLong(wminfo.window, GCL_HICONSM, (LONG)icon);
+  SetClassLongPtr(wminfo.window, GCL_HICON, (LONG_PTR)icon);
+  SetClassLongPtr(wminfo.window, GCL_HICONSM, (LONG_PTR)icon);
   
   return true;
 }
