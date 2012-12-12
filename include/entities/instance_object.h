@@ -17,7 +17,7 @@
 typedef struct {
   vec3 position;
   vec3 scale;
-  vec4 rotation;
+  mat4 rotation;
 } instance_data;
 
 typedef struct {
@@ -37,6 +37,6 @@ typedef struct {
 instance_object* instance_object_new();
 void instance_object_delete(instance_object* io);
 
-void instance_object_add_instance(instance_object* io, vec3 position, vec3 scale, vec4 rotation);
+void instance_object_add_instance(instance_object* io, vec3 position, vec3 scale, mat4 rotation);
 
 #endif

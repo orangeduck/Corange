@@ -7,7 +7,7 @@ animated_object* animated_object_new() {
   animated_object* ao = malloc(sizeof(animated_object));
   ao->position = vec3_zero();
   ao->scale = vec3_one();
-  ao->rotation = quaternion_id();
+  ao->rotation = mat4_id();
   
   ao->active = true;
   ao->recieve_shadows = true;

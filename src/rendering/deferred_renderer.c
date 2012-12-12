@@ -779,7 +779,7 @@ void deferred_renderer_end() {
     
     SDL_GL_CheckError();
     
-    mat4 skydome_world = mat4_world(CAMERA->position, vec3_new(10, 10, 10), quaternion_id());
+    mat4 skydome_world = mat4_world(CAMERA->position, vec3_new(10, 10, 10), mat4_id());
     
     mat4_to_array(skydome_world, WORLD_MATRIX);
     
@@ -1289,7 +1289,7 @@ void deferred_renderer_render_landscape(landscape* l) {
     
     vec3 scale = vec3_new(-(1.0 / terr->width) * l->size_x, l->scale, -(1.0 / terr->height) * l->size_y);
     vec3 translation = vec3_new(l->size_x / 2, 0, l->size_y / 2);
-    vec4 rotation = quaternion_id();
+    mat4 rotation = mat4_id();
     
     mat4 r_world_matrix = mat4_world(translation, scale, rotation);
     mat4_to_array(r_world_matrix, WORLD_MATRIX);

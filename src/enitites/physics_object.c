@@ -7,14 +7,14 @@ physics_object* physics_object_new() {
   physics_object* po = malloc(sizeof(physics_object));
   
   po->position = vec3_zero();
-  po->rotation = quaternion_id();
+  po->rotation = mat4_id();
   po->scale = vec3_one();
   
   po->velocity = vec3_zero();
-  po->angular_velocity = quaternion_id();
+  po->angular_velocity = mat4_id();
   
   po->acceleration = vec3_new(0, -9.81, 0);
-  po->angular_acceleration = quaternion_id();
+  po->angular_acceleration = mat4_id();
   
   po->previous_position = vec3_zero();
   

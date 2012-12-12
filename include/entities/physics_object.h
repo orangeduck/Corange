@@ -22,13 +22,13 @@ typedef struct {
   
   vec3 position;
   vec3 scale;
-  vec4 rotation;
+  mat4 rotation;
   
   vec3 velocity;
-  vec4 angular_velocity;
+  mat4 angular_velocity;
   
   vec3 acceleration;
-  vec4 angular_acceleration;
+  mat4 angular_acceleration;
   
   vec3 previous_position;
   

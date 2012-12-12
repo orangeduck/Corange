@@ -21,7 +21,7 @@ void instance_object_delete(instance_object* io) {
   free(io);
 }
 
-void instance_object_add_instance(instance_object* io, vec3 position, vec3 scale, vec4 rotation) {
+void instance_object_add_instance(instance_object* io, vec3 position, vec3 scale, mat4 rotation) {
   
   if (io->num_instances == MAX_INSTANCES) {
     warning("Max number of instances %i reached for instance object!", MAX_INSTANCES);

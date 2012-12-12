@@ -431,7 +431,7 @@ mat4 mat4_view_look_at(vec3 position, vec3 target, vec3 up);
 mat4 mat4_perspective(float fov, float near_clip, float far_clip, float ratio);
 mat4 mat4_orthographic(float left, float right, float bottom, float top, float near, float far);
 
-mat4 mat4_world(vec3 position, vec3 scale, vec4 rotation);
+mat4 mat4_world(vec3 position, vec3 scale, mat4 rotation);
 
 mat4 mat4_lerp(mat4 m1, mat4 mat2, float amount);
 mat4 mat4_smoothstep(mat4 m1, mat4 mat2, float amount);

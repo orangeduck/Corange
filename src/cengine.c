@@ -1989,12 +1989,12 @@ mat4 mat4_rotation_quaternion(vec4 q) {
   return m;
 }
 
-mat4 mat4_world(vec3 position, vec3 scale, vec4 rotation) {
+mat4 mat4_world(vec3 position, vec3 scale, mat4 rotation) {
   
   mat4 pos_m, sca_m, rot_m, result;
   
   pos_m = mat4_translation(position);
-  rot_m = mat4_rotation_quaternion(rotation);
+  rot_m = rotation;
   sca_m = mat4_scale(scale);
   
   result = mat4_id();
