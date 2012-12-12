@@ -1971,7 +1971,6 @@ mat4 mat4_rotation_euler(float x, float y, float z) {
 mat4 mat4_rotation_quaternion(vec4 q) {
 
   q = quaternion_normalize(q);
-  q = quaternion_swap_handedness(q);
   
   mat4 m = mat4_id();
   

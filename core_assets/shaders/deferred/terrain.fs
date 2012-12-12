@@ -34,12 +34,14 @@ float linear_depth(float depth, float near, float far){
 
 void main( void ) {
   
+  const float bumpiness = 0.75;
+  
 	vec2 uvs = vec2(position.x, position.z) / 7;
 	vec2 world_uvs;
   world_uvs.x = 1 - (position.x / size_x + 0.5);
 	world_uvs.y =     (position.z / size_y + 0.5);
 
-  vec4 attrib = texture2D(attribmap, world_uvs);
+  vec4 attrib = normalize(texture2D(attribmap, world_uvs));
 
 	vec4 normal0 = texture2D(ground0_nm, uvs) * attrib.r;
 	vec4 normal1 = texture2D(ground1_nm, uvs) * attrib.g;
@@ -48,7 +50,7 @@ void main( void ) {
 	vec4 normal = normal0 + normal1 + normal2 + normal3;
   
 	normal.rgb = swap_red_green_inv(normal.rgb);
-  normal = mix(normal, vec4( 0.5, 0.5, 1.0, 1.0 ), 1.5);
+  normal = mix(vec4( 0.5, 0.5, 1.0, 1.0 ), normal, bumpiness);
 	normal = normalize(normal * 2.0 - vec4(1.0,1.0,1.0,0.0)) * TBN;
 	
   vec4 diffuse0 = texture2D(ground0, uvs) * attrib.r;

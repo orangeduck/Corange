@@ -62,7 +62,7 @@ void raw_save_file(terrain* ter, char* filename);
 void terrain_delete(terrain* ter);
 
 terrain_chunk* terrain_get_chunk(terrain* ter, int x, int y);
-void terrain_reload_chunk(terrain* ter, int x, int y);
+void terrain_reload_chunk(terrain* ter, int i);
 
 float terrain_height(terrain* ter, vec2 position);
 vec3 terrain_normal(terrain* ter, vec2 position);

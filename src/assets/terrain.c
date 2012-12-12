@@ -242,13 +242,7 @@ static void terrain_new_chunk(terrain* ter, int i) {
 
 }
 
-void terrain_reload_chunk(terrain* ter, int x, int y) {
-
-  if ((x < 0) || (y < 0) || (x >= ter->num_cols) || (y >= ter->num_cols)) {
-    return;
-  }
-  
-  int i = x + y * ter->num_cols;
+void terrain_reload_chunk(terrain* ter, int i) {
 
   terrain_chunk_delete(ter->chunks[i]);
   terrain_new_chunk(ter, i);
