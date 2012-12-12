@@ -14,10 +14,14 @@
 #include "cengine.h"
 #include "casset.h"
 
+#include "assets/image.h"
+
 typedef struct {
   
   asset_hndl heightmap;
   asset_hndl attribmap;
+  
+  image* attribimage;
   
   float scale;
   float size_x;

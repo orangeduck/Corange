@@ -170,9 +170,6 @@ image* texture_get_image(texture* t) {
   
   free(data);
   
-  image_bgr_to_rgb(i);
-  image_flip_vertical(i);
-  
   return i;
 }
 

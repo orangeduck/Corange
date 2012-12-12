@@ -1,7 +1,7 @@
-#include <stdlib.h>
-
 #include "entities/landscape.h"
+
 #include "assets/terrain.h"
+#include "assets/texture.h"
 
 landscape* landscape_new() {
   
@@ -9,6 +9,8 @@ landscape* landscape_new() {
   
   l->heightmap = asset_hndl_null();
   l->attribmap = asset_hndl_null();
+  
+  l->attribimage = NULL;
   
   l->scale = 0.25;
   l->size_x = 128;
@@ -29,6 +31,9 @@ landscape* landscape_new() {
 }
 
 void landscape_delete(landscape* l) {
+  
+  if (l->attribimage != NULL) { image_delete(l->attribimage); }
+
   free(l);
 }
 
@@ -89,5 +94,39 @@ void landscape_paint_height(landscape* l, vec2 pos, float radius, float value) {
 }
 
 void landscape_paint_color(landscape* l, vec2 pos, float radius, int type) {
+  
+  if (l->attribimage == NULL) {
+    l->attribimage = texture_get_image(asset_hndl_ptr(l->attribmap));
+  }
 
+  pos.x = (1 - ((pos.x / l->size_x) + 0.5)) * l->attribimage->width;
+  pos.y = (1 - ((pos.y / l->size_y) + 0.5)) * l->attribimage->height;
+  
+  int base_x = roundf(pos.x);
+  int base_y = roundf(pos.y);
+  
+  for (int x = base_x - radius - 1; x < base_x + radius + 1; x++)
+  for (int y = base_y - radius - 1; y < base_y + radius + 1; y++) {
+    
+    if (x < 0) continue;
+    if (y < 0) continue;
+    if (x >= l->attribimage->width) continue;
+    if (y >= l->attribimage->height) continue;
+    
+    float dist = saturate(1 - vec2_dist(pos, vec2_new(x, y)) / radius);
+    
+    vec4 pix = image_get_pixel(l->attribimage, x, y);
+    
+    if (type == 0) { pix.x += dist; }
+    if (type == 1) { pix.y += dist; }
+    if (type == 2) { pix.z += dist; }
+    if (type == 3) { pix.w += dist; }
+    
+    pix = vec4_normalize(pix);
+    
+    image_set_pixel(l->attribimage, x, y, pix);
+  }
+  
+  texture_set_image(asset_hndl_ptr(l->attribmap), l->attribimage);
+  
 }
