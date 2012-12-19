@@ -1,30 +1,30 @@
 #version 120
 
-attribute vec3 normal;
-attribute vec3 tangent;
-attribute vec3 binormal;
+attribute vec3 vPosition;
+attribute vec3 vNormal;
+attribute vec3 vTangent;
+attribute vec3 vBinormal;
 
-uniform mat4 world_matrix;
-uniform mat4 view_matrix;
-uniform mat4 proj_matrix;
+uniform mat4 world;
+uniform mat4 view;
+uniform mat4 proj;
 
-varying vec4 position;
-varying mat4 TBN;
+varying vec3 fPosition;
+varying mat4 fTBN;
 
 void main( void ) {
   
-  position = world_matrix * gl_Vertex;
-
-  mat3 world_rot = mat3(world_matrix);
+  vec4 w_position = world * vec4(vPosition, 1);
+  vec3 w_tangent  = normalize(mat3(world) * vTangent);
+  vec3 w_binormal = normalize(mat3(world) * vBinormal);
+  vec3 w_normal   = normalize(mat3(world) * vNormal);
   
-  vec3 w_tangent = normalize(world_rot * tangent);
-  vec3 w_binormal = normalize(world_rot * binormal);
-  vec3 w_normal = normalize(world_rot * normal);
+  fTBN = mat4(
+    w_tangent.x, w_binormal.x, w_normal.x, 0.0,
+    w_tangent.y, w_binormal.y, w_normal.y, 0.0,
+    w_tangent.z, w_binormal.z, w_normal.z, 0.0,
+    0.0, 0.0, 0.0, 1.0 );
   
-  TBN = mat4( w_tangent.x, w_binormal.x, w_normal.x, 0.0,
-              w_tangent.y, w_binormal.y, w_normal.y, 0.0,
-              w_tangent.z, w_binormal.z, w_normal.z, 0.0,
-              0.0, 0.0, 0.0, 1.0 );
-             
-  gl_Position = proj_matrix * view_matrix * position;
+  fPosition = w_position.xyz / w_position.w;
+  gl_Position = proj * view * w_position;
 }

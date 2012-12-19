@@ -71,12 +71,12 @@ void corange_finish();
 #include "ui/ui_button.h"
 #include "ui/ui_textbox.h"
 #include "ui/ui_browser.h"
+#include "ui/ui_toast.h"
 
 /* Rendering */
 
 #include "rendering/forward_renderer.h"
 #include "rendering/deferred_renderer.h"
-#include "rendering/shadow_mapper.h"
 
 /* Data Structures */
 

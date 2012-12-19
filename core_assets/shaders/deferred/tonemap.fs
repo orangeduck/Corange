@@ -3,6 +3,8 @@
 uniform sampler2D hdr_texture;
 uniform float exposure;
 
+varying vec2 fTexcoord;
+
 /* Headers */
 
 vec3 filmic_tonemap(vec3 color, float exposure);
@@ -11,7 +13,7 @@ vec3 filmic_tonemap(vec3 color, float exposure);
 
 void main() {
 
-  vec4 color = texture2D(hdr_texture, gl_TexCoord[0].xy);
+  vec4 color = texture2D(hdr_texture, fTexcoord);
   
   color.rgb = filmic_tonemap(color.rgb, exposure);
   

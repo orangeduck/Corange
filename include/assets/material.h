@@ -58,4 +58,6 @@ material* mat_load_file(char* filename);
 material_entry* material_get_entry(material* m, int index);
 material_entry* material_add_entry(material* m);
 
+shader_program* material_first_program(material* m);
+
 #endif

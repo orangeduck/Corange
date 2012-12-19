@@ -628,6 +628,10 @@ vec3 vec3_dark_grey() {
   return vec3_new(0.25,0.25,0.25);
 }
 
+vec3 vec3_up() {
+  return vec3_new(0, 1, 0);
+}
+
 vec3 vec3_add(vec3 v1, vec3 v2) {
   vec3 v;
   v.x = v1.x + v2.x;
@@ -1839,21 +1843,48 @@ mat4 mat4_perspective(float fov, float near_clip, float far_clip, float ratio) {
   return proj_matrix;
 }
 
-mat4 mat4_orthographic(float left, float right, float bottom, float top, float near_clip, float far_clip) {
+mat4 mat4_orthographic(float left, float right, float bottom, float top, float clip_near, float clip_far) {
 
   mat4 m = mat4_id();
   
   m.xx = 2 / (right - left);
   m.yy = 2 / (top - bottom);
-  m.zz = -2 / (far_clip - near_clip);
+  m.zz = 1 / (clip_near - clip_far);
   
-  m.xw = -(right + left) / (right - left);
-  m.yw = -(top + bottom) / (top - bottom);
-  m.zw = -(far_clip + near_clip) / (far_clip - near_clip);
+  m.xw = -1 - 2 * left / (right - left);
+  m.yw =  1 + 2 * top  / (bottom - top);
+  m.zw = clip_near / (clip_near - clip_far);
   
   return m;
 
 }
+
+/*
++D3DXMATRIX* WINAPI D3DXMatrixOrthoOffCenterLH(D3DXMATRIX *pout, FLOAT l, FLOAT r, FLOAT b, FLOAT t, FLOAT zn, FLOAT zf)
++{
++    D3DXMatrixIdentity(pout);
++    pout->m[0][0] = 2.0f / (r - l);
++    pout->m[1][1] = 2.0f / (t - b);
++    pout->m[2][2] = 1.0f / (zf -zn);
++    pout->m[3][0] = -1.0f -2.0f *l / (r - l);
++    pout->m[3][1] = 1.0f + 2.0f * t / (b - t);
++    pout->m[3][2] = zn / (zn -zf);
++    return pout;
++}
+
++D3DXMATRIX* WINAPI D3DXMatrixOrthoOffCenterRH(D3DXMATRIX *pout, FLOAT l, FLOAT r, FLOAT b, FLOAT t, FLOAT zn, FLOAT zf)
++{
++    D3DXMatrixIdentity(pout);
++    pout->m[0][0] = 2.0f / (r - l);
++    pout->m[1][1] = 2.0f / (t - b);
++    pout->m[2][2] = 1.0f / (zn -zf);
++    pout->m[3][0] = -1.0f -2.0f *l / (r - l);
++    pout->m[3][1] = 1.0f + 2.0f * t / (b - t);
++    pout->m[3][2] = zn / (zn -zf);
++    return pout;
++}
+
+*/
 
 
 mat4 mat4_translation(vec3 v) {
@@ -2181,6 +2212,98 @@ box box_transform(box bb, mat4 world_matrix) {
   
   return bb;
   
+}
+
+frustum frustum_new(vec3 ntr, vec3 ntl, vec3 nbr, vec3 nbl, vec3 ftr, vec3 ftl, vec3 fbr, vec3 fbl) {
+  frustum f;
+  f.ntr = ntr;
+  f.ntl = ntl;
+  f.nbr = nbr;
+  f.nbl = nbl;
+  f.ftr = ftr;
+  f.ftl = ftl;
+  f.fbr = fbr;
+  f.fbl = fbl;
+  return f;
+}
+
+frustum frustum_new_clipbox() {
+  return frustum_new(
+    vec3_new( 1, 1,-1), vec3_new(-1, 1,-1), 
+    vec3_new( 1,-1,-1), vec3_new(-1,-1,-1),
+    vec3_new( 1, 1, 1), vec3_new(-1, 1, 1),
+    vec3_new( 1,-1, 1), vec3_new(-1,-1, 1)); 
+}
+
+frustum frustum_slice(frustum f, float start, float end) {
+  frustum r;
+  r.ntr = vec3_add(f.ntr, vec3_mul(vec3_sub(f.ftr, f.ntr), start));
+  r.ftr = vec3_add(f.ntr, vec3_mul(vec3_sub(f.ftr, f.ntr), end  ));
+
+  r.ntl = vec3_add(f.ntl, vec3_mul(vec3_sub(f.ftl, f.ntl), start));
+  r.ftl = vec3_add(f.ntl, vec3_mul(vec3_sub(f.ftl, f.ntl), end  ));
+
+  r.nbr = vec3_add(f.nbr, vec3_mul(vec3_sub(f.fbr, f.nbr), start));
+  r.fbr = vec3_add(f.nbr, vec3_mul(vec3_sub(f.fbr, f.nbr), end  ));
+
+  r.nbl = vec3_add(f.nbl, vec3_mul(vec3_sub(f.fbl, f.nbl), start));
+  r.fbl = vec3_add(f.nbl, vec3_mul(vec3_sub(f.fbl, f.nbl), end  ));
+  return r;
+}
+
+vec3 frustum_center(frustum f) {
+  vec3 total;
+  total = vec3_add(total, f.ntr);
+  total = vec3_add(total, f.ftr);
+  total = vec3_add(total, f.ntl);
+  total = vec3_add(total, f.ftl);
+  total = vec3_add(total, f.nbr);
+  total = vec3_add(total, f.fbr);
+  total = vec3_add(total, f.nbl);
+  total = vec3_add(total, f.fbl);
+  return vec3_div(total, 8);
+}
+
+vec3 frustum_maximums(frustum f) {
+  vec3 r;
+  r.x = max(max(max(max(max(max(max(f.ntr.x, f.ftr.x), f.ntl.x), f.ftl.x), f.nbr.x), f.fbr.x), f.nbl.x), f.fbl.x);
+  r.y = max(max(max(max(max(max(max(f.ntr.y, f.ftr.y), f.ntl.y), f.ftl.y), f.nbr.y), f.fbr.y), f.nbl.y), f.fbl.y);
+  r.z = max(max(max(max(max(max(max(f.ntr.z, f.ftr.z), f.ntl.z), f.ftl.z), f.nbr.z), f.fbr.z), f.nbl.z), f.fbl.z);
+  return r;
+}
+
+vec3 frustum_minimums(frustum f) {
+  vec3 r;
+  r.x = min(min(min(min(min(min(min(f.ntr.x, f.ftr.x), f.ntl.x), f.ftl.x), f.nbr.x), f.fbr.x), f.nbl.x), f.fbl.x);
+  r.y = min(min(min(min(min(min(min(f.ntr.y, f.ftr.y), f.ntl.y), f.ftl.y), f.nbr.y), f.fbr.y), f.nbl.y), f.fbl.y);
+  r.z = min(min(min(min(min(min(min(f.ntr.z, f.ftr.z), f.ntl.z), f.ftl.z), f.nbr.z), f.fbr.z), f.nbl.z), f.fbl.z);
+  return r;
+}
+
+frustum frustum_transform(frustum f, mat4 m) {
+  frustum r;
+  r.ntr = mat4_mul_vec3(m, f.ntr);
+  r.ftr = mat4_mul_vec3(m, f.ftr);
+  r.ntl = mat4_mul_vec3(m, f.ntl);
+  r.ftl = mat4_mul_vec3(m, f.ftl);
+  r.nbr = mat4_mul_vec3(m, f.nbr);
+  r.fbr = mat4_mul_vec3(m, f.fbr);
+  r.nbl = mat4_mul_vec3(m, f.nbl);
+  r.fbl = mat4_mul_vec3(m, f.fbl);
+  return r;
+}
+
+frustum frustum_translate(frustum f, vec3 v) {
+  frustum r;
+  r.ntr = vec3_add(f.ntr, v);
+  r.ftr = vec3_add(f.ftr, v);
+  r.ntl = vec3_add(f.ntl, v);
+  r.ftl = vec3_add(f.ftl, v);
+  r.nbr = vec3_add(f.nbr, v);
+  r.fbr = vec3_add(f.fbr, v);
+  r.nbl = vec3_add(f.nbl, v);
+  r.fbl = vec3_add(f.fbl, v);
+  return r;
 }
 
 sphere sphere_new(vec3 center, float radius) {

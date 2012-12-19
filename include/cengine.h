@@ -204,6 +204,7 @@ typedef struct {
 vec3 vec3_new(float x, float y, float z);
 vec3 vec3_zero();
 vec3 vec3_one();
+vec3 vec3_up();
 
 vec3 vec3_red();
 vec3 vec3_green();
@@ -472,6 +473,24 @@ box box_merge(box b1, box b2);
 box box_transform(box b1, mat4 world);
 
 bool box_contains(box b1, vec3 point);
+
+/* Frustum */
+
+typedef struct {
+	vec3 ntr, ntl, nbr, nbl;
+  vec3 ftr, ftl, fbr, fbl;
+} frustum;
+
+frustum frustum_new(vec3 ntr, vec3 ntl, vec3 nbr, vec3 nbl, vec3 ftr, vec3 ftl, vec3 fbr, vec3 fbl);
+frustum frustum_new_clipbox();
+frustum frustum_slice(frustum f, float start, float end);
+
+vec3 frustum_center(frustum f);
+vec3 frustum_maximums(frustum f);
+vec3 frustum_minimums(frustum f);
+
+frustum frustum_transform(frustum f, mat4 m);
+frustum frustum_translate(frustum f, vec3 v);
 
 /* Sphere */
 

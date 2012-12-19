@@ -7,9 +7,11 @@ static int mouse_right_down;
 
 static int object_id = 1;
 static bool use_deferred = true;
+deferred_renderer* dr = NULL;
 
 static void swap_renderer() {
   
+  /*
   camera* cam = entity_get("camera");
   light* sun = entity_get("sun");
   light* backlight = entity_get("backlight");
@@ -43,65 +45,8 @@ static void swap_renderer() {
     use_deferred = true;
     
   }
+  */
 
-}
-
-static bool any_button_pressed = false;
-
-static void switch_renderer_event(ui_button* b, SDL_Event event) {
-  
-  if (event.type == SDL_MOUSEBUTTONDOWN) {
-    
-    if (ui_button_contains_point(b, vec2_new(event.motion.x, event.motion.y))) {
-      any_button_pressed = true;
-      b->pressed = true;
-    }
-  
-  } else if (event.type == SDL_MOUSEBUTTONUP) {
-    
-    if (b->pressed) {
-      any_button_pressed = false;
-      b->pressed = false;
-      if ((strcmp(ui_elem_name(b), "forward_renderer") == 0) && (use_deferred)) {
-        swap_renderer();
-      }
-      if ((strcmp(ui_elem_name(b), "deferred_renderer") == 0) && (!use_deferred)) {
-        swap_renderer();
-      }
-      
-    }
-  }
-}
-
-static void switch_object_event(ui_button* b, SDL_Event event) {
-  
-  if (event.type == SDL_MOUSEBUTTONDOWN) {
-    
-    if (ui_button_contains_point(b, vec2_new(event.motion.x, event.motion.y))) {
-      any_button_pressed = true;
-      b->pressed = true;
-    }
-  
-  } else if (event.type == SDL_MOUSEBUTTONUP) {
-    
-    if (b->pressed) {
-      any_button_pressed = false;
-      b->pressed = false;
-      
-      char* name = ui_elem_name(b);
-      if (strcmp(name, "piano") == 0) {
-        object_id = 1;
-      } else if (strcmp(name, "cello") == 0) {
-        object_id = 0;
-      } else if (strcmp(name, "imrod") == 0) {
-        object_id = 2;
-      } else if (strcmp(name, "dino") == 0) {
-        object_id = 3;
-      }
-      
-    }
-  }
-  
 }
 
 static vec3 ik_target;
@@ -129,7 +74,7 @@ void renderers_init() {
   static_object* s_cello = entity_new("cello", static_object);
   s_cello->renderable = r_cello;
   s_cello->position = vec3_new(0, 3, 0);
-  s_cello->rotation = quaternion_mul(s_cello->rotation, quaternion_yaw(-1.7));
+  //s_cello->rotation = quaternion_mul(s_cello->rotation, quaternion_yaw(-1.7));
   s_cello->scale = vec3_new(0.6, 0.6, 0.6);
   
   asset_hndl r_piano = asset_hndl_new(P("./resources/piano/piano.obj"));
@@ -156,7 +101,7 @@ void renderers_init() {
   
   a_imrod->renderable = r_imrod;
   a_imrod->animation = asset_hndl_new(P("./resources/imrod/imrod.ani"));
-  a_imrod->rotation = quaternion_mul(a_imrod->rotation, quaternion_roll(1.57));
+  //a_imrod->rotation = quaternion_mul(a_imrod->rotation, quaternion_roll(1.57));
   
   /* Put some text on the screen */
   
@@ -184,8 +129,11 @@ void renderers_init() {
   ui_button_resize(deferred_renderer, vec2_new(75,25));
   ui_button_set_label(deferred_renderer, "Deferred");
   
-  ui_elem_add_event("forward_renderer", switch_renderer_event);
-  ui_elem_add_event("deferred_renderer", switch_renderer_event);
+  void forward_render_onclick() { use_deferred = true; swap_renderer(); }
+  void deferred_renderer_onclick() { use_deferred = false; swap_renderer(); }
+  
+  ui_button_set_onclick(forward_renderer, forward_render_onclick);
+  ui_button_set_onclick(deferred_renderer, deferred_renderer_onclick);
   
   ui_button* object = ui_elem_new("object", ui_button);
   ui_button_move(object, vec2_new(10, graphics_viewport_height() - 70));
@@ -213,10 +161,15 @@ void renderers_init() {
   ui_button_resize(dino, vec2_new(40,25));
   ui_button_set_label(dino, "Dino");
   
-  ui_elem_add_event("piano", switch_object_event);
-  ui_elem_add_event("cello", switch_object_event);
-  ui_elem_add_event("imrod", switch_object_event);
-  ui_elem_add_event("dino", switch_object_event);
+  void onclick_piano() { object_id = 1; }
+  void onclick_cello() { object_id = 0; }
+  void onclick_imrod() { object_id = 2; }
+  void onclick_dino() { object_id = 3; }
+  
+  ui_button_set_onclick(piano, onclick_piano);
+  ui_button_set_onclick(cello, onclick_cello);
+  ui_button_set_onclick(imrod, onclick_imrod);
+  ui_button_set_onclick(dino, onclick_dino);
   
   /* New Camera and light */
   
@@ -241,11 +194,10 @@ void renderers_init() {
   backlight->power = 2;
   
   /* Renderer Setup */
-  
-  shadow_mapper_init(sun);
-  
-  use_deferred = 1;
-  swap_renderer();
+    
+  dr = deferred_renderer_new();
+  deferred_renderer_set_camera(dr, cam);
+  deferred_renderer_set_sun_light(dr, sun);
   
   ik_target = vec3_new(0.0, 0.5, -2.8);
   
@@ -264,7 +216,7 @@ static void select_light(int x, int y) {
   
   camera* cam = entity_get("camera");
   mat4 viewm = camera_view_matrix(cam);
-  mat4 projm = camera_proj_matrix(cam, graphics_viewport_ratio() );
+  mat4 projm = camera_proj_matrix(cam);
   
   selected_light = NULL;
   float range = 0.1;
@@ -322,10 +274,8 @@ void renderers_event(SDL_Event event) {
   break;
   
   case SDL_MOUSEMOTION:
-    if (!any_button_pressed) {
-      mouse_x = event.motion.xrel;
-      mouse_y = event.motion.yrel;
-    }
+    mouse_x = event.motion.xrel;
+    mouse_y = event.motion.yrel;
   break;
   }
     
@@ -399,110 +349,21 @@ void renderers_update() {
 }
 
 void renderers_render() {
-
-  light* sun = entity_get("sun");
-  light* backlight = entity_get("backlight");
-
-  static_object* s_podium = entity_get("podium");
   
-  static_object* s_piano = entity_get("piano");
-  static_object* s_cello = entity_get("cello");
-  static_object* s_dino = entity_get("dino");
-  animated_object* a_imrod = entity_get("imrod");
+  deferred_renderer_add(dr, render_object_static(entity_get("podium")));
+  deferred_renderer_add(dr, render_object_static(entity_get("piano")));
+  //deferred_renderer_add(dr, render_object_static(entity_get("cello")));
+  //deferred_renderer_add(dr, render_object_static(entity_get("dino")));
+  //deferred_renderer_add(dr, render_object_animated(entity_get("imrod")));
+  deferred_renderer_add(dr, render_object_light(entity_get("sun")));
+  deferred_renderer_add(dr, render_object_light(entity_get("backlight")));
   
-  shadow_mapper_begin();
-  shadow_mapper_render_static(s_podium);
-  if (object_id == 0) {
-    shadow_mapper_render_static(s_cello);
-  } else if (object_id == 1) { 
-    shadow_mapper_render_static(s_piano);
-  } else if (object_id == 2) {
-    shadow_mapper_render_animated(a_imrod);
-  } else if (object_id == 3) {
-    shadow_mapper_render_static(s_dino);
-  }
-  shadow_mapper_end();
-  
-  if (use_deferred) {
-    
-    deferred_renderer_begin();
-    deferred_renderer_render_static(s_podium);
-    
-    if (object_id == 0) {
-      deferred_renderer_render_static(s_cello);
-    } else if (object_id == 1) {
-      deferred_renderer_render_static(s_piano);
-    } else if (object_id == 2) {
-      deferred_renderer_render_animated(a_imrod);
-    } else if (object_id == 3) {
-      deferred_renderer_render_static(s_dino);
-    }
-    
-    deferred_renderer_render_light(sun);
-    deferred_renderer_render_light(backlight);
-    
-    if (selected_light != NULL) {
-      deferred_renderer_render_axis(mat4_world(selected_light->position, vec3_one(), quaternion_id()));
-    }
-    
-    deferred_renderer_end();
-    
-  } else {
-    
-    forward_renderer_begin();
-    forward_renderer_render_static(s_podium);
-    if (object_id == 0) {
-      forward_renderer_render_static(s_cello);
-    } else if (object_id == 1) {
-      forward_renderer_render_static(s_piano);
-    } else if (object_id == 2) {
-      forward_renderer_render_animated(a_imrod);
-      
-      mat4 foot_pos = bone_transform(skeleton_bone_name(a_imrod->pose, "foot_r"));
-      
-      /*
-      vec3 pos = m44_mul_vec3(foot_pos, vec3_zero());
-      pos = m44_mul_vec3(m44_world(a_imrod->position, a_imrod->scale, a_imrod->rotation), pos);
-      
-      glDisable(GL_DEPTH_TEST);
-      glPointSize(5.0);
-      glBegin(GL_POINTS);
-        glColor3f(0,0,1);
-        glVertex3f(pos.x, pos.y, pos.z);
-        glColor3f(0,1,0);
-        glVertex3f(ik_target.x, ik_target.y, ik_target.z);
-      glEnd();
-      glColor3f(1,1,1);
-      glPointSize(1.0);
-      glEnable(GL_DEPTH_TEST);
-      */
-      
-    } else if (object_id == 3) {
-      forward_renderer_render_static(s_dino);
-    }
-    
-    forward_renderer_render_light(sun);
-    forward_renderer_render_light(backlight);
-    
-    if (selected_light != NULL) {
-      forward_renderer_render_axis(mat4_world(selected_light->position, vec3_one(), quaternion_id()));
-    }
-    
-    forward_renderer_end();
-  }
+  deferred_renderer_render(dr);
   
 }
 
 void renderers_finish() {
-  
-  if (use_deferred) {
-    deferred_renderer_finish();
-  } else {
-    forward_renderer_finish();
-  }
-
-  shadow_mapper_finish();
-  
+  deferred_renderer_delete(dr);
 }
 
 int main(int argc, char **argv) {

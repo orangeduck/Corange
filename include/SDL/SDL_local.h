@@ -83,6 +83,7 @@ typedef void (APIENTRY * GLUNIFORMMATRIX4FVFN)( GLint location, GLsizei count,GL
 typedef void (APIENTRY * GLUNIFORM1FVFN)( GLint location, GLsizei count, const GLfloat* value );
 typedef void (APIENTRY * GLUNIFORM2FVFN)( GLint location, GLsizei count, const GLfloat* value );
 typedef void (APIENTRY * GLUNIFORM3FVFN)( GLint location, GLsizei count, const GLfloat* value );
+typedef void (APIENTRY * GLUNIFORM4FVFN)( GLint location, GLsizei count, const GLfloat* value );
 typedef void (APIENTRY * GLGETSHADERIVFN)( GLuint shader, GLenum pname, GLint* params );
 typedef void (APIENTRY * GLGETPROGRAMIVFN)( GLuint program, GLenum pname, GLint* params );
 typedef void (APIENTRY * GLPROGRAMPARAMETERIFN)( GLuint program, GLenum pname, GLint value );
@@ -148,6 +149,7 @@ extern GLUNIFORMMATRIX4FVFN glUniformMatrix4fv;
 extern GLUNIFORM1FVFN glUniform1fv;
 extern GLUNIFORM2FVFN glUniform2fv;
 extern GLUNIFORM2FVFN glUniform3fv;
+extern GLUNIFORM2FVFN glUniform4fv;
 extern GLGETSHADERIVFN glGetShaderiv;
 extern GLGETPROGRAMIVFN glGetProgramiv;
 extern GLPROGRAMPARAMETERIFN glProgramParameteri;

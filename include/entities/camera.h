@@ -23,8 +23,8 @@ camera* camera_new(vec3 position, vec3 target);
 void camera_delete(camera* cam);
 
 mat4 camera_view_matrix(camera* c);
-mat4 camera_proj_matrix(camera* c, float aspect_ratio);
-mat4 camera_view_proj_matrix(camera* c, float aspect_ratio);
+mat4 camera_proj_matrix(camera* c);
+mat4 camera_view_proj_matrix(camera* c);
 
 void camera_control_orbit(camera* c, SDL_Event e);
 void camera_control_freecam(camera* c, float timestep);

@@ -558,6 +558,7 @@ GLUNIFORMMATRIX4FVFN glUniformMatrix4fv = NULL;
 GLUNIFORM1FVFN glUniform1fv = NULL;
 GLUNIFORM2FVFN glUniform2fv = NULL;
 GLUNIFORM3FVFN glUniform3fv = NULL;
+GLUNIFORM3FVFN glUniform4fv = NULL;
 GLGETSHADERIVFN glGetShaderiv = NULL;
 GLPROGRAMPARAMETERIFN glProgramParameteri = NULL;
 GLGETPROGRAMIVFN glGetProgramiv = NULL;
@@ -633,6 +634,7 @@ void SDL_GL_LoadExtensions() {
   SDL_GL_LoadExtension(GLUNIFORM1FVFN, glUniform1fv);
   SDL_GL_LoadExtension(GLUNIFORM2FVFN, glUniform2fv);
   SDL_GL_LoadExtension(GLUNIFORM3FVFN, glUniform3fv);
+  SDL_GL_LoadExtension(GLUNIFORM3FVFN, glUniform4fv);
   SDL_GL_LoadExtension(GLUNIFORMMATRIX4FVFN, glUniformMatrix4fv);
   
   /* Attributes */
@@ -694,103 +696,6 @@ void SDL_GL_LoadExtensions() {
 #ifdef __unix__
 
 void SDL_PrintStackTrace() {
-  
-  const int DEPTH = 10;
-  void* stack[DEPTH];
-     
-  int size = backtrace(stack, DEPTH);
-  char** strings = backtrace_symbols(stack, size);
-
-  printf ("[STACK] (%i frames)\n", size);
-  
-  for (int i = 0; i < size; i++) {
-    printf ("  %s\n", strings[i]);
-  }
-
-  free(strings);
-  
-  fflush(stdout);
-}
-
-#elif _WIN32
-#include <windows.h>
-
-typedef struct _SYMBOL_INFO {
-  ULONG   SizeOfStruct;
-  ULONG   TypeIndex;
-  ULONG64 Reserved[2];
-  ULONG   Index;
-  ULONG   Size;
-  ULONG64 ModBase;
-  ULONG   Flags;
-  ULONG64 Value;
-  ULONG64 Address;
-  ULONG   Register;
-  ULONG   Scope;
-  ULONG   Tag;
-  ULONG   NameLen;
-  ULONG   MaxNameLen;
-  TCHAR   Name[1];
-} SYMBOL_INFO, *PSYMBOL_INFO;
-
-#define PCTSTR const char*
-
-void SDL_PrintStackTrace() {
-  
-  /* For some reason this is giving the incorrect symbol names */
-  
-  typedef USHORT (WINAPI *CaptureStackBackTraceFn)(ULONG,ULONG,PVOID*,PULONG);
-  typedef BOOL (WINAPI *SymInitializeFn)(HANDLE,PCTSTR,BOOL);
-  typedef BOOL (WINAPI *SymFromAddrFn)(HANDLE,DWORD64,PDWORD64,PSYMBOL_INFO);
-  
-  CaptureStackBackTraceFn CaptureStackBackTrace = (CaptureStackBackTraceFn)(GetProcAddress(LoadLibrary("kernel32.dll"), "RtlCaptureStackBackTrace"));
-  SymInitializeFn SymInitialize = (SymInitializeFn)(GetProcAddress(LoadLibrary("Dbghelp.dll"), "SymInitialize"));
-  SymFromAddrFn SymFromAddr = (SymFromAddrFn)(GetProcAddress(LoadLibrary("Dbghelp.dll"), "SymFromAddr"));
-  
-  if ((CaptureStackBackTrace == NULL) || 
-      (SymInitialize == NULL) ||
-      (SymFromAddr == NULL)) {
-    printf("[STACK] Could not retrieve functions for stack trace\n");
-    return;
-  }
-  
-  HANDLE process = GetCurrentProcess();
-  if (process == 0) {
-    printf("[STACK] Could not retrieve current process\n");
-    return;
-  }
-  
-  if (SymInitialize(process, NULL, TRUE) == 0) {
-    printf("[STACK] Could not ilitialize symbols for process\n");
-    return;
-  }
-  
-  if (sizeof(void*) != sizeof(DWORD64)) {
-    printf("[STACK] Cannot retrive stack symbols on 32-bit binary\n");
-    return;
-  }
-  
-  SYMBOL_INFO* symbol = calloc(sizeof(SYMBOL_INFO) + 256, 1);
-  symbol->MaxNameLen = 255;
-  symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
-  
-  void* stack[32];
-  int frames = CaptureStackBackTrace(0, 32, stack, NULL);
-  
-  printf ("[STACK] (%i frames)\n", frames);
-  for(int i = 0; i < frames; i++ ){
-    
-    DWORD64 address = PtrToUlong(stack[i]);
-    if (SymFromAddr(process, address, 0, symbol)) {
-      printf("  %i: %s - %08X\n", frames-i-1, symbol->Name, (unsigned int)symbol->Address );
-    } else {
-      DWORD error = GetLastError();
-      printf("  %i: SymFromAddr returned error %d\n", frames-i-1, (int)error);
-    }
-    
-  }
-  
-  free(symbol);
 }
 
 #else

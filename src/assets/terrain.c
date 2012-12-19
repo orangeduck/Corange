@@ -33,7 +33,7 @@ static void terrain_new_chunk(terrain* ter, int i) {
     
     float offset   = terrain_height(ter, vec2_new(gx, gy));
     float offset_x = terrain_height(ter, vec2_add(vec2_new(gx, gy), vec2_new(1,0)));
-    float offset_y = terrain_height(ter, vec2_add(vec2_new(gx, gy), vec2_new(0,-1)));
+    float offset_y = terrain_height(ter, vec2_add(vec2_new(gx, gy), vec2_new(0,1)));
     
     vec3 pos    = vec3_new(gx+0, offset,   gy+0);
     vec3 pos_xv = vec3_new(gx+1, offset_x, gy+0);

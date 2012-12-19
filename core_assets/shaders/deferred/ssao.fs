@@ -1,9 +1,11 @@
 #version 120
 
-uniform sampler2D random_texture;
 uniform sampler2D depth_texture;
 uniform sampler2D normals_texture;
+uniform sampler2D random_texture;
 uniform float seed;
+
+varying vec2 fTexcoord;
 
 /* Headers */
 
@@ -14,7 +16,7 @@ float ssao(vec2 texcoords, sampler2D depth_texture, sampler2D normals_texture, s
 
 void main() {
 	
-  float ssao = ssao(gl_TexCoord[0].xy, depth_texture, normals_texture, random_texture, seed);
+  float ssao = ssao(fTexcoord, depth_texture, normals_texture, random_texture, seed);
   gl_FragColor = vec4(ssao, ssao, ssao, 1.0);
 	
 } 

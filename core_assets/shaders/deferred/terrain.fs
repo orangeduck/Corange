@@ -1,8 +1,5 @@
 #version 120
 
-varying vec4 position;
-varying mat4 TBN;
-
 uniform sampler2D attribmap;
 
 uniform sampler2D ground0;
@@ -21,6 +18,9 @@ uniform float size_y;
 uniform float near;
 uniform float far;
 
+varying vec3 fPosition;
+varying mat4 fTBN;
+
 /* Headers */
 
 vec3 from_gamma(vec3 color);
@@ -36,10 +36,10 @@ void main( void ) {
   
   const float bumpiness = 0.75;
   
-	vec2 uvs = vec2(position.x, position.z) / 7;
+	vec2 uvs = vec2(fPosition.x, fPosition.z) / 7;
 	vec2 world_uvs;
-  world_uvs.x = 1 - (position.x / size_x + 0.5);
-	world_uvs.y =     (position.z / size_y + 0.5);
+  world_uvs.x = 1 - (fPosition.x / size_x + 0.5);
+	world_uvs.y =     (fPosition.z / size_y + 0.5);
 
   vec4 attrib = normalize(texture2D(attribmap, world_uvs));
 
@@ -51,7 +51,7 @@ void main( void ) {
   
 	normal.rgb = swap_red_green_inv(normal.rgb);
   normal = mix(vec4( 0.5, 0.5, 1.0, 1.0 ), normal, bumpiness);
-	normal = normalize(normal * 2.0 - vec4(1.0,1.0,1.0,0.0)) * TBN;
+	normal = normalize(normal * 2.0 - vec4(1.0,1.0,1.0,0.0)) * fTBN;
 	
   vec4 diffuse0 = texture2D(ground0, uvs) * attrib.r;
   vec4 diffuse1 = texture2D(ground1, uvs) * attrib.g;
@@ -62,7 +62,7 @@ void main( void ) {
 	gl_FragData[0].rgb = from_gamma(diffuse.rgb);
 	gl_FragData[0].a = 0.1;
 	
-	gl_FragData[1].rgb = position.xyz;
+	gl_FragData[1].rgb = fPosition.xyz;
 	gl_FragData[1].a = 2.0;
 	
 	gl_FragData[2] = normal;

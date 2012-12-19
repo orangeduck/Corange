@@ -1,12 +1,10 @@
 #version 120
 
 uniform vec3 light_direction;
-uniform sampler2D depth_texture;
 
-varying vec3 direction;
-varying vec3 m_color;
-varying vec3 r_color;
-varying vec4 screen_position;
+varying vec3 fDirection;
+varying vec3 fM_color;
+varying vec3 fR_color;
 
 float rayleigh_phase(float cos2a) {
   return 0.75 + 0.75*cos2a;
@@ -18,15 +16,11 @@ float mei_phase(float cosa, float cos2a) {
 
 void main() {
 
-  vec2 uvs = (screen_position.xy / screen_position.w) / 2 + 0.5 ;
-
-  float depth = texture2D(depth_texture, uvs).r;
-
-  float cosa = dot(light_direction, direction) / length(direction);
+  float cosa = dot(light_direction, fDirection) / length(fDirection);
   float cos2a = cosa * cosa;
   
-	gl_FragColor.rgb = rayleigh_phase(cos2a) * r_color + 
-                     mei_phase(cosa, cos2a) * m_color;
-  gl_FragColor.rgb = max(gl_FragColor.rgb, vec3(0.1, 0.1, 0.1));
-	gl_FragColor.a = pow(depth, 4.0);
+	gl_FragColor.rgb =
+    rayleigh_phase(cos2a) * fR_color + 
+    mei_phase(cosa, cos2a) * fM_color;
+  gl_FragColor.a = 1.0;
 }

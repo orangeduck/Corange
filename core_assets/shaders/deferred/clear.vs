@@ -1,8 +1,15 @@
 #version 120
 
-varying vec4 position;
+attribute vec3 vPosition;
+
+uniform mat4 world;
+uniform mat4 view;
+uniform mat4 proj;
+
+varying vec3 fPosition;
 
 void main() {
-	position = gl_ModelViewProjectionMatrix * gl_Vertex;
-    gl_Position = position;
+  vec4 screen_position = proj * view * world * vec4(vPosition, 1);
+	fPosition = screen_position.xyz / screen_position.w;
+  gl_Position = screen_position;
 } 

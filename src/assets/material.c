@@ -57,18 +57,20 @@ static void material_generate_programs(material* m) {
     material_entry* me = m->entries[i];
     me->program = shader_program_new();
     
+    bool attached = false;
     for(int j = 0; j < me->num_items; j++) {
       
       if (me->types[j] == mat_item_shader) {
         asset_hndl ah = me->items[j].as_asset;
         
         shader_program_attach_shader(me->program, asset_hndl_ptr(ah));
+        attached = true;
         SDL_GL_CheckError();
       }
       
     }
     
-    shader_program_link(me->program);
+    if (attached) { shader_program_link(me->program); }
     SDL_GL_CheckError();
     
   }
@@ -210,4 +212,12 @@ material* mat_load_file(char* filename) {
 
 material_entry* material_get_entry(material* m, int index) {
   return m->entries[index];
+}
+
+shader_program* material_first_program(material* m) {
+  if (m->num_entries <= 0) {
+    error("No entries in material!");
+  } else {
+    return m->entries[0]->program;
+  }
 }

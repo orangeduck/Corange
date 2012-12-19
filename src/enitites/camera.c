@@ -1,7 +1,9 @@
 #include "entities/camera.h"
 
+#include "cgraphics.h"
+
 #define DEFAULT_NEAR_CLIP 0.1
-#define DEFAULT_FAR_CLIP 8192.0
+#define DEFAULT_FAR_CLIP 256.0
 
 #define DEFAULT_FOV 0.785398163
 
@@ -26,13 +28,13 @@ mat4 camera_view_matrix(camera* c) {
   return mat4_view_look_at(c->position, c->target, vec3_new(0.0f,1.0f,0.0f) );
 }
 
-mat4 camera_proj_matrix(camera* c, float aspect_ratio) {
-  return mat4_perspective(c->fov, c->near_clip, c->far_clip, aspect_ratio);
+mat4 camera_proj_matrix(camera* c) {
+  return mat4_perspective(c->fov, c->near_clip, c->far_clip, graphics_viewport_ratio());
 }
 
-mat4 camera_view_proj_matrix(camera* c, float aspect_ratio) {
+mat4 camera_view_proj_matrix(camera* c) {
   mat4 view = camera_view_matrix(c);
-  mat4 proj = camera_proj_matrix(c, aspect_ratio);
+  mat4 proj = camera_proj_matrix(c);
   return mat4_mul_mat4(view, proj);
 }
 

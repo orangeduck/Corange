@@ -30,7 +30,7 @@ vec3 normal_from_depth(sampler2D depth_texture, vec2 texcoords) {
   
 }
 
-const vec3 sample_sphere[32] = vec3[32](
+const vec3 ao_sample_sphere[32] = vec3[32](
   vec3(-0.00,  0.02, -0.03), vec3( 0.35, -0.04,  0.31), vec3( 0.66, -0.32,  0.53), 
   vec3(-0.04, -0.04,  0.01), vec3( 0.24, -0.22,  0.89), vec3(-0.09,  0.10, -0.54), 
   vec3( 0.24,  0.04,  0.01), vec3( 0.37,  0.88,  0.05), vec3( 0.02,  0.11, -0.19), 
@@ -88,7 +88,7 @@ float ssao_depth(vec2 texcoords, sampler2D depth_texture, sampler2D random_textu
   float occlusion = 0.0;
   for(int i = 0; i < samples; i++) {
   
-    vec3 ray = radius_depth * reflect(sample_sphere[i], random);
+    vec3 ray = radius_depth * reflect(ao_sample_sphere[i], random);
     vec2 projected = position.xy + sign(dot(ray,normal)) * ray.xy * vec2(width, height);
     
     float occ_depth = texture2D(depth_texture, projected).r;
@@ -121,7 +121,7 @@ float ssao(vec2 texcoords, sampler2D depth_texture, sampler2D normals_texture, s
   float occlusion = 0.0;
   for(int i = 0; i < samples; i++) {
   
-    vec3 ray = radius_depth * reflect(sample_sphere[i], random);
+    vec3 ray = radius_depth * reflect(ao_sample_sphere[i], random);
     vec2 projected = position.xy + sign(dot(ray,normal)) * ray.xy * vec2(width, height);
     
     float occ_depth = texture2D(depth_texture, projected).r;

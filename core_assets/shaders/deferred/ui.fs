@@ -3,12 +3,12 @@
 uniform sampler2D diffuse;
 uniform float alpha_test;
 
-varying vec2 texcoords;
-varying vec4 color;
+varying vec2 fTexcoord;
+varying vec4 fColor;
 
 void main() {
 	
-	vec4 albedo = texture2D(diffuse, texcoords) * color;
+	vec4 albedo = texture2D(diffuse, fTexcoord) * fColor;
 	if (albedo.a < alpha_test) {
 	  discard;
 	}
@@ -17,7 +17,7 @@ void main() {
 	gl_FragData[0].a = 0.0;
 	
 	gl_FragData[1].rgb = vec3(0,0,0);
-	gl_FragData[1].a = float(1);
+	gl_FragData[1].a = float(4);
 	
 	gl_FragData[2].rgb = vec3(0,0,0);
 	gl_FragData[2].a = 0.0;

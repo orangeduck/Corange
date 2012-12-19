@@ -3,7 +3,7 @@
 /* Headers */
 
 vec3 fxaa_unsharp(sampler2D screen, vec2 pos, int width, int height);
-vec3 fxaa(sampler2D screen, vec2 pos, int width, int height);
+vec3 fxaa(sampler2D screen, vec2 texcoord, int width, int height);
 
 /* End */
 
@@ -54,115 +54,53 @@ vec3 fxaa_unsharp(sampler2D screen, vec2 pos, int width, int height) {
   
 }
 
-
-
-/* Following technique unfinished! */
-
-float fxaa_lum(vec3 rgb) {
-  return rgb.g * (0.587/0.299) + rgb.r;
-}
-
-#define THRESHOLD_MIN (1.0 / 16.0)
-#define THRESHOLD_EDGE (1.0 / 8.0)
-
-#define SUBPIX_TRIM (1.0 / 4.0)
-#define SUBPIX_TRIM_SCALE 1.0
-#define SUBPIX_CAP (3.0 / 4.0)
-
-#define SEARCH_STEPS 5
-
-vec3 fxaa(sampler2D screen, vec2 pos, int width, int height) {
+vec3 fxaa(sampler2D screen, vec2 texcoord, int width, int height) {
   
-  float xoff = 1.0 / float(width);
-  float yoff = 1.0 / float(height);
+  const float span_max = 8.0;
+  const float reduce_amount = 1.0 / 8.0;
+  const float reduce_min = (1.0 / 128.0);
   
-  vec3 rgb_n = texture2D(screen, pos + vec2(0.0,yoff)).rgb;
-  vec3 rgb_w = texture2D(screen, pos + vec2(xoff,0.0)).rgb;
-  vec3 rgb_o = texture2D(screen, pos + vec2(0.0,0.0)).rgb;
-  vec3 rgb_e = texture2D(screen, pos + vec2(-xoff,0.0)).rgb;
-  vec3 rgb_s = texture2D(screen, pos + vec2(0.0,-yoff)).rgb;
+  vec2 pixel = 1.0 / vec2(width, height);
 
-  float lum_n = fxaa_lum(rgb_n);
-  float lum_w = fxaa_lum(rgb_w);
-  float lum_o = fxaa_lum(rgb_o);
-  float lum_e = fxaa_lum(rgb_e);
-  float lum_s = fxaa_lum(rgb_s);
+  vec3 rgb_nw = texture2D(screen, texcoord.xy + (vec2(-1.0, -1.0) * pixel)).rgb;
+  vec3 rgb_ne = texture2D(screen, texcoord.xy + (vec2( 1.0, -1.0) * pixel)).rgb;
+  vec3 rgb_sw = texture2D(screen, texcoord.xy + (vec2(-1.0,  1.0) * pixel)).rgb;
+  vec3 rgb_se = texture2D(screen, texcoord.xy + (vec2( 1.0,  1.0) * pixel)).rgb;
+  vec3 rgb_m  = texture2D(screen, texcoord.xy).rgb;
+	
+  vec3 luma = vec3(0.299, 0.587, 0.114);
+  float luma_nw = dot(rgb_nw, luma);
+  float luma_ne = dot(rgb_ne, luma);
+  float luma_sw = dot(rgb_sw, luma);
+  float luma_se = dot(rgb_se, luma);
+  float luma_m  = dot( rgb_m, luma);
+	
+  float luma_min = min(luma_m, min(min(luma_nw, luma_ne), min(luma_sw, luma_se)));
+  float luma_max = max(luma_m, max(max(luma_nw, luma_ne), max(luma_sw, luma_se)));
+	
+  vec2 dir;
+  dir.x = -((luma_nw + luma_ne) - (luma_sw + luma_se));
+  dir.y =  ((luma_nw + luma_sw) - (luma_ne + luma_se));
+	
+  float dir_reduce = max((luma_nw + luma_ne + luma_sw + luma_se) * (0.25 * reduce_amount), reduce_min);
+  float dir_rcp_min = 1.0/(min(abs(dir.x), abs(dir.y)) + dir_reduce);
+	
+  dir = min(vec2(span_max,  span_max), max(vec2(-span_max, -span_max), dir * dir_rcp_min)) * pixel;
+
+  vec3 rgba0 = texture2D(screen, texcoord.xy + dir * (1.0 / 3.0 - 0.5)).rgb;
+  vec3 rgba1 = texture2D(screen, texcoord.xy + dir * (2.0 / 3.0 - 0.5)).rgb;
+  vec3 rgba2 = texture2D(screen, texcoord.xy + dir * (0.0 / 3.0 - 0.5)).rgb;
+  vec3 rgba3 = texture2D(screen, texcoord.xy + dir * (3.0 / 3.0 - 0.5)).rgb;
   
-  float range_min = min(lum_o, min(min(lum_n, lum_w), min(lum_s, lum_e)));
-  float range_max = max(lum_o, max(max(lum_n, lum_w), max(lum_s, lum_e)));
+  vec3 rgb_a = (1.0/ 2.0) * (rgba0 + rgba1);
+  vec3 rgb_b = rgb_a * (1.0/ 2.0) + (1.0/ 4.0) * (rgba2 + rgba3);
   
-  float range = range_max - range_min;
+  float luma_b = dot(rgb_b, luma);
   
-  if (range > max(THRESHOLD_MIN, range_max * THRESHOLD_EDGE)) {
-    
-    float lum_l = (lum_n + lum_w + lum_e + lum_s) * 0.25;
-    float range_l = abs(lum_l - lum_o);
-    float blend_l = max(0.0, (range_l / range) - SUBPIX_TRIM) * SUBPIX_TRIM_SCALE;
-    
-    blend_l = min(SUBPIX_CAP, blend_l);
-    
-    vec3 rgb_l = rgb_n + rgb_w + rgb_o + rgb_e + rgb_s;
-    
-    vec3 rgb_nw = texture2D(screen, pos + vec2(xoff,yoff)).rgb;
-    vec3 rgb_ne = texture2D(screen, pos + vec2(-xoff,yoff)).rgb;
-    vec3 rgb_sw = texture2D(screen, pos + vec2(xoff,-yoff)).rgb;
-    vec3 rgb_se = texture2D(screen, pos + vec2(-xoff,-yoff)).rgb;
-    
-    float lum_nw = fxaa_lum(rgb_nw);
-    float lum_ne = fxaa_lum(rgb_ne);
-    float lum_sw = fxaa_lum(rgb_sw);
-    float lum_se = fxaa_lum(rgb_se);
-    
-    rgb_l += (rgb_nw + rgb_ne + rgb_sw + rgb_se);
-    rgb_l = rgb_l * (1.0 / 9.0);
-    
-    float edge_v = abs((0.25 * lum_nw) + (-0.5 * lum_n) + (0.25 * lum_ne)) +
-                   abs((0.50 * lum_w ) + (-1.0 * lum_o) + (0.50 * lum_e )) +
-                   abs((0.25 * lum_sw) + (-0.5 * lum_s) + (0.25 * lum_se));
-    
-    float edge_h = abs((0.25 * lum_nw) + (-0.5 * lum_w) + (0.25 * lum_sw)) + 
-                   abs((0.50 * lum_w ) + (-1.0 * lum_o) + (0.50 * lum_s )) +
-                   abs((0.25 * lum_ne) + (-0.5 * lum_e) + (0.25 * lum_se));
-    
-    vec2 off_np;
-    if (edge_h >= edge_v) {
-      off_np = vec2(1.0,0.0);
-    } else {
-      off_np = vec2(0.0,1.0);
-    }
-    
-    if (edge_h >= edge_v) {
-      return vec3(1.0,0.0,0.0);
-    } else {
-      return vec3(0.0,1.0,0.0);
-    }
-    
-    /*
-    
-    int done_n = 0;
-    int done_p = 0;
-    float lum_end_n = 0;
-    float lum_end_p = 0;
-    vec2 pos_n = pos;
-    vec2 pos_p = pos;
-    float gradient_n = 0.0;
-    
-    for(int i = 0; i < SEARCH_STEPS; i++) {
-      if (!done_n) lum_end_n = fxaa_lum(texture2DGrad(screen, pos_n, off_np).rgb);
-      if (!done_p) lum_end_p = fxaa_lum(texture2DGrad(screen, pos_p, off_np).rgb);
-      
-      done_n = done_n || (abs(lum_end_n - lum_n) >= gradient_n;
-      done_p = done_p || (abs(lum_end_p - lum_p) >= gradient_n;
-      if (done_n && done_p) break;
-      
-      if (!done_n) pos_n -= off_np;
-      if (!done_n) pos_n += off_np;
-    }
-    
-    */
-    
+  if((luma_b < luma_min) || (luma_b > luma_max)){
+    return rgb_a;
+  } else {
+    return rgb_b;
   }
-  
-  return rgb_o;
   
 }

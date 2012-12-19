@@ -1,17 +1,17 @@
 #version 120
 
-uniform mat4 world_matrix;
-uniform mat4 proj_matrix;
-uniform mat4 view_matrix;
+attribute vec3 vPosition;
+
+uniform mat4 world;
+uniform mat4 view;
+uniform mat4 proj;
 
 uniform vec3 light_direction;
+//uniform vec3 camera_position;
 
-uniform vec3 camera_position;
-
-varying vec3 direction;
-varying vec3 m_color;
-varying vec3 r_color;
-varying vec4 screen_position;
+varying vec3 fDirection;
+varying vec3 fM_color;
+varying vec3 fR_color;
 
 const int nsamples = 3;
 const float fsamples = 3.0;
@@ -49,9 +49,9 @@ void main() {
   //cam_pos.xz = (cam_pos.xz - 1000) / 2000;
   
 	vec3 position;
-  position.x = gl_Vertex.x * 1;
-  position.z = gl_Vertex.z * 1;
-  position.y = inner_radius + (abs(gl_Vertex.y) * 0.25);
+  position.x = vPosition.x * 1;
+  position.z = vPosition.z * 1;
+  position.y = inner_radius + (abs(vPosition.y) * 0.25);
   
 	vec3 ray = position - cam_pos;
 	float far = length(ray);
@@ -72,7 +72,7 @@ void main() {
 	for(int i=0; i<nsamples; i++) {
 		float height = length(sample_point);
 		float depth = exp(scale_over_depth * (inner_radius - height));
-		float light_angle = dot(light_direction, sample_point) / height;
+		float light_angle = dot(-light_direction, sample_point) / height;
 		float camera_angle = dot(ray, sample_point) / height;
 		float scatter = (start_offset + depth*(scalefunc(light_angle) - scalefunc(camera_angle)));
 		vec3 attenuate = exp(-scatter * (inv_wavelength * kr4pi + km4pi));
@@ -80,11 +80,9 @@ void main() {
 		sample_point += sample_ray;
 	}
 
-	m_color = front_color * kmesun;
-	r_color = front_color * (inv_wavelength * kresun);
+	fM_color = front_color * kmesun;
+	fR_color = front_color * (inv_wavelength * kresun);
+  fDirection = cam_pos - position;
   
-  direction = cam_pos - position;
-  
-  screen_position = proj_matrix * view_matrix * world_matrix * gl_Vertex;
-	gl_Position = screen_position;
+	gl_Position = proj * view * world * vec4(vPosition, 1);
 }

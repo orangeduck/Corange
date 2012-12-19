@@ -285,7 +285,7 @@ void forward_renderer_begin() {
   }
 
   mat4 viewm = camera_view_matrix(CAMERA);
-  mat4 projm = camera_proj_matrix(CAMERA, graphics_viewport_ratio() );
+  mat4 projm = camera_proj_matrix(CAMERA);
   
   mat4_to_array(viewm, view_matrix);
   mat4_to_array(projm, proj_matrix);
@@ -1038,7 +1038,7 @@ void forward_renderer_render_axis(mat4 world) {
 void forward_renderer_render_light(light* l) {
   
   mat4 viewm = camera_view_matrix(CAMERA);
-  mat4 projm = camera_proj_matrix(CAMERA, graphics_viewport_ratio() );
+  mat4 projm = camera_proj_matrix(CAMERA);
   
   vec4 light_pos = vec4_new(l->position.x, l->position.y, l->position.z, 1);
   light_pos = mat4_mul_vec4(viewm, light_pos);

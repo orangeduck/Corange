@@ -11,6 +11,7 @@ float glossiness = 25.0
 float bumpiness = 1.5
 float specular_level = 1.5
 float env_amount = 3.0
+int material = 3
 
 submaterial bands
 shader vertex = $CORANGE/shaders/forward/static.vs
@@ -25,6 +26,7 @@ float glossiness = 15.0
 float bumpiness = 1.75
 float specular_level = 1.5
 float env_amount = 1.0
+int material = 3
 
 submaterial gun
 shader vertex = $CORANGE/shaders/forward/static.vs
@@ -39,6 +41,7 @@ float glossiness = 25.0
 float bumpiness = 1.5
 float specular_level = 1.5
 float env_amount = 3.0
+int material = 3
 
 submaterial gunbox
 shader vertex = $CORANGE/shaders/forward/static.vs
@@ -53,6 +56,7 @@ float glossiness = 25.0
 float bumpiness = 1.5
 float specular_level = 1.5
 float env_amount = 3.0
+int material = 3
 
 submaterial ammo_box
 shader vertex = $CORANGE/shaders/forward/static.vs
@@ -68,6 +72,7 @@ float bumpiness = 1.75
 float specular_level = 1.5
 float env_amount = 3.0
 float alpha_test = 0.5
+int material = 3
 
 submaterial main_platform
 shader vertex = $CORANGE/shaders/forward/static.vs
@@ -82,7 +87,7 @@ float glossiness = 25.0
 float bumpiness = 1.5
 float specular_level = 1.5
 float env_amount = 3.0
-int mat_id = 3
+int material = 3
 
 submaterial flag
 shader vertex = $CORANGE/shaders/forward/static.vs
@@ -98,7 +103,7 @@ float bumpiness = 2.0
 float specular_level = 1.5
 float env_amount = 3.0
 float alpha_test = 0.5
-int mat_id = 3
+int material = 3
 
 submaterial gunturret
 shader vertex = $CORANGE/shaders/forward/static.vs
@@ -113,7 +118,7 @@ float glossiness = 25.0
 float bumpiness = 1.5
 float specular_level = 1.5
 float env_amount = 3.0
-int mat_id = 3
+int material = 3
 
 submaterial neck_ring
 shader vertex = $CORANGE/shaders/forward/static.vs
@@ -128,7 +133,7 @@ float glossiness = 25.0
 float bumpiness = 1.5
 float specular_level = 1.5
 float env_amount = 3.0
-int mat_id = 3
+int material = 3
 
 submaterial body
 shader vertex = $CORANGE/shaders/forward/static.vs
@@ -143,4 +148,4 @@ float glossiness = 5.0
 float bumpiness = 1.75
 float specular_level = 0.25
 float env_amount = 0.5
-int mat_id = 2
+int material = 2

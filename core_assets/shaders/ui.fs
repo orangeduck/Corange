@@ -17,8 +17,8 @@ void main() {
   
   vec4 galbedo = texture2D(diffuse, texcoords + glitch_off.xy * vec2(0.05, 0.025)) * color;
   
-  vec3  gfinal = mix(galbedo.rgb, glitch_col.rgb, 0.1) * glitch_col.rgb;
-  float galpha = mix(galbedo.a, glitch_col.a, 0.1);
+  vec3  gfinal = mix(galbedo.rgb, glitch_col.rgb, 0.15) * glitch_col.rgb;
+  float galpha = mix(galbedo.a, glitch_col.a, 0.15);
   
   gl_FragColor.rgb = mix(albedo.rgb, gfinal, glitch);
   gl_FragColor.a = mix(albedo.a, galpha, glitch);

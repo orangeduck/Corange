@@ -1,11 +1,13 @@
 #version 120
 
-uniform int width;
-uniform int height;
+//uniform int width;
+//uniform int height;
 
 uniform sampler2D ldr_texture;
-uniform sampler2D depth_texture;
-uniform sampler2D random_texture;
+//uniform sampler2D depth_texture;
+//uniform sampler2D random_texture;
+
+varying vec2 fTexcoord;
 
 /* Headers */
 
@@ -28,14 +30,14 @@ void main() {
   const float bloom_amount = 5.0;
   const float bloom_color = 3.0;
   
-  vec4 bloom_s = texture2DLod(ldr_texture, gl_TexCoord[0].xy, bloom_size);
+  vec4 bloom_s = texture2DLod(ldr_texture, fTexcoord, bloom_size);
   vec3 bloom = bloom_amount * bloom_s.a * pow3(bloom_s.rgb, bloom_color);
   
   //const float focal_depth = 0.0015;
   const float focal_depth = 0.0;
   
 	//gl_FragColor.rgb = bloom + bokeh_dof(width, height, ldr_texture, depth_texture, random_texture, gl_TexCoord[0].xy, focal_depth);
-	gl_FragColor.rgb = bloom + texture2D(ldr_texture, gl_TexCoord[0].xy).rgb;
+	gl_FragColor.rgb = bloom + texture2D(ldr_texture, fTexcoord).rgb;
 	gl_FragColor.a = 1.0;
   
 } 

@@ -1,4 +1,5 @@
 #include "assets/shader.h"
+#include "assets/texture.h"
 
 static shader* load_shader_file(char* filename, GLenum type) {
 
@@ -172,4 +173,188 @@ void shader_delete(shader* shader) {
   free(shader);
 }
 
+GLint shader_program_get_attribute(shader_program* p, char* name) {
+  GLint attr = glGetAttribLocation(shader_program_handle(p), name);
+  if (attr == -1) {
+    error("Shader has no attribute called '%s'", name);
+    return -1;
+  } else {
+    return attr;
+  }
+}
 
+void shader_program_enable(shader_program* p) {
+  glUseProgram(shader_program_handle(p));
+}
+
+void shader_program_disable(shader_program* p) {
+  glUseProgram(0);
+}
+
+void shader_program_set_int(shader_program* p, char* name, int val) {
+  GLint location = glGetUniformLocation(shader_program_handle(p), name);
+  if ( location == -1) {
+    warning("Shader has no uniform called '%s'", name);
+  } else {
+    glUniform1i(location, val);
+    SDL_GL_CheckError();
+  }
+}
+
+void shader_program_set_float(shader_program* p, char* name, float val) {
+  GLint location = glGetUniformLocation(shader_program_handle(p), name);
+  if ( location == -1) {
+    warning("Shader has no uniform called '%s'", name);
+  } else {
+    glUniform1f(location, val);
+    SDL_GL_CheckError();
+  }
+}
+
+void shader_program_set_vec2(shader_program* p, char* name, vec2 val) {
+  GLint location = glGetUniformLocation(shader_program_handle(p), name);
+  if ( location == -1) {
+    warning("Shader has no uniform called '%s'", name);
+  } else {
+    glUniform2f(location, val.x, val.y);
+    SDL_GL_CheckError();
+  }
+}
+
+void shader_program_set_vec3(shader_program* p, char* name, vec3 val) {
+  GLint location = glGetUniformLocation(shader_program_handle(p), name);
+  if ( location == -1) {
+    warning("Shader has no uniform called '%s'", name);
+  } else {
+    glUniform3f(location, val.x, val.y, val.z);
+    SDL_GL_CheckError();
+  }
+}
+
+void shader_program_set_vec4(shader_program* p, char* name, vec4 val) {
+  GLint location = glGetUniformLocation(shader_program_handle(p), name);
+  if ( location == -1) {
+    warning("Shader has no uniform called '%s'", name);
+  } else {
+    glUniform4f(location, val.x, val.y, val.z, val.w);
+    SDL_GL_CheckError();
+  }
+}
+
+void shader_program_set_mat4(shader_program* p, char* name, mat4 val) {
+  GLint location = glGetUniformLocation(shader_program_handle(p), name);
+  if ( location == -1) {
+    warning("Shader has no uniform called '%s'", name);
+  } else {
+    glUniformMatrix4fv(location, 1, GL_TRUE, (float*)&val);
+    SDL_GL_CheckError();
+  }
+}
+
+void shader_program_enable_texture(shader_program* p, char* name, int index, asset_hndl t) {
+
+  GLint location = glGetUniformLocation(shader_program_handle(p), name);
+  if ( location == -1) {
+    warning("Shader has no uniform called '%s'", name);
+  } else {
+    glActiveTexture(GL_TEXTURE0 + index );
+    glBindTexture(GL_TEXTURE_2D, texture_handle(asset_hndl_ptr(t)));
+    glEnable(GL_TEXTURE_2D);
+    glUniform1i(location, index);
+    SDL_GL_CheckError();
+  }
+  
+}
+
+void shader_program_enable_texture_id(shader_program* p, char* name, int index, GLint t) {
+
+  GLint location = glGetUniformLocation(shader_program_handle(p), name);
+  if ( location == -1) {
+    warning("Shader has no uniform called '%s'", name);
+  } else {
+    glActiveTexture(GL_TEXTURE0 + index );
+    glBindTexture(GL_TEXTURE_2D, t);
+    glEnable(GL_TEXTURE_2D);
+    glUniform1i(location, index);
+    SDL_GL_CheckError();
+  }
+
+}
+
+void shader_program_disable_texture(shader_program* p, int index) {
+
+  glActiveTexture(GL_TEXTURE0 + index );
+  glDisable(GL_TEXTURE_2D);
+
+}
+
+void shader_program_set_float_array(shader_program* p, char* name, float* vals, int count) {
+  GLint location = glGetUniformLocation(shader_program_handle(p), name);
+  if ( location == -1) {
+    warning("Shader has no uniform called '%s'", name);
+  } else {
+    glUniform1fv(location, count, vals);
+    SDL_GL_CheckError();
+  }
+}
+
+void shader_program_set_vec2_array(shader_program* p, char* name, vec2* vals, int count) {
+  GLint location = glGetUniformLocation(shader_program_handle(p), name);
+  if ( location == -1) {
+    warning("Shader has no uniform called '%s'", name);
+  } else {
+    glUniform2fv(location, count, (float*)vals);
+    SDL_GL_CheckError();
+  }
+}
+
+void shader_program_set_vec3_array(shader_program* p, char* name, vec3* vals, int count) {
+  GLint location = glGetUniformLocation(shader_program_handle(p), name);
+  if ( location == -1) {
+    warning("Shader has no uniform called '%s'", name);
+  } else {
+    glUniform3fv(location, count, (float*)vals);
+    SDL_GL_CheckError();
+  }
+}
+
+void shader_program_set_vec4_array(shader_program* p, char* name, vec4* vals, int count) {
+  GLint location = glGetUniformLocation(shader_program_handle(p), name);
+  if ( location == -1) {
+    warning("Shader has no uniform called '%s'", name);
+  } else {
+    glUniform4fv(location, count, (float*)vals);
+    SDL_GL_CheckError();
+  }
+}
+
+void shader_program_set_mat4_array(shader_program* p, char* name, mat4* vals, int count) {
+  GLint location = glGetUniformLocation(shader_program_handle(p), name);
+  if ( location == -1) {
+    warning("Shader has no uniform called '%s'", name);
+  } else {
+    glUniformMatrix4fv(location, count, GL_TRUE, (float*)vals);
+    SDL_GL_CheckError();
+  }
+}
+
+void shader_program_enable_attribute(shader_program* p, char* name, int count, int stride, void* ptr) {
+  GLint attr = glGetAttribLocation(shader_program_handle(p), name);
+  if (attr == -1) {
+    warning("Shader has no attribute called '%s'", name);
+  } else {
+    glEnableVertexAttribArray(attr);  
+    glVertexAttribPointer(attr, count, GL_FLOAT, GL_FALSE, sizeof(float) * stride, ptr);
+    SDL_GL_CheckError();
+  }
+}
+
+void shader_program_disable_attribute(shader_program* p, char* name) {
+  GLint attr = glGetAttribLocation(shader_program_handle(p), name);
+  if (attr == -1) {
+    warning("Shader has no attribute called '%s'", name);
+  } else {
+    glDisableVertexAttribArray(attr);  
+    SDL_GL_CheckError();
+  }
+}
