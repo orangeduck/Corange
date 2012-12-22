@@ -1,3 +1,2 @@
 shader vert = $CORANGE/shaders/deferred/ssao.vs
 shader frag = $CORANGE/shaders/deferred/ssao.fs
-shader ao = $CORANGE/shaders/screen_ao.fs

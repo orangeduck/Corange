@@ -56,17 +56,16 @@ void main() {
   if (material == 4) { gl_FragColor.rgb = albedo; return; }
   
   float depth = texture2D( depth_texture, fTexcoord).r;
-  
-  float shadow0 = shadow_amount(position.xyz, light_view[0], light_proj[0], shadows_texture0, 8, 0.0, position.xz);
-  float shadow1 = shadow_amount(position.xyz, light_view[1], light_proj[1], shadows_texture1, 4, 0.0, position.xz);
-  float shadow2 = shadow_amount(position.xyz, light_view[2], light_proj[2], shadows_texture2, 1, 0.0, position.xz);
-	float shadow = depth > light_start[2] ? shadow2 : (depth > light_start[1] ? shadow1 : shadow0);
-  
-  vec3 ssao = texture2DLod(ssao_texture, fTexcoord, 0.0).rgb;
-	
   vec4 normal_a = texture2D(normals_texture, fTexcoord);
 	vec3 normal = normalize(normal_a.rgb);
   float glossiness = normal_a.a;
+  
+  float shadow0 = shadow_amount(position.xyz, light_view[0], light_proj[0], shadows_texture0, 8, 0.00075, normal.xy);
+  float shadow1 = shadow_amount(position.xyz, light_view[1], light_proj[1], shadows_texture1, 4, 0.00075, normal.xy);
+  float shadow2 = shadow_amount(position.xyz, light_view[2], light_proj[2], shadows_texture2, 1, 0.00075, normal.xy);
+	float shadow = depth > light_start[2] ? shadow2 : (depth > light_start[1] ? shadow1 : shadow0);
+  
+  vec3 ssao = texture2DLod(ssao_texture, fTexcoord, 1.0).rgb;
   
   vec3 diffuse  = vec3(0.0, 0.0, 0.0);
   vec3 ambient  = vec3(0.0, 0.0, 0.0);
@@ -98,16 +97,10 @@ void main() {
   
   if ((material == 2) || (material == 3)) {
   
-    float env_factor;
+    float env_factor = float(material) / 2;
     
-    if (material == 3) {
-      env_factor = 1.5;
-    } else {
-      env_factor = 0.5;
-    }
-  
     vec3 reflected = normalize(reflect(eye_dir, normal));
-    vec3 env = from_gamma(texture2D(env_texture, vec2(reflected.x, -reflected.y)).rgb) * ambient;
+    vec3 env = from_gamma(texture2D(env_texture, vec2(reflected.x, -reflected.y)).rgb) * ambient * 1.5;
     float env_amount = (1.0 - dot(eye_dir, normal)) * spec * env_factor;
     
     diffuse = mix(diffuse, env, env_amount);
@@ -115,5 +108,6 @@ void main() {
   
   vec3 final = diffuse + ambient + specular;  
   gl_FragColor.rgb = final;
+  //gl_FragColor.rgb = ssao;
 
 } 

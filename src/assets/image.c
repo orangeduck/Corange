@@ -945,6 +945,7 @@ image* image_tga_load_file(char* filename) {
 		channels = 4;
 	} else {
     error("Cannot load file '%s', it has depth of %i", filename, depth);
+    return NULL;
   }
 
 	int size = height * width * channels;

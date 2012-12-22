@@ -475,13 +475,20 @@ static void shadow_mapper_transforms(deferred_renderer* dr, int i, mat4* view, m
 
 static void render_shadows_static(deferred_renderer* dr, int i, static_object* s) {
   
+  mat4 world = mat4_world( s->position, s->scale, s->rotation );
   mat4 view, proj;
   float clip_near, clip_far;
   shadow_mapper_transforms(dr, i, &view, &proj, &clip_near, &clip_far);
   
+  mat4 inv_view = mat4_inverse(view);
+  mat4 inv_proj = mat4_inverse(proj);
+  frustum frus = frustum_new_clipbox();
+  frus = frustum_transform(frus, inv_proj);
+  frus = frustum_transform(frus, inv_view);
+  
   shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_depth));
   shader_program_enable(shader);
-  shader_program_set_mat4(shader, "world", mat4_world( s->position, s->scale, s->rotation ));
+  shader_program_set_mat4(shader, "world", world);
   shader_program_set_mat4(shader, "view",  view);
   shader_program_set_mat4(shader, "proj",  proj);
   shader_program_set_float(shader, "clip_near", clip_near);
@@ -494,6 +501,9 @@ static void render_shadows_static(deferred_renderer* dr, int i, static_object* s
   for(int j = 0; j < r->num_surfaces; j++) {
     
     renderable_surface* s = r->surfaces[j];
+    
+    if (sphere_outside_frustum(sphere_transform(s->bound, world), frus)) { continue; }
+    
     material_entry* me = material_get_entry(asset_hndl_ptr(r->material), j);
     bool use_alpha =
       material_entry_has_item(me, "alpha_test") &&
@@ -534,14 +544,22 @@ static void render_shadows_static(deferred_renderer* dr, int i, static_object* s
 static mat4 bone_matrices[MAX_BONES];
 
 static void render_shadows_animated(deferred_renderer* dr, int i, animated_object* ao) {
-
+  
+  mat4 world = mat4_world( ao->position, ao->scale, ao->rotation );
   mat4 view, proj;
   float clip_near, clip_far;
   shadow_mapper_transforms(dr, i, &view, &proj, &clip_near, &clip_far);
 
+  mat4 inv_view = mat4_inverse(view);
+  mat4 inv_proj = mat4_inverse(proj);
+  frustum frus = frustum_new_clipbox();
+  frus = frustum_transform(frus, inv_proj);
+  frus = frustum_transform(frus, inv_view);
+  
   skeleton* skel = asset_hndl_ptr(ao->skeleton);
 
   if (skel->num_bones > MAX_BONES) { error("animated object skeleton has too many bones (over %i)", MAX_BONES); }
+  if (ao->pose == NULL) { return; }
   
   for(int j = 0; j < skel->num_bones; j++) {
     mat4 base = bone_transform(skel->bones[j]);
@@ -551,7 +569,7 @@ static void render_shadows_animated(deferred_renderer* dr, int i, animated_objec
   
   shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_depth_ani));
   shader_program_enable(shader);
-  shader_program_set_mat4(shader, "world", mat4_world( ao->position, ao->scale, ao->rotation ));
+  shader_program_set_mat4(shader, "world", world);
   shader_program_set_mat4(shader, "view",  view);
   shader_program_set_mat4(shader, "proj",  proj);
   shader_program_set_mat4_array(shader, "world_bones", bone_matrices, skel->num_bones);
@@ -564,6 +582,8 @@ static void render_shadows_animated(deferred_renderer* dr, int i, animated_objec
   
   for(int j = 0; j < r->num_surfaces; j++) {
     renderable_surface* s = r->surfaces[j];
+    
+    if (sphere_outside_frustum(sphere_transform(s->bound, world), frus)) { continue; }
     
     glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
@@ -600,8 +620,17 @@ static void render_shadows_landscape(deferred_renderer* dr, int i, landscape* l)
   vec3 translation = vec3_new(l->size_x / 2, 0, l->size_y / 2);
   mat4 rotation = mat4_id();
   
-  shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_depth));
+  // This assumes that X or Z scale of a chunk will never exceed the height.
+  float bound_scale_val = max(scale.x, scale.z);
+  vec3 bound_scale = vec3_new(bound_scale_val, bound_scale_val, bound_scale_val);
   
+  mat4 inv_view = mat4_inverse(view);
+  mat4 inv_proj = mat4_inverse(proj);
+  frustum frus = frustum_new_clipbox();
+  frus = frustum_transform(frus, inv_proj);
+  frus = frustum_transform(frus, inv_view);
+  
+  shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_depth));
   shader_program_enable(shader);
   shader_program_set_mat4(shader, "world", mat4_world( translation, scale, rotation ));
   shader_program_set_mat4(shader, "view",  view);
@@ -609,16 +638,31 @@ static void render_shadows_landscape(deferred_renderer* dr, int i, landscape* l)
   shader_program_set_float(shader, "clip_near", clip_near);
   shader_program_set_float(shader, "clip_far", clip_far);
   shader_program_set_float(shader, "alpha_test",  0.0);
-    
+  
   for(int j = 0; j < terr->num_chunks; j++) {
     terrain_chunk* tc = terr->chunks[j];
     
+    float chunkx = (1.0 / (terr->num_rows-1)) *  l->size_x;
+    float chunky = (1.0 / (terr->num_cols-1)) *  l->size_y;
+    float posx = ((float)(i % terr->num_cols)) * chunkx - l->size_x / 2;
+    float posy = ((float)(i / terr->num_cols)) * chunky - l->size_y / 2;
+    
+    sphere bound = sphere_transform(tc->bound, mat4_world(translation, bound_scale, mat4_id()));
+    if (sphere_outside_frustum(bound, frus)) { continue; }
+    
+    float dist = vec2_dist_sqrd(
+      vec2_new(dr->camera->position.x, dr->camera->position.z), 
+      vec2_new(-posx, -posy)) / (100 * NUM_TERRAIN_BUFFERS);
+    
+    //int buff_index = clamp((int)dist, 0, NUM_TERRAIN_BUFFERS-1);
+    int buff_index = NUM_TERRAIN_BUFFERS-1;
+    
     glBindBuffer(GL_ARRAY_BUFFER, tc->vertex_buffer);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tc->index_buffers[NUM_TERRAIN_BUFFERS-2]);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tc->index_buffers[buff_index]);
   
     shader_program_enable_attribute(shader, "vPosition", 3, 12, (void*)0);
       
-      glDrawElements(GL_TRIANGLES, tc->num_indicies[NUM_TERRAIN_BUFFERS-2], GL_UNSIGNED_INT, (void*)0);
+      glDrawElements(GL_TRIANGLES, tc->num_indicies[buff_index], GL_UNSIGNED_INT, (void*)0);
     
     shader_program_disable_attribute(shader, "vPosition");
     
@@ -655,9 +699,7 @@ static void render_shadows(deferred_renderer* dr) {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
   
   }
-  
-  //texture_write_to_file(&dr->shadows_texture[0], "depth.tga");
-  
+    
 }
 
 static void render_clear(deferred_renderer* dr) {
@@ -689,13 +731,20 @@ static void render_clear(deferred_renderer* dr) {
 
 static void render_static(deferred_renderer* dr, static_object* so) {
   
+  mat4 world = mat4_world( so->position, so->scale, so->rotation );
+  mat4 inv_view = mat4_inverse(camera_view_matrix(dr->camera));
+  mat4 inv_proj = mat4_inverse(camera_proj_matrix(dr->camera));
+  frustum frus = frustum_new_clipbox();
+  frus = frustum_transform(frus, inv_proj);
+  frus = frustum_transform(frus, inv_view);
+  
   renderable* r = asset_hndl_ptr(so->renderable);
   
   if(r->is_rigged) { error("Static object is rigged!"); }
   
   shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_static));
   shader_program_enable(shader);
-  shader_program_set_mat4(shader, "world", mat4_world( so->position, so->scale, so->rotation ));
+  shader_program_set_mat4(shader, "world", world);
   shader_program_set_mat4(shader, "view", camera_view_matrix(dr->camera));
   shader_program_set_mat4(shader, "proj", camera_proj_matrix(dr->camera));
   shader_program_set_float(shader, "near", dr->camera->near_clip);
@@ -704,6 +753,8 @@ static void render_static(deferred_renderer* dr, static_object* so) {
   for(int i=0; i < r->num_surfaces; i++) {
     
     renderable_surface* s = r->surfaces[i];
+    
+    if (sphere_outside_frustum(sphere_transform(s->bound, world), frus)) { continue; }
     
     int mentry_id = min(i, ((material*)asset_hndl_ptr(r->material))->num_entries-1);
     material_entry* me = material_get_entry(asset_hndl_ptr(r->material), mentry_id);
@@ -752,6 +803,7 @@ static void render_animated(deferred_renderer* dr, animated_object* ao) {
   skeleton* skel = asset_hndl_ptr(ao->skeleton);
 
   if (skel->num_bones > MAX_BONES) { error("animated object skeleton has too many bones (over %i)", MAX_BONES); }
+  if (ao->pose == NULL) { return; }
   
   for(int i = 0; i < skel->num_bones; i++) {
     mat4 base = bone_transform(skel->bones[i]);
@@ -759,13 +811,20 @@ static void render_animated(deferred_renderer* dr, animated_object* ao) {
     bone_matrices[i] = mat4_mul_mat4(ani, mat4_inverse(base));
   }
   
+  mat4 world = mat4_world( ao->position, ao->scale, ao->rotation );
+  mat4 inv_view = mat4_inverse(camera_view_matrix(dr->camera));
+  mat4 inv_proj = mat4_inverse(camera_proj_matrix(dr->camera));
+  frustum frus = frustum_new_clipbox();
+  frus = frustum_transform(frus, inv_proj);
+  frus = frustum_transform(frus, inv_view);  
+  
   renderable* r = asset_hndl_ptr(ao->renderable);
   
   if(!r->is_rigged) { error("Animated object is not rigged!"); }
   
   shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_animated));
   shader_program_enable(shader);
-  shader_program_set_mat4(shader, "world", mat4_world( ao->position, ao->scale, ao->rotation ));
+  shader_program_set_mat4(shader, "world", world);
   shader_program_set_mat4(shader, "view", camera_view_matrix(dr->camera));
   shader_program_set_mat4(shader, "proj", camera_proj_matrix(dr->camera));
   shader_program_set_float(shader, "near", dr->camera->near_clip);
@@ -775,6 +834,8 @@ static void render_animated(deferred_renderer* dr, animated_object* ao) {
   for(int i=0; i < r->num_surfaces; i++) {
     
     renderable_surface* s = r->surfaces[i];
+    
+    if (sphere_outside_frustum(sphere_transform(s->bound, world), frus)) { continue; }
     
     int mat_id = min(i, ((material*)asset_hndl_ptr(r->material))->num_entries-1);
     material_entry* me = material_get_entry(asset_hndl_ptr(r->material), mat_id);
@@ -823,9 +884,27 @@ static void render_animated(deferred_renderer* dr, animated_object* ao) {
 
 void render_landscape(deferred_renderer* dr, landscape* l) {
 
+  //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+  terrain* terr = asset_hndl_ptr(l->heightmap);
+  
+  vec3 scale = vec3_new(-(1.0 / terr->width) * l->size_x, l->scale, -(1.0 / terr->height) * l->size_y);
+  vec3 translation = vec3_new(l->size_x / 2, 0, l->size_y / 2);
+  
+  mat4 inv_view = mat4_inverse(camera_view_matrix(dr->camera));
+  mat4 inv_proj = mat4_inverse(camera_proj_matrix(dr->camera));
+  frustum frus = frustum_new_clipbox();
+  frus = frustum_transform(frus, inv_proj);
+  frus = frustum_transform(frus, inv_view);
+  
+  // This assumes that X or Z scale of a chunk will never exceed the height.
+  float bound_scale_val = max(scale.x, scale.z);
+  vec3 bound_scale = vec3_new(bound_scale_val, bound_scale_val, bound_scale_val);  
+  
   shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_terrain));
   
   shader_program_enable(shader);
+  shader_program_set_mat4(shader, "world", mat4_world(translation, scale, mat4_id()));
   shader_program_set_mat4(shader, "view", camera_view_matrix(dr->camera));
   shader_program_set_mat4(shader, "proj", camera_proj_matrix(dr->camera));
   shader_program_set_float(shader, "near", dr->camera->near_clip);
@@ -842,27 +921,33 @@ void render_landscape(deferred_renderer* dr, landscape* l) {
   shader_program_enable_texture(shader, "ground3_nm", 7, l->ground3_nm);
   shader_program_enable_texture(shader, "attribmap", 8, l->attribmap);
   
-  terrain* terr = asset_hndl_ptr(l->heightmap);
-  
   for(int i = 0; i < terr->num_chunks; i++) {
     
     terrain_chunk* tc = terr->chunks[i];
     
-    vec3 scale = vec3_new(-(1.0 / terr->width) * l->size_x, l->scale, -(1.0 / terr->height) * l->size_y);
-    vec3 translation = vec3_new(l->size_x / 2, 0, l->size_y / 2);
-    mat4 rotation = mat4_id();
+    float chunkx = (1.0 / (terr->num_rows-1)) *  l->size_x;
+    float chunky = (1.0 / (terr->num_cols-1)) *  l->size_y;
+    float posx = ((float)(i % terr->num_cols)) * chunkx - l->size_x / 2;
+    float posy = ((float)(i / terr->num_cols)) * chunky - l->size_y / 2;
     
-    shader_program_set_mat4(shader, "world", mat4_world(translation, scale, rotation));
+    sphere bound = sphere_transform(tc->bound, mat4_world(translation, bound_scale, mat4_id()));
+    if (sphere_outside_frustum(bound, frus)) { continue; }
+    
+    float dist = vec2_dist_sqrd(
+      vec2_new(dr->camera->position.x, dr->camera->position.z), 
+      vec2_new(-posx, -posy)) / (100 * NUM_TERRAIN_BUFFERS);
+    
+    int buff_index = clamp((int)dist, 0, NUM_TERRAIN_BUFFERS-1);
     
     glBindBuffer(GL_ARRAY_BUFFER, tc->vertex_buffer);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tc->index_buffers[0]);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tc->index_buffers[buff_index]);
     
     shader_program_enable_attribute(shader, "vPosition",  3, 12, (void*)0);
     shader_program_enable_attribute(shader, "vNormal",    3, 12, (void*)(sizeof(float) * 3));
     shader_program_enable_attribute(shader, "vTangent",   3, 12, (void*)(sizeof(float) * 6));
     shader_program_enable_attribute(shader, "vBinormal",  3, 12, (void*)(sizeof(float) * 9));
     
-      glDrawElements(GL_TRIANGLES, tc->num_indicies[0], GL_UNSIGNED_INT, (void*)0);
+      glDrawElements(GL_TRIANGLES, tc->num_indicies[buff_index], GL_UNSIGNED_INT, (void*)0);
     
     shader_program_disable_attribute(shader, "vPosition");
     shader_program_disable_attribute(shader, "vNormal");
@@ -884,6 +969,8 @@ void render_landscape(deferred_renderer* dr, landscape* l) {
   shader_program_disable_texture(shader, 7);
   shader_program_disable_texture(shader, 8);
   shader_program_disable(shader);
+  
+  //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
   
 }
 
@@ -1089,12 +1176,16 @@ static void render_ssao(deferred_renderer* dr) {
   shader_program_set_mat4(shader, "world", mat4_id());
   shader_program_set_mat4(shader, "view", mat4_id());
   shader_program_set_mat4(shader, "proj", mat4_orthographic(-1, 1, -1, 1, -1, 1));
+  
   shader_program_enable_texture(shader, "random_texture", 0, dr->tex_random);
   shader_program_enable_texture_id(shader, "depth_texture", 1, dr->gdepth_texture);
-  shader_program_enable_texture_id(shader, "normals_texture", 2, dr->gnormals_texture);
-  shader_program_set_float(shader, "seed", vec3_dot(dr->camera->position, vec3_one()));
+  shader_program_enable_texture_id(shader, "normals_texture", 2, dr->gnormals_texture);  
+  shader_program_enable_texture_id(shader, "positions_texture", 3, dr->gpositions_texture);
+
   shader_program_set_int(shader, "width", graphics_viewport_width());
   shader_program_set_int(shader, "height", graphics_viewport_height());
+  shader_program_set_float(shader, "clip_far", dr->camera->far_clip);
+  shader_program_set_float(shader, "clip_near", dr->camera->near_clip);
   
   shader_program_enable_attribute(shader, "vPosition",  3, 3, quad_position);
   shader_program_enable_attribute(shader, "vTexcoord",  2, 2, quad_texcoord);
@@ -1104,6 +1195,7 @@ static void render_ssao(deferred_renderer* dr) {
   shader_program_disable_attribute(shader, "vPosition");
   shader_program_disable_attribute(shader, "vTexcoord");
   
+  shader_program_disable_texture(shader, 3);
   shader_program_disable_texture(shader, 2);
   shader_program_disable_texture(shader, 1);
   shader_program_disable_texture(shader, 0);
@@ -1482,15 +1574,19 @@ void deferred_renderer_render(deferred_renderer* dr) {
   
   dr->time += frame_time();
   
-  render_shadows(dr);
-  render_clear(dr);
-  render_gbuffer(dr);
-  render_ssao(dr);
-  render_skies(dr);
-  render_compose(dr);
-  render_tonemap(dr);
-  render_post0(dr);
-  render_post1(dr);
+  //timer t = timer_start(0, "Rendering Start");
+  
+  render_shadows(dr);   //t = timer_split(t, "Shadow");
+  render_clear(dr);     //t = timer_split(t, "Clear");
+  render_gbuffer(dr);   //t = timer_split(t, "GBuffer");
+  render_ssao(dr);      //t = timer_split(t, "SSAO");
+  render_skies(dr);     //t = timer_split(t, "Skies");
+  render_compose(dr);   //t = timer_split(t, "Compose");
+  render_tonemap(dr);   //t = timer_split(t, "Tonemap");
+  render_post0(dr);     //t = timer_split(t, "Post0");
+  render_post1(dr);     //t = timer_split(t, "Post1");
+  
+  //timer_stop(t, "Rendering End");
   
   dr->render_objects_num = 0;
   

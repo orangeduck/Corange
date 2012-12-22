@@ -1,6 +1,7 @@
 #include "assets/material.h"
 
 void material_entry_delete(material_entry* me) {
+  SDL_GL_CheckError();
   shader_program_delete(me->program);
   for(int i = 0; i < me->num_items; i++) {
     free(me->names[i]);
@@ -9,10 +10,12 @@ void material_entry_delete(material_entry* me) {
   free(me->types);
   free(me->items);
   free(me);
+  SDL_GL_CheckError();
 }
 
 material_item material_entry_item(material_entry* me, char* name) {
   
+  SDL_GL_CheckError();
   for(int i = 0; i < me->num_items; i++) {
     if (strcmp(me->names[i], name) == 0) {
       return me->items[i];
@@ -22,47 +25,60 @@ material_item material_entry_item(material_entry* me, char* name) {
   material_item empty;
   memset(&empty, 0, sizeof(empty));
   
+  SDL_GL_CheckError();
   return empty;
 }
 
 bool material_entry_has_item(material_entry* me, char* name) {
+  SDL_GL_CheckError();
   for(int i = 0; i < me->num_items; i++) {
     if (strcmp(me->names[i], name) == 0) {
       return true;
     }
   }
   
+  SDL_GL_CheckError();
   return false;
 }
 
 material* material_new() {
+  SDL_GL_CheckError();
   material* m = malloc(sizeof(material));
   m->num_entries = 0;
   m->entries = malloc(sizeof(material_entry) * m->num_entries);
+  SDL_GL_CheckError();
   return m;
 }
 
 void material_delete(material* m) {
+  SDL_GL_CheckError();
   for(int i = 0; i < m->num_entries; i++) {
     material_entry_delete(m->entries[i]);
   }
   free(m->entries);
   free(m);
+  SDL_GL_CheckError();
 }
 
 static void material_generate_programs(material* m) {
+
+  SDL_GL_CheckError();
   
   for(int i = 0; i < m->num_entries; i++) {
-    
+
+    SDL_GL_CheckError();
+  
     material_entry* me = m->entries[i];
     me->program = shader_program_new();
     
+    SDL_GL_CheckError();
     bool attached = false;
     for(int j = 0; j < me->num_items; j++) {
       
       if (me->types[j] == mat_item_shader) {
         asset_hndl ah = me->items[j].as_asset;
         
+        SDL_GL_CheckError();
         shader_program_attach_shader(me->program, asset_hndl_ptr(ah));
         attached = true;
         SDL_GL_CheckError();
@@ -70,6 +86,7 @@ static void material_generate_programs(material* m) {
       
     }
     
+    SDL_GL_CheckError();
     if (attached) { shader_program_link(me->program); }
     SDL_GL_CheckError();
     
@@ -80,6 +97,7 @@ static void material_generate_programs(material* m) {
 }
 
 void material_entry_add_item(material_entry* me, char* name, int type, material_item mi) {
+  SDL_GL_CheckError();
   me->num_items++;
   
   me->types = realloc(me->types, sizeof(int) * me->num_items);
@@ -90,9 +108,11 @@ void material_entry_add_item(material_entry* me, char* name, int type, material_
   me->types[me->num_items-1] = type;
   me->names[me->num_items-1] = malloc(strlen(name)+1);
   strcpy(me->names[me->num_items-1], name);  
+  SDL_GL_CheckError();
 }
 
 material_entry* material_add_entry(material* m) {
+  SDL_GL_CheckError();
   m->num_entries++;
   m->entries = realloc(m->entries, sizeof(material_entry*) * m->num_entries);
   m->entries[m->num_entries-1] = malloc(sizeof(material_entry));
@@ -109,6 +129,8 @@ material_entry* material_add_entry(material* m) {
 
 material* mat_load_file(char* filename) {
   
+  SDL_GL_CheckError();
+  
   SDL_RWops* file = SDL_RWFromFile(filename, "r");
   if(file == NULL) {
     error("Cannot load file %s", filename);
@@ -120,6 +142,8 @@ material* mat_load_file(char* filename) {
   m->num_entries++;
   m->entries = realloc(m->entries, sizeof(material_entry*) * m->num_entries);
   m->entries[m->num_entries-1] = malloc(sizeof(material_entry));
+
+  SDL_GL_CheckError();
   
   /* Fill in first entry */
   material_entry* me = m->entries[m->num_entries-1];
@@ -197,15 +221,22 @@ material* mat_load_file(char* filename) {
       
     } else {
       error("Unknown material item type '%s'", type);
+      return NULL;
     }
     
+    SDL_GL_CheckError();
     material_entry_add_item(m->entries[m->num_entries-1], name, type_id, mi);
+    SDL_GL_CheckError();
   
   }
   
   SDL_RWclose(file);
   
+  SDL_GL_CheckError();
+  
   material_generate_programs(m);
+  
+  SDL_GL_CheckError();
   
   return m;
 }
@@ -217,6 +248,7 @@ material_entry* material_get_entry(material* m, int index) {
 shader_program* material_first_program(material* m) {
   if (m->num_entries <= 0) {
     error("No entries in material!");
+    return NULL;
   } else {
     return m->entries[0]->program;
   }

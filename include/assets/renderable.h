@@ -24,6 +24,7 @@ typedef struct {
   GLuint triangle_vbo;
   int num_verticies;
   int num_triangles;
+  sphere bound;
 } renderable_surface;
 
 renderable_surface* renderable_surface_new(mesh* m);

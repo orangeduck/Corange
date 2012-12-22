@@ -11,6 +11,28 @@ static void corange_signal(int sig) {
   }
 }
 
+static FILE* logout = NULL;
+
+static void corange_error(const char* str) {
+  
+  fprintf(stderr, "%s\n", str); fflush(stderr);
+  fprintf(logout, "%s\n", str); fflush(logout);
+  
+  SDL_PrintStackTrace();
+  exit(EXIT_FAILURE);
+}
+
+static void corange_warning(const char* str) {
+  fprintf(stdout, "%s\n", str); fflush(stdout);
+  fprintf(logout, "%s\n", str); fflush(logout);
+  
+}
+
+static void corange_debug(const char* str) {
+  fprintf(stdout, "%s\n", str); fflush(stdout);
+  fprintf(logout, "%s\n", str); fflush(logout);
+}
+
 void corange_init(const char* core_assets_path) {
   
   /* Stop stdout redirect on windows */
@@ -20,6 +42,7 @@ void corange_init(const char* core_assets_path) {
     FILE* ferr = freopen( "CON", "w", stderr );
   #endif
   
+  
   /* Attach signal handlers */
   signal(SIGABRT, corange_signal);
   signal(SIGFPE, corange_signal);
@@ -28,7 +51,11 @@ void corange_init(const char* core_assets_path) {
   signal(SIGSEGV, corange_signal);
   signal(SIGTERM, corange_signal);
   
-  at_error(SDL_PrintStackTrace);
+  logout = fopen("output.log", "w");
+  
+  at_error(corange_error);
+  at_warning(corange_warning);
+  at_debug(corange_debug);
   
   /* Starting Corange */
   debug("Starting Corange...");
@@ -120,4 +147,5 @@ void corange_finish() {
   
   SDL_Quit();
 
+  fclose(logout);
 }

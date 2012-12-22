@@ -202,6 +202,8 @@ void asset_handler_cast(type_id type, const char* extension, void* asset_loader(
 
 void file_load(fpath filename) {
   
+  SDL_GL_CheckError();
+  
   filename = asset_map_filename(filename);
   
   if (dict_contains(asset_dict, filename.ptr)) {
@@ -223,6 +225,8 @@ void file_load(fpath filename) {
     
   }
 
+  SDL_GL_CheckError();
+  
 }
 
 bool file_exists(fpath filename) {

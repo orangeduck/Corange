@@ -24,7 +24,7 @@ animated_object* animated_object_new() {
 }
 
 void animated_object_delete(animated_object* ao) {
-  skeleton_delete(ao->pose);
+  if (ao->pose) { skeleton_delete(ao->pose); }
   free(ao);
 }
 

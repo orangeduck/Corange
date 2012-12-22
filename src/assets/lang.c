@@ -60,5 +60,6 @@ char* S(char* id) {
     return lang_get(asset_hndl_ptr(curr_lang), id);
   } else {
     error("Current Language hasn't been set!");
+    return NULL;
   }
 }

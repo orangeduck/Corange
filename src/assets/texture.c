@@ -443,7 +443,9 @@ static bool is_power_of_two(unsigned int x) {
  return (x == 1);
 }
 
-texture* dds_load_file( char* filename ){
+texture* dds_load_file( char* filename ) {
+  
+  SDL_GL_CheckError();
   
   DdsLoadInfo loadInfoDXT1 =   { 1, 0, 0, 4, 8,  GL_COMPRESSED_RGBA_S3TC_DXT1 };
   DdsLoadInfo loadInfoDXT3 =   { 1, 0, 0, 4, 16, GL_COMPRESSED_RGBA_S3TC_DXT3 };

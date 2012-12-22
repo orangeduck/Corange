@@ -22,6 +22,8 @@ struct terrain_chunk {
   int id;
   int x, y, width, height;
   
+  sphere bound;
+  
   struct terrain_chunk* left;
   struct terrain_chunk* right;
   struct terrain_chunk* top;

@@ -46,8 +46,8 @@ void graphics_init() {
     error("Cannot initialize SDL video!");
   }
 
-  window_width = DEFAULT_WIDTH;
-  window_height = DEFAULT_HEIGHT;
+  window_width = 0;
+  window_height = 0;
   window_flags = SDL_OPENGL;
   window_vsync = 1;
   window_multisamples = 4;
@@ -56,6 +56,9 @@ void graphics_init() {
   
   graphics_viewport_set_title("Corange");
   graphics_viewport_start();
+  
+  window_width = screen->w;
+  window_height = screen->h;
   
   SDL_GL_PrintInfo();
   SDL_GL_PrintExtensions();
@@ -176,7 +179,7 @@ static char screenshot_string[256];
 void graphics_viewport_screenshot() {
   
   unsigned char* image_data = malloc( sizeof(unsigned char) * graphics_viewport_width() * graphics_viewport_height() * 4 );
-  glReadPixels( 0, 0, graphics_viewport_width(), graphics_viewport_height(), GL_RGBA, GL_UNSIGNED_BYTE, image_data ); 
+  glReadPixels( 0, 0, graphics_viewport_width(), graphics_viewport_height(), GL_BGRA, GL_UNSIGNED_BYTE, image_data ); 
   
   image* i = image_new(graphics_viewport_width(), graphics_viewport_height(), image_data);
   

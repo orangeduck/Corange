@@ -124,6 +124,7 @@ renderable_surface* renderable_surface_new(mesh* m) {
   
   s->num_verticies = m->num_verts;
   s->num_triangles = m->num_triangles;
+  s->bound = mesh_bounding_sphere(m);
   
   /* Position Normal Tangent Binormal Uvs Color      */
   /* 3        3      3       3        2   4     = 18 */
@@ -258,7 +259,30 @@ void renderable_surface_delete(renderable_surface* s) {
   
 }
 
+static sphere renderable_surface_bounding_sphere(float* verts, int num_verts, int stride) {
+  
+  sphere s;
+  
+  s.center = vec3_zero();
+  for(int i = 0; i < num_verts * stride; i += stride) {
+    vec3 position = vec3_new(verts[i+0], verts[i+1], verts[i+2]);
+    s.center = vec3_add(s.center, position);
+  }
+  s.center = vec3_div(s.center, num_verts);
+  
+  s.radius = 0;
+  for(int i = 0; i < num_verts * stride; i += stride) {
+    vec3 position = vec3_new(verts[i+0], verts[i+1], verts[i+2]);
+    s.radius = max(s.radius, vec3_dist(s.center, position));
+  }
+  
+  return s;
+  
+}
+
 renderable* bmf_load_file(char* filename) {
+
+  SDL_GL_CheckError();
 
   renderable* r = malloc(sizeof(renderable));
   
@@ -297,10 +321,10 @@ renderable* bmf_load_file(char* filename) {
   uint32_t num_surfaces;
   SDL_RWread(file, &num_surfaces, sizeof(uint32_t), 1);
   r->num_surfaces = num_surfaces;
-    
+  
   r->surfaces = malloc(sizeof(renderable_surface*) * r->num_surfaces);
   
-  const int vertsize = r->is_rigged ? 24 : 18;
+  const int stride = r->is_rigged ? 24 : 18;
   
   for(int i = 0; i < r->num_surfaces; i++) {
     renderable_surface* s = malloc(sizeof(renderable_surface));
@@ -308,23 +332,28 @@ renderable* bmf_load_file(char* filename) {
     uint32_t num_verticies;
     SDL_RWread(file, &num_verticies, sizeof(uint32_t), 1);
     s->num_verticies = num_verticies;
-        
-    float* vert_data = malloc(sizeof(float) * vertsize * s->num_verticies);
-    SDL_RWread(file, vert_data, sizeof(float) * vertsize * s->num_verticies, 1);
+    
+    float* vert_data = malloc(sizeof(float) * stride * s->num_verticies);
+    SDL_RWread(file, vert_data, sizeof(float) * stride * s->num_verticies, 1);
+    
+    s->bound = renderable_surface_bounding_sphere(vert_data, s->num_verticies, stride);
+    
     glGenBuffers(1, &s->vertex_vbo);
     glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * s->num_verticies * vertsize, vert_data, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * s->num_verticies * stride, vert_data, GL_STATIC_DRAW);
+    SDL_GL_CheckError();
     free(vert_data);
     
     uint32_t num_indicies;
     SDL_RWread(file, &num_indicies, sizeof(uint32_t), 1);
     s->num_triangles = num_indicies / 3;
-        
+    
     uint32_t* index_data = malloc(sizeof(uint32_t) * num_indicies);
     SDL_RWread(file, index_data, sizeof(uint32_t) * num_indicies, 1);
     glGenBuffers(1, &s->triangle_vbo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * num_indicies, index_data, GL_STATIC_DRAW);
+    SDL_GL_CheckError();
     free(index_data);
     
     r->surfaces[i] = s;
@@ -332,6 +361,8 @@ renderable* bmf_load_file(char* filename) {
   
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
+  SDL_GL_CheckError();
+
   
   SDL_RWclose(file);
   
@@ -392,10 +423,12 @@ void bmf_save_file(renderable* r, char* filename) {
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   
   SDL_RWclose(file);
-  
+    
 }
 
 renderable* obj_load_file(char* filename) {
+  
+  SDL_GL_CheckError();
   
   model* obj_model = malloc(sizeof(model));
   obj_model->num_meshes = 0;
@@ -1000,13 +1033,31 @@ renderable* smd_load_file(char* filename) {
   renderable* r = renderable_new();
   renderable_add_mesh_rigged(r, smd_mesh, weights);
   r->is_rigged = true;
-  r->material = asset_hndl_new_load(P("$CORANGE/shaders/basic_animated.mat"));
   
   vertex_hashtable_delete(hashes);
   vertex_list_delete(vert_list);
   int_list_delete(tri_list);
   mesh_delete(smd_mesh);
   free(weights);
+
+  fpath mat_file;
+  fpath bmf_file;
+  fpath fileid;
+  
+  SDL_PathFileLocation(mat_file.ptr, filename);
+  SDL_PathFileLocation(bmf_file.ptr, filename);
+  SDL_PathFileName(fileid.ptr, filename);
+  
+  strcat(mat_file.ptr, fileid.ptr);
+  strcat(mat_file.ptr, ".mat");
+  
+  if (file_exists(mat_file)) {
+    r->material = asset_hndl_new(mat_file);
+  }
+  
+  strcat(bmf_file.ptr, fileid.ptr);
+  strcat(bmf_file.ptr, ".bmf");
+  bmf_save_file(r, bmf_file.ptr);
   
   return r;
 }

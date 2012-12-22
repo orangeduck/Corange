@@ -83,21 +83,31 @@ void ui_rectangle_render(ui_rectangle* rect) {
     return;
   }
   
+  SDL_GL_CheckError();
   asset_hndl mat = asset_hndl_new_load(P("$CORANGE/shaders/ui.mat"));
   
   shader_program* program_ui = material_get_entry(asset_hndl_ptr(mat), 0)->program;
   
+  SDL_GL_CheckError();
+  
   GLuint ui_handle = shader_program_handle(program_ui);
   glUseProgram(ui_handle);
   
-	glMatrixMode(GL_PROJECTION);
+	SDL_GL_CheckError();
+  
+  glMatrixMode(GL_PROJECTION);
   glPushMatrix();
 	glLoadIdentity();
+  SDL_GL_CheckError();
 	glOrtho(0, graphics_viewport_width(), graphics_viewport_height(), 0, -1, 1);
   
-	glMatrixMode(GL_MODELVIEW);
+  SDL_GL_CheckError();
+	
+  glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
 	glLoadIdentity();
+  
+  SDL_GL_CheckError();
   
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -113,6 +123,8 @@ void ui_rectangle_render(ui_rectangle* rect) {
     glBindTexture(GL_TEXTURE_2D, texture_handle(asset_hndl_ptr(asset_hndl_new_load(P("$CORANGE/resources/random.dds")))) );
     glUniform1i(glGetUniformLocation(ui_handle, "random"), 1);
   }
+  
+  SDL_GL_CheckError();
   
   TIME += frame_time();
   glUniform1f(glGetUniformLocation(ui_handle, "time"), TIME);
@@ -150,6 +162,8 @@ void ui_rectangle_render(ui_rectangle* rect) {
   
   }
   
+  SDL_GL_CheckError();
+  
   if(rect->border_size > 0) {
   
     glColor4f(rect->border_color.x, rect->border_color.y, rect->border_color.z, rect->border_color.w);  
@@ -178,6 +192,8 @@ void ui_rectangle_render(ui_rectangle* rect) {
 	glMatrixMode(GL_MODELVIEW);
   glPopMatrix();
   
+  SDL_GL_CheckError();
+  
   if(!asset_hndl_isnull(rect->texture)) {
     glActiveTexture(GL_TEXTURE0 + 1);
     glDisable(GL_TEXTURE_2D);
@@ -187,7 +203,9 @@ void ui_rectangle_render(ui_rectangle* rect) {
   }
   
   glUseProgram(0);
- 
+  
+  SDL_GL_CheckError();
+  
 }
 
 bool ui_rectangle_contains_point(ui_rectangle* rect, vec2 pos) {

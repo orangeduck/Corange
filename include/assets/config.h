@@ -15,5 +15,6 @@ void config_delete(config* c);
 char* config_string(config* c, char* key);
 int config_int(config* c, char* key);
 float config_float(config* c, char* key);
+bool config_bool(config* c, char* key);
 
 #endif

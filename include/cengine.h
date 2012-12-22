@@ -52,18 +52,38 @@ fpath fpath_file_extension(fpath path);
 */
 
 /* Register functions for events */
-void at_error(void(*func)(void));
-void at_warning(void(*func)(void));
-void at_debug(void(*func)(void));
+void at_error(void(*func)(const char*));
+void at_warning(void(*func)(const char*));
+void at_debug(void(*func)(const char*));
 
 /* Call registered functions */
-void error_();
-void warning_();
-void debug_();
+void error_(const char*);
+void warning_(const char*);
+void debug_(const char*);
 
-#define error(MSG, ...) { printf("[ERROR] (%s:%s:%i) ", __FILE__, __func__, __LINE__); printf(MSG, ##__VA_ARGS__); printf("\n"); fflush(stdout); error_(); exit(EXIT_FAILURE); }
-#define warning(MSG, ...) { printf("[WARNING] (%s:%s:%i) ", __FILE__, __func__, __LINE__); printf(MSG, ##__VA_ARGS__); printf("\n"); fflush(stdout); warning_(); }
-#define debug(MSG, ...) { printf("[DEBUG] (%s:%s:%i) ", __FILE__, __func__, __LINE__); printf(MSG, ##__VA_ARGS__); printf("\n"); fflush(stdout); debug_(); }
+char error_buf[2048];
+char error_str[2048];
+
+char warning_buf[2048];
+char warning_str[2048];
+
+char debug_buf[2048];
+char debug_str[2048];
+
+#define error(MSG, ...) { \
+  sprintf(error_str, "[ERROR] (%s:%s:%i) ", __FILE__, __func__, __LINE__); \
+  sprintf(error_buf, MSG, ##__VA_ARGS__); strcat(error_str, error_buf); \
+  error_(error_str); }
+  
+#define warning(MSG, ...) { \
+  sprintf(warning_str, "[WARNING] (%s:%s:%i) ", __FILE__, __func__, __LINE__); \
+  sprintf(warning_buf, MSG, ##__VA_ARGS__); strcat(warning_str, warning_buf); \
+  warning_(warning_str); }
+
+#define debug(MSG, ...) { \
+  sprintf(debug_str, "[DEBUG] (%s:%s:%i) ", __FILE__, __func__, __LINE__); \
+  sprintf(debug_buf, MSG, ##__VA_ARGS__); strcat(debug_str, debug_buf); \
+  debug_(debug_str); }
 
 #define alloc_check(PTR) { if((PTR) == NULL) { error("Out of Memory!"); } }
 
@@ -83,9 +103,9 @@ typedef struct {
   unsigned long split;
 } timer;
 
-timer timer_start(int id);
-timer timer_split(timer t);
-timer timer_stop(timer t);
+timer timer_start(int id, const char* tag);
+timer timer_split(timer t, const char* tag);
+timer timer_stop(timer t, const char* tag);
 
 void timestamp(char* out);
 
@@ -492,6 +512,10 @@ vec3 frustum_minimums(frustum f);
 frustum frustum_transform(frustum f, mat4 m);
 frustum frustum_translate(frustum f, vec3 v);
 
+box frustum_box(frustum f);
+
+bool frustum_outside_box(frustum f, box b);
+
 /* Sphere */
 
 typedef struct {
@@ -502,9 +526,14 @@ typedef struct {
 
 sphere sphere_new(vec3 center, float radius);
 sphere sphere_of_box(box bb);
+sphere sphere_of_frustum(frustum f);
 sphere sphere_merge(sphere s1, sphere s2);
 sphere sphere_transform(sphere s, mat4 world);
 
+bool sphere_inside_box(sphere s, box b);
+bool sphere_outside_frustum(sphere s1, frustum f);
+bool sphere_outside_sphere(sphere s1, sphere s2); 
+bool sphere_outside_box(sphere s, box b);
 bool sphere_contains_point(sphere s1, vec3 point);
 bool sphere_contains_sphere(sphere s1, sphere s2);
 
@@ -546,6 +575,8 @@ float mesh_surface_area(mesh* m);
 void mesh_transform(mesh* m, mat4 transform);
 void mesh_translate(mesh* m, vec3 translation);
 void mesh_scale(mesh* m, float scale);
+
+sphere mesh_bounding_sphere(mesh* m);
 
 /* Model */
 

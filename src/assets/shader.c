@@ -3,6 +3,8 @@
 
 static shader* load_shader_file(char* filename, GLenum type) {
 
+  SDL_GL_CheckError();
+
   shader* new_shader = malloc(sizeof(shader));
   
   SDL_RWops* file = SDL_RWFromFile(filename, "r");
@@ -32,6 +34,8 @@ static shader* load_shader_file(char* filename, GLenum type) {
   if (compile_error == GL_FALSE) {
     error("Compiler Error on Shader %s.", filename);
   }
+  
+  SDL_GL_CheckError();
   
   return new_shader;
 }
@@ -65,6 +69,9 @@ shader_program* shader_program_new() {
 }
 
 GLuint shader_program_handle(shader_program* p) {
+  
+  SDL_GL_CheckError();
+  
   if (p == NULL) {
     error("Cannot get handle for NULL shader program");
   }
@@ -75,6 +82,9 @@ GLuint shader_program_handle(shader_program* p) {
 }
 
 GLuint shader_handle(shader* s) {
+
+  SDL_GL_CheckError();
+
   if (s == NULL) {
     error("Cannot get handle for NULL shader");
   }
@@ -87,6 +97,8 @@ GLuint shader_handle(shader* s) {
 
 void shader_program_attach_shader(shader_program* program, shader* shader) {
   
+  SDL_GL_CheckError();
+
   if (shader_program_has_shader(program, shader)) {
     error("Shader already attached!");
   }
@@ -95,9 +107,13 @@ void shader_program_attach_shader(shader_program* program, shader* shader) {
   
   shader_program_print_log(program);
   
+  SDL_GL_CheckError();
+  
 }
 
 void shader_program_link(shader_program* program) {
+
+  SDL_GL_CheckError();
 
   GLint count = -1;
   glGetIntegerv(GL_MAX_GEOMETRY_OUTPUT_VERTICES, &count);
@@ -113,9 +129,13 @@ void shader_program_link(shader_program* program) {
     error("Error linking shader program!");
   }
   
+  SDL_GL_CheckError();
+  
 }
 
 bool shader_program_has_shader(shader_program* p, shader* s) {
+
+  SDL_GL_CheckError();
 
   GLuint shaders[128];
   int num_shaders = 0;
@@ -125,11 +145,15 @@ bool shader_program_has_shader(shader_program* p, shader* s) {
     if (shaders[i] == shader_handle(s)) return true;
   }
   
+  SDL_GL_CheckError();
+
   return false;
 }
 
 void shader_program_print_info(shader_program* p) {
   
+  SDL_GL_CheckError();
+
   GLuint shaders[128];
   int num_shaders = 0;
   glGetAttachedShaders(shader_program_handle(p), 128, &num_shaders, shaders);
@@ -138,10 +162,15 @@ void shader_program_print_info(shader_program* p) {
   for(int i = 0; i < num_shaders; i++) {
     debug("| Shader %i: %i", i, shaders[i]);
   }
+
+  SDL_GL_CheckError();
   
 }
 
 void shader_program_print_log(shader_program* program) {
+
+  SDL_GL_CheckError();
+
   char log[2048];
   int i;
   glGetProgramInfoLog(shader_program_handle(program), 2048, &i, log);
@@ -150,9 +179,15 @@ void shader_program_print_log(shader_program* program) {
   if (strcmp(log, "") != 0) {
     debug("%s", log);
   }
+
+  SDL_GL_CheckError();
+  
 }
 
 void shader_print_log(shader* shader) {
+
+  SDL_GL_CheckError();
+
   char log[2048];
   int i;
   glGetShaderInfoLog(shader_handle(shader), 2048, &i, log);
@@ -161,19 +196,27 @@ void shader_print_log(shader* shader) {
   if (strcmp(log, "") != 0) {
     debug("%s", log);
   }
+
+  SDL_GL_CheckError();
+  
 }
 
 void shader_program_delete(shader_program* program) {
   glDeleteProgram(shader_program_handle(program));
+  SDL_GL_CheckError();
   free(program);
 }
 
 void shader_delete(shader* shader) {
   glDeleteShader(shader_handle(shader));
+  SDL_GL_CheckError();
   free(shader);
 }
 
 GLint shader_program_get_attribute(shader_program* p, char* name) {
+
+  SDL_GL_CheckError();
+
   GLint attr = glGetAttribLocation(shader_program_handle(p), name);
   if (attr == -1) {
     error("Shader has no attribute called '%s'", name);
@@ -181,14 +224,19 @@ GLint shader_program_get_attribute(shader_program* p, char* name) {
   } else {
     return attr;
   }
+
+  SDL_GL_CheckError();
+  
 }
 
 void shader_program_enable(shader_program* p) {
   glUseProgram(shader_program_handle(p));
+  SDL_GL_CheckError();
 }
 
 void shader_program_disable(shader_program* p) {
   glUseProgram(0);
+  SDL_GL_CheckError();
 }
 
 void shader_program_set_int(shader_program* p, char* name, int val) {

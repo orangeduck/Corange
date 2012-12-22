@@ -19,9 +19,10 @@ typedef struct {
   float far_clip;
 } camera;
 
-camera* camera_new(vec3 position, vec3 target);
+camera* camera_new();
 void camera_delete(camera* cam);
 
+vec3 camera_direction(camera* c);
 mat4 camera_view_matrix(camera* c);
 mat4 camera_proj_matrix(camera* c);
 mat4 camera_view_proj_matrix(camera* c);

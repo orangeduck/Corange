@@ -47,6 +47,7 @@ char* config_string(config* c, char* key) {
     return out;
   } else {
     error("key '%s' not in config file!", key);
+    return NULL;
   }
 }
 
@@ -56,6 +57,7 @@ int config_int(config* c, char* key) {
     return atoi(out);
   } else {
     error("key '%s' not in config file!", key);
+    return 0;
   }
 }
 
@@ -65,5 +67,6 @@ float config_float(config* c, char* key) {
     return atof(out);
   } else {
     error("key '%s' not in config file!", key);
+    return 0.0;
   }
 }

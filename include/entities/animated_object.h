@@ -30,7 +30,7 @@ typedef struct {
   asset_hndl renderable;
   asset_hndl animation;
   asset_hndl skeleton;
-    
+  
   skeleton* pose;
   
 } animated_object;

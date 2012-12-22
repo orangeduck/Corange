@@ -34,12 +34,11 @@ float shadow_amount(vec3 position, mat4 light_view, mat4 light_proj, sampler2D l
   float pixel_depth = light_pos.z / 2 + 0.5;
   vec2  pixel_coords = vec2(light_pos.x, light_pos.y) / 2.0 + 0.5;
   
-  float shade = 1.0;
-  float k = 0.0025;
-  
-  for (int i = 0; i < 8; i++) {
-    float shadow_depth = texture2D( light_depth, pixel_coords + shadow_sample_sphere[i].xy * k ).r;
-    shade = shade - sign(pixel_depth - shadow_depth - shadow_bias) * 0.12;
+  float shade = 1.0;  
+  for (int i = 0; i < samples; i++) {
+    vec2 offset = reflect(shadow_sample_sphere[i].xy, seed);
+    float shadow_depth = texture2D( light_depth, pixel_coords + offset * kernel ).r;
+    shade = shade - sign(pixel_depth - shadow_depth - shadow_bias) * (float(1) / float(samples));
   }
   
   return shade;

@@ -2,26 +2,25 @@
 
 #include "cgraphics.h"
 
-#define DEFAULT_NEAR_CLIP 0.1
-#define DEFAULT_FAR_CLIP 256.0
+camera* camera_new() {
 
-#define DEFAULT_FOV 0.785398163
-
-camera* camera_new(vec3 position, vec3 target) {
-
-  camera* cam = malloc(sizeof(camera));
+  camera* c = malloc(sizeof(camera));
   
-  cam->position = position;
-  cam->target = target;
-  cam->fov = DEFAULT_FOV;
-  cam->near_clip = DEFAULT_NEAR_CLIP;
-  cam->far_clip = DEFAULT_FAR_CLIP;
+  c->position = vec3_new(10, 10, 10);
+  c->target = vec3_zero();
+  c->fov = 0.785398163;
+  c->near_clip = 0.1;
+  c->far_clip = 256.0;
   
-  return cam;
+  return c;
 }
 
-void camera_delete(camera* cam) {
-  free(cam);
+void camera_delete(camera* c) {
+  free(c);
+}
+
+vec3 camera_direction(camera* c) {
+  return vec3_normalize(vec3_sub(c->target, c->position));
 }
 
 mat4 camera_view_matrix(camera* c) {

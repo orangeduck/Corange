@@ -32,9 +32,9 @@ fpath fpath_file_extension(fpath path) {
 
 /* Error Functions */
 
-typedef void(*error_func_t)(void);
-typedef void(*warn_func_t)(void);
-typedef void(*debug_func_t)(void);
+typedef void (*error_func_t)(const char*);
+typedef void (*warn_func_t)(const char*);
+typedef void (*debug_func_t)(const char*);
 
 #define MAX_AT_FUNCS 32
 static error_func_t error_funcs[MAX_AT_FUNCS];
@@ -45,7 +45,7 @@ int num_error_funcs = 0;
 int num_warn_funcs = 0;
 int num_debug_funcs = 0;
 
-void at_error(void(*func)(void)) {
+void at_error(void(*func)(const char*)) {
   if (num_error_funcs == MAX_AT_FUNCS) { 
     warning("Cannot register more than maximum of %i error functions", MAX_AT_FUNCS);
     return;
@@ -55,7 +55,7 @@ void at_error(void(*func)(void)) {
   num_error_funcs++;
 }
 
-void at_warning(void(*func)(void)) {
+void at_warning(void(*func)(const char*)) {
   if (num_warn_funcs == MAX_AT_FUNCS) { 
     warning("Cannot register more than maximum of %i warning functions", MAX_AT_FUNCS);
     return;
@@ -65,7 +65,7 @@ void at_warning(void(*func)(void)) {
   num_warn_funcs++;
 }
 
-void at_debug(void(*func)(void)) {
+void at_debug(void(*func)(const char*)) {
   if (num_debug_funcs == MAX_AT_FUNCS) { 
     warning("Cannot register more than maximum of %i debug functions", MAX_AT_FUNCS);
     return;
@@ -75,27 +75,27 @@ void at_debug(void(*func)(void)) {
   num_debug_funcs++;
 }
 
-void error_() {
+void error_(const char* str) {
   for (int i = 0; i < num_error_funcs; i++) {
-    error_funcs[i]();
+    error_funcs[i](str);
   }
 }
 
-void warning_() {
+void warning_(const char* str) {
   for (int i = 0; i < num_warn_funcs; i++) {
-    warn_funcs[i]();
+    warn_funcs[i](str);
   }
 }
 
-void debug_() {
+void debug_(const char* str) {
   for (int i = 0; i < num_debug_funcs; i++) {
-    debug_funcs[i]();
+    debug_funcs[i](str);
   }
 }
 
 /* Timing Functions */
 
-timer timer_start(int id) {
+timer timer_start(int id, const char* tag) {
   
   timer t;
   t.id = id;
@@ -103,24 +103,28 @@ timer timer_start(int id) {
   t.split = SDL_GetTicks();
   t.end = 0;
   
-  debug("Timer %d Start: %f", id, 0.0f);
+  debug("Timer %d '%s' Start: %f", id, tag, 0.0f);
   
   return t;
 }
 
-timer timer_split(timer t) {
+timer timer_split(timer t, const char* tag) {
   
-  double difference = (double)(SDL_GetTicks() - t.split) / 1000.0;
-  debug("Timer %d Split: %f", t.id, difference);
+  long curr = SDL_GetTicks();
   
-  t.split = SDL_GetTicks();
+  double difference = (double)(curr - t.split) / 1000.0;
+  debug("Timer %d '%s' Split: %f", t.id, tag, difference);
+  
+  t.split = curr;
   return t;
 }
 
-timer timer_stop(timer t) {
-
-  double difference = (double)(SDL_GetTicks() - t.start) / 1000.0f;
-  debug("Timer %d End: %f", t.id, difference);
+timer timer_stop(timer t, const char* tag) {
+  
+  long curr = SDL_GetTicks();
+  
+  double difference = (double)(curr - t.start) / 1000.0f;
+  debug("Timer %d '%s' End: %f", t.id, tag, difference);
   
   t.end = SDL_GetTicks();
   return t;
@@ -2144,8 +2148,8 @@ box box_new(float x_min, float x_max, float y_min, float y_max, float z_min, flo
   bb.bottom = plane_new( vec3_new(0, y_min,0), vec3_new(0,-1,0));
   bb.left   = plane_new( vec3_new( x_max,0,0), vec3_new( 1,0,0));
   bb.right  = plane_new( vec3_new( x_min,0,0), vec3_new(-1,0,0));
-  bb.front  = plane_new( vec3_new(0,0, y_max), vec3_new(0,0, 1));
-  bb.back   = plane_new( vec3_new(0,0, y_min), vec3_new(0,0,-1));
+  bb.front  = plane_new( vec3_new(0,0, z_max), vec3_new(0,0, 1));
+  bb.back   = plane_new( vec3_new(0,0, z_min), vec3_new(0,0,-1));
   return bb;
 
 }
@@ -2165,12 +2169,12 @@ box box_sphere(vec3 center, float radius) {
 
 bool box_contains(box bb, vec3 point) {
   
-  if ( !point_behind_plane(point, bb.top) ) { return false; }
+  if ( !point_behind_plane(point, bb.top)    ) { return false; }
   if ( !point_behind_plane(point, bb.bottom) ) { return false; }
-  if ( !point_behind_plane(point, bb.left)) { return false; }
-  if ( !point_behind_plane(point, bb.right)) { return false; }
-  if ( !point_behind_plane(point, bb.front)) { return false; }
-  if ( !point_behind_plane(point, bb.back)) { return false; }
+  if ( !point_behind_plane(point, bb.left)   ) { return false; }
+  if ( !point_behind_plane(point, bb.right)  ) { return false; }
+  if ( !point_behind_plane(point, bb.front)  ) { return false; }
+  if ( !point_behind_plane(point, bb.back)   ) { return false; }
   
   return true;
 }
@@ -2306,6 +2310,31 @@ frustum frustum_translate(frustum f, vec3 v) {
   return r;
 }
 
+box frustum_box(frustum f) {
+  box b;
+  b.top     = plane_new(f.ntr, vec3_normalize(vec3_cross(vec3_sub(f.ftr, f.ntr), vec3_sub(f.ntl, f.ntr))));
+  b.bottom  = plane_new(f.nbr, vec3_normalize(vec3_cross(vec3_sub(f.nbl, f.nbr), vec3_sub(f.fbr, f.nbr))));
+  b.left    = plane_new(f.ntl, vec3_normalize(vec3_cross(vec3_sub(f.ftl, f.ntl), vec3_sub(f.nbl, f.ntl))));
+  b.right   = plane_new(f.ntr, vec3_normalize(vec3_cross(vec3_sub(f.nbr, f.ntr), vec3_sub(f.ftr, f.ntr))));
+  b.front   = plane_new(f.ftr, vec3_normalize(vec3_cross(vec3_sub(f.fbr, f.ftr), vec3_sub(f.ftl, f.ftr))));
+  b.back    = plane_new(f.ntr, vec3_normalize(vec3_cross(vec3_sub(f.ntl, f.ntr), vec3_sub(f.nbr, f.ntr))));
+  return b;
+}
+
+bool frustum_outside_box(frustum f, box b) {
+  error("Unimplemented");
+  return false;
+}
+
+bool sphere_outside_frustum(sphere s, frustum f) {
+  //return !sphere_inside_box(s, frustum_box(f));
+  return sphere_outside_sphere(s, sphere_of_frustum(f));
+}
+
+bool sphere_outside_sphere(sphere s1, sphere s2) {
+  return vec3_dist(s1.center, s2.center) > (s1.radius + s2.radius);
+}
+
 sphere sphere_new(vec3 center, float radius) {
   sphere bs;
   bs.center = center;
@@ -2347,6 +2376,24 @@ sphere sphere_of_box(box bb) {
   return bs;
 }
 
+sphere sphere_of_frustum(frustum f) {
+  
+  sphere s;
+  s.center = frustum_center(f);
+  s.radius = 0;
+  s.radius = max(s.radius, vec3_dist(s.center, f.ntr));
+  s.radius = max(s.radius, vec3_dist(s.center, f.ftr));
+  s.radius = max(s.radius, vec3_dist(s.center, f.ntl));
+  s.radius = max(s.radius, vec3_dist(s.center, f.ftl));
+  s.radius = max(s.radius, vec3_dist(s.center, f.nbr));
+  s.radius = max(s.radius, vec3_dist(s.center, f.fbr));
+  s.radius = max(s.radius, vec3_dist(s.center, f.nbl));
+  s.radius = max(s.radius, vec3_dist(s.center, f.fbl));
+  
+  return s;
+  
+}
+
 sphere sphere_merge(sphere bs1, sphere bs2) {
   
   vec3 center = vec3_div(vec3_add(bs1.center, bs2.center), 2);
@@ -2362,6 +2409,28 @@ sphere sphere_merge(sphere bs1, sphere bs2) {
   bs.radius_sqrd = dist * dist;
   
   return bs;
+}
+
+bool sphere_inside_box(sphere s, box b) {
+  
+  if (-plane_signed_distance(b.top, s.center)    < s.radius) { return false; }
+  if (-plane_signed_distance(b.bottom, s.center) < s.radius) { return false; }
+  if (-plane_signed_distance(b.left, s.center)   < s.radius) { return false; }
+  if (-plane_signed_distance(b.right, s.center)  < s.radius) { return false; }
+  if (-plane_signed_distance(b.front, s.center)  < s.radius) { return false; }
+  if (-plane_signed_distance(b.back, s.center)   < s.radius) { return false; }
+  
+  return true;
+  
+}
+
+bool sphere_outside_box(sphere s, box b) {
+  
+  if (sphere_inside_box(s, b)) { return false; }
+  
+  error("Unimplemented");
+  return false;
+  
 }
 
 bool sphere_contains_point(sphere s1, vec3 point) {
@@ -2681,6 +2750,22 @@ void mesh_transform(mesh* m, mat4 transform) {
     i = i + 3;
   }
 
+}
+
+sphere mesh_bounding_sphere(mesh* m) {
+  
+  sphere s = sphere_new(vec3_zero(), 0);
+  
+  for (int i = 0; i < m->num_verts; i++) {
+    s.center = vec3_add(s.center, m->verticies[i].position);
+  }
+  s.center = vec3_div(s.center, m->num_verts);
+  
+  for (int i = 0; i < m->num_verts; i++) {
+    s.radius = max(s.radius, vec3_dist(s.center, m->verticies[i].position));
+  }
+  
+  return s;
 }
 
 void model_print(model* m) {

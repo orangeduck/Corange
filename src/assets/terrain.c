@@ -19,11 +19,11 @@ static void terrain_new_chunk(terrain* ter, int i) {
   tc->width = ter->chunk_width;
   tc->height = ter->chunk_height;
   
-  int x_max = tc->width*SUBDIVISIONS+1;
-  int y_max = tc->height*SUBDIVISIONS+1;
+  int x_max = tc->width * SUBDIVISIONS + 1;
+  int y_max = tc->height * SUBDIVISIONS + 1;
   
   tc->num_verts = x_max * y_max + x_max * 2 + y_max * 2;
-  float* vertex_buffer = malloc(sizeof(float) * 12 * tc->num_verts);
+  vec3* vertex_buffer = malloc(sizeof(vec3) * 4 * tc->num_verts);
   int index = 0;
   
   for(int x = 0; x < x_max; x++)
@@ -43,21 +43,10 @@ static void terrain_new_chunk(terrain* ter, int i) {
     vec3 binorm  = vec3_normalize(vec3_sub(pos_xv, pos));
     vec3 normal  = vec3_cross(tangent, binorm);
     
-    vertex_buffer[index] = pos.x; index++;
-    vertex_buffer[index] = pos.y; index++;
-    vertex_buffer[index] = pos.z; index++;
-    
-    vertex_buffer[index] = normal.x; index++;
-    vertex_buffer[index] = normal.y; index++;
-    vertex_buffer[index] = normal.z; index++;
-    
-    vertex_buffer[index] = tangent.x; index++;
-    vertex_buffer[index] = tangent.y; index++;
-    vertex_buffer[index] = tangent.z; index++;
-    
-    vertex_buffer[index] = binorm.x; index++;
-    vertex_buffer[index] = binorm.y; index++;
-    vertex_buffer[index] = binorm.z; index++;
+    vertex_buffer[index] = pos; index++;
+    vertex_buffer[index] = normal; index++;
+    vertex_buffer[index] = tangent; index++;
+    vertex_buffer[index] = binorm; index++;
     
   }
   
@@ -72,21 +61,10 @@ static void terrain_new_chunk(terrain* ter, int i) {
     float offset = terrain_height(ter, vec2_new(gx, gy)) - FIN_DEPTH;
     vec3 pos = vec3_new(gx, offset, gy);
     
-    vertex_buffer[index] = pos.x; index++;
-    vertex_buffer[index] = pos.y; index++;
-    vertex_buffer[index] = pos.z; index++;
-    
-    vertex_buffer[index] = 0; index++;
-    vertex_buffer[index] = 1; index++;
-    vertex_buffer[index] = 0; index++;
-    
-    vertex_buffer[index] = 1; index++;
-    vertex_buffer[index] = 0; index++;
-    vertex_buffer[index] = 0; index++;
-    
-    vertex_buffer[index] = 0; index++;
-    vertex_buffer[index] = 0; index++;
-    vertex_buffer[index] = 1; index++;
+    vertex_buffer[index] = pos; index++;
+    vertex_buffer[index] = vec3_zero(); index++;
+    vertex_buffer[index] = vec3_zero(); index++;
+    vertex_buffer[index] = vec3_zero(); index++;
   }
   
   for(int y = 0; y < y_max; y++) {
@@ -96,21 +74,10 @@ static void terrain_new_chunk(terrain* ter, int i) {
     float offset = terrain_height(ter, vec2_new(gx, gy)) - FIN_DEPTH;
     vec3 pos = vec3_new(gx, offset, gy);
     
-    vertex_buffer[index] = pos.x; index++;
-    vertex_buffer[index] = pos.y; index++;
-    vertex_buffer[index] = pos.z; index++;
-    
-    vertex_buffer[index] = 0; index++;
-    vertex_buffer[index] = 1; index++;
-    vertex_buffer[index] = 0; index++;
-    
-    vertex_buffer[index] = 1; index++;
-    vertex_buffer[index] = 0; index++;
-    vertex_buffer[index] = 0; index++;
-    
-    vertex_buffer[index] = 0; index++;
-    vertex_buffer[index] = 0; index++;
-    vertex_buffer[index] = 1; index++;
+    vertex_buffer[index] = pos; index++;
+    vertex_buffer[index] = vec3_zero(); index++;
+    vertex_buffer[index] = vec3_zero(); index++;
+    vertex_buffer[index] = vec3_zero(); index++;
   }
   
   for(int x = 0; x < x_max; x++) {
@@ -120,21 +87,10 @@ static void terrain_new_chunk(terrain* ter, int i) {
     float offset = terrain_height(ter, vec2_new(gx, gy)) - FIN_DEPTH;
     vec3 pos = vec3_new(gx, offset, gy);
     
-    vertex_buffer[index] = pos.x; index++;
-    vertex_buffer[index] = pos.y; index++;
-    vertex_buffer[index] = pos.z; index++;
-    
-    vertex_buffer[index] = 0; index++;
-    vertex_buffer[index] = 1; index++;
-    vertex_buffer[index] = 0; index++;
-    
-    vertex_buffer[index] = 1; index++;
-    vertex_buffer[index] = 0; index++;
-    vertex_buffer[index] = 0; index++;
-    
-    vertex_buffer[index] = 0; index++;
-    vertex_buffer[index] = 0; index++;
-    vertex_buffer[index] = 1; index++;
+    vertex_buffer[index] = pos; index++;
+    vertex_buffer[index] = vec3_zero(); index++;
+    vertex_buffer[index] = vec3_zero(); index++;
+    vertex_buffer[index] = vec3_zero(); index++;
   }
   
   for(int x = 0; x < x_max; x++) {
@@ -144,29 +100,30 @@ static void terrain_new_chunk(terrain* ter, int i) {
     float offset = terrain_height(ter, vec2_new(gx, gy)) - FIN_DEPTH;
     vec3 pos = vec3_new(gx, offset, gy);
     
-    vertex_buffer[index] = pos.x; index++;
-    vertex_buffer[index] = pos.y; index++;
-    vertex_buffer[index] = pos.z; index++;
-    
-    vertex_buffer[index] = 0; index++;
-    vertex_buffer[index] = 1; index++;
-    vertex_buffer[index] = 0; index++;
-    
-    vertex_buffer[index] = 1; index++;
-    vertex_buffer[index] = 0; index++;
-    vertex_buffer[index] = 0; index++;
-    
-    vertex_buffer[index] = 0; index++;
-    vertex_buffer[index] = 0; index++;
-    vertex_buffer[index] = 1; index++;
+    vertex_buffer[index] = pos; index++;
+    vertex_buffer[index] = vec3_zero(); index++;
+    vertex_buffer[index] = vec3_zero(); index++;
+    vertex_buffer[index] = vec3_zero(); index++;
+  }
+  
+  tc->bound.center = vec3_zero();
+  for (int i = 0; i < index; i+=4) {
+    tc->bound.center = vec3_add(tc->bound.center, vertex_buffer[i]);
+  }
+  tc->bound.center = vec3_div(tc->bound.center, tc->num_verts);
+  
+  tc->bound.radius = 0;
+  for (int i = 0; i < index; i+=4) {
+    tc->bound.radius = max(tc->bound.radius, vec3_dist(tc->bound.center, vertex_buffer[i]));
   }
   
   glGenBuffers(1, &tc->vertex_buffer);
   glBindBuffer(GL_ARRAY_BUFFER, tc->vertex_buffer);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 12 * tc->num_verts, vertex_buffer, GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(vec3) * 4 * tc->num_verts, vertex_buffer, GL_STATIC_DRAW);
   free(vertex_buffer);
   
   glGenBuffers(NUM_TERRAIN_BUFFERS, tc->index_buffers);
+  
   for(int j = 0; j < NUM_TERRAIN_BUFFERS; j++) {
   
     int off = pow(2, j);
