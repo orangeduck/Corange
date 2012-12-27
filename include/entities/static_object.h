@@ -29,4 +29,6 @@ typedef struct {
 static_object* static_object_new();
 void static_object_delete(static_object* s);
 
+mat4 static_object_world(static_object* s);
+
 #endif

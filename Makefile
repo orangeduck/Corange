@@ -51,7 +51,7 @@ corange.res: corange.rc
 	windres $< -O coff -o $@
 	
 clean:
-	rm $(OBJ)
+	rm $(OBJ) $(STATIC) $(DYNAMIC)
   
 install_unix: $(STATIC)
 	cp $(STATIC) /usr/local/lib/$(STATIC)

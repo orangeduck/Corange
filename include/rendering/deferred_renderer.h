@@ -15,6 +15,8 @@
 #include "cengine.h"
 #include "assets/texture.h"
 #include "assets/shader.h"
+#include "assets/cmesh.h"
+#include "assets/config.h"
 
 #include "entities/camera.h"
 #include "entities/light.h"
@@ -34,17 +36,30 @@ enum {
   RO_TYPE_LIGHT     = 3, 
   RO_TYPE_LANDSCAPE = 4,
   RO_TYPE_PAINT     = 5,
+  RO_TYPE_SPHERE    = 6,
+  RO_TYPE_ELLIPSOID = 7,
+  RO_TYPE_CMESH     = 8,
 };
 
 typedef struct {
   int type;
   union {
+  
+    /* Geometry */
     mat4 axis;
+    sphere sphere;
+    ellipsoid ellipsoid;
+    struct { cmesh* colmesh; mat4 colworld; };
+    
+    /* Objects */
     static_object* static_object;
     animated_object* animated_object;
-    light* light;
     landscape* landscape;
+    
+    /* UI */
+    light* light;
     struct { vec3 paint_pos; vec3 paint_norm; float paint_radius; };
+    
   };
 } render_object;
 
@@ -52,6 +67,9 @@ render_object render_object_static(static_object* s);
 render_object render_object_animated(animated_object* a);
 render_object render_object_light(light* l);
 render_object render_object_axis(mat4 a);
+render_object render_object_sphere(sphere s);
+render_object render_object_ellipsoid(ellipsoid e);
+render_object render_object_cmesh(cmesh* cm, mat4 world);
 render_object render_object_landscape(landscape* l);
 render_object render_object_paint(vec3 paint_pos, vec3 paint_norm, float paint_radius);
 
@@ -86,6 +104,7 @@ typedef struct {
 
   /* Meshes */
   asset_hndl mesh_skydome;
+  asset_hndl mesh_sphere;
 
   /* Textures */
   asset_hndl tex_color_correction;

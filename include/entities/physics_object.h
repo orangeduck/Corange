@@ -40,7 +40,7 @@ typedef struct {
   bool cast_shadows;
 
   asset_hndl renderable;
-  asset_hndl collision_body;
+  //asset_hndl collision_body;
 
 } physics_object;
 

@@ -20,3 +20,7 @@ static_object* static_object_new() {
 void static_object_delete(static_object* s) {
   free(s);
 }
+
+mat4 static_object_world(static_object* s) {
+  return mat4_world(s->position, s->scale, s->rotation);
+}

@@ -15,6 +15,7 @@
 #include "casset.h"
 
 #include "assets/image.h"
+#include "assets/terrain.h"
 
 typedef struct {
   
@@ -42,10 +43,13 @@ typedef struct {
 landscape* landscape_new();
 void landscape_delete(landscape* l);
 
+mat4  landscape_world(landscape* l);
 float landscape_height(landscape* l, vec2 pos);
 vec3  landscape_normal(landscape* l, vec2 pos);
 
 void landscape_paint_height(landscape* l, vec2 pos, float radius, float value);
 void landscape_paint_color(landscape* l, vec2 pos, float radius, int type);
+
+void landscape_chunks(landscape* l, vec2 pos, struct terrain_chunk** chunks_out);
 
 #endif

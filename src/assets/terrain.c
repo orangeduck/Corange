@@ -5,6 +5,8 @@ void terrain_chunk_delete(terrain_chunk* tc) {
   glDeleteBuffers(3, tc->index_buffers);
   glDeleteBuffers(1, &tc->vertex_buffer);
   
+  cmesh_delete(tc->colmesh);
+  
   free(tc);
 }
 
@@ -195,6 +197,35 @@ static void terrain_new_chunk(terrain* ter, int i) {
     free(index_buffer);
   }
   
+  tc->colmesh = malloc(sizeof(cmesh));
+  tc->colmesh->is_leaf = true;
+  tc->colmesh->triangles_num = (tc->width/4) * (tc->height/4) * 2;
+  tc->colmesh->triangles = malloc(sizeof(ctri) * tc->colmesh->triangles_num);
+  
+  int tri_i = 0;
+  
+  for (int x = 0; x < tc->width;  x += 4)
+  for (int y = 0; y < tc->height; y += 4) {
+    
+    float gx = tc->x * ter->chunk_width  + (float)x;
+    float gy = tc->y * ter->chunk_height + (float)y;    
+    
+    vec3 a = vec3_new(gx  , terrain_height(ter, vec2_new(gx  , gy  )) , gy  );
+    vec3 b = vec3_new(gx+4, terrain_height(ter, vec2_new(gx+4, gy  )) , gy  );
+    vec3 c = vec3_new(gx+4, terrain_height(ter, vec2_new(gx+4, gy+4)) , gy+4);
+    vec3 d = vec3_new(gx  , terrain_height(ter, vec2_new(gx  , gy+4)) , gy+4);
+    
+    vec3 tang   = vec3_normalize(vec3_sub(b, a));
+    vec3 binorm = vec3_normalize(vec3_sub(d, a));
+    vec3 norm   = vec3_cross( binorm, tang );
+    
+    tc->colmesh->triangles[tri_i] = ctri_new(a, c, b, norm); tri_i++;
+    tc->colmesh->triangles[tri_i] = ctri_new(a, d, c, norm); tri_i++;
+  
+  }
+  
+  tc->colmesh->bound = cmesh_bound(tc->colmesh);
+  
   ter->chunks[i] = tc;
 
 }
@@ -349,14 +380,18 @@ float terrain_height(terrain* ter, vec2 position) {
 
 vec3 terrain_normal(terrain* ter, vec2 position) {
   
-  float base = terrain_height(ter, position);
-  float base_x = terrain_height(ter, vec2_add(position, vec2_new(-1,0)));
-  float base_y = terrain_height(ter, vec2_add(position, vec2_new(0,-1)));
+  float offset   = terrain_height(ter, position);
+  float offset_x = terrain_height(ter, vec2_add(position, vec2_new(1,0)));
+  float offset_y = terrain_height(ter, vec2_add(position, vec2_new(0,1)));
   
-  vec3 basev = vec3_new(position.x, base, position.y);
-  vec3 base_xv = vec3_new(position.x+1, base_x, position.y+0);
-  vec3 base_yv = vec3_new(position.x+0, base_y, position.y+1);
+  vec3 pos    = vec3_new(position.x+0, offset,   position.y+0);
+  vec3 pos_xv = vec3_new(position.x+1, offset_x, position.y+0);
+  vec3 pos_yv = vec3_new(position.x+0, offset_y, position.y+1);
   
-  return vec3_normalize(vec3_cross(vec3_sub(base_yv, basev), vec3_sub(base_xv, basev)));
+  vec3 tangent = vec3_normalize(vec3_sub(pos_yv, pos));
+  vec3 binorm  = vec3_normalize(vec3_sub(pos_xv, pos));
+  vec3 normal  = vec3_cross(tangent, binorm);
+  
+  return normal;
   
 }

@@ -1,6 +1,6 @@
 #include "entities/physics_object.h"
 
-#include "assets/collision_body.h"
+#include "assets/cmesh.h"
 
 physics_object* physics_object_new() {
 
@@ -26,7 +26,7 @@ physics_object* physics_object_new() {
   po->cast_shadows = true;
   
   po->renderable = asset_hndl_null();
-  po->collision_body = asset_hndl_null();
+  //po->collision_body = asset_hndl_null();
   
   return po;
 }
@@ -53,6 +53,7 @@ void physics_object_update(physics_object* po, float timestep) {
 
 void physics_object_collide_static(physics_object* po, static_object* so, float timestep) {
   
+  /*
   collision_body* po_col = asset_hndl_ptr(po->collision_body);
   collision_body* so_col = asset_hndl_ptr(so->collision_body);
   
@@ -104,5 +105,6 @@ void physics_object_collide_static(physics_object* po, static_object* so, float 
     }
     
   }
+  */
   
 }

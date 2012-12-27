@@ -1,12 +1,14 @@
 #include "rendering/deferred_renderer.h"
 
 #include "cgraphics.h"
+#include "centity.h"
 
 #include "assets/shader.h"
 #include "assets/texture.h"
 #include "assets/material.h"
 #include "assets/renderable.h"
 #include "assets/terrain.h"
+#include "assets/cmesh.h"
 
 #include "rendering/sky.h"
 
@@ -51,6 +53,28 @@ render_object render_object_paint(vec3 paint_pos, vec3 paint_norm, float paint_r
   ro.paint_pos = paint_pos;
   ro.paint_norm = paint_norm;
   ro.paint_radius = paint_radius;
+  return ro;
+}
+
+render_object render_object_sphere(sphere s) {
+  render_object ro;
+  ro.type = RO_TYPE_SPHERE;
+  ro.sphere = s;
+  return ro;
+}
+
+render_object render_object_cmesh(cmesh* cm, mat4 world) {
+  render_object ro;
+  ro.type = RO_TYPE_CMESH;
+  ro.colmesh = cm;
+  ro.colworld = world;
+  return ro;
+}
+
+render_object render_object_ellipsoid(ellipsoid e) {
+  render_object ro;
+  ro.type = RO_TYPE_ELLIPSOID;
+  ro.ellipsoid = e;
   return ro;
 }
 
@@ -109,6 +133,7 @@ deferred_renderer* deferred_renderer_new() {
   
   /* Meshes */
   dr->mesh_skydome  = asset_hndl_new_load(P("$CORANGE/resources/skydome.obj"));
+  dr->mesh_sphere   = asset_hndl_new_load(P("$CORANGE/resources/sphere.obj"));
   
   /* Textures */
   dr->tex_color_correction  = asset_hndl_new_load(P("$CORANGE/resources/identity.lut"));
@@ -654,8 +679,7 @@ static void render_shadows_landscape(deferred_renderer* dr, int i, landscape* l)
       vec2_new(dr->camera->position.x, dr->camera->position.z), 
       vec2_new(-posx, -posy)) / (100 * NUM_TERRAIN_BUFFERS);
     
-    //int buff_index = clamp((int)dist, 0, NUM_TERRAIN_BUFFERS-1);
-    int buff_index = NUM_TERRAIN_BUFFERS-1;
+    int buff_index = clamp((int)dist, 0, NUM_TERRAIN_BUFFERS-1);
     
     glBindBuffer(GL_ARRAY_BUFFER, tc->vertex_buffer);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tc->index_buffers[buff_index]);
@@ -729,6 +753,73 @@ static void render_clear(deferred_renderer* dr) {
   
 }
 
+static void render_cmesh(deferred_renderer* dr, cmesh* cm, mat4 world) {
+  
+  if (!cm->is_leaf) {
+    render_cmesh(dr, cm->front, world);
+    render_cmesh(dr, cm->back,  world);
+    return;
+  }
+  
+  shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_static));
+  shader_program_enable(shader);
+  shader_program_set_mat4(shader, "world", world);
+  shader_program_set_mat4(shader, "view", camera_view_matrix(dr->camera));
+  shader_program_set_mat4(shader, "proj", camera_proj_matrix(dr->camera));
+  shader_program_set_float(shader, "near", dr->camera->near_clip);
+  shader_program_set_float(shader, "far", dr->camera->far_clip);
+  
+  material_entry* me = material_get_entry(asset_get_load(P("$CORANGE/shaders/basic.mat")), 0);
+  
+  shader_program_enable_texture(shader, "diffuse_map", 0, material_entry_item(me, "diffuse_map").as_asset);
+  shader_program_enable_texture(shader, "bump_map", 1, material_entry_item(me, "bump_map").as_asset);
+  shader_program_enable_texture(shader, "spec_map", 2, material_entry_item(me, "spec_map").as_asset);
+  shader_program_set_float(shader, "glossiness", material_entry_item(me, "glossiness").as_float);
+  shader_program_set_float(shader, "bumpiness", material_entry_item(me, "bumpiness").as_float);
+  shader_program_set_float(shader, "specular_level", material_entry_item(me, "specular_level").as_float);
+  shader_program_set_float(shader, "alpha_test", 0);
+  shader_program_set_int(shader, "material", material_entry_item(me, "material").as_int);
+  
+  vec3* positions = malloc(sizeof(vec3) * cm->triangles_num * 3);
+  vec3* normals   = malloc(sizeof(vec3) * cm->triangles_num * 3);
+  
+  for (int i = 0; i < cm->triangles_num * 3; i += 3) {
+    ctri t = cm->triangles[i / 3];
+    
+    positions[i+0] = t.a;
+    positions[i+1] = t.b;
+    positions[i+2] = t.c;
+    
+    normals[i+0] = t.norm;
+    normals[i+1] = t.norm;
+    normals[i+2] = t.norm;
+  }
+  
+  shader_program_enable_attribute(shader, "vPosition",  3, 3, positions);
+  shader_program_enable_attribute(shader, "vNormal",    3, 3, normals);
+  shader_program_enable_attribute(shader, "vTangent",   3, 3, normals);
+  shader_program_enable_attribute(shader, "vBinormal",  3, 3, normals);
+  shader_program_enable_attribute(shader, "vTexcoord",  2, 2, normals);
+    
+    glDrawArrays(GL_TRIANGLES, 0, cm->triangles_num * 3);
+  
+  shader_program_disable_attribute(shader, "vPosition");
+  shader_program_disable_attribute(shader, "vNormal");
+  shader_program_disable_attribute(shader, "vTangent");
+  shader_program_disable_attribute(shader, "vBinormal");
+  shader_program_disable_attribute(shader, "vTexcoord");
+  
+  free(positions);
+  free(normals);
+  
+  shader_program_disable_texture(shader, 2);
+  shader_program_disable_texture(shader, 1);
+  shader_program_disable_texture(shader, 0);
+  
+  shader_program_disable(shader);
+    
+}
+
 static void render_static(deferred_renderer* dr, static_object* so) {
   
   mat4 world = mat4_world( so->position, so->scale, so->rotation );
@@ -737,6 +828,14 @@ static void render_static(deferred_renderer* dr, static_object* so) {
   frustum frus = frustum_new_clipbox();
   frus = frustum_transform(frus, inv_proj);
   frus = frustum_transform(frus, inv_view);
+  
+  config* options = asset_get_load(P("./assets/options.cfg"));
+  if (config_bool(options, "render_colmeshes")) {
+    if (!file_isloaded(so->collision_body.path)) {
+      file_load(so->collision_body.path);
+    }
+    render_cmesh(dr, asset_hndl_ptr(so->collision_body), world);
+  }
   
   renderable* r = asset_hndl_ptr(so->renderable);
   
@@ -891,6 +990,18 @@ void render_landscape(deferred_renderer* dr, landscape* l) {
   vec3 scale = vec3_new(-(1.0 / terr->width) * l->size_x, l->scale, -(1.0 / terr->height) * l->size_y);
   vec3 translation = vec3_new(l->size_x / 2, 0, l->size_y / 2);
   
+  config* options = asset_get_load(P("./assets/options.cfg"));
+  if (config_bool(options, "render_colmeshes")) {
+  
+    for(int i = 0; i < terr->num_chunks; i++) {
+          
+      terrain_chunk* tc = terr->chunks[i];
+      render_cmesh(dr, tc->colmesh, landscape_world(l));  
+      
+    }
+  
+  }
+  
   mat4 inv_view = mat4_inverse(camera_view_matrix(dr->camera));
   mat4 inv_proj = mat4_inverse(camera_proj_matrix(dr->camera));
   frustum frus = frustum_new_clipbox();
@@ -904,7 +1015,7 @@ void render_landscape(deferred_renderer* dr, landscape* l) {
   shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_terrain));
   
   shader_program_enable(shader);
-  shader_program_set_mat4(shader, "world", mat4_world(translation, scale, mat4_id()));
+  shader_program_set_mat4(shader, "world", landscape_world(l));
   shader_program_set_mat4(shader, "view", camera_view_matrix(dr->camera));
   shader_program_set_mat4(shader, "proj", camera_proj_matrix(dr->camera));
   shader_program_set_float(shader, "near", dr->camera->near_clip);
@@ -1074,6 +1185,19 @@ void render_axis(deferred_renderer* dr, mat4 world) {
   
 }
 
+void render_ellipsoid(deferred_renderer* dr, ellipsoid e) {
+  
+  static_object so;
+  so.position = e.center;
+  so.rotation = mat4_id();
+  so.scale = vec3_new(e.radiuses.x, e.radiuses.y, e.radiuses.z);
+  so.renderable = dr->mesh_sphere;
+  so.collision_body = asset_hndl_new(P("$CORANGE/resources/sphere.col"));
+  
+  render_static(dr, &so);
+  
+}
+
 void render_paint_circle(deferred_renderer* dr, vec3 position, vec3 normal, float radius) {
   
   vec3 axis_x = vec3_cross(normal, vec3_new(1, 0, 0));
@@ -1146,11 +1270,19 @@ static void render_gbuffer(deferred_renderer* dr) {
   
   for ( int j = 0; j < dr->render_objects_num; j++) {
       
-    if (dr->render_objects[j].type == RO_TYPE_STATIC) { render_static(dr, dr->render_objects[j].static_object); }
-    if (dr->render_objects[j].type == RO_TYPE_ANIMATED) { render_animated(dr, dr->render_objects[j].animated_object); }
+    if (dr->render_objects[j].type == RO_TYPE_STATIC)    { render_static(dr, dr->render_objects[j].static_object); }
+    if (dr->render_objects[j].type == RO_TYPE_ANIMATED)  { render_animated(dr, dr->render_objects[j].animated_object); }
     if (dr->render_objects[j].type == RO_TYPE_LANDSCAPE) { render_landscape(dr, dr->render_objects[j].landscape); }
-    if (dr->render_objects[j].type == RO_TYPE_LIGHT) { render_light(dr, dr->render_objects[j].light); }
-    if (dr->render_objects[j].type == RO_TYPE_AXIS) { render_axis(dr, dr->render_objects[j].axis); }
+    if (dr->render_objects[j].type == RO_TYPE_LIGHT)     { render_light(dr, dr->render_objects[j].light); }
+    if (dr->render_objects[j].type == RO_TYPE_AXIS)      { render_axis(dr, dr->render_objects[j].axis); }
+    if (dr->render_objects[j].type == RO_TYPE_SPHERE)    { render_ellipsoid(dr, ellipsoid_of_sphere(dr->render_objects[j].sphere)); }
+    if (dr->render_objects[j].type == RO_TYPE_ELLIPSOID) { render_ellipsoid(dr, dr->render_objects[j].ellipsoid); }
+    
+    if (dr->render_objects[j].type == RO_TYPE_CMESH) {
+      render_cmesh(dr, 
+        dr->render_objects[j].colmesh, 
+        dr->render_objects[j].colworld); }
+        
     if (dr->render_objects[j].type == RO_TYPE_PAINT) {
       render_paint_circle(dr, 
         dr->render_objects[j].paint_pos, 
@@ -1303,14 +1435,15 @@ static void render_compose(deferred_renderer* dr) {
   shader_program_set_mat4(shader, "proj", mat4_orthographic(-1, 1, -1, 1, -1, 1));
 
   shader_program_enable_texture(shader, "env_texture", 0, dr->tex_environment);  
-  shader_program_enable_texture_id(shader, "diffuse_texture", 1, dr->gdiffuse_texture);
-  shader_program_enable_texture_id(shader, "positions_texture", 2, dr->gpositions_texture);
-  shader_program_enable_texture_id(shader, "normals_texture", 3, dr->gnormals_texture);
-  shader_program_enable_texture_id(shader, "ssao_texture", 4, dr->ssao_texture);
-  shader_program_enable_texture_id(shader, "depth_texture", 5, dr->gdepth_texture);
-  shader_program_enable_texture_id(shader, "shadows_texture0", 6, dr->shadows_texture[0]);
-  shader_program_enable_texture_id(shader, "shadows_texture1", 7, dr->shadows_texture[1]);
-  shader_program_enable_texture_id(shader, "shadows_texture2", 8, dr->shadows_texture[2]);
+  shader_program_enable_texture(shader, "random_texture", 1, dr->tex_random);
+  shader_program_enable_texture_id(shader, "diffuse_texture", 2, dr->gdiffuse_texture);
+  shader_program_enable_texture_id(shader, "positions_texture", 3, dr->gpositions_texture);
+  shader_program_enable_texture_id(shader, "normals_texture", 4, dr->gnormals_texture);
+  shader_program_enable_texture_id(shader, "ssao_texture", 5, dr->ssao_texture);
+  shader_program_enable_texture_id(shader, "depth_texture", 6, dr->gdepth_texture);
+  shader_program_enable_texture_id(shader, "shadows_texture0", 7, dr->shadows_texture[0]);
+  shader_program_enable_texture_id(shader, "shadows_texture1", 8, dr->shadows_texture[1]);
+  shader_program_enable_texture_id(shader, "shadows_texture2", 9, dr->shadows_texture[2]);
   
   mat4 light_proj[3];
   mat4 light_view[3];
@@ -1391,6 +1524,7 @@ static void render_compose(deferred_renderer* dr) {
   shader_program_disable_attribute(shader, "vPosition");
   shader_program_disable_attribute(shader, "vTexcoord");
   
+  shader_program_disable_texture(shader, 9);
   shader_program_disable_texture(shader, 8);
   shader_program_disable_texture(shader, 7);
   shader_program_disable_texture(shader, 6);

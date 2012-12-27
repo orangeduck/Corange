@@ -3,6 +3,7 @@
 uniform sampler2D diffuse_texture;
 uniform sampler2D positions_texture;
 uniform sampler2D normals_texture;
+uniform sampler2D random_texture;
 uniform sampler2D depth_texture;
 uniform sampler2D shadows_texture0;
 uniform sampler2D shadows_texture1;
@@ -60,9 +61,13 @@ void main() {
 	vec3 normal = normalize(normal_a.rgb);
   float glossiness = normal_a.a;
   
-  float shadow0 = shadow_amount(position.xyz, light_view[0], light_proj[0], shadows_texture0, 8, 0.00075, normal.xy);
-  float shadow1 = shadow_amount(position.xyz, light_view[1], light_proj[1], shadows_texture1, 4, 0.00075, normal.xy);
-  float shadow2 = shadow_amount(position.xyz, light_view[2], light_proj[2], shadows_texture2, 1, 0.00075, normal.xy);
+  const float noise_tile = 1.0;
+  vec2 random_coords = vec2(position.xz + position.yz + position.yx) * noise_tile;
+  vec3 random = normalize( texture2D(random_texture, random_coords).rgb * 2.0 - 1.0 );
+  
+  float shadow0 = shadow_amount(position.xyz, light_view[0], light_proj[0], shadows_texture0, 4, 0.00075, random.xy);
+  float shadow1 = shadow_amount(position.xyz, light_view[1], light_proj[1], shadows_texture1, 4, 0.00075, random.xy);
+  float shadow2 = shadow_amount(position.xyz, light_view[2], light_proj[2], shadows_texture2, 4, 0.001, random.xy);
 	float shadow = depth > light_start[2] ? shadow2 : (depth > light_start[1] ? shadow1 : shadow0);
   
   vec3 ssao = texture2DLod(ssao_texture, fTexcoord, 1.0).rgb;

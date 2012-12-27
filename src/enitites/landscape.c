@@ -37,6 +37,17 @@ void landscape_delete(landscape* l) {
   free(l);
 }
 
+mat4  landscape_world(landscape* l) {
+  
+  terrain* terr = asset_hndl_ptr(l->heightmap);
+  
+  vec3 scale = vec3_new(-(1.0 / terr->width) * l->size_x, l->scale, -(1.0 / terr->height) * l->size_y);
+  vec3 translation = vec3_new(l->size_x / 2, 0, l->size_y / 2);
+  
+  return mat4_world(translation, scale, mat4_id());
+  
+}
+
 float landscape_height(landscape* l, vec2 pos) {
   
   terrain* t = asset_hndl_ptr(l->heightmap);
@@ -48,14 +59,21 @@ float landscape_height(landscape* l, vec2 pos) {
   
 }
 
-vec3  landscape_normal(landscape* l, vec2 pos) {
+vec3 landscape_normal(landscape* l, vec2 pos) {
   
   terrain* t = asset_hndl_ptr(l->heightmap);
 
   pos.x = (1 - ((pos.x / l->size_x) + 0.5)) * t->width;
   pos.y = (1 - ((pos.y / l->size_y) + 0.5)) * t->height;
   
-  return terrain_normal(t, pos);
+  vec3 norm = terrain_normal(t, pos);
+  
+  vec3 scale = vec3_new(-(1.0 / t->width) * l->size_x, l->scale, -(1.0 / t->height) * l->size_y);
+  vec3 translation = vec3_new(l->size_x / 2, 0, l->size_y / 2);
+  
+  mat4 world = mat4_world(translation, scale, mat4_id());
+  
+  return mat3_mul_vec3(mat4_to_mat3(world), norm);
 
 }
 
@@ -89,6 +107,28 @@ void landscape_paint_height(landscape* l, vec2 pos, float radius, float value) {
   for(int y = chunk_y - 1; y < chunk_y + 2; y++) {
     int chunk = clamp(x + y * t->chunk_width, 0, t->num_chunks-1);
     terrain_reload_chunk(t, chunk);
+  }
+  
+}
+
+void landscape_chunks(landscape* l, vec2 pos, struct terrain_chunk** chunks_out) {
+  
+  terrain* t = asset_hndl_ptr(l->heightmap);
+
+  pos.x = (1 - ((pos.x / l->size_x) + 0.5)) * t->width;
+  pos.y = (1 - ((pos.y / l->size_y) + 0.5)) * t->height;
+  
+  int base_x = roundf(pos.x);
+  int base_y = roundf(pos.y);
+  
+  int chunk_x = base_x / t->chunk_width;
+  int chunk_y = base_y / t->chunk_height;
+  
+  int index = 0;
+  for(int x = chunk_x - 1; x < chunk_x + 2; x++)
+  for(int y = chunk_y - 1; y < chunk_y + 2; y++) {
+    int chunk = clamp(x + y * t->chunk_width, 0, t->num_chunks-1);
+    chunks_out[index] = t->chunks[chunk]; index++;
   }
   
 }

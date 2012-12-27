@@ -25,6 +25,7 @@
 #include "cgraphics.h"
 #include "caudio.h"
 #include "cjoystick.h"
+#include "cphysics.h"
 
 /* Corange Functions */
 
@@ -47,6 +48,7 @@ void corange_finish();
 
 #include "casset.h"
 
+#include "assets/config.h"
 #include "assets/image.h"
 #include "assets/sound.h"
 #include "assets/music.h"
@@ -56,7 +58,7 @@ void corange_finish();
 #include "assets/texture.h"
 #include "assets/material.h"
 #include "assets/renderable.h"
-#include "assets/collision_body.h"
+#include "assets/cmesh.h"
 #include "assets/skeleton.h"
 #include "assets/animation.h"
 #include "assets/terrain.h"

@@ -23,6 +23,7 @@
 #include <math.h>
 #include <time.h>
 #include <signal.h>
+#include <float.h>
 
 /* SDL includes */
 #include <SDL/SDL.h>
@@ -143,6 +144,8 @@ char* type_id_name(int id);
 #endif
 float clamp(float x, float bottom, float top);
 float saturate(float x);
+bool between(float x, float bottom, float top);
+bool between_or(float x, float bottom, float top);
 
 float lerp(float p1, float p2, float amount);
 float smoothstep(float p1, float p2, float amount);
@@ -472,9 +475,17 @@ typedef struct {
 
 plane plane_new(vec3 position, vec3 direction);
 plane plane_transform(plane p, mat4 world);
-float plane_signed_distance(plane p, vec3 point);
+float plane_distance(plane p, vec3 point);
 
-bool point_behind_plane(vec3 point, plane plane);
+bool point_inside_plane(vec3 point, plane p);
+bool point_outside_plane(vec3 point, plane p);
+bool point_intersects_plane(vec3 point, plane p);
+
+bool point_swept_inside_plane(vec3 point, vec3 vel, plane p);
+bool point_swept_outside_plane(vec3 point, vec3 vel, plane p);
+bool point_swept_intersects_plane(vec3 point, vec3 vel, plane p);
+
+vec3 plane_project(plane p, vec3 v);
 
 /* Box */
 
@@ -504,13 +515,12 @@ typedef struct {
 frustum frustum_new(vec3 ntr, vec3 ntl, vec3 nbr, vec3 nbl, vec3 ftr, vec3 ftl, vec3 fbr, vec3 fbl);
 frustum frustum_new_clipbox();
 frustum frustum_slice(frustum f, float start, float end);
+frustum frustum_transform(frustum f, mat4 m);
+frustum frustum_translate(frustum f, vec3 v);
 
 vec3 frustum_center(frustum f);
 vec3 frustum_maximums(frustum f);
 vec3 frustum_minimums(frustum f);
-
-frustum frustum_transform(frustum f, mat4 m);
-frustum frustum_translate(frustum f, vec3 v);
 
 box frustum_box(frustum f);
 
@@ -521,23 +531,78 @@ bool frustum_outside_box(frustum f, box b);
 typedef struct {
   vec3 center;
   float radius;
-  float radius_sqrd;
 } sphere;
 
+sphere sphere_unit();
 sphere sphere_new(vec3 center, float radius);
-sphere sphere_of_box(box bb);
-sphere sphere_of_frustum(frustum f);
 sphere sphere_merge(sphere s1, sphere s2);
 sphere sphere_transform(sphere s, mat4 world);
 
-bool sphere_inside_box(sphere s, box b);
-bool sphere_outside_frustum(sphere s1, frustum f);
-bool sphere_outside_sphere(sphere s1, sphere s2); 
-bool sphere_outside_box(sphere s, box b);
-bool sphere_contains_point(sphere s1, vec3 point);
-bool sphere_contains_sphere(sphere s1, sphere s2);
+sphere sphere_of_box(box bb);
+sphere sphere_of_frustum(frustum f);
 
-/* Vectex */
+bool sphere_inside_box(sphere s, box b);
+bool sphere_outside_box(sphere s, box b);
+bool sphere_intersects_box(sphere s, box b);
+
+bool sphere_inside_frustum(sphere s, frustum f);
+bool sphere_outside_frustum(sphere s, frustum f);
+bool sphere_intersects_frustum(sphere s, frustum f);
+
+bool sphere_outside_sphere(sphere s1, sphere s2); 
+bool sphere_inside_sphere(sphere s1, sphere s2); 
+bool sphere_intersects_sphere(sphere s1, sphere s2); 
+
+bool point_inside_sphere(sphere s, vec3 point);
+bool point_outside_sphere(sphere s, vec3 point);
+bool point_intersects_sphere(sphere s, vec3 point);
+
+bool sphere_inside_plane(sphere s, plane p);
+bool sphere_outside_plane(sphere s, plane p);
+bool sphere_intersects_plane(sphere s, plane p);
+
+bool point_swept_inside_sphere(sphere s, vec3 v, vec3 point);
+bool point_swept_outside_sphere(sphere s, vec3 v, vec3 point);
+bool point_swept_intersects_sphere(sphere s, vec3 v, vec3 point);
+
+bool sphere_swept_inside_plane(sphere s, vec3 v, plane p);
+bool sphere_swept_outside_plane(sphere s, vec3 v, plane p);
+bool sphere_swept_intersects_plane(sphere s, vec3 v, plane p);
+
+bool sphere_swept_outside_sphere(sphere s1, vec3 v, sphere s2); 
+bool sphere_swept_inside_sphere(sphere s1, vec3 v, sphere s2); 
+bool sphere_swept_intersects_sphere(sphere s1, vec3 v, sphere s2); 
+
+/* Ellipsoid */
+
+typedef struct {
+  vec3 center;
+  vec3 radiuses;
+} ellipsoid;
+
+ellipsoid ellipsoid_new(vec3 center, vec3 radiuses);
+ellipsoid ellipsoid_transform(ellipsoid e, mat4 m);
+ellipsoid ellipsoid_of_sphere(sphere s);
+
+mat4 ellipsoid_space(ellipsoid e);
+mat4 ellipsoid_inv_space(ellipsoid e);
+
+/* Capsule */
+
+typedef struct {
+  vec3 start;
+  vec3 end;
+  float radius;
+} capsule;
+
+capsule capsule_new(vec3 start, vec3 end, float radius);
+capsule capsule_transform(capsule c, mat4 m);
+
+bool capsule_inside_plane(capsule c, plane p);
+bool capsule_outside_plane(capsule c, plane p);
+bool capsule_intersects_plane(capsule c, plane p);
+
+/* Vertex */
 
 typedef struct {
   vec3 position;

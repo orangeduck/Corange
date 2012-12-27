@@ -6,4 +6,5 @@ texture spec_map = $CORANGE/resources/orange_peel_s.dds
 float glossiness = 10
 float bumpiness = 1
 float specular_level = 1
-int mat_id = 3
+float alpha_test = 0
+int material = 2

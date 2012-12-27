@@ -21,10 +21,10 @@ config* cfg_load_file(const char* filename) {
     char key[1024];
     char val[1024];
     
-    if (sscanf(line, "%s=%s", key, val) == 2) {
+    if (sscanf(line, "%[^ \r\n=] = %[^ \r\n=]", key, val) == 2) {
       char* val_cpy = malloc(strlen(val) + 1);
       strcpy(val_cpy, val);
-      dict_set(c->entries, key, val);
+      dict_set(c->entries, key, val_cpy);
     }
     
   }
@@ -69,4 +69,16 @@ float config_float(config* c, char* key) {
     error("key '%s' not in config file!", key);
     return 0.0;
   }
+}
+
+bool config_bool(config* c, char* key) {
+  char* out = dict_get(c->entries, key);
+  if (out) {
+    if (strstr(out, "false")) { return false; }
+    if (strstr(out, "true"))  { return true; }
+    return (bool)atoi(out);
+  } else {
+    error("key '%s' not in config file!", key);
+    return false;
+  }  
 }

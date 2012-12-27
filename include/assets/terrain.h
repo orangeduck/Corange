@@ -14,6 +14,8 @@
 
 #include "cengine.h"
 
+#include "assets/cmesh.h"
+
 #define NUM_TERRAIN_SUBDIVISIONS 0
 #define NUM_TERRAIN_BUFFERS 4
 
@@ -28,6 +30,8 @@ struct terrain_chunk {
   struct terrain_chunk* right;
   struct terrain_chunk* top;
   struct terrain_chunk* bottom;
+  
+  cmesh* colmesh;
   
   int num_verts;
   GLuint vertex_buffer;
