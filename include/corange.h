@@ -25,6 +25,7 @@
 #include "cgraphics.h"
 #include "caudio.h"
 #include "cjoystick.h"
+#include "cnet.h"
 #include "cphysics.h"
 
 /* Corange Functions */

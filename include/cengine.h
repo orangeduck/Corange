@@ -30,6 +30,7 @@
 #include <SDL/SDL_opengl.h>
 #include <SDL/SDL_rwops.h>
 #include <SDL/SDL_mixer.h>
+#include <SDL/SDL_net.h>
 #include "SDL/SDL_local.h"
 
 
@@ -250,6 +251,7 @@ vec3 vec3_floor(vec3 v);
 vec3 vec3_fmod(vec3 v, float val);
 
 bool vec3_equ(vec3 v1, vec3 v2);
+bool vec3_neq(vec3 v1, vec3 v2);
 
 float vec3_dot(vec3 v1, vec3 v2);
 float vec3_length_sqrd(vec3 v);

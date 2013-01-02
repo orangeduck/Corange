@@ -790,10 +790,17 @@ vec3 vec3_from_string(char* s) {
 }
 
 bool vec3_equ(vec3 v1, vec3 v2) {
-  if(!(v1.x == v2.x)) { return false; }
-  if(!(v1.y == v2.y)) { return false; }
-  if(!(v1.z == v2.z)) { return false; }
+  if (v1.x != v2.x) { return false; }
+  if (v1.y != v2.y) { return false; }
+  if (v1.z != v2.z) { return false; }
   return true;
+}
+
+bool vec3_neq(vec3 v1, vec3 v2) {
+  if (v1.x != v2.x) { return true; }
+  if (v1.y != v2.y) { return true; }
+  if (v1.z != v2.z) { return true; }
+  return false;
 }
 
 void vec3_to_array(vec3 v, float* out) {
@@ -2309,8 +2316,8 @@ box frustum_box(frustum f) {
   b.bottom  = plane_new(f.nbr, vec3_normalize(vec3_cross(vec3_sub(f.nbl, f.nbr), vec3_sub(f.fbr, f.nbr))));
   b.left    = plane_new(f.ntl, vec3_normalize(vec3_cross(vec3_sub(f.ftl, f.ntl), vec3_sub(f.nbl, f.ntl))));
   b.right   = plane_new(f.ntr, vec3_normalize(vec3_cross(vec3_sub(f.nbr, f.ntr), vec3_sub(f.ftr, f.ntr))));
-  b.front   = plane_new(f.ftr, vec3_normalize(vec3_cross(vec3_sub(f.fbr, f.ftr), vec3_sub(f.ftl, f.ftr))));
-  b.back    = plane_new(f.ntr, vec3_normalize(vec3_cross(vec3_sub(f.ntl, f.ntr), vec3_sub(f.nbr, f.ntr))));
+  b.front   = plane_new(f.ftr, vec3_normalize(vec3_cross(vec3_sub(f.ftl, f.ftr), vec3_sub(f.fbr, f.ftr))));
+  b.back    = plane_new(f.ntr, vec3_normalize(vec3_cross(vec3_sub(f.nbr, f.ntr), vec3_sub(f.ntl, f.ntr))));
   return b;
 }
 
@@ -2320,12 +2327,20 @@ bool frustum_outside_box(frustum f, box b) {
 }
 
 bool sphere_outside_frustum(sphere s, frustum f) {
-  //return !sphere_inside_box(s, frustum_box(f));
-  return sphere_outside_sphere(s, sphere_of_frustum(f));
+  return sphere_outside_box(s, frustum_box(f));
+}
+
+bool sphere_inside_frustum(sphere s, frustum f) {
+  return sphere_inside_box(s, frustum_box(f));
+}
+
+bool sphere_intersects_frustum(sphere s, frustum f) {
+  return sphere_intersects_box(s, frustum_box(f));
 }
 
 bool sphere_outside_sphere(sphere s1, sphere s2) {
-  return vec3_dist(s1.center, s2.center) > (s1.radius + s2.radius);
+  float rtot = (s1.radius + s2.radius);
+  return vec3_dist_sqrd(s1.center, s2.center) > rtot * rtot;
 }
 
 sphere sphere_unit() {
@@ -2401,12 +2416,12 @@ sphere sphere_merge(sphere bs1, sphere bs2) {
 
 bool sphere_inside_box(sphere s, box b) {
   
-  if (-plane_distance(b.top, s.center)    < s.radius) { return false; }
-  if (-plane_distance(b.bottom, s.center) < s.radius) { return false; }
-  if (-plane_distance(b.left, s.center)   < s.radius) { return false; }
-  if (-plane_distance(b.right, s.center)  < s.radius) { return false; }
-  if (-plane_distance(b.front, s.center)  < s.radius) { return false; }
-  if (-plane_distance(b.back, s.center)   < s.radius) { return false; }
+  if (!sphere_inside_plane(s, b.front))  { return false; }
+  if (!sphere_inside_plane(s, b.back))   { return false; }
+  if (!sphere_inside_plane(s, b.top))    { return false; }
+  if (!sphere_inside_plane(s, b.bottom)) { return false; }
+  if (!sphere_inside_plane(s, b.left))   { return false; }
+  if (!sphere_inside_plane(s, b.right))  { return false; }
   
   return true;
   
@@ -2414,11 +2429,19 @@ bool sphere_inside_box(sphere s, box b) {
 
 bool sphere_outside_box(sphere s, box b) {
   
-  if (sphere_inside_box(s, b)) { return false; }
+  if (!sphere_outside_plane(s, b.front))  { return false; }
+  if (!sphere_outside_plane(s, b.back))   { return false; }
+  if (!sphere_outside_plane(s, b.top))    { return false; }
+  if (!sphere_outside_plane(s, b.bottom)) { return false; }
+  if (!sphere_outside_plane(s, b.left))   { return false; }
+  if (!sphere_outside_plane(s, b.right))  { return false; }
   
-  error("Unimplemented");
-  return false;
+  return true;
   
+}
+
+bool sphere_intersects_box(sphere s, box b) {
+  return !(sphere_inside_box(s, b) || sphere_outside_box(s, b));
 }
 
 sphere sphere_transform(sphere bs, mat4 world) {

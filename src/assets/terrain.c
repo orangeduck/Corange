@@ -1,9 +1,13 @@
 #include "assets/terrain.h"
 
+#include "cnet.h"
+
 void terrain_chunk_delete(terrain_chunk* tc) {
   
-  glDeleteBuffers(3, tc->index_buffers);
-  glDeleteBuffers(1, &tc->vertex_buffer);
+  if (net_is_client()) {
+    glDeleteBuffers(3, tc->index_buffers);
+    glDeleteBuffers(1, &tc->vertex_buffer);
+  }
   
   cmesh_delete(tc->colmesh);
   
@@ -119,12 +123,17 @@ static void terrain_new_chunk(terrain* ter, int i) {
     tc->bound.radius = max(tc->bound.radius, vec3_dist(tc->bound.center, vertex_buffer[i]));
   }
   
-  glGenBuffers(1, &tc->vertex_buffer);
-  glBindBuffer(GL_ARRAY_BUFFER, tc->vertex_buffer);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vec3) * 4 * tc->num_verts, vertex_buffer, GL_STATIC_DRAW);
+  if (net_is_client()) {
+    glGenBuffers(1, &tc->vertex_buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, tc->vertex_buffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vec3) * 4 * tc->num_verts, vertex_buffer, GL_STATIC_DRAW);
+  }
+  
   free(vertex_buffer);
   
-  glGenBuffers(NUM_TERRAIN_BUFFERS, tc->index_buffers);
+  if (net_is_client()) {
+    glGenBuffers(NUM_TERRAIN_BUFFERS, tc->index_buffers);
+  }
   
   for(int j = 0; j < NUM_TERRAIN_BUFFERS; j++) {
   
@@ -192,8 +201,11 @@ static void terrain_new_chunk(terrain* ter, int i) {
       index_buffer[index] = y_base + y_max+1 + y+off; index++;
     }
     
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tc->index_buffers[j]);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * tc->num_indicies[j], index_buffer, GL_DYNAMIC_DRAW);
+    if (net_is_client()) {
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tc->index_buffers[j]);
+      glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * tc->num_indicies[j], index_buffer, GL_DYNAMIC_DRAW);
+    }
+    
     free(index_buffer);
   }
   

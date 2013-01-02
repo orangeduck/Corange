@@ -72,6 +72,10 @@ void corange_init(const char* core_assets_path) {
   debug("Creating Joystick Manager...");
   joystick_init();
   
+  /* Network Manager */
+  debug("Creating Network Manager...");
+  net_init();
+  
   /* Asset Manager */
   debug("Creating Asset Manager...");
   
@@ -142,6 +146,7 @@ void corange_finish() {
   entity_finish();
   asset_finish();
   
+  net_finish();
   joystick_finish();
   audio_finish();
   graphics_finish();
