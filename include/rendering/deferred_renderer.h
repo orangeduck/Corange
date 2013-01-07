@@ -22,6 +22,7 @@
 #include "entities/light.h"
 #include "entities/static_object.h"
 #include "entities/animated_object.h"
+#include "entities/particles.h"
 #include "entities/landscape.h"
 
 enum {
@@ -33,12 +34,13 @@ enum {
   RO_TYPE_AXIS      = 0,
   RO_TYPE_STATIC    = 1,
   RO_TYPE_ANIMATED  = 2,
-  RO_TYPE_LIGHT     = 3, 
-  RO_TYPE_LANDSCAPE = 4,
-  RO_TYPE_PAINT     = 5,
-  RO_TYPE_SPHERE    = 6,
-  RO_TYPE_ELLIPSOID = 7,
-  RO_TYPE_CMESH     = 8,
+  RO_TYPE_PARTICLES = 3,
+  RO_TYPE_LIGHT     = 4, 
+  RO_TYPE_LANDSCAPE = 5,
+  RO_TYPE_PAINT     = 6,
+  RO_TYPE_SPHERE    = 7,
+  RO_TYPE_ELLIPSOID = 8,
+  RO_TYPE_CMESH     = 9,
 };
 
 typedef struct {
@@ -55,6 +57,7 @@ typedef struct {
     static_object* static_object;
     animated_object* animated_object;
     landscape* landscape;
+    particles* particles;
     
     /* UI */
     light* light;
@@ -65,6 +68,7 @@ typedef struct {
 
 render_object render_object_static(static_object* s);
 render_object render_object_animated(animated_object* a);
+render_object render_object_particles(particles* p);
 render_object render_object_light(light* l);
 render_object render_object_axis(mat4 a);
 render_object render_object_sphere(sphere s);
@@ -101,6 +105,8 @@ typedef struct {
   asset_hndl mat_depth;
   asset_hndl mat_depth_ani;
   asset_hndl mat_sun;
+  asset_hndl mat_clouds;
+  asset_hndl mat_particles;
 
   /* Meshes */
   asset_hndl mesh_skydome;
@@ -152,6 +158,7 @@ typedef struct {
   int shadows_heights[3];
 
   /* Variables */
+  int seed;
   float glitch;
   float time;
   float time_of_day;

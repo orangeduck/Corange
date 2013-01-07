@@ -56,9 +56,9 @@ vec3 fxaa_unsharp(sampler2D screen, vec2 pos, int width, int height) {
 
 vec3 fxaa(sampler2D screen, vec2 texcoord, int width, int height) {
   
-  const float span_max = 8.0;
-  const float reduce_amount = 1.0 / 8.0;
-  const float reduce_min = (1.0 / 128.0);
+  const float span_max = 4.0;
+  const float reduce_amount = 1.0 / 4.0;
+  const float reduce_min = (1.0 / 64.0);
   
   vec2 pixel = 1.0 / vec2(width, height);
 

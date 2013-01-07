@@ -111,6 +111,25 @@ void ui_textbox_set_contents(ui_textbox* tb, char* label) {
   ui_text_draw_string(tb->contents, label);
 }
 
+void ui_textbox_set_alignment(ui_textbox* tb, int halign, int valign) {
+
+  ui_text_align(tb->contents, halign, valign);
+  ui_text_align(tb->label, halign, valign);
+  
+  float x = 0, y = 0;
+  
+  if (halign == text_align_left) { x = tb->inner->top_left.x; }
+  if (halign == text_align_right) { x = tb->inner->bottom_right.x; }
+  if (halign == text_align_center) { x = ui_rectangle_center(tb->inner).x; }
+  if (valign == text_align_top) { y = tb->inner->top_left.y; }
+  if (valign == text_align_bottom) { y = tb->inner->bottom_right.y; }
+  if (valign == text_align_center) { y = ui_rectangle_center(tb->inner).y; }
+  
+  ui_text_move(tb->contents, vec2_new(x, y));
+  ui_text_move(tb->label, vec2_new(x, y));
+
+}
+
 void ui_textbox_disable(ui_textbox* tb) {
   tb->enabled = false;
 }
@@ -166,8 +185,39 @@ void ui_textbox_event(ui_textbox* tb, SDL_Event e) {
         case SDLK_x: ch = 'x'; break;
         case SDLK_y: ch = 'y'; break;
         case SDLK_z: ch = 'z'; break;
+        
+        case SDLK_1: ch = '1'; break;
+        case SDLK_2: ch = '2'; break;
+        case SDLK_3: ch = '3'; break;
+        case SDLK_4: ch = '4'; break;
+        case SDLK_5: ch = '5'; break;
+        case SDLK_6: ch = '6'; break;
+        case SDLK_7: ch = '7'; break;
+        case SDLK_8: ch = '8'; break;
+        case SDLK_9: ch = '9'; break;
+        case SDLK_0: ch = '0'; break;
+        
+        case SDLK_SPACE:     ch = ' '; break;
+        
         default: ch = 0; break;
       }
+      
+      bool uppercase = 
+        (e.key.keysym.mod & KMOD_RSHIFT) ||
+        (e.key.keysym.mod & KMOD_LSHIFT) ||
+        (e.key.keysym.mod & KMOD_CAPS);
+      
+      if ((ch >= 'a') && (ch <= 'z') && uppercase) { ch = ch - 32; }
+      if (ch == '1' && uppercase) { ch = '!'; }
+      if (ch == '2' && uppercase) { ch = '"'; }
+      if (ch == '2' && uppercase) { ch = '£'; }
+      if (ch == '4' && uppercase) { ch = '$'; }
+      if (ch == '5' && uppercase) { ch = '%'; }
+      if (ch == '6' && uppercase) { ch = '^'; }
+      if (ch == '7' && uppercase) { ch = '&'; }
+      if (ch == '8' && uppercase) { ch = '*'; }
+      if (ch == '9' && uppercase) { ch = '('; }
+      if (ch == '0' && uppercase) { ch = ')'; }
       
       if (ch != 0) {
         ui_textbox_addchar(tb, ch);

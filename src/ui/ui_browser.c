@@ -28,6 +28,7 @@ ui_browser* ui_browser_new() {
   
   strcpy(b->directory.ptr, SDL_GetWorkingDir());
   
+  b->scroll = 0;
   b->num_items = 0;
   b->items = NULL;
   b->onselect = NULL;
@@ -52,6 +53,21 @@ void ui_browser_delete(ui_browser* b) {
   
 }
 
+static void move_text_items(ui_browser* b) {
+  
+  vec2 position = vec2_add(b->inner->top_left, vec2_new(5, 5));
+  
+  position = vec2_sub(position, vec2_new(0, 20 * b->scroll));
+  
+  for (int i = 0; i < b->num_items; i++) {
+  
+    ui_text_move(b->items[i], position);
+    position = vec2_add(position, vec2_new(0, 20));    
+  
+  }
+
+}
+
 void ui_browser_chdir(ui_browser* b, fpath p) {
   
   for(int i = 0; i < b->num_items; i++) {
@@ -61,9 +77,7 @@ void ui_browser_chdir(ui_browser* b, fpath p) {
   debug("Setting Directory: '%s'", p.ptr);
   b->directory = p;
   b->num_items = 0;
-  
-  vec2 position = vec2_add(b->inner->top_left, vec2_new(5, 5));
-  
+    
   DIR* dir = opendir(p.ptr);
   if (dir == NULL) {
     error("Could not open directory '%s' to load.", p.ptr);
@@ -72,10 +86,8 @@ void ui_browser_chdir(ui_browser* b, fpath p) {
   struct dirent* ent;
   while ((ent = readdir(dir)) != NULL) {
   
-    position = vec2_add(position, vec2_new(0, 20));
   
     ui_text* entry = ui_text_new();
-    ui_text_move(entry, position);
     ui_text_set_color(entry, vec4_light_grey());
     ui_text_draw_string(entry, ent->d_name);
     
@@ -87,11 +99,18 @@ void ui_browser_chdir(ui_browser* b, fpath p) {
   
   closedir(dir);
   
+  move_text_items(b);
+  
 }
 
 void ui_browser_event(ui_browser* b, SDL_Event e) {
   
-  if (e.type == SDL_MOUSEBUTTONUP) {
+  if (e.type == SDL_MOUSEBUTTONDOWN && ui_rectangle_contains_point(b->inner, vec2_new(e.motion.x, e.motion.y))) {
+    if (e.button.button == SDL_BUTTON_WHEELUP)   { b->scroll = clamp(b->scroll-1, 0, b->num_items); move_text_items(b); }
+    if (e.button.button == SDL_BUTTON_WHEELDOWN) { b->scroll = clamp(b->scroll+1, 0, b->num_items); move_text_items(b); }
+  }
+  
+  if (e.type == SDL_MOUSEBUTTONUP && e.button.button == SDL_BUTTON_LEFT) {
   
     for (int i = 0; i < b->num_items; i++) {
       
@@ -145,8 +164,10 @@ void ui_browser_render(ui_browser* b) {
   ui_rectangle_render(b->outer);
   ui_rectangle_render(b->inner);
   
-  for(int i = 0; i < b->num_items; i++) {
-    ui_text_render(b->items[i]);
+  for(int i = b->scroll; i < b->num_items; i++) {
+    if (ui_rectangle_contains_point(b->inner, b->items[i]->position)) {
+      ui_text_render(b->items[i]);
+    }    
   }
   
   

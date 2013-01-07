@@ -12,12 +12,12 @@ varying vec4 color;
 void main() {
   vec4 albedo = texture2D(diffuse, texcoords) * color;
   
-  vec4 glitch_off = texture2D(random, texcoords + vec2(0, time / 200));
+  vec4 glitch_off = texture2D(random, texcoords + albedo.rg * vec2(0, time / 200));
   vec4 glitch_col = texture2D(random, texcoords + glitch_off.yz + vec2(0, time / 200));
   
   vec4 galbedo = texture2D(diffuse, texcoords + glitch_off.xy * vec2(0.05, 0.025)) * color;
   
-  vec3  gfinal = mix(galbedo.rgb, glitch_col.rgb, 0.15) * glitch_col.rgb;
+  vec3  gfinal = mix(galbedo.rgb, glitch_col.rgb, 0.30) * glitch_col.rgb * glitch_col.rgb;
   float galpha = mix(galbedo.a, glitch_col.a, 0.15);
   
   gl_FragColor.rgb = mix(albedo.rgb, gfinal, glitch);

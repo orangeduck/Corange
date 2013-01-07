@@ -68,6 +68,7 @@ void ui_text_delete(ui_text* text);
 void ui_text_move(ui_text* text, vec2 pos);
 void ui_text_set_font(ui_text* text, asset_hndl font);
 void ui_text_set_color(ui_text* text, vec4 color);
+void ui_text_set_scale(ui_text* text, vec2 scale);
 void ui_text_align(ui_text* text, int halign, int valign);
 
 void ui_text_draw(ui_text* text);

@@ -1,0 +1,2 @@
+shader vert = $CORANGE/shaders/deferred/clouds.vs
+shader frag = $CORANGE/shaders/deferred/clouds.fs

@@ -82,3 +82,17 @@ bool config_bool(config* c, char* key) {
     return false;
   }  
 }
+
+asset_hndl option_graphics_asset(config* c, char* key, asset_hndl high, asset_hndl medium, asset_hndl low) {
+  int val = config_int(c, key);
+  if (val == 2) { return high; }
+  if (val == 1) { return medium; }
+  return low;
+}
+
+int option_graphics_int(config* c, char* key, int high, int medium, int low) {
+  int val = config_int(c, key);
+  if (val == 2) { return high; }
+  if (val == 1) { return medium; }
+  return low;
+}

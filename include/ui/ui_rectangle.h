@@ -26,6 +26,7 @@ typedef struct {
   
   float glitch;
   
+  bool blend_add;
   bool active;
 } ui_rectangle;
 
@@ -44,5 +45,6 @@ void ui_rectangle_set_color(ui_rectangle* rect, vec4 color);
 void ui_rectangle_set_glitch(ui_rectangle* rect, float glitch);
 vec2 ui_rectangle_center(ui_rectangle* rect);
 bool ui_rectangle_contains_point(ui_rectangle* rect, vec2 pos);
+void ui_rectangle_blend_add(ui_rectangle* rect);
 
 #endif

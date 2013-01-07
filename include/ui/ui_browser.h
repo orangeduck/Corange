@@ -11,6 +11,7 @@ typedef struct {
   
   fpath directory;
   
+  int scroll;  
   int num_items;
   ui_text** items;
   

@@ -17,4 +17,7 @@ int config_int(config* c, char* key);
 float config_float(config* c, char* key);
 bool config_bool(config* c, char* key);
 
+asset_hndl option_graphics_asset(config* c, char* key, asset_hndl high, asset_hndl medium, asset_hndl low);
+int option_graphics_int(config* c, char* key, int high, int medium, int low);
+
 #endif

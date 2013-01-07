@@ -17,6 +17,8 @@ vec3 filmic_tonemap(vec3 color, float exposure);
 
 vec3 color_correction(vec3 color, sampler3D lut, int lut_size);
 
+vec3 desaturate(vec3 color);
+
 /* End */
 
 vec3 to_gamma(vec3 color) {
@@ -92,4 +94,9 @@ vec3 color_correction(vec3 color, sampler3D lut, int lut_size) {
   float offset = 1.0 / (2.0 * float(lut_size));
 
   return texture3D(lut, clamp(color, 0.0, 1.0) * scale + offset).rgb;
+}
+
+vec3 desaturate(vec3 color) {
+  float s = (color.r + color.g + color.b) / 3;
+  return vec3(s, s, s);
 }
