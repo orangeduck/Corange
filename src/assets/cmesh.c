@@ -22,6 +22,7 @@ ctri ctri_new(vec3 a, vec3 b, vec3 c, vec3 norm) {
   t.b = b;
   t.c = c;
   t.norm = norm;
+  t.bound = sphere_unit();
   t.bound = ctri_bound(t);
   return t;
 }
