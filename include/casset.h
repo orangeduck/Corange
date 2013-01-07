@@ -48,6 +48,9 @@ void asset_finish();
 /* Map a variable such as '$CORANGE' to a path string */
 void asset_add_path_variable(fpath variable, fpath mapping);
 
+fpath asset_map_filename(fpath filename);
+fpath asset_unmap_filename(fpath filename);
+
 /* Create handler for asset type. Requires type, file extension, and load/unload functions. */
 #define asset_handler(type, extension, loader, deleter) \
   asset_handler_cast(typeid(type), extension, \
