@@ -35,6 +35,7 @@ void ui_textbox_resize(ui_textbox* tb, vec2 size);
 void ui_textbox_set_font(ui_textbox* tb, asset_hndl f);
 void ui_textbox_set_label(ui_textbox* tb, char* label);
 void ui_textbox_set_contents(ui_textbox* tb, char* label);
+void ui_textbox_set_alignment(ui_textbox* tb, int halign, int valign);
 
 void ui_textbox_disable(ui_textbox* tb);
 void ui_textbox_enable(ui_textbox* tb);

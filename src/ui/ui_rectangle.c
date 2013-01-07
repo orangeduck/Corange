@@ -24,6 +24,7 @@ ui_rectangle* ui_rectangle_new() {
   rect->border_color = vec4_black();
   
   rect->active = true;
+  rect->blend_add = false;
   
   return rect;
   
@@ -75,6 +76,10 @@ void ui_rectangle_set_glitch(ui_rectangle* rect, float glitch) {
   rect->glitch = glitch;
 }
 
+void ui_rectangle_blend_add(ui_rectangle* rect) {
+  rect->blend_add = true;
+}
+
 static float TIME = 0;
 
 void ui_rectangle_render(ui_rectangle* rect) {
@@ -110,7 +115,11 @@ void ui_rectangle_render(ui_rectangle* rect) {
   SDL_GL_CheckError();
   
   glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  if (rect->blend_add) {
+    glBlendFunc(GL_ONE, GL_ONE);
+  } else {
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  }
   
   if(!asset_hndl_isnull(rect->texture)) {
     glActiveTexture(GL_TEXTURE0 + 0);

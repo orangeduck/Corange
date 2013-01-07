@@ -12,6 +12,7 @@ static const float TIME_SUNSET   = 0.50;
 static const float TIME_MIDNIGHT = 0.75;
 
 bool sky_isday(float t);
+vec3 sky_wind(float t, int seed);
 
 asset_hndl sky_mesh_sun(float t);
 asset_hndl sky_mesh_moon(float t);
@@ -48,5 +49,10 @@ vec3 sky_ground_direction(float t);
 vec3 sky_ground_diffuse(float t);
 vec3 sky_ground_ambient(float t);
 vec3 sky_ground_specular(float t);
+
+int sky_clouds_num();
+asset_hndl sky_clouds_mesh(int i);
+asset_hndl sky_clouds_tex(int i);
+float sky_clouds_opacity(int i, float t, int seed);
 
 #endif

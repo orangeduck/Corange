@@ -33,13 +33,10 @@ varying vec2 fTexcoord;
 
 /* Headers */
 
-float shadow_amount(vec3 position, mat4 light_view, mat4 light_proj, sampler2D light_depth, int samples, float kernel, vec2 seed);
-float shadow_amount_soft_pcf25(vec4 light_pos, sampler2D light_depth, float hardness);
+float shadow_amount(vec3 position, mat4 light_view, mat4 light_proj, sampler2D light_depth, const int samples, const float kernel, vec2 seed);
 
 vec3 to_gamma(vec3 color);
 vec3 from_gamma(vec3 color);
-
-vec3 apply_fog_blue(vec3 pixel, vec3 position, vec3 camera_position);
 
 /* End */
 
@@ -62,12 +59,15 @@ void main() {
   float glossiness = normal_a.a;
   
   const float noise_tile = 1.0;
-  vec2 random_coords = vec2(position.xz + position.yz + position.yx) * noise_tile;
-  vec3 random = normalize( texture2D(random_texture, random_coords).rgb * 2.0 - 1.0 );
+  vec3 random = 
+    abs(normal.x) * texture2D(random_texture, position.yz * noise_tile).rgb +
+    abs(normal.y) * texture2D(random_texture, position.xz * noise_tile).rgb +
+    abs(normal.z) * texture2D(random_texture, position.xy * noise_tile).rgb;
+  random = normalize(random * 2.0 - 1.0);
   
-  float shadow0 = shadow_amount(position.xyz, light_view[0], light_proj[0], shadows_texture0, 4, 0.00075, random.xy);
-  float shadow1 = shadow_amount(position.xyz, light_view[1], light_proj[1], shadows_texture1, 4, 0.00075, random.xy);
-  float shadow2 = shadow_amount(position.xyz, light_view[2], light_proj[2], shadows_texture2, 4, 0.001, random.xy);
+  float shadow0 = shadow_amount(position.xyz, light_view[0], light_proj[0], shadows_texture0, 8, 0.00075, random.xy);
+  float shadow1 = shadow_amount(position.xyz, light_view[1], light_proj[1], shadows_texture1, 6, 0.00075, random.xy);
+  float shadow2 = shadow_amount(position.xyz, light_view[2], light_proj[2], shadows_texture2, 4, 0.00100, random.xy);
 	float shadow = depth > light_start[2] ? shadow2 : (depth > light_start[1] ? shadow1 : shadow0);
   
   vec3 ssao = texture2DLod(ssao_texture, fTexcoord, 1.0).rgb;

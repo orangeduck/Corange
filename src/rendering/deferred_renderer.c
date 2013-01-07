@@ -113,6 +113,8 @@ deferred_renderer* deferred_renderer_new() {
     dr->dyn_light[i] = NULL;
   }
   
+  config* options = asset_get_load(P("./assets/options.cfg"));
+  
   /* Materials */
   folder_load(P("$CORANGE/shaders/deferred/"));
   
@@ -122,7 +124,6 @@ deferred_renderer* deferred_renderer_new() {
   dr->mat_clear     = asset_hndl_new(P("$CORANGE/shaders/deferred/clear.mat"));
   dr->mat_ssao      = asset_hndl_new(P("$CORANGE/shaders/deferred/ssao.mat"));
   dr->mat_tonemap   = asset_hndl_new(P("$CORANGE/shaders/deferred/tonemap.mat"));
-  dr->mat_compose   = asset_hndl_new(P("$CORANGE/shaders/deferred/compose.mat"));
   dr->mat_post0     = asset_hndl_new(P("$CORANGE/shaders/deferred/post0.mat"));
   dr->mat_post1     = asset_hndl_new(P("$CORANGE/shaders/deferred/post1.mat"));
   dr->mat_ui        = asset_hndl_new(P("$CORANGE/shaders/deferred/ui.mat"));
@@ -130,6 +131,13 @@ deferred_renderer* deferred_renderer_new() {
   dr->mat_depth     = asset_hndl_new(P("$CORANGE/shaders/deferred/depth.mat"));
   dr->mat_depth_ani = asset_hndl_new(P("$CORANGE/shaders/deferred/depth_animated.mat"));
   dr->mat_sun       = asset_hndl_new(P("$CORANGE/shaders/deferred/sun.mat"));
+  dr->mat_clouds    = asset_hndl_new(P("$CORANGE/shaders/deferred/clouds.mat"));
+  dr->mat_particles = asset_hndl_new(P("$CORANGE/shaders/deferred/particles.mat"));
+  
+  dr->mat_compose = option_graphics_asset(options, "graphics_lighting",
+    asset_hndl_new(P("$CORANGE/shaders/deferred/compose.mat")),
+    asset_hndl_new(P("$CORANGE/shaders/deferred/compose.mat")),
+    asset_hndl_new(P("$CORANGE/shaders/deferred/compose_low.mat")));
   
   /* Meshes */
   dr->mesh_skydome  = asset_hndl_new_load(P("$CORANGE/resources/skydome.obj"));
@@ -147,59 +155,62 @@ deferred_renderer* deferred_renderer_new() {
   int width = graphics_viewport_width();
   int height = graphics_viewport_height();
   
+  int gwidth  = width  * option_graphics_int(options, "graphics_msaa", 4, 2, 1);
+  int gheight = height * option_graphics_int(options, "graphics_msaa", 4, 2, 1);
+  
   glGenFramebuffers(1, &dr->gfbo);
   glBindFramebuffer(GL_FRAMEBUFFER, dr->gfbo);
   
   glGenRenderbuffers(1, &dr->gdiffuse_buffer);
   glBindRenderbuffer(GL_RENDERBUFFER, dr->gdiffuse_buffer);
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, width, height);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, gwidth, gheight);
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, dr->gdiffuse_buffer);   
   
   glGenRenderbuffers(1, &dr->gpositions_buffer);
   glBindRenderbuffer(GL_RENDERBUFFER, dr->gpositions_buffer);
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA32F, width, height);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA32F, gwidth, gheight);
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_RENDERBUFFER, dr->gpositions_buffer);  
   
   glGenRenderbuffers(1, &dr->gnormals_buffer);  
   glBindRenderbuffer(GL_RENDERBUFFER, dr->gnormals_buffer);
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA16F, width, height);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA16F, gwidth, gheight);
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_RENDERBUFFER, dr->gnormals_buffer);  
   
   glGenRenderbuffers(1, &dr->gdepth_buffer);
   glBindRenderbuffer(GL_RENDERBUFFER, dr->gdepth_buffer);
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width, height);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, gwidth, gheight);
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, dr->gdepth_buffer);  
   
   glGenTextures(1, &dr->gdiffuse_texture);
   glBindTexture(GL_TEXTURE_2D, dr->gdiffuse_texture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, gwidth, gheight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, dr->gdiffuse_texture, 0);
   
   glGenTextures(1, &dr->gpositions_texture);
   glBindTexture(GL_TEXTURE_2D, dr->gpositions_texture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, gwidth, gheight, 0, GL_RGBA, GL_FLOAT, NULL);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, dr->gpositions_texture, 0);
   
   glGenTextures(1, &dr->gnormals_texture);
   glBindTexture(GL_TEXTURE_2D, dr->gnormals_texture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, gwidth, gheight, 0, GL_RGBA, GL_FLOAT, NULL);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, dr->gnormals_texture, 0);
   
   glGenTextures(1, &dr->gdepth_texture);
   glBindTexture(GL_TEXTURE_2D, dr->gdepth_texture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, gwidth, gheight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -210,17 +221,20 @@ deferred_renderer* deferred_renderer_new() {
   
   /* SSAO Buffer */
   
+  int ssaowidth  = width  / option_graphics_int(options, "graphics_ssao", 1, 2, 4);
+  int ssaoheight = height / option_graphics_int(options, "graphics_ssao", 1, 2, 4);
+  
   glGenFramebuffers(1, &dr->ssao_fbo);
   glBindFramebuffer(GL_FRAMEBUFFER, dr->ssao_fbo);
   
   glGenRenderbuffers(1, &dr->ssao_buffer);
   glBindRenderbuffer(GL_RENDERBUFFER, dr->ssao_buffer);
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, width / 2, height / 2);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, ssaowidth, ssaoheight);
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, dr->ssao_buffer);   
   
   glGenTextures(1, &dr->ssao_texture);
   glBindTexture(GL_TEXTURE_2D, dr->ssao_texture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width / 2, height / 2, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, ssaowidth, ssaoheight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -231,19 +245,22 @@ deferred_renderer* deferred_renderer_new() {
   
   /* HDR Buffer */
   
+  int hdrwidth  = width  * option_graphics_int(options, "graphics_msaa", 4, 2, 1);
+  int hdrheight = height * option_graphics_int(options, "graphics_msaa", 4, 2, 1);
+  
   glGenFramebuffers(1, &dr->hdr_fbo);
   glBindFramebuffer(GL_FRAMEBUFFER, dr->hdr_fbo);
   
   glGenRenderbuffers(1, &dr->hdr_buffer);
   glBindRenderbuffer(GL_RENDERBUFFER, dr->hdr_buffer);
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA16F, width, height);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA16F, hdrwidth, hdrheight);
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, dr->hdr_buffer);   
   
   glGenTextures(1, &dr->hdr_texture);
   glBindTexture(GL_TEXTURE_2D, dr->hdr_texture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, hdrwidth, hdrheight, 0, GL_RGBA, GL_FLOAT, NULL);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, dr->hdr_texture, 0);
@@ -292,13 +309,16 @@ deferred_renderer* deferred_renderer_new() {
   
   /* Shadow Buffers */
   
+  int shadow_width  = option_graphics_int(options, "graphics_shadows", 4096, 2048, 1024);
+  int shadow_height = option_graphics_int(options, "graphics_shadows", 4096, 2048, 1024);
+  
   dr->shadows_start[0] = 0.00; dr->shadows_end[0] = 0.05;
   dr->shadows_start[1] = 0.05; dr->shadows_end[1] = 0.20;
   dr->shadows_start[2] = 0.20; dr->shadows_end[2] = 0.50;
   
-  dr->shadows_widths[0] = 4096; dr->shadows_heights[0] = 4096;
-  dr->shadows_widths[1] = 4096; dr->shadows_heights[1] = 4096;
-  dr->shadows_widths[2] = 2048; dr->shadows_heights[2] = 2048;
+  dr->shadows_widths[0] = shadow_width; dr->shadows_heights[0] = shadow_height;
+  dr->shadows_widths[1] = shadow_width; dr->shadows_heights[1] = shadow_height;
+  dr->shadows_widths[2] = shadow_width; dr->shadows_heights[2] = shadow_height;
   
   for (int i = 0; i < 3; i++) {
     
@@ -330,6 +350,7 @@ deferred_renderer* deferred_renderer_new() {
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   
   /* Variables */
+  dr->seed = 0;
   dr->glitch = 0.0;
   dr->time = 0.0;
   dr->time_of_day = TIME_MORNING;
@@ -1261,9 +1282,17 @@ void render_paint_circle(deferred_renderer* dr, vec3 position, vec3 normal, floa
 
 static void render_gbuffer(deferred_renderer* dr) {
   
+  config* options = asset_get_load(P("./assets/options.cfg"));
+  
+  int width = graphics_viewport_width();
+  int height = graphics_viewport_height();
+  
+  int gwidth  = width  * option_graphics_int(options, "graphics_msaa", 4, 2, 1);
+  int gheight = height * option_graphics_int(options, "graphics_msaa", 4, 2, 1);
+  
   glBindFramebuffer(GL_FRAMEBUFFER, dr->gfbo);
   glDrawBuffers(3, (GLenum[]){ GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 });
-  glViewport( 0, 0, graphics_viewport_width(), graphics_viewport_height());
+  glViewport( 0, 0, gwidth, gheight);
   
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);
@@ -1298,8 +1327,16 @@ static void render_gbuffer(deferred_renderer* dr) {
 
 static void render_ssao(deferred_renderer* dr) {
   
+  config* options = asset_get_load(P("./assets/options.cfg"));
+  
+  int width = graphics_viewport_width();
+  int height = graphics_viewport_height();
+  
+  int ssaowidth  = width  * option_graphics_int(options, "graphics_ssao", 1, 0.5, 0.25);
+  int ssaoheight = height * option_graphics_int(options, "graphics_ssao", 1, 0.5, 0.25);
+  
   glBindFramebuffer(GL_FRAMEBUFFER, dr->ssao_fbo);
-  glViewport(0, 0, graphics_viewport_width() / 2, graphics_viewport_height() / 2);
+  glViewport(0, 0, ssaowidth, ssaoheight);
   glClearColor(1, 1, 1, 1);
   glClear( GL_COLOR_BUFFER_BIT );
   
@@ -1348,7 +1385,16 @@ static void render_skies(deferred_renderer* dr) {
   if (!dr->skydome_enabled) { return; }
   if (dr->sun_light == NULL) { error("No sun light set for rendering skies!"); }
   
-  glBindFramebuffer(GL_FRAMEBUFFER, dr->hdr_fbo);  
+  config* options = asset_get_load(P("./assets/options.cfg"));
+  
+  int width = graphics_viewport_width();
+  int height = graphics_viewport_height();
+  
+  int hdrwidth  = width  * option_graphics_int(options, "graphics_msaa", 4, 2, 1);
+  int hdrheight = height * option_graphics_int(options, "graphics_msaa", 4, 2, 1);
+  
+  glBindFramebuffer(GL_FRAMEBUFFER, dr->hdr_fbo);
+  glViewport(0, 0, hdrwidth, hdrheight);
   glDepthMask(GL_FALSE);
     
   {
@@ -1387,7 +1433,7 @@ static void render_skies(deferred_renderer* dr) {
   
     shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_sun));
     shader_program_enable(shader);
-    shader_program_set_mat4(shader, "world", mat4_world(dr->camera->position, vec3_new(10, 10, 10), sky_mesh_sun_world(dr->time_of_day)));
+    shader_program_set_mat4(shader, "world", mat4_world(dr->camera->position, vec3_one(), sky_mesh_sun_world(dr->time_of_day)));
     shader_program_set_mat4(shader, "view", camera_view_matrix(dr->camera));
     shader_program_set_mat4(shader, "proj", camera_proj_matrix(dr->camera));
     shader_program_set_float(shader, "sun_brightness", 1.5w);
@@ -1418,6 +1464,53 @@ static void render_skies(deferred_renderer* dr) {
   
   }
   
+  {
+  
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  
+    shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_clouds));
+    shader_program_enable(shader);
+    shader_program_set_mat4(shader, "world", mat4_world(dr->camera->position, vec3_new(10, 10, 10), mat4_id()));
+    shader_program_set_mat4(shader, "view", camera_view_matrix(dr->camera));
+    shader_program_set_mat4(shader, "proj", camera_proj_matrix(dr->camera));
+    shader_program_set_float(shader, "time", dr->time);
+    shader_program_set_float(shader, "wind", vec3_length(sky_wind(dr->time_of_day, dr->seed)));
+    shader_program_set_vec3(shader, "cloud_color", vec3_one());
+    shader_program_set_vec3(shader, "cloud_light", vec3_new(1, 1, 1));
+    
+    for (int i = 0; i < sky_clouds_num(); i++) {
+    
+      shader_program_enable_texture(shader, "cloud_texture", 0, sky_clouds_tex(i));
+      shader_program_set_float(shader, "opacity", sky_clouds_opacity(i, dr->time_of_day, dr->seed));
+      
+      renderable* sun_r = asset_hndl_ptr(sky_clouds_mesh(i));
+      renderable_surface* s = sun_r->surfaces[0];
+      
+      glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
+      
+      shader_program_enable_attribute(shader, "vPosition",  3, 18, (void*)0);
+      shader_program_enable_attribute(shader, "vTexcoord",  2, 18, (void*)(sizeof(float) * 12));
+      
+        glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
+      
+      shader_program_disable_attribute(shader, "vPosition");
+      shader_program_disable_attribute(shader, "vTexcoord");
+      
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+      glBindBuffer(GL_ARRAY_BUFFER, 0);
+      
+      shader_program_disable_texture(shader, 0);
+    
+    }
+    
+    shader_program_disable(shader);
+    
+    glDisable(GL_BLEND);
+  
+  }
+  
   glDepthMask(GL_TRUE);
   glBindFramebuffer(GL_FRAMEBUFFER, 0);  
   
@@ -1425,8 +1518,16 @@ static void render_skies(deferred_renderer* dr) {
 
 static void render_compose(deferred_renderer* dr) {
   
+  config* options = asset_get_load(P("./assets/options.cfg"));
+  
+  int width = graphics_viewport_width();
+  int height = graphics_viewport_height();
+  
+  int hdrwidth  = width  * option_graphics_int(options, "graphics_msaa", 4, 2, 1);
+  int hdrheight = height * option_graphics_int(options, "graphics_msaa", 4, 2, 1);
+  
   glBindFramebuffer(GL_FRAMEBUFFER, dr->hdr_fbo);
-  glViewport(0, 0, graphics_viewport_width(), graphics_viewport_height());
+  glViewport(0, 0, hdrwidth, hdrheight);
   
   shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_compose));
   shader_program_enable(shader);
@@ -1537,7 +1638,64 @@ static void render_compose(deferred_renderer* dr) {
   shader_program_disable(shader);
   
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
-  glViewport(0, 0, graphics_viewport_width(), graphics_viewport_height());
+  glViewport(0, 0, width, height);
+  
+}
+
+static void render_particles(deferred_renderer* dr) {
+  
+  config* options = asset_get_load(P("./assets/options.cfg"));
+  
+  int width = graphics_viewport_width();
+  int height = graphics_viewport_height();
+  
+  int hdrwidth  = width  * option_graphics_int(options, "graphics_msaa", 4, 2, 1);
+  int hdrheight = height * option_graphics_int(options, "graphics_msaa", 4, 2, 1);
+  
+  glBindFramebuffer(GL_FRAMEBUFFER, dr->hdr_fbo);
+  glViewport(0, 0, hdrwidth, hdrheight);
+  
+  glEnable(GL_BLEND);
+  
+  shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_particles));
+  shader_program_enable(shader);
+  shader_program_set_mat4(shader, "view", camera_view_matrix(dr->camera));
+  shader_program_set_mat4(shader, "proj", camera_proj_matrix(dr->camera));
+  
+  for (int i = 0; i < dr->render_objects_num; i++) {
+    
+    if (dr->render_objects[i].type != RO_TYPE_PARTICLES) { continue; }
+    
+    particles* p = dr->render_objects[i].particles;
+    
+    glBlendFunc(p->blend_src, p->blend_dst);
+    
+    shader_program_set_mat4(shader, "world", mat4_world(p->position, p->scale, p->rotation));
+    shader_program_enable_texture(shader, "diffuse_texture", 0, p->texture);
+    
+    glBindBuffer(GL_ARRAY_BUFFER, p->vertex_buff);
+    
+    shader_program_enable_attribute(shader, "vPosition",  3, 9, (void*)(0));
+    shader_program_enable_attribute(shader, "vTexcoord",  2, 9, (void*)(sizeof(float) * 3));
+    shader_program_enable_attribute(shader, "vColor",     4, 9, (void*)(sizeof(float) * 5));
+    
+      glDrawArrays(GL_TRIANGLES, 0, p->count * 6);
+    
+    shader_program_disable_attribute(shader, "vPosition");
+    shader_program_disable_attribute(shader, "vTexcoord");
+    shader_program_disable_attribute(shader, "vColor");
+  
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+  
+  }
+
+  glDisable(GL_BLEND);
+  
+  shader_program_disable_texture(shader, 0);
+  shader_program_disable(shader);
+  
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  glViewport(0, 0, width, height);
   
 }
 
@@ -1654,6 +1812,8 @@ static void render_post0(deferred_renderer* dr) {
 
 static void render_post1(deferred_renderer* dr) {
   
+  config* options = asset_get_load(P("./assets/options.cfg"));
+  
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   glViewport(0, 0, graphics_viewport_width(), graphics_viewport_height());
   glClearDepth(1.0);
@@ -1679,6 +1839,7 @@ static void render_post1(deferred_renderer* dr) {
   shader_program_set_float(shader, "time", dr->time);
   shader_program_set_int(shader, "width", graphics_viewport_width());
   shader_program_set_int(shader, "height", graphics_viewport_height());
+  shader_program_set_int(shader, "fxaa_quality", config_int(options, "graphics_fxaa"));
   
   shader_program_enable_attribute(shader, "vPosition",  3, 3, quad_position);
   shader_program_enable_attribute(shader, "vTexcoord",  2, 2, quad_texcoord);
@@ -1716,6 +1877,7 @@ void deferred_renderer_render(deferred_renderer* dr) {
   render_ssao(dr);      //t = timer_split(t, "SSAO");
   render_skies(dr);     //t = timer_split(t, "Skies");
   render_compose(dr);   //t = timer_split(t, "Compose");
+  render_particles(dr); //t = timer_split(t, "Particles");
   render_tonemap(dr);   //t = timer_split(t, "Tonemap");
   render_post0(dr);     //t = timer_split(t, "Post0");
   render_post1(dr);     //t = timer_split(t, "Post1");

@@ -1,0 +1,4 @@
+shader vert = $CORANGE/shaders/deferred/compose.vs
+shader frag = $CORANGE/shaders/deferred/compose_low.fs
+shader shadows = $CORANGE/shaders/shadows.fs
+shader colors =  $CORANGE/shaders/colors.fs

@@ -77,6 +77,11 @@ void ui_text_set_color(ui_text* text, vec4 color) {
   ui_text_draw(text);
 }
 
+void ui_text_set_scale(ui_text* text, vec2 scale) {
+  text->scale = scale;
+  ui_text_draw(text);
+}
+
 void ui_text_align(ui_text* text, int halign, int valign) {
   text->halign = halign;
   text->valign = valign;

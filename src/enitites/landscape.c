@@ -127,7 +127,7 @@ void landscape_chunks(landscape* l, vec2 pos, struct terrain_chunk** chunks_out)
   int index = 0;
   for(int x = chunk_x - 1; x < chunk_x + 2; x++)
   for(int y = chunk_y - 1; y < chunk_y + 2; y++) {
-    int chunk = clamp(x + y * t->chunk_width, 0, t->num_chunks-1);
+    int chunk = clamp(x + y * t->num_rows, 0, t->num_chunks-1);
     chunks_out[index] = t->chunks[chunk]; index++;
   }
   

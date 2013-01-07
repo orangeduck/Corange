@@ -37,17 +37,13 @@ static void terrain_new_chunk(terrain* ter, int i) {
     float gx = tc->x * ter->chunk_width + (float)x/SUBDIVISIONS;
     float gy = tc->y * ter->chunk_height + (float)y/SUBDIVISIONS;
     
-    float offset   = terrain_height(ter, vec2_new(gx, gy));
-    float offset_x = terrain_height(ter, vec2_add(vec2_new(gx, gy), vec2_new(1,0)));
-    float offset_y = terrain_height(ter, vec2_add(vec2_new(gx, gy), vec2_new(0,1)));
+    float height = terrain_height(ter, vec2_new(gx, gy));
+    mat4  axis   = terrain_axis(ter, vec2_new(gx, gy));
     
-    vec3 pos    = vec3_new(gx+0, offset,   gy+0);
-    vec3 pos_xv = vec3_new(gx+1, offset_x, gy+0);
-    vec3 pos_yv = vec3_new(gx+0, offset_y, gy+1);
-    
-    vec3 tangent = vec3_normalize(vec3_sub(pos_yv, pos));
-    vec3 binorm  = vec3_normalize(vec3_sub(pos_xv, pos));
-    vec3 normal  = vec3_cross(tangent, binorm);
+    vec3 pos = vec3_new(gx, height, gy);
+    vec3 tangent = mat4_mul_vec3(axis, vec3_new(1,0,0));
+    vec3 normal  = mat4_mul_vec3(axis, vec3_new(0,1,0));
+    vec3 binorm  = mat4_mul_vec3(axis, vec3_new(0,0,1));
     
     vertex_buffer[index] = pos; index++;
     vertex_buffer[index] = normal; index++;
@@ -64,52 +60,72 @@ static void terrain_new_chunk(terrain* ter, int i) {
     int gx = tc->x * ter->chunk_width + 0;
     int gy = tc->y * ter->chunk_height + (float)y/SUBDIVISIONS;
     
-    float offset = terrain_height(ter, vec2_new(gx, gy)) - FIN_DEPTH;
-    vec3 pos = vec3_new(gx, offset, gy);
+    float height = terrain_height(ter, vec2_new(gx, gy)) - FIN_DEPTH;
+    mat4  axis   = terrain_axis(ter, vec2_new(gx, gy));
+    
+    vec3 pos = vec3_new(gx, height, gy);
+    vec3 tangent = mat4_mul_vec3(axis, vec3_new(1,0,0));
+    vec3 normal  = mat4_mul_vec3(axis, vec3_new(0,1,0));
+    vec3 binorm  = mat4_mul_vec3(axis, vec3_new(0,0,1));
     
     vertex_buffer[index] = pos; index++;
-    vertex_buffer[index] = vec3_zero(); index++;
-    vertex_buffer[index] = vec3_zero(); index++;
-    vertex_buffer[index] = vec3_zero(); index++;
+    vertex_buffer[index] = normal; index++;
+    vertex_buffer[index] = tangent; index++;
+    vertex_buffer[index] = binorm; index++;
   }
   
   for(int y = 0; y < y_max; y++) {
     int gx = tc->x * ter->chunk_width + ter->chunk_width;
     int gy = tc->y * ter->chunk_height + (float)y/SUBDIVISIONS;
     
-    float offset = terrain_height(ter, vec2_new(gx, gy)) - FIN_DEPTH;
-    vec3 pos = vec3_new(gx, offset, gy);
+    float height = terrain_height(ter, vec2_new(gx, gy)) - FIN_DEPTH;
+    mat4  axis   = terrain_axis(ter, vec2_new(gx, gy));
+    
+    vec3 pos = vec3_new(gx, height, gy);
+    vec3 tangent = mat4_mul_vec3(axis, vec3_new(1,0,0));
+    vec3 normal  = mat4_mul_vec3(axis, vec3_new(0,1,0));
+    vec3 binorm  = mat4_mul_vec3(axis, vec3_new(0,0,1));
     
     vertex_buffer[index] = pos; index++;
-    vertex_buffer[index] = vec3_zero(); index++;
-    vertex_buffer[index] = vec3_zero(); index++;
-    vertex_buffer[index] = vec3_zero(); index++;
+    vertex_buffer[index] = normal; index++;
+    vertex_buffer[index] = tangent; index++;
+    vertex_buffer[index] = binorm; index++;
   }
   
   for(int x = 0; x < x_max; x++) {
     int  gx = tc->x * ter->chunk_width + (float)x/SUBDIVISIONS;
     int  gy = tc->y * ter->chunk_height + 0;
     
-    float offset = terrain_height(ter, vec2_new(gx, gy)) - FIN_DEPTH;
-    vec3 pos = vec3_new(gx, offset, gy);
+    float height = terrain_height(ter, vec2_new(gx, gy)) - FIN_DEPTH;
+    mat4  axis   = terrain_axis(ter, vec2_new(gx, gy));
+    
+    vec3 pos = vec3_new(gx, height, gy);
+    vec3 tangent = mat4_mul_vec3(axis, vec3_new(1,0,0));
+    vec3 normal  = mat4_mul_vec3(axis, vec3_new(0,1,0));
+    vec3 binorm  = mat4_mul_vec3(axis, vec3_new(0,0,1));
     
     vertex_buffer[index] = pos; index++;
-    vertex_buffer[index] = vec3_zero(); index++;
-    vertex_buffer[index] = vec3_zero(); index++;
-    vertex_buffer[index] = vec3_zero(); index++;
+    vertex_buffer[index] = normal; index++;
+    vertex_buffer[index] = tangent; index++;
+    vertex_buffer[index] = binorm; index++;
   }
   
   for(int x = 0; x < x_max; x++) {
     int  gx = tc->x * ter->chunk_width + (float)x/SUBDIVISIONS;
     int  gy = tc->y * ter->chunk_height + ter->chunk_height;
     
-    float offset = terrain_height(ter, vec2_new(gx, gy)) - FIN_DEPTH;
-    vec3 pos = vec3_new(gx, offset, gy);
+    float height = terrain_height(ter, vec2_new(gx, gy)) - FIN_DEPTH;
+    mat4  axis   = terrain_axis(ter, vec2_new(gx, gy));
+    
+    vec3 pos = vec3_new(gx, height, gy);
+    vec3 tangent = mat4_mul_vec3(axis, vec3_new(1,0,0));
+    vec3 normal  = mat4_mul_vec3(axis, vec3_new(0,1,0));
+    vec3 binorm  = mat4_mul_vec3(axis, vec3_new(0,0,1));
     
     vertex_buffer[index] = pos; index++;
-    vertex_buffer[index] = vec3_zero(); index++;
-    vertex_buffer[index] = vec3_zero(); index++;
-    vertex_buffer[index] = vec3_zero(); index++;
+    vertex_buffer[index] = normal; index++;
+    vertex_buffer[index] = tangent; index++;
+    vertex_buffer[index] = binorm; index++;
   }
   
   tc->bound.center = vec3_zero();
@@ -281,7 +297,7 @@ terrain* raw_load_file(char* filename) {
   int width = sqrt(num_pixels);
   int height = width;
   
-  const int CHUNK_SIZE = 32;
+  const int CHUNK_SIZE = 64;
   
   terrain* ter = malloc(sizeof(terrain));
   ter->width = width;
@@ -390,8 +406,9 @@ float terrain_height(terrain* ter, vec2 position) {
   
 }
 
-vec3 terrain_normal(terrain* ter, vec2 position) {
-  
+
+mat4 terrain_axis(terrain* ter, vec2 position) {
+
   float offset   = terrain_height(ter, position);
   float offset_x = terrain_height(ter, vec2_add(position, vec2_new(1,0)));
   float offset_y = terrain_height(ter, vec2_add(position, vec2_new(0,1)));
@@ -403,7 +420,19 @@ vec3 terrain_normal(terrain* ter, vec2 position) {
   vec3 tangent = vec3_normalize(vec3_sub(pos_yv, pos));
   vec3 binorm  = vec3_normalize(vec3_sub(pos_xv, pos));
   vec3 normal  = vec3_cross(tangent, binorm);
+
+  return mat4_new(
+    tangent.x, tangent.y, tangent.z, 0,
+    normal.x,  normal.y,  normal.z,  0,
+    binorm.x,  binorm.y,  binorm.z,  0,
+    0, 0, 0, 1);
   
-  return normal;
+}
+
+vec3 terrain_normal(terrain* ter, vec2 position) {
+  
+  mat4 axis = terrain_axis(ter, position);
+  
+  return mat4_mul_vec3(axis, vec3_new(0, 1, 0));
   
 }

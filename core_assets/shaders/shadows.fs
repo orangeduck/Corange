@@ -2,7 +2,7 @@
 
 /* Prototypes */
 
-float shadow_amount(vec3 position, mat4 light_view, mat4 light_proj, sampler2D light_depth, int samples, float kernel, vec2 seed);
+float shadow_amount(vec3 position, mat4 light_view, mat4 light_proj, sampler2D light_depth, const int samples, const float kernel, vec2 seed);
 float shadow_amount_soft_pcf25(vec4 light_pos, sampler2D light_depth, float hardness);
 
 /* End */
@@ -11,7 +11,7 @@ float linear_depth(float depth, float near, float far){
   return (2.0 * near) / (far + near - depth * (far - near));
 }
 
-const vec3 shadow_sample_sphere[32] = vec3[32](
+const vec3[32] shadow_sample_sphere = vec3[32](
   vec3(-0.00,  0.02, -0.03), vec3( 0.35, -0.04,  0.31), vec3( 0.66, -0.32,  0.53), 
   vec3(-0.04, -0.04,  0.01), vec3( 0.24, -0.22,  0.89), vec3(-0.09,  0.10, -0.54), 
   vec3( 0.24,  0.04,  0.01), vec3( 0.37,  0.88,  0.05), vec3( 0.02,  0.11, -0.19), 
@@ -26,7 +26,7 @@ const vec3 shadow_sample_sphere[32] = vec3[32](
 
 const float shadow_bias = 0.001;
 
-float shadow_amount(vec3 position, mat4 light_view, mat4 light_proj, sampler2D light_depth, int samples, float kernel, vec2 seed) {
+float shadow_amount(vec3 position, mat4 light_view, mat4 light_proj, sampler2D light_depth, const int samples, const float kernel, vec2 seed) {
  
   vec4 light_pos = light_proj * light_view * vec4(position, 1.0);
   light_pos = light_pos / light_pos.w;

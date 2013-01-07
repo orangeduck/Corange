@@ -53,19 +53,22 @@ float difference_occlusion(float difference, float clip_near, float clip_far) {
 
 void main() {
 	
-  const float total_strength = 1.5;
+  const float total_strength = 1.0;
   const float base = 0.0;
   const float radius = 0.000001;
-  const int samples = 4;
-  const float noise_tile = 5.0;
+  const int samples = 6;
+  const float noise_tile = 10.0;
   
-  vec3 pixel = texture2D(positions_texture, fTexcoord).rgb;
+  vec3  pixel  = texture2D(positions_texture, fTexcoord).rgb;
+  float depth  = texture2D(depth_texture, fTexcoord).r;
+  vec3  normal = texture2D(normals_texture, fTexcoord).rgb;
   
-  vec2 random_coords = vec2(pixel.xz + pixel.yz + pixel.yx) * noise_tile;
-  vec3 random = normalize( texture2D(random_texture, random_coords).rgb * 2.0 - 1.0 );
-  
-  float depth = texture2D(depth_texture, fTexcoord).r;
-  vec3 normal = texture2D(normals_texture, fTexcoord).rgb;
+  vec3 random = 
+    abs(normal.x) * texture2D(random_texture, pixel.yz * noise_tile).rgb +
+    abs(normal.y) * texture2D(random_texture, pixel.xz * noise_tile).rgb +
+    abs(normal.z) * texture2D(random_texture, pixel.xy * noise_tile).rgb;
+  random = normalize(random * 2.0 - 1.0);
+
   vec3 position = vec3(fTexcoord, depth);
   
   float radius_depth = radius/depth;
