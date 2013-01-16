@@ -82,17 +82,13 @@ typedef struct {
   /* Camera */
   camera* camera;
   
-  /* Lights */
-  light* sky_light;
-  light* sun_light;
-  light* moon_light;
-  
   int dyn_lights_num;
   light* dyn_light[DEFERRED_MAX_DYN_LIGHTS];
 
   /* Materials */
   asset_hndl mat_static;
   asset_hndl mat_animated;
+  asset_hndl mat_vegetation;
   asset_hndl mat_terrain;
   asset_hndl mat_clear;
   asset_hndl mat_ui;
@@ -104,6 +100,7 @@ typedef struct {
   asset_hndl mat_skydome;
   asset_hndl mat_depth;
   asset_hndl mat_depth_ani;
+  asset_hndl mat_depth_veg;
   asset_hndl mat_sun;
   asset_hndl mat_clouds;
   asset_hndl mat_particles;
@@ -182,9 +179,6 @@ void deferred_renderer_set_vignetting(deferred_renderer* dr, asset_hndl v);
 void deferred_renderer_set_glitch(deferred_renderer* dr, float glitch);
 void deferred_renderer_set_skydome_enabled(deferred_renderer* dr, bool enabled);
 
-void deferred_renderer_set_sun_light(deferred_renderer* dr, light* l);
-void deferred_renderer_set_sky_light(deferred_renderer* dr, light* l);
-void deferred_renderer_set_moon_light(deferred_renderer* dr, light* l);
 int  deferred_renderer_num_dyn_light(deferred_renderer* dr);
 void deferred_renderer_add_dyn_light(deferred_renderer* dr, light* l);
 void deferred_renderer_rem_dyn_light(deferred_renderer* dr, light* l);

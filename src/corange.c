@@ -85,6 +85,7 @@ void corange_init(const char* core_assets_path) {
   asset_handler(renderable, "bmf", bmf_load_file, renderable_delete);
   asset_handler(renderable, "obj", obj_load_file, renderable_delete);
   asset_handler(renderable, "smd", smd_load_file, renderable_delete);
+  asset_handler(renderable, "ply", ply_load_file, renderable_delete);
   asset_handler(skeleton, "skl", skl_load_file, skeleton_delete);
   asset_handler(animation, "ani", ani_load_file, animation_delete);
   asset_handler(cmesh, "col", col_load_file, cmesh_delete);
@@ -94,6 +95,7 @@ void corange_init(const char* core_assets_path) {
   asset_handler(texture, "tga", tga_load_file, texture_delete);
   asset_handler(texture, "dds", dds_load_file, texture_delete);
   asset_handler(texture, "lut", lut_load_file, texture_delete);
+  asset_handler(texture, "acv", acv_load_file, texture_delete);
   
   asset_handler(shader, "vs" , vs_load_file,  shader_delete);
   asset_handler(shader, "fs" , fs_load_file,  shader_delete);

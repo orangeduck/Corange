@@ -36,14 +36,17 @@ void main() {
     color = texture2D(ldr_texture, fTexcoord).rgb;  
   }
   
-  vec2 first = fTexcoord + color.rg * vec2(5.0, 5.11) + color.b * vec2(-5.41) + color.rg * time * 0.05;
-  vec4 second = texture2D(random_perlin, first / 512.0 * vec2(width, height));
-  vec4 third = texture2D(random_perlin, first * 0.2 + second.rg * 0.1 + color.gb * time * 0.05);
-  color = mix(color, desaturate(third.rgb), glitch);
+  {
+    vec2 first = mod(fTexcoord + color.rg * vec2(5.0, 5.11) + color.b * vec2(-5.41) + color.rg * time * 0.05, 1.0);
+    vec4 second = texture2D(random_perlin, first / 512.0 * vec2(width, height), 1.0);
+    vec4 third  = texture2D(random_perlin, first * 0.2 + second.rg * 0.1 + color.gb * time * 0.05, 1.0);
+    color = mix(color, 1.0 * desaturate(third.rgb), glitch);
+  }
   
-  vec3 vignetting = texture2D(vignetting_texture, fTexcoord).rgb;
-  color = color * mix(vignetting, vec3(1.0,1.0,1.0), 0.75);
-  color = to_gamma(color);
+  {
+    vec3 vignetting = texture2D(vignetting_texture, fTexcoord).rgb;
+    color = color * mix(vignetting, vec3(1.0,1.0,1.0), 0.0);
+  }
   
 	gl_FragColor.rgb = color_correction(color, lut, 64);
 	gl_FragColor.a = 1.0;

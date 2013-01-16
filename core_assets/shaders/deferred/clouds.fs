@@ -12,7 +12,7 @@ varying vec2 fTexcoord;
 
 void main() {
 
-  float speed = 0.001 * wind;
+  float speed = 0.0025 * wind;
 
   vec2 coords = vec2(fTexcoord.x + time * speed, 1-fTexcoord.y);
   

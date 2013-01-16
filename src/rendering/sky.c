@@ -61,15 +61,18 @@ vec3 sky_sun_direction(float t) {
 }
 
 vec3 sky_sun_diffuse(float t) {
-  return vec3_new(1.0,  0.937, 0.8);
+  return vec3_mul(vec3_new(1.0,  0.937, 0.8), 1.5);
+  //return vec3_mul(vec3_new(1.0,  0.937, 0.8), 0);
 }
 
 vec3 sky_sun_ambient(float t) {
-  return vec3_mul(vec3_new(1.0,  0.937, 0.8), 0.2);
+  return vec3_mul(vec3_new(1.0,  0.937, 0.8), 0.5);
+  //return vec3_mul(vec3_new(1.0,  0.937, 0.8), 0);
 }
 
 vec3 sky_sun_specular(float t) {
-  return vec3_new(1.0,  0.894, 0.811);
+  return vec3_mul(vec3_new(1.0,  0.894, 0.811), 2.0);
+  //return vec3_mul(vec3_new(1.0,  0.894, 0.811), 0);
 }
 
 vec3 sky_sky_direction(float t) {
@@ -106,24 +109,36 @@ float sky_sky_power(float t) {
 }
 
 vec3 sky_sky_diffuse(float t) {
-  return vec3_mul(vec3_new(0.8, 0.93, 1.0), 0.1);
+  return vec3_mul(vec3_new(0.8, 0.93, 1.0), 0.3);
 }
 
 vec3 sky_sky_ambient(float t) {
-  return vec3_mul(vec3_new(0.8, 0.93, 1.0), 0.4);
+  return vec3_mul(vec3_new(0.8, 0.93, 1.0), 0.2);
 }
 
 vec3 sky_sky_specular(float t) {
-  return vec3_mul(vec3_new(0.8, 0.93, 1.0), 0.1);
+  return vec3_mul(vec3_new(0.8, 0.93, 1.0), 0.2);
+}
+
+float sky_ground_power(float t) {
+  return sky_sky_power(t);
 }
 
 vec3 sky_ground_direction(float t) {
   return vec3_up();
 }
 
-vec3 sky_ground_diffuse(float t);
-vec3 sky_ground_ambient(float t);
-vec3 sky_ground_specular(float t);
+vec3 sky_ground_diffuse(float t) {
+  return vec3_mul(vec3_new(0.537, 0.572, 0.396), 0.2);
+}
+
+vec3 sky_ground_ambient(float t) {
+  return vec3_mul(vec3_new(0.537, 0.572, 0.396), 0.05);
+}
+
+vec3 sky_ground_specular(float t) {
+  return vec3_mul(vec3_new(0.537, 0.572, 0.396), 0.1);
+}
 
 
 enum {
@@ -173,18 +188,19 @@ asset_hndl sky_clouds_tex(int i) {
 }
 
 float sky_clouds_opacity(int i, float t, int seed) {
-  if (i ==  0) { return 0.75; }
-  if (i ==  1) { return 0.75; }
-  if (i ==  2) { return 0.75; }
-  if (i ==  4) { return 0.75; }
-  if (i ==  5) { return 0.75; }
-  if (i ==  6) { return 0.75; }
-  if (i ==  7) { return 0.75; }
-  if (i ==  8) { return 0.75; }
-  if (i ==  9) { return 0.75; }
-  if (i == 10) { return 0.75; }
-  if (i == 11) { return 0.75; }
-  if (i == 12) { return 0.75; }
-  if (i == 13) { return 0.75; }
+  if (i ==  0) { return 0.5; }
+  if (i ==  1) { return 0.5; }
+  if (i ==  2) { return 0.5; }
+  if (i ==  3) { return 0.5; }
+  if (i ==  4) { return 0.5; }
+  if (i ==  5) { return 0.0; }
+  if (i ==  6) { return 0.0; }
+  if (i ==  7) { return 0.0; }
+  if (i ==  8) { return 0.0; }
+  if (i ==  9) { return 0.0; }
+  if (i == 10) { return 0.5; }
+  if (i == 11) { return 0.5; }
+  if (i == 12) { return 0.5; }
+  if (i == 13) { return 0.5; }
   return 0;
 }

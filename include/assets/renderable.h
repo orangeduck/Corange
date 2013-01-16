@@ -49,6 +49,7 @@ model* renderable_to_model(renderable* r);
 renderable* bmf_load_file(char* filename);
 renderable* obj_load_file(char* filename);
 renderable* smd_load_file(char* filename);
+renderable* ply_load_file(char* filename);
 
 void bmf_save_file(renderable* r, char* filename);
 

@@ -11,6 +11,7 @@ varying vec2 fTexcoord;
 
 /* Headers */
 
+vec3 to_gamma(vec3 color);
 vec3 bokeh_dof(int width, int height, sampler2D screen, sampler2D screendepth, sampler2D random, vec2 coords, float focalDepth);
 vec3 basic_dof(int width, int height, sampler2D screen, sampler2D screendepth, sampler2D random, vec2 coords);
 
@@ -37,7 +38,7 @@ void main() {
   const float focal_depth = 0.0;
   
 	//gl_FragColor.rgb = bloom + bokeh_dof(width, height, ldr_texture, depth_texture, random_texture, gl_TexCoord[0].xy, focal_depth);
-	gl_FragColor.rgb = bloom + texture2D(ldr_texture, fTexcoord).rgb;
+	gl_FragColor.rgb = to_gamma(bloom + texture2D(ldr_texture, fTexcoord).rgb);
 	gl_FragColor.a = 1.0;
   
 } 

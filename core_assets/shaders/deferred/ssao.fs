@@ -36,7 +36,7 @@ float difference_occlusion(float difference, float clip_near, float clip_far) {
   difference = max(difference, 0.0);
   
   /* This is the depth difference at which the maximum occlusion happens */
-  const float target = 0.000005 * (clip_far - clip_near); 
+  float target = 0.000005 * (clip_far - clip_near); 
   
   /* This is the length of the falloff after maximum depth difference is reached */
   const float falloff = 5.0;

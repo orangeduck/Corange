@@ -20,7 +20,7 @@ void main() {
   float cos2a = cosa * cosa;
   
 	gl_FragColor.rgb =
-    rayleigh_phase(cos2a) * fR_color + 
-    mei_phase(cosa, cos2a) * fM_color;
+    0.5 * (rayleigh_phase(cos2a)  * fR_color) + 
+    1.0 * (mei_phase(cosa, cos2a) * fM_color);
   gl_FragColor.a = 1.0;
 }
