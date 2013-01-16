@@ -1,6 +1,6 @@
 #version 120
 
-uniform sampler2D diffuse_texture;
+uniform sampler2D diffuse_map;
 uniform float alpha_test;
 
 uniform float clip_near;
@@ -14,8 +14,10 @@ float linear_depth(float depth, float near, float far){
 }
 
 void main() {
- 
-  float alpha = texture2D(diffuse_texture, fTexcoord).a;
+  
+  vec2 uvs = vec2(fTexcoord.x, 1-fTexcoord.y);
+  
+  float alpha = texture2D(diffuse_map, uvs).a;
   if (alpha < alpha_test) {
     discard;
   }

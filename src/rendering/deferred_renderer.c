@@ -102,11 +102,6 @@ deferred_renderer* deferred_renderer_new() {
   
   /* Camera */
   dr->camera = NULL;
-  
-  /* Lights */
-  dr->sky_light = NULL;
-  dr->sun_light = NULL;
-  dr->moon_light = NULL;
 
   dr->dyn_lights_num = 0;
   for(int i = 0; i < DEFERRED_MAX_DYN_LIGHTS; i++) {
@@ -118,21 +113,23 @@ deferred_renderer* deferred_renderer_new() {
   /* Materials */
   folder_load(P("$CORANGE/shaders/deferred/"));
   
-  dr->mat_static    = asset_hndl_new(P("$CORANGE/shaders/deferred/static.mat"));
-  dr->mat_animated  = asset_hndl_new(P("$CORANGE/shaders/deferred/animated.mat"));
-  dr->mat_terrain   = asset_hndl_new(P("$CORANGE/shaders/deferred/terrain.mat"));
-  dr->mat_clear     = asset_hndl_new(P("$CORANGE/shaders/deferred/clear.mat"));
-  dr->mat_ssao      = asset_hndl_new(P("$CORANGE/shaders/deferred/ssao.mat"));
-  dr->mat_tonemap   = asset_hndl_new(P("$CORANGE/shaders/deferred/tonemap.mat"));
-  dr->mat_post0     = asset_hndl_new(P("$CORANGE/shaders/deferred/post0.mat"));
-  dr->mat_post1     = asset_hndl_new(P("$CORANGE/shaders/deferred/post1.mat"));
-  dr->mat_ui        = asset_hndl_new(P("$CORANGE/shaders/deferred/ui.mat"));
-  dr->mat_skydome   = asset_hndl_new(P("$CORANGE/shaders/deferred/skydome.mat"));
-  dr->mat_depth     = asset_hndl_new(P("$CORANGE/shaders/deferred/depth.mat"));
-  dr->mat_depth_ani = asset_hndl_new(P("$CORANGE/shaders/deferred/depth_animated.mat"));
-  dr->mat_sun       = asset_hndl_new(P("$CORANGE/shaders/deferred/sun.mat"));
-  dr->mat_clouds    = asset_hndl_new(P("$CORANGE/shaders/deferred/clouds.mat"));
-  dr->mat_particles = asset_hndl_new(P("$CORANGE/shaders/deferred/particles.mat"));
+  dr->mat_static     = asset_hndl_new(P("$CORANGE/shaders/deferred/static.mat"));
+  dr->mat_animated   = asset_hndl_new(P("$CORANGE/shaders/deferred/animated.mat"));
+  dr->mat_vegetation = asset_hndl_new(P("$CORANGE/shaders/deferred/vegetation.mat"));
+  dr->mat_terrain    = asset_hndl_new(P("$CORANGE/shaders/deferred/terrain.mat"));
+  dr->mat_clear      = asset_hndl_new(P("$CORANGE/shaders/deferred/clear.mat"));
+  dr->mat_ssao       = asset_hndl_new(P("$CORANGE/shaders/deferred/ssao.mat"));
+  dr->mat_tonemap    = asset_hndl_new(P("$CORANGE/shaders/deferred/tonemap.mat"));
+  dr->mat_post0      = asset_hndl_new(P("$CORANGE/shaders/deferred/post0.mat"));
+  dr->mat_post1      = asset_hndl_new(P("$CORANGE/shaders/deferred/post1.mat"));
+  dr->mat_ui         = asset_hndl_new(P("$CORANGE/shaders/deferred/ui.mat"));
+  dr->mat_skydome    = asset_hndl_new(P("$CORANGE/shaders/deferred/skydome.mat"));
+  dr->mat_depth      = asset_hndl_new(P("$CORANGE/shaders/deferred/depth.mat"));
+  dr->mat_depth_ani  = asset_hndl_new(P("$CORANGE/shaders/deferred/depth_animated.mat"));
+  dr->mat_depth_veg  = asset_hndl_new(P("$CORANGE/shaders/deferred/depth_vegetation.mat"));
+  dr->mat_sun        = asset_hndl_new(P("$CORANGE/shaders/deferred/sun.mat"));
+  dr->mat_clouds     = asset_hndl_new(P("$CORANGE/shaders/deferred/clouds.mat"));
+  dr->mat_particles  = asset_hndl_new(P("$CORANGE/shaders/deferred/particles.mat"));
   
   dr->mat_compose = option_graphics_asset(options, "graphics_lighting",
     asset_hndl_new(P("$CORANGE/shaders/deferred/compose.mat")),
@@ -430,19 +427,7 @@ void deferred_renderer_set_skydome_enabled(deferred_renderer* dr, bool enabled) 
   dr->skydome_enabled = enabled;
 }
 
-void deferred_renderer_set_sun_light(deferred_renderer* dr, light* l) {
-  dr->sun_light = l;
-}
-
-void deferred_renderer_set_sky_light(deferred_renderer* dr, light* l) {
-  dr->sky_light = l;
-}
-
-void deferred_renderer_set_moon_light(deferred_renderer* dr, light* l) {
-  dr->moon_light = l;
-}
-
-int  deferred_renderer_num_dyn_light(deferred_renderer* dr) {
+int deferred_renderer_num_dyn_light(deferred_renderer* dr) {
   return dr->dyn_lights_num;
 }
 
@@ -519,6 +504,76 @@ static void shadow_mapper_transforms(deferred_renderer* dr, int i, mat4* view, m
   
 }
 
+static void render_shadows_vegetation(deferred_renderer* dr, int i, static_object* s) {
+
+  mat4 world = mat4_world( s->position, s->scale, s->rotation );
+  mat4 view, proj;
+  float clip_near, clip_far;
+  shadow_mapper_transforms(dr, i, &view, &proj, &clip_near, &clip_far);
+  
+  mat4 inv_view = mat4_inverse(view);
+  mat4 inv_proj = mat4_inverse(proj);
+  frustum frus = frustum_new_clipbox();
+  frus = frustum_transform(frus, inv_proj);
+  frus = frustum_transform(frus, inv_view);
+  
+  shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_depth_veg));
+  shader_program_enable(shader);
+  shader_program_set_mat4(shader, "world", world);
+  shader_program_set_mat4(shader, "view",  view);
+  shader_program_set_mat4(shader, "proj",  proj);
+  shader_program_set_float(shader, "clip_near", clip_near);
+  shader_program_set_float(shader, "clip_far", clip_far);
+  shader_program_set_float(shader, "time", dr->time);
+  
+  renderable* r = asset_hndl_ptr(s->renderable);
+
+  if(r->is_rigged) { error("Static Object is rigged!"); }
+  
+  for(int j = 0; j < r->num_surfaces; j++) {
+    
+    renderable_surface* s = r->surfaces[j];
+    
+    if (sphere_outside_frustum(sphere_transform(s->bound, world), frus)) { continue; }
+    
+    material_entry* me = material_get_entry(asset_hndl_ptr(r->material), j);
+    bool use_alpha =
+      material_entry_has_item(me, "alpha_test") &&
+      material_entry_has_item(me, "diffuse_map");
+    
+    if (use_alpha) {
+      shader_program_set_float(shader, "alpha_test", material_entry_item(me, "alpha_test").as_float);
+      shader_program_enable_texture(shader, "diffuse_map", 0, material_entry_item(me, "diffuse_map").as_asset);
+    } else {
+      shader_program_set_float(shader, "alpha_test", 0.0);
+    }
+    
+    glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
+    
+    shader_program_enable_attribute(shader, "vPosition", 3, 18, (void*)0);
+    shader_program_enable_attribute(shader, "vTexcoord", 2, 18, (void*)(sizeof(float) * 12));
+    shader_program_enable_attribute(shader, "vColor",    4, 18, (void*)(sizeof(float) * 14));
+    
+      glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
+    
+    shader_program_disable_attribute(shader, "vPosition");
+    shader_program_disable_attribute(shader, "vTexcoord");
+    shader_program_disable_attribute(shader, "vColor");
+    
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    
+    if (use_alpha) {
+      shader_program_disable_texture(shader, 0);
+    }
+    
+  }
+  
+  shader_program_disable(shader);
+
+}
+
 static void render_shadows_static(deferred_renderer* dr, int i, static_object* s) {
   
   mat4 world = mat4_world( s->position, s->scale, s->rotation );
@@ -553,11 +608,11 @@ static void render_shadows_static(deferred_renderer* dr, int i, static_object* s
     material_entry* me = material_get_entry(asset_hndl_ptr(r->material), j);
     bool use_alpha =
       material_entry_has_item(me, "alpha_test") &&
-      material_entry_has_item(me, "diffuse_texture");
+      material_entry_has_item(me, "diffuse_map");
     
     if (use_alpha) {
       shader_program_set_float(shader, "alpha_test", material_entry_item(me, "alpha_test").as_float);
-      shader_program_enable_texture(shader, "diffuse_texture", 0, material_entry_item(me, "diffuse_texture").as_asset);
+      shader_program_enable_texture(shader, "diffuse_map", 0, material_entry_item(me, "diffuse_map").as_asset);
     } else {
       shader_program_set_float(shader, "alpha_test", 0.0);
     }
@@ -690,8 +745,8 @@ static void render_shadows_landscape(deferred_renderer* dr, int i, landscape* l)
     
     float chunkx = (1.0 / (terr->num_rows-1)) *  l->size_x;
     float chunky = (1.0 / (terr->num_cols-1)) *  l->size_y;
-    float posx = ((float)(i % terr->num_cols)) * chunkx - l->size_x / 2;
-    float posy = ((float)(i / terr->num_cols)) * chunky - l->size_y / 2;
+    float posx = ((float)(j % terr->num_cols)) * chunkx - l->size_x / 2;
+    float posy = ((float)(j / terr->num_cols)) * chunky - l->size_y / 2;
     
     sphere bound = sphere_transform(tc->bound, mat4_world(translation, bound_scale, mat4_id()));
     if (sphere_outside_frustum(bound, frus)) { continue; }
@@ -731,6 +786,26 @@ static void render_shadows(deferred_renderer* dr) {
     glCullFace(GL_FRONT);
   
     for ( int j = 0; j < dr->render_objects_num; j++) {
+      
+      // HACK ALERT
+      bool veg_found = false;
+      if (dr->render_objects[j].type == RO_TYPE_STATIC) {
+        renderable* r = asset_hndl_ptr(dr->render_objects[j].static_object->renderable);
+        material* m = asset_hndl_ptr(r->material);        
+        
+        for (int k = 0; k < m->num_entries; k++) {
+          if (material_entry_item(m->entries[k], "material").as_int == 6) {
+            render_shadows_vegetation(dr, i, dr->render_objects[j].static_object);
+            veg_found = true;
+            break;
+          }
+        }
+        
+      }
+      
+      if (veg_found) continue;
+
+    
       if (dr->render_objects[j].type == RO_TYPE_STATIC) { render_shadows_static(dr, i, dr->render_objects[j].static_object); }
       if (dr->render_objects[j].type == RO_TYPE_ANIMATED) { render_shadows_animated(dr, i, dr->render_objects[j].animated_object); }
       if (dr->render_objects[j].type == RO_TYPE_LANDSCAPE) { render_shadows_landscape(dr, i, dr->render_objects[j].landscape); }
@@ -879,7 +954,11 @@ static void render_static(deferred_renderer* dr, static_object* so) {
     int mentry_id = min(i, ((material*)asset_hndl_ptr(r->material))->num_entries-1);
     material_entry* me = material_get_entry(asset_hndl_ptr(r->material), mentry_id);
     
-    shader_program_enable_texture(shader, "diffuse_map", 0, material_entry_item(me, "diffuse_map").as_asset);
+    if (config_bool(options, "render_white")) {
+      shader_program_enable_texture(shader, "diffuse_map", 0, asset_hndl_new_load(P("$CORANGE/resources/white.dds")));
+    } else {
+      shader_program_enable_texture(shader, "diffuse_map", 0, material_entry_item(me, "diffuse_map").as_asset);
+    }
     shader_program_enable_texture(shader, "bump_map", 1, material_entry_item(me, "bump_map").as_asset);
     shader_program_enable_texture(shader, "spec_map", 2, material_entry_item(me, "spec_map").as_asset);
     shader_program_set_float(shader, "glossiness", material_entry_item(me, "glossiness").as_float);
@@ -918,7 +997,93 @@ static void render_static(deferred_renderer* dr, static_object* so) {
 
 }
 
+static void render_vegetation(deferred_renderer* dr, static_object* so) {
+  
+  mat4 world = mat4_world( so->position, so->scale, so->rotation );
+  mat4 inv_view = mat4_inverse(camera_view_matrix(dr->camera));
+  mat4 inv_proj = mat4_inverse(camera_proj_matrix(dr->camera));
+  frustum frus = frustum_new_clipbox();
+  frus = frustum_transform(frus, inv_proj);
+  frus = frustum_transform(frus, inv_view);
+  
+  config* options = asset_get_load(P("./assets/options.cfg"));
+  if (config_bool(options, "render_colmeshes")) {
+    if (!file_isloaded(so->collision_body.path)) {
+      file_load(so->collision_body.path);
+    }
+    render_cmesh(dr, asset_hndl_ptr(so->collision_body), world);
+  }
+  
+  renderable* r = asset_hndl_ptr(so->renderable);
+  
+  if(r->is_rigged) { error("Static object is rigged!"); }
+  
+  shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_vegetation));
+  shader_program_enable(shader);
+  shader_program_set_mat4(shader, "world", world);
+  shader_program_set_mat4(shader, "view", camera_view_matrix(dr->camera));
+  shader_program_set_mat4(shader, "proj", camera_proj_matrix(dr->camera));
+  shader_program_set_float(shader, "near", dr->camera->near_clip);
+  shader_program_set_float(shader, "far", dr->camera->far_clip);
+  shader_program_set_float(shader, "time", dr->time);
+  
+  for(int i=0; i < r->num_surfaces; i++) {
+    
+    renderable_surface* s = r->surfaces[i];
+    
+    if (sphere_outside_frustum(sphere_transform(s->bound, world), frus)) { continue; }
+    
+    int mentry_id = min(i, ((material*)asset_hndl_ptr(r->material))->num_entries-1);
+    material_entry* me = material_get_entry(asset_hndl_ptr(r->material), mentry_id);
+    
+    if (config_bool(options, "render_white")) {
+      shader_program_enable_texture(shader, "diffuse_map", 0, asset_hndl_new_load(P("$CORANGE/resources/white.dds")));
+    } else {
+      shader_program_enable_texture(shader, "diffuse_map", 0, material_entry_item(me, "diffuse_map").as_asset);
+    }
+    shader_program_enable_texture(shader, "bump_map", 1, material_entry_item(me, "bump_map").as_asset);
+    shader_program_enable_texture(shader, "spec_map", 2, material_entry_item(me, "spec_map").as_asset);
+    shader_program_set_float(shader, "glossiness", material_entry_item(me, "glossiness").as_float);
+    shader_program_set_float(shader, "bumpiness", material_entry_item(me, "bumpiness").as_float);
+    shader_program_set_float(shader, "specular_level", material_entry_item(me, "specular_level").as_float);
+    shader_program_set_float(shader, "alpha_test", material_entry_item(me, "alpha_test").as_float);
+    shader_program_set_int(shader, "material", material_entry_item(me, "material").as_int);
+    
+    glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
+    
+    shader_program_enable_attribute(shader, "vPosition",  3, 18, (void*)0);
+    shader_program_enable_attribute(shader, "vNormal",    3, 18, (void*)(sizeof(float) * 3));
+    shader_program_enable_attribute(shader, "vTangent",   3, 18, (void*)(sizeof(float) * 6));
+    shader_program_enable_attribute(shader, "vBinormal",  3, 18, (void*)(sizeof(float) * 9));
+    shader_program_enable_attribute(shader, "vTexcoord",  2, 18, (void*)(sizeof(float) * 12));
+    shader_program_enable_attribute(shader, "vColor",     4, 18, (void*)(sizeof(float) * 14));
+    
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
+      glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
+    
+    shader_program_disable_attribute(shader, "vPosition");
+    shader_program_disable_attribute(shader, "vNormal");
+    shader_program_disable_attribute(shader, "vTangent");
+    shader_program_disable_attribute(shader, "vBinormal");
+    shader_program_disable_attribute(shader, "vTexcoord");
+    shader_program_disable_attribute(shader, "vColor");
+    
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    
+    shader_program_disable_texture(shader, 2);
+    shader_program_disable_texture(shader, 1);
+    shader_program_disable_texture(shader, 0);
+
+  }
+  
+  shader_program_disable(shader);
+
+}
+
 static void render_animated(deferred_renderer* dr, animated_object* ao) {
+  
+  config* options = asset_get_load(P("./assets/options.cfg"));
   
   skeleton* skel = asset_hndl_ptr(ao->skeleton);
 
@@ -960,7 +1125,11 @@ static void render_animated(deferred_renderer* dr, animated_object* ao) {
     int mat_id = min(i, ((material*)asset_hndl_ptr(r->material))->num_entries-1);
     material_entry* me = material_get_entry(asset_hndl_ptr(r->material), mat_id);
     
-    shader_program_enable_texture(shader, "diffuse_map", 0, material_entry_item(me, "diffuse_map").as_asset);
+    if (config_bool(options, "render_white")) {
+      shader_program_enable_texture(shader, "diffuse_map", 0, asset_hndl_new_load(P("$CORANGE/resources/white.dds")));
+    } else {
+      shader_program_enable_texture(shader, "diffuse_map", 0, material_entry_item(me, "diffuse_map").as_asset);
+    }
     shader_program_enable_texture(shader, "bump_map", 1, material_entry_item(me, "bump_map").as_asset);
     shader_program_enable_texture(shader, "spec_map", 2, material_entry_item(me, "spec_map").as_asset);
     shader_program_set_float(shader, "glossiness", material_entry_item(me, "glossiness").as_float);
@@ -992,9 +1161,9 @@ static void render_animated(deferred_renderer* dr, animated_object* ao) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     
-    shader_program_disable_texture(shader, 0);
-    shader_program_disable_texture(shader, 1);
     shader_program_disable_texture(shader, 2);
+    shader_program_disable_texture(shader, 1);
+    shader_program_disable_texture(shader, 0);
 
   }
   
@@ -1043,10 +1212,19 @@ void render_landscape(deferred_renderer* dr, landscape* l) {
   shader_program_set_float(shader, "far", dr->camera->far_clip);
   shader_program_set_float(shader, "size_x", l->size_x);
   shader_program_set_float(shader, "size_y", l->size_y);
-  shader_program_enable_texture(shader, "ground0", 0, l->ground0);
-  shader_program_enable_texture(shader, "ground1", 1, l->ground1);
-  shader_program_enable_texture(shader, "ground2", 2, l->ground2);
-  shader_program_enable_texture(shader, "ground3", 3, l->ground3);
+  
+  if (config_bool(options, "render_white")) {
+    shader_program_enable_texture(shader, "ground0", 0, asset_hndl_new_load(P("$CORANGE/resources/white.dds")));
+    shader_program_enable_texture(shader, "ground1", 1, asset_hndl_new_load(P("$CORANGE/resources/white.dds")));
+    shader_program_enable_texture(shader, "ground2", 2, asset_hndl_new_load(P("$CORANGE/resources/white.dds")));
+    shader_program_enable_texture(shader, "ground3", 3, asset_hndl_new_load(P("$CORANGE/resources/white.dds")));
+  } else {
+    shader_program_enable_texture(shader, "ground0", 0, l->ground0);
+    shader_program_enable_texture(shader, "ground1", 1, l->ground1);
+    shader_program_enable_texture(shader, "ground2", 2, l->ground2);
+    shader_program_enable_texture(shader, "ground3", 3, l->ground3);
+  }
+  
   shader_program_enable_texture(shader, "ground0_nm", 4, l->ground0_nm);
   shader_program_enable_texture(shader, "ground1_nm", 5, l->ground1_nm);
   shader_program_enable_texture(shader, "ground2_nm", 6, l->ground2_nm);
@@ -1298,7 +1476,25 @@ static void render_gbuffer(deferred_renderer* dr) {
   glEnable(GL_CULL_FACE);
   
   for ( int j = 0; j < dr->render_objects_num; j++) {
+    
+    // HACK ALERT
+    bool veg_found = false;
+    if (dr->render_objects[j].type == RO_TYPE_STATIC) {
+      renderable* r = asset_hndl_ptr(dr->render_objects[j].static_object->renderable);
+      material* m = asset_hndl_ptr(r->material);
       
+      for (int i = 0; i < m->num_entries; i++) {
+        if (material_entry_item(m->entries[i], "material").as_int == 6) {
+          render_vegetation(dr, dr->render_objects[j].static_object);
+          veg_found = true;
+          break;
+        }
+      }
+      
+    }
+    
+    if (veg_found) continue;
+    
     if (dr->render_objects[j].type == RO_TYPE_STATIC)    { render_static(dr, dr->render_objects[j].static_object); }
     if (dr->render_objects[j].type == RO_TYPE_ANIMATED)  { render_animated(dr, dr->render_objects[j].animated_object); }
     if (dr->render_objects[j].type == RO_TYPE_LANDSCAPE) { render_landscape(dr, dr->render_objects[j].landscape); }
@@ -1383,7 +1579,6 @@ static void render_ssao(deferred_renderer* dr) {
 static void render_skies(deferred_renderer* dr) {
   
   if (!dr->skydome_enabled) { return; }
-  if (dr->sun_light == NULL) { error("No sun light set for rendering skies!"); }
   
   config* options = asset_get_load(P("./assets/options.cfg"));
   
@@ -1396,7 +1591,7 @@ static void render_skies(deferred_renderer* dr) {
   glBindFramebuffer(GL_FRAMEBUFFER, dr->hdr_fbo);
   glViewport(0, 0, hdrwidth, hdrheight);
   glDepthMask(GL_FALSE);
-    
+  
   {
   
     shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_skydome));
@@ -1477,7 +1672,7 @@ static void render_skies(deferred_renderer* dr) {
     shader_program_set_float(shader, "time", dr->time);
     shader_program_set_float(shader, "wind", vec3_length(sky_wind(dr->time_of_day, dr->seed)));
     shader_program_set_vec3(shader, "cloud_color", vec3_one());
-    shader_program_set_vec3(shader, "cloud_light", vec3_new(1, 1, 1));
+    shader_program_set_vec3(shader, "cloud_light", vec3_mul(vec3_one(), 2));
     
     for (int i = 0; i < sky_clouds_num(); i++) {
     
@@ -1597,25 +1792,34 @@ static void render_compose(deferred_renderer* dr) {
   light_ambient[2]  = sky_sky_ambient(dr->time_of_day);
   light_specular[2] = sky_sky_specular(dr->time_of_day);
   
+  light_power[3]    = sky_ground_power(dr->time_of_day);
+  light_falloff[3]  = 0;
+  light_position[3] = vec3_neg(sky_ground_direction(dr->time_of_day));
+  light_target[3]   = vec3_zero();
+  light_diffuse[3]  = sky_ground_diffuse(dr->time_of_day);
+  light_ambient[3]  = sky_ground_ambient(dr->time_of_day);
+  light_specular[3] = sky_ground_specular(dr->time_of_day);
+  
+  const int ln = 4;
   for(int i = 0; i < dr->dyn_lights_num; i++) {
-    light_power[i+3]    = dr->dyn_light[i]->power;
-    light_falloff[i+3]  = dr->dyn_light[i]->falloff;
-    light_position[i+3] = dr->dyn_light[i]->position;
-    light_target[i+3]   = dr->dyn_light[i]->target;
-    light_diffuse[i+3]  = dr->dyn_light[i]->diffuse_color;
-    light_ambient[i+3]  = dr->dyn_light[i]->ambient_color;
-    light_specular[i+3] = dr->dyn_light[i]->specular_color;
+    light_power[i+ln]    = dr->dyn_light[i]->power;
+    light_falloff[i+ln]  = dr->dyn_light[i]->falloff;
+    light_position[i+ln] = dr->dyn_light[i]->position;
+    light_target[i+ln]   = dr->dyn_light[i]->target;
+    light_diffuse[i+ln]  = dr->dyn_light[i]->diffuse_color;
+    light_ambient[i+ln]  = dr->dyn_light[i]->ambient_color;
+    light_specular[i+ln] = dr->dyn_light[i]->specular_color;
   }
   
-  shader_program_set_int(shader, "lights_num", dr->dyn_lights_num + 3);
+  shader_program_set_int(shader, "lights_num", dr->dyn_lights_num + ln);
   shader_program_set_int(shader, "light_shadows", sky_isday(dr->time_of_day) ? 0 : 1);
-  shader_program_set_float_array(shader, "light_power", light_power, dr->dyn_lights_num + 3);
-  shader_program_set_float_array(shader, "light_falloff", light_falloff, dr->dyn_lights_num + 3);
-  shader_program_set_vec3_array(shader, "light_position", light_position, dr->dyn_lights_num + 3);
-  shader_program_set_vec3_array(shader, "light_target", light_target, dr->dyn_lights_num + 3);
-  shader_program_set_vec3_array(shader, "light_diffuse", light_diffuse, dr->dyn_lights_num + 3);
-  shader_program_set_vec3_array(shader, "light_ambient", light_ambient, dr->dyn_lights_num + 3);
-  shader_program_set_vec3_array(shader, "light_specular", light_specular, dr->dyn_lights_num + 3);
+  shader_program_set_float_array(shader, "light_power", light_power, dr->dyn_lights_num + ln);
+  shader_program_set_float_array(shader, "light_falloff", light_falloff, dr->dyn_lights_num + ln);
+  shader_program_set_vec3_array(shader, "light_position", light_position, dr->dyn_lights_num + ln);
+  shader_program_set_vec3_array(shader, "light_target", light_target, dr->dyn_lights_num + ln);
+  shader_program_set_vec3_array(shader, "light_diffuse", light_diffuse, dr->dyn_lights_num + ln);
+  shader_program_set_vec3_array(shader, "light_ambient", light_ambient, dr->dyn_lights_num + ln);
+  shader_program_set_vec3_array(shader, "light_specular", light_specular, dr->dyn_lights_num + ln);
   
   shader_program_enable_attribute(shader, "vPosition",  3, 3, quad_position);
   shader_program_enable_attribute(shader, "vTexcoord",  2, 2, quad_texcoord);
@@ -1748,7 +1952,7 @@ static void render_tonemap(deferred_renderer* dr) {
   float average = (float)(color[0] + color[1] + color[2]) / (3.0 * 255.0);
   
   //EXPOSURE += (EXPOSURE_TARGET - average) * EXPOSURE_SPEED;
-  dr->exposure = 5.0;
+  dr->exposure = 4.0;
   
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   glViewport(0, 0, graphics_viewport_width(), graphics_viewport_height());

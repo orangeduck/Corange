@@ -1062,3 +1062,99 @@ renderable* smd_load_file(char* filename) {
   return r;
 }
 
+renderable* ply_load_file(char* filename) {
+  
+  SDL_RWops* file = SDL_RWFromFile(filename, "r");
+  
+  if(file == NULL) {
+    error("Could not load file %s", filename);
+  }
+  
+  renderable* r = renderable_new();
+  
+  mesh* curr_mesh = NULL;
+  int vert_id = 0;
+  int tri_id = 0;
+  
+  char line[1024];
+  while(SDL_RWreadline(file, line, 1024)) {
+        
+    if (strstr(line, "ply")) {
+      
+      if (curr_mesh != NULL) {
+        mesh_generate_tangents(curr_mesh);
+        renderable_add_mesh(r, curr_mesh);
+        mesh_delete(curr_mesh);
+      }
+    
+      curr_mesh = mesh_new();
+      vert_id = 0;
+      tri_id = 0;
+    }
+    
+    int vert_count = 0;
+    if (sscanf(line, "element vertex %i", &vert_count)) {
+      curr_mesh->num_verts = vert_count;
+      curr_mesh->verticies = malloc(sizeof(vertex) * vert_count);
+    }
+    
+    int tri_count = 0;
+    if (sscanf(line, "element face %i", &tri_count)) {
+      curr_mesh->num_triangles = tri_count;
+      curr_mesh->triangles = malloc(sizeof(uint32_t) * tri_count * 3);
+    }
+    
+    vertex v;
+    int r, g, b, a;
+    if (sscanf(line, "%f %f %f %f %f %f %f %f %i %i %i %i",
+      &v.position.x, &v.position.y, &v.position.z,
+      &v.normal.x, &v.normal.y, &v.normal.z,
+      &v.uvs.x, &v.uvs.y, &r, &g, &b, &a) == 12) {
+      
+      v.color = vec4_new(
+        (float)r / 255.0, (float)g / 255.0, 
+        (float)b / 255.0, (float)a / 255.0);
+      
+      curr_mesh->verticies[vert_id] = v; vert_id++;
+    }
+    
+    int i0, i1, i2;
+    if (sscanf(line, "3 %i %i %i", &i0, &i1, &i2) == 3) {
+      curr_mesh->triangles[tri_id] = i0; tri_id++;
+      curr_mesh->triangles[tri_id] = i1; tri_id++;
+      curr_mesh->triangles[tri_id] = i2; tri_id++;
+    }
+    
+  }
+  
+  SDL_RWclose(file);
+  
+  if (curr_mesh != NULL) {
+    mesh_generate_tangents(curr_mesh);
+    renderable_add_mesh(r, curr_mesh);
+    mesh_delete(curr_mesh);
+  }
+  
+  fpath mat_file;
+  fpath bmf_file;
+  fpath fileid;
+  
+  SDL_PathFileLocation(mat_file.ptr, filename);
+  SDL_PathFileLocation(bmf_file.ptr, filename);
+  SDL_PathFileName(fileid.ptr, filename);
+  
+  strcat(mat_file.ptr, fileid.ptr);
+  strcat(mat_file.ptr, ".mat");
+  
+  if (file_exists(mat_file)) {
+    r->material = asset_hndl_new(mat_file);
+  }
+  
+  strcat(bmf_file.ptr, fileid.ptr);
+  strcat(bmf_file.ptr, ".bmf");
+  bmf_save_file(r, bmf_file.ptr);
+  
+  return r;
+  
+}
+

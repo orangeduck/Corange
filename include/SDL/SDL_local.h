@@ -8,8 +8,12 @@
 #include "SDL/SDL_opengl.h"
 #include "SDL/SDL_thread.h"
 
-#ifndef MAX_PATH
+#ifdef MAX_PATH
+  // Do Nothing
+#elif PATH_MAX
   #define MAX_PATH PATH_MAX
+#else
+  #define MAX_PATH 256
 #endif
 
 void SDL_PrintStackTrace();

@@ -11,6 +11,7 @@ uniform mat4 view;
 uniform mat4 proj;
 
 varying vec2 fTexcoord;
+varying vec3 fColor;
 varying vec3 fPosition;
 varying mat4 fTBN;
 
@@ -28,6 +29,7 @@ void main( void ) {
   
   vec4 world_position = world * vec4(vPosition, 1);
   
+  fColor = vec3(1.0, 1.0, 1.0);
   fTexcoord = vTexcoord;
   fPosition = world_position.xyz / world_position.w;
   gl_Position = proj * view * world_position;

@@ -1,7 +1,7 @@
 #ifndef spline_h
 #define spline_h
 
-#include "corange.h"
+#include "cengine.h"
 
 #define MAX_SPLINE_POINTS 20
 
@@ -21,21 +21,16 @@ spline* spline_new();
 void spline_delete(spline* s);
 
 void spline_add_point(spline* s, vec2 p);
-
 vec2 spline_get_point(spline* s, int i);
 void spline_set_point(spline* s, int i, vec2 p);
 
 void spline_update(spline* s);
+void spline_print(spline* s);
 
 float spline_get_x(spline* s, float y);
 float spline_get_y(spline* s, float x);
-
 float spline_get_x_between(spline* s, int low, int high, float y);
 float spline_get_y_between(spline* s, int low, int high, float x);
-
-void spline_print(spline* s);
-
-void spline_render(spline* s, vec2 position, vec2 size, int increments);
 
 
 typedef struct {
@@ -46,11 +41,9 @@ typedef struct {
   spline* a_spline;
 } color_curves;
 
-color_curves* acv_load_file(char* filename);
+color_curves* color_curves_load(char* filename);
 void color_curves_delete(color_curves* cc);
-
 void color_curves_write_lut(color_curves* cc, char* filename);
-
 vec3 color_curves_map(color_curves* cc, vec3 in);
 
 #endif

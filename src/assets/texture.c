@@ -1,5 +1,7 @@
 #include "assets/texture.h"
 
+#include "data/spline.h"
+
 texture* texture_new() {
   
   texture* t = malloc(sizeof(texture));
@@ -575,6 +577,8 @@ texture* dds_load_file( char* filename ) {
   
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, mipMapCount-1 );
   
+  SDL_RWclose(f);
+  
   texture* tex = malloc(sizeof(texture));
   *tex = my_texture;
   
@@ -583,3 +587,57 @@ texture* dds_load_file( char* filename ) {
   return tex;
   
 }
+
+texture* acv_load_file( char* filename ) {
+
+  color_curves* cc = color_curves_load(filename);
+  
+  uint32_t lut_size = 64;
+  
+  unsigned char* lut_data = malloc(sizeof(char) * 3 * lut_size * lut_size * lut_size);
+  
+  int r, g, b;
+  for(r = 0; r < lut_size; r++)
+  for(g = 0; g < lut_size; g++)
+  for(b = 0; b < lut_size; b++) {
+    
+    int i = (3 * r) + (3 * lut_size * g) + (3 * lut_size * lut_size * b);
+    
+    float red   = (float)r / lut_size;
+    float green = (float)g / lut_size;
+    float blue  = (float)b / lut_size;
+    
+    red = spline_get_x(cc->r_spline, red);
+    green = spline_get_x(cc->g_spline, green);
+    blue = spline_get_x(cc->b_spline, blue);
+    
+    red = spline_get_x(cc->rgb_spline, red);
+    green = spline_get_x(cc->rgb_spline, green);
+    blue = spline_get_x(cc->rgb_spline, blue);
+    
+    lut_data[i+0] = (unsigned char) (red   * 255);
+    lut_data[i+1] = (unsigned char) (green * 255);
+    lut_data[i+2] = (unsigned char) (blue  * 255);
+  
+  }
+  
+  color_curves_delete(cc);
+
+  texture* t = texture_new();
+  
+  glEnable(GL_TEXTURE_3D);
+  glBindTexture(GL_TEXTURE_3D, texture_handle(t));
+  glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB, lut_size, lut_size, lut_size, 0, GL_RGB, GL_UNSIGNED_BYTE, lut_data);
+  glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+  glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+  glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_MIRRORED_REPEAT);
+  glDisable(GL_TEXTURE_3D);
+  
+  free(lut_data);
+  
+  return t;
+  
+}
+    

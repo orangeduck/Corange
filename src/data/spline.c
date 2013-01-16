@@ -1,6 +1,4 @@
-#include "corange.h"
-
-#include "spline.h"
+#include "data/spline.h"
 
 spline* spline_new() {
   spline* s = malloc(sizeof(spline));
@@ -197,57 +195,7 @@ float spline_get_x(spline* s, float y) {
   return x;
 }
 
-void spline_render(spline* s, vec2 position, vec2 size, int increments) {
-
-	glMatrixMode(GL_PROJECTION);
-  glPushMatrix();
-	glLoadIdentity();
-	glOrtho(0, graphics_viewport_width(), graphics_viewport_height(), 0, -1, 1);
-  
-	glMatrixMode(GL_MODELVIEW);
-  glPushMatrix();
-	glLoadIdentity();
-  
-  glColor4f(1,1,1,1);
-  glPointSize(4);
-  glEnable(GL_POINT_SMOOTH);
-  
-  glBegin(GL_POINTS);
-    
-    for(int i = 0; i < s->num_points; i++) {
-      vec2 loc = vec2_new( s->x[i], s->y[i] );
-      glVertex2f(position.x + loc.x * size.x, position.y + loc.y * size.y );
-    }
-  
-  glEnd();
-  
-  glDisable(GL_POINT_SMOOTH);
-  glPointSize(1);
-  
-  glBegin(GL_LINE_STRIP);
-    
-    float j;
-    float step = 1.0 / increments;
-    float loc;
-    for( j = 0; j <= 1; j += step) {
-      loc = spline_get_y(s, j);
-      glVertex2f(position.x + j * size.x, position.y + loc * size.y);
-    }
-    float y = s->y[s->num_points-1];
-    float x = s->x[s->num_points-1];
-    glVertex2f(position.x + x * size.x, position.y + y * size.y);
-  
-  glEnd();
-  
-  glMatrixMode(GL_PROJECTION);
-  glPopMatrix();
-  
-	glMatrixMode(GL_MODELVIEW);
-  glPopMatrix();
-  
-}
-
-color_curves* acv_load_file(char* filename) {
+color_curves* color_curves_load(char* filename) {
   
   SDL_RWops* file = SDL_RWFromFile(filename, "r");
   
@@ -381,7 +329,7 @@ vec3 color_curves_map(color_curves* cc, vec3 in) {
 
 void color_curves_write_lut(color_curves* cc, char* filename) {
 
-  int lut_size = 64;
+  uint16_t lut_size = 64;
   
   unsigned char* lut_data = malloc(sizeof(char) * 3 * lut_size * lut_size * lut_size);
   
@@ -412,7 +360,7 @@ void color_curves_write_lut(color_curves* cc, char* filename) {
   
   SDL_RWops* file = SDL_RWFromFile(filename, "wb");
   SDL_RWwrite(file, "CORANGE-LUT", sizeof("CORANGE-LUT"), 1);
-  SDL_RWwrite(file, &lut_size, sizeof(char) * 2, 1);
+  SDL_RWwrite(file, &lut_size, sizeof(uint16_t), 1);
   SDL_RWwrite(file, lut_data, sizeof(char) * 3 * lut_size * lut_size * lut_size, 1);
   SDL_RWclose(file);
   

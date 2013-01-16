@@ -1,8 +1,0 @@
-lut_gen
-lut_gen.exe
-lib/*.*
-*~
-*.o
-stdout.txt
-stderr.txt
-

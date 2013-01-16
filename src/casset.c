@@ -42,13 +42,52 @@ void asset_add_path_variable(fpath variable, fpath mapping) {
   
 }
 
-static fpath asset_map_realpath(fpath filename) {
+static fpath asset_map_fullpath(fpath filename) {
   fpath out;
   SDL_PathFullName(out.ptr, filename.ptr);
   return out;
 }
 
-static fpath asset_map_filename(fpath filename) {
+static fpath asset_map_shortpath(fpath filename) {
+  fpath out;
+  SDL_PathRelative(out.ptr, filename.ptr);
+  return out;
+}
+
+fpath asset_unmap_filename(fpath filename) {
+  
+  fpath fullpath = asset_map_fullpath(filename);
+  
+  for (int i = 0; i < num_path_variables; i++) {
+    
+    fpath variable = path_variables[i].variable;
+    fpath mapping  = path_variables[i].mapping; 
+    fpath fullmapping = asset_map_fullpath(mapping);
+    
+    char* subptr = strstr(fullpath.ptr, fullmapping.ptr);
+    
+    if (subptr) {
+    
+      fpath sub; strcpy(sub.ptr, subptr);
+    
+      int replace_len = strlen(variable.ptr);
+      int start_len = strlen(fullpath.ptr) - strlen(sub.ptr);
+      int ext_len = strlen(sub.ptr) - strlen(fullmapping.ptr);
+      
+      fullpath.ptr[start_len] = '\0';
+      strcat(fullpath.ptr, variable.ptr);
+      strcat(fullpath.ptr, "/");
+      strcat(fullpath.ptr, sub.ptr + strlen(fullmapping.ptr));
+      
+    }
+    
+  }
+  
+  return asset_map_shortpath(fullpath);
+  
+}
+
+fpath asset_map_filename(fpath filename) {
   
   fpath out = filename;
   
@@ -74,7 +113,7 @@ static fpath asset_map_filename(fpath filename) {
   
   }
 
-  return asset_map_realpath(out);
+  return asset_map_fullpath(out);
 }
 
 asset_hndl asset_hndl_null() {

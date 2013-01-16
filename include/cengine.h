@@ -477,6 +477,7 @@ typedef struct {
 
 plane plane_new(vec3 position, vec3 direction);
 plane plane_transform(plane p, mat4 world);
+plane plane_transform_space(plane p, mat3 space);
 float plane_distance(plane p, vec3 point);
 
 bool point_inside_plane(vec3 point, plane p);
@@ -539,6 +540,7 @@ sphere sphere_unit();
 sphere sphere_new(vec3 center, float radius);
 sphere sphere_merge(sphere s1, sphere s2);
 sphere sphere_transform(sphere s, mat4 world);
+sphere sphere_transform_space(sphere s, mat3 space);
 
 sphere sphere_of_box(box bb);
 sphere sphere_of_frustum(frustum f);
@@ -586,8 +588,8 @@ ellipsoid ellipsoid_new(vec3 center, vec3 radiuses);
 ellipsoid ellipsoid_transform(ellipsoid e, mat4 m);
 ellipsoid ellipsoid_of_sphere(sphere s);
 
-mat4 ellipsoid_space(ellipsoid e);
-mat4 ellipsoid_inv_space(ellipsoid e);
+mat3 ellipsoid_space(ellipsoid e);
+mat3 ellipsoid_inv_space(ellipsoid e);
 
 /* Capsule */
 

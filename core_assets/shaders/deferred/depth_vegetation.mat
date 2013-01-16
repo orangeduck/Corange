@@ -1,0 +1,2 @@
+shader vertex = $CORANGE/shaders/deferred/depth_vegetation.vs
+shader fragment = $CORANGE/shaders/deferred/depth.fs

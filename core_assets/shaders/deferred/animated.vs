@@ -15,12 +15,14 @@ uniform mat4 view;
 uniform mat4 proj;
 
 varying vec3 fPosition;
+varying vec3 fColor;
 varying vec2 fTexcoord;
 varying mat4 fTBN;
 
 void main(){
   
   fTexcoord = vTexcoord;
+  fColor = vec3(1, 1, 1);
 
   vec4 blendpos = vec4(0.0,0.0,0.0,0.0);
   for (int i = 0; i < 3; i++) {

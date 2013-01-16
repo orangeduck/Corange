@@ -13,6 +13,7 @@ uniform float near;
 uniform float far;
 
 varying vec2 fTexcoord;
+varying vec3 fColor;
 varying vec3 fPosition;
 varying mat4 fTBN;
 
@@ -44,7 +45,7 @@ void main( void ) {
   normal = mix(normal, vec4( 0.5, 0.5, 1.0, 1.0 ), bumpiness);
 	normal = (normal * 2.0 - vec4(1.0,1.0,1.0,0.0)) * fTBN;
   
-	gl_FragData[0].rgb = from_gamma(diffuse.rgb);
+	gl_FragData[0].rgb = from_gamma(diffuse.rgb) * fColor;
 	gl_FragData[0].a = spec;
 	
 	gl_FragData[1].rgb = fPosition;

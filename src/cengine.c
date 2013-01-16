@@ -41,9 +41,9 @@ static error_func_t error_funcs[MAX_AT_FUNCS];
 static warn_func_t warn_funcs[MAX_AT_FUNCS];
 static debug_func_t debug_funcs[MAX_AT_FUNCS];
 
-int num_error_funcs = 0;
-int num_warn_funcs = 0;
-int num_debug_funcs = 0;
+static int num_error_funcs = 0;
+static int num_warn_funcs = 0;
+static int num_debug_funcs = 0;
 
 void at_error(void(*func)(const char*)) {
   if (num_error_funcs == MAX_AT_FUNCS) { 
@@ -2119,6 +2119,14 @@ float plane_distance(plane p, vec3 point) {
 plane plane_transform(plane p, mat4 world) {
   p.position  = mat4_mul_vec3(world, p.position);
   p.direction = mat3_mul_vec3(mat4_to_mat3(world), p.direction);
+  p.direction = vec3_normalize(p.direction);
+  return p;
+}
+
+plane plane_transform_space(plane p, mat3 space) {
+  p.position  = mat3_mul_vec3(space, p.position);
+  p.direction = mat3_mul_vec3(space, p.direction);
+  p.direction = vec3_normalize(p.direction);
   return p;
 }
 
@@ -2444,11 +2452,19 @@ bool sphere_intersects_box(sphere s, box b) {
   return !(sphere_inside_box(s, b) || sphere_outside_box(s, b));
 }
 
-sphere sphere_transform(sphere bs, mat4 world) {
+sphere sphere_transform(sphere s, mat4 world) {
   
-  vec3 center = mat4_mul_vec3(world, bs.center);
-  float radius = bs.radius * max(max(world.xx, world.yy), world.zz);
+  vec3 center = mat4_mul_vec3(world, s.center);
+  float radius = s.radius * max(max(world.xx, world.yy), world.zz);
   
+  return sphere_new(center, radius);
+}
+
+sphere sphere_transform_space(sphere s, mat3 space) {
+
+  vec3 center = mat3_mul_vec3(space, s.center);
+  float radius = s.radius * max(max(space.xx, space.yy), space.zz);
+
   return sphere_new(center, radius);
 }
 
@@ -2590,25 +2606,21 @@ ellipsoid ellipsoid_transform(ellipsoid e, mat4 m) {
   return e;
 }
 
-mat4 ellipsoid_space(ellipsoid e) {
+mat3 ellipsoid_space(ellipsoid e) {
   
-  return mat4_new(
-    1.0/e.radiuses.x, 0, 0, 0,
-    0, 1.0/e.radiuses.y, 0, 0,
-    0, 0, 1.0/e.radiuses.z, 0,
-    0, 0, 0, 1.0
-  );
+  return mat3_new(
+    1.0/e.radiuses.x, 0, 0,
+    0, 1.0/e.radiuses.y, 0,
+    0, 0, 1.0/e.radiuses.z);
   
 }
 
-mat4 ellipsoid_inv_space(ellipsoid e) {
+mat3 ellipsoid_inv_space(ellipsoid e) {
 
-  return mat4_new(
-    e.radiuses.x, 0, 0, 0,
-    0, e.radiuses.y, 0, 0,
-    0, 0, e.radiuses.z, 0,
-    0, 0, 0, 1
-  );
+  return mat3_new(
+    e.radiuses.x, 0, 0,
+    0, e.radiuses.y, 0,
+    0, 0, e.radiuses.z);
 
 }
 
