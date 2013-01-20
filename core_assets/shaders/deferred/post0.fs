@@ -9,13 +9,21 @@ uniform sampler2D ldr_texture;
 
 varying vec2 fTexcoord;
 
-/* Headers */
+vec3 to_gamma(vec3 color) {
+  vec3 ret;
+  ret.r = pow(color.r, 2.2);
+  ret.g = pow(color.g, 2.2);
+  ret.b = pow(color.b, 2.2);
+	return ret;
+}
 
-vec3 to_gamma(vec3 color);
-vec3 bokeh_dof(int width, int height, sampler2D screen, sampler2D screendepth, sampler2D random, vec2 coords, float focalDepth);
-vec3 basic_dof(int width, int height, sampler2D screen, sampler2D screendepth, sampler2D random, vec2 coords);
-
-/* End */
+vec3 from_gamma(vec3 color) {
+  vec3 ret;
+  ret.r = pow(color.r, 1.0/2.2);
+  ret.g = pow(color.g, 1.0/2.2);
+  ret.b = pow(color.b, 1.0/2.2);
+	return ret;
+}
 
 vec3 pow3(vec3 col, float exponent) {
   vec3 ret;

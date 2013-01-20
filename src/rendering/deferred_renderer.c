@@ -47,6 +47,13 @@ render_object render_object_landscape(landscape* l) {
   return ro;
 }
 
+render_object render_object_particles(particles* p) {
+  render_object ro;
+  ro.type = RO_TYPE_PARTICLES;
+  ro.particles = p;
+  return ro;
+}
+
 render_object render_object_paint(vec3 paint_pos, vec3 paint_norm, float paint_radius) {
   render_object ro;
   ro.type = RO_TYPE_PAINT;
@@ -75,6 +82,13 @@ render_object render_object_ellipsoid(ellipsoid e) {
   render_object ro;
   ro.type = RO_TYPE_ELLIPSOID;
   ro.ellipsoid = e;
+  return ro;
+}
+
+render_object render_object_projectile(projectile* p) {
+  render_object ro;
+  ro.type = RO_TYPE_PROJECTILE;
+  ro.projectile = p;
   return ro;
 }
 
@@ -427,10 +441,6 @@ void deferred_renderer_set_skydome_enabled(deferred_renderer* dr, bool enabled) 
   dr->skydome_enabled = enabled;
 }
 
-int deferred_renderer_num_dyn_light(deferred_renderer* dr) {
-  return dr->dyn_lights_num;
-}
-
 void deferred_renderer_add_dyn_light(deferred_renderer* dr, light* l) {
 
   if (dr->dyn_lights_num == DEFERRED_MAX_DYN_LIGHTS) {
@@ -441,27 +451,6 @@ void deferred_renderer_add_dyn_light(deferred_renderer* dr, light* l) {
   dr->dyn_light[dr->dyn_lights_num] = l;
   dr->dyn_lights_num++;
 
-}
-
-void deferred_renderer_rem_dyn_light(deferred_renderer* dr, light* l) {
-  
-  bool found = false;
-  for(int i = 0; i < dr->dyn_lights_num; i++) {
-    if ((dr->dyn_light[i] == l) && !found) {
-      found = true;
-    }
-    
-    if (found) {
-      dr->dyn_light[i] = dr->dyn_light[i+1];
-    }
-  }
-  
-  if (found) {
-    dr->dyn_lights_num--;
-  } else {
-    warning("Could not find light %p to remove!", l);
-  }
-  
 }
 
 void deferred_renderer_add(deferred_renderer* dr, render_object ro) {
@@ -1397,6 +1386,19 @@ void render_ellipsoid(deferred_renderer* dr, ellipsoid e) {
   
 }
 
+void render_projectile(deferred_renderer* dr, projectile* p) {
+
+  static_object so;
+  so.position = p->position;
+  so.rotation = mat4_id();
+  so.scale = vec3_new(10, 10, 10);
+  so.renderable = p->mesh;
+  so.collision_body = asset_hndl_null();
+  
+  render_static(dr, &so);
+
+}
+
 void render_paint_circle(deferred_renderer* dr, vec3 position, vec3 normal, float radius) {
   
   vec3 axis_x = vec3_cross(normal, vec3_new(1, 0, 0));
@@ -1495,13 +1497,14 @@ static void render_gbuffer(deferred_renderer* dr) {
     
     if (veg_found) continue;
     
-    if (dr->render_objects[j].type == RO_TYPE_STATIC)    { render_static(dr, dr->render_objects[j].static_object); }
-    if (dr->render_objects[j].type == RO_TYPE_ANIMATED)  { render_animated(dr, dr->render_objects[j].animated_object); }
-    if (dr->render_objects[j].type == RO_TYPE_LANDSCAPE) { render_landscape(dr, dr->render_objects[j].landscape); }
-    if (dr->render_objects[j].type == RO_TYPE_LIGHT)     { render_light(dr, dr->render_objects[j].light); }
-    if (dr->render_objects[j].type == RO_TYPE_AXIS)      { render_axis(dr, dr->render_objects[j].axis); }
-    if (dr->render_objects[j].type == RO_TYPE_SPHERE)    { render_ellipsoid(dr, ellipsoid_of_sphere(dr->render_objects[j].sphere)); }
-    if (dr->render_objects[j].type == RO_TYPE_ELLIPSOID) { render_ellipsoid(dr, dr->render_objects[j].ellipsoid); }
+    if (dr->render_objects[j].type == RO_TYPE_STATIC)     { render_static(dr, dr->render_objects[j].static_object); }
+    if (dr->render_objects[j].type == RO_TYPE_ANIMATED)   { render_animated(dr, dr->render_objects[j].animated_object); }
+    if (dr->render_objects[j].type == RO_TYPE_LANDSCAPE)  { render_landscape(dr, dr->render_objects[j].landscape); }
+    if (dr->render_objects[j].type == RO_TYPE_LIGHT)      { render_light(dr, dr->render_objects[j].light); }
+    if (dr->render_objects[j].type == RO_TYPE_AXIS)       { render_axis(dr, dr->render_objects[j].axis); }
+    if (dr->render_objects[j].type == RO_TYPE_SPHERE)     { render_ellipsoid(dr, ellipsoid_of_sphere(dr->render_objects[j].sphere)); }
+    if (dr->render_objects[j].type == RO_TYPE_ELLIPSOID)  { render_ellipsoid(dr, dr->render_objects[j].ellipsoid); }
+    if (dr->render_objects[j].type == RO_TYPE_PROJECTILE) { render_projectile(dr, dr->render_objects[j].projectile); }
     
     if (dr->render_objects[j].type == RO_TYPE_CMESH) {
       render_cmesh(dr, 
@@ -1848,6 +1851,8 @@ static void render_compose(deferred_renderer* dr) {
 
 static void render_particles(deferred_renderer* dr) {
   
+  //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+  
   config* options = asset_get_load(P("./assets/options.cfg"));
   
   int width = graphics_viewport_width();
@@ -1865,27 +1870,48 @@ static void render_particles(deferred_renderer* dr) {
   shader_program_enable(shader);
   shader_program_set_mat4(shader, "view", camera_view_matrix(dr->camera));
   shader_program_set_mat4(shader, "proj", camera_proj_matrix(dr->camera));
+  shader_program_set_float(shader, "clip_near", dr->camera->near_clip);
+  shader_program_set_float(shader, "clip_far", dr->camera->far_clip);
+
+  shader_program_set_float(shader, "light_power", sky_sun_power(dr->time_of_day));
+  shader_program_set_vec3(shader, "light_direction", sky_sun_direction(dr->time_of_day));
+  shader_program_set_vec3(shader, "light_diffuse", sky_sun_diffuse(dr->time_of_day));
+  shader_program_set_vec3(shader, "light_ambient", sky_sky_ambient(dr->time_of_day));
   
   for (int i = 0; i < dr->render_objects_num; i++) {
     
     if (dr->render_objects[i].type != RO_TYPE_PARTICLES) { continue; }
     
     particles* p = dr->render_objects[i].particles;
+    effect* e = asset_hndl_ptr(p->effect);
     
-    glBlendFunc(p->blend_src, p->blend_dst);
+    glBlendFunc(e->blend_src, e->blend_dst);
+    
+    shader_program_set_float(shader, "particle_depth", e->depth);
+    shader_program_set_float(shader, "particle_thickness", e->thickness);
+    shader_program_set_float(shader, "particle_bumpiness", e->bumpiness);
+    shader_program_set_float(shader, "particle_scattering", e->scattering);
     
     shader_program_set_mat4(shader, "world", mat4_world(p->position, p->scale, p->rotation));
-    shader_program_enable_texture(shader, "diffuse_texture", 0, p->texture);
+    shader_program_enable_texture(shader, "particle_diffuse", 0, e->texture);
+    shader_program_enable_texture(shader, "particle_normals", 1, e->texture_nm);
+    shader_program_enable_texture_id(shader, "depth", 2, dr->gdepth_texture);
     
     glBindBuffer(GL_ARRAY_BUFFER, p->vertex_buff);
     
-    shader_program_enable_attribute(shader, "vPosition",  3, 9, (void*)(0));
-    shader_program_enable_attribute(shader, "vTexcoord",  2, 9, (void*)(sizeof(float) * 3));
-    shader_program_enable_attribute(shader, "vColor",     4, 9, (void*)(sizeof(float) * 5));
+    shader_program_enable_attribute(shader, "vPosition",  3, 18, (void*)(0));
+    shader_program_enable_attribute(shader, "vNormal",    3, 18, (void*)(sizeof(float) * 3));
+    shader_program_enable_attribute(shader, "vTangent",   3, 18, (void*)(sizeof(float) * 6));
+    shader_program_enable_attribute(shader, "vBinormal",  3, 18, (void*)(sizeof(float) * 9));
+    shader_program_enable_attribute(shader, "vTexcoord",  2, 18, (void*)(sizeof(float) * 12));
+    shader_program_enable_attribute(shader, "vColor",     4, 18, (void*)(sizeof(float) * 14));
     
       glDrawArrays(GL_TRIANGLES, 0, p->count * 6);
     
     shader_program_disable_attribute(shader, "vPosition");
+    shader_program_disable_attribute(shader, "vNormal");
+    shader_program_disable_attribute(shader, "vTangent");
+    shader_program_disable_attribute(shader, "vBinormal");
     shader_program_disable_attribute(shader, "vTexcoord");
     shader_program_disable_attribute(shader, "vColor");
   
@@ -1894,12 +1920,16 @@ static void render_particles(deferred_renderer* dr) {
   }
 
   glDisable(GL_BLEND);
-  
+
+  shader_program_disable_texture(shader, 2);
+  shader_program_disable_texture(shader, 1);
   shader_program_disable_texture(shader, 0);
   shader_program_disable(shader);
   
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   glViewport(0, 0, width, height);
+  
+  //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
   
 }
 
@@ -2089,6 +2119,7 @@ void deferred_renderer_render(deferred_renderer* dr) {
   //timer_stop(t, "Rendering End");
   
   dr->render_objects_num = 0;
+  dr->dyn_lights_num = 0;
   
 }
  

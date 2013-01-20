@@ -44,6 +44,7 @@ void corange_finish();
 #include "entities/physics_object.h"
 #include "entities/instance_object.h"
 #include "entities/landscape.h"
+#include "entities/particles.h"
 
 /* Assets */
 
@@ -63,6 +64,7 @@ void corange_finish();
 #include "assets/skeleton.h"
 #include "assets/animation.h"
 #include "assets/terrain.h"
+#include "assets/effect.h"
 
 /* UI */
 

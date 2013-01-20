@@ -23,6 +23,7 @@
 #include "entities/static_object.h"
 #include "entities/animated_object.h"
 #include "entities/particles.h"
+#include "entities/projectile.h"
 #include "entities/landscape.h"
 
 enum {
@@ -31,16 +32,17 @@ enum {
 };
 
 enum {
-  RO_TYPE_AXIS      = 0,
-  RO_TYPE_STATIC    = 1,
-  RO_TYPE_ANIMATED  = 2,
-  RO_TYPE_PARTICLES = 3,
-  RO_TYPE_LIGHT     = 4, 
-  RO_TYPE_LANDSCAPE = 5,
-  RO_TYPE_PAINT     = 6,
-  RO_TYPE_SPHERE    = 7,
-  RO_TYPE_ELLIPSOID = 8,
-  RO_TYPE_CMESH     = 9,
+  RO_TYPE_AXIS       = 0,
+  RO_TYPE_STATIC     = 1,
+  RO_TYPE_ANIMATED   = 2,
+  RO_TYPE_PARTICLES  = 3,
+  RO_TYPE_LIGHT      = 4, 
+  RO_TYPE_LANDSCAPE  = 5,
+  RO_TYPE_PAINT      = 6,
+  RO_TYPE_SPHERE     = 7,
+  RO_TYPE_ELLIPSOID  = 8,
+  RO_TYPE_CMESH      = 9,
+  RO_TYPE_PROJECTILE = 10,
 };
 
 typedef struct {
@@ -58,6 +60,7 @@ typedef struct {
     animated_object* animated_object;
     landscape* landscape;
     particles* particles;
+    projectile* projectile;
     
     /* UI */
     light* light;
@@ -75,6 +78,7 @@ render_object render_object_sphere(sphere s);
 render_object render_object_ellipsoid(ellipsoid e);
 render_object render_object_cmesh(cmesh* cm, mat4 world);
 render_object render_object_landscape(landscape* l);
+render_object render_object_projectile(projectile* p);
 render_object render_object_paint(vec3 paint_pos, vec3 paint_norm, float paint_radius);
 
 typedef struct {
@@ -179,11 +183,9 @@ void deferred_renderer_set_vignetting(deferred_renderer* dr, asset_hndl v);
 void deferred_renderer_set_glitch(deferred_renderer* dr, float glitch);
 void deferred_renderer_set_skydome_enabled(deferred_renderer* dr, bool enabled);
 
-int  deferred_renderer_num_dyn_light(deferred_renderer* dr);
-void deferred_renderer_add_dyn_light(deferred_renderer* dr, light* l);
-void deferred_renderer_rem_dyn_light(deferred_renderer* dr, light* l);
-
 void deferred_renderer_add(deferred_renderer* dr, render_object ro);
+void deferred_renderer_add_dyn_light(deferred_renderer* dr, light* l);
+
 void deferred_renderer_render(deferred_renderer* dr);
 
 #endif

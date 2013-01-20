@@ -1,5 +1,2 @@
 shader vert   = $CORANGE/shaders/deferred/post.vs
 shader frag   = $CORANGE/shaders/deferred/post1.fs
-shader colors = $CORANGE/shaders/colors.fs
-shader aa     = $CORANGE/shaders/anti_aliasing.fs
-shader post   = $CORANGE/shaders/post_effects.fs
