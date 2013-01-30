@@ -53,7 +53,7 @@ void animated_object_update(animated_object* ao, float timestep) {
   skeleton* frame0 = animation->frames[0];
   skeleton* frame1 = animation->frames[animation->num_frames-1];
   float frame0_time = 0;
-  float frame1_time = 999999;
+  float frame1_time = FLT_MAX;
   
   for(int i = 0; i < animation->num_frames; i++) {
     if ((timepoint > animation->frame_times[i]) && (frame0_time < animation->frame_times[i])) {
@@ -68,7 +68,6 @@ void animated_object_update(animated_object* ao, float timestep) {
   }
   
   float amount = (timepoint - frame0_time) / (frame1_time - frame0_time);
-  amount = 1-amount;
   
   skeleton* skel = asset_hndl_ptr(ao->skeleton);
   

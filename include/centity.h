@@ -21,18 +21,15 @@ void entity_finish();
 #define entity_handler(type, new, del) entity_handler_cast(typeid(type), (void*(*)())new , (void(*)(void*))del)
 void entity_handler_cast(int type_id, void* entity_new() , void entity_del(void* entity));
 
-
 /* Create, add, get and destroy entities */
-#define entity_new(name, type) (type*)entity_new_type_id(name, typeid(type))
-#define entity_add(name, type, entity) entity_add_type_id(name, typeid(type), entity);
-#define entity_get_as(name, type) ((type*)entity_get_as_type_id(name, typeid(type)))
+#define entity_new(fmt, type, ...) (type*)entity_new_type_id(fmt, typeid(type), ##__VA_ARGS__)
+#define entity_get_as(fmt, type, ...) ((type*)entity_get_as_type_id(fmt, typeid(type)), ##__VA_ARGS__)
 
-bool entity_exists(char* name);
-entity* entity_new_type_id(char* name, int type_id);
-void entity_add_type_id(char* name, int type_id, entity* entity);
-entity* entity_get(char* name);
-entity* entity_get_as_type_id(char* name, int type_id);
-void entity_delete(char* name);
+bool entity_exists(char* fmt, ...);
+entity* entity_get(char* fmt, ...);
+entity* entity_get_as_type_id(char* fmt, int type_id, ...);
+entity* entity_new_type_id(char* fmt, int type_id, ...);
+void entity_delete(char* fmt, ...);
 
 /* Get the name or typename from an entity */
 char* entity_name(entity* e);

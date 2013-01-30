@@ -6,6 +6,7 @@
 
 typedef struct {
   bool collided;
+  mat4 rotation;
   vec3 position;
   vec3 velocity;
   float radius;

@@ -761,6 +761,19 @@ static void render_shadows_landscape(deferred_renderer* dr, int i, landscape* l)
 
 }
 
+void render_shadows_projectile(deferred_renderer* dr, int i, projectile* p) {
+
+  static_object so;
+  so.position = p->position;
+  so.rotation = p->rotation;
+  so.scale = vec3_new(1, 1, 1);
+  so.renderable = p->mesh;
+  so.collision_body = asset_hndl_null();
+  
+  render_shadows_static(dr, i, &so);
+
+}
+
 static void render_shadows(deferred_renderer* dr) {
   
   for (int i = 0; i < 3; i++) {
@@ -798,6 +811,7 @@ static void render_shadows(deferred_renderer* dr) {
       if (dr->render_objects[j].type == RO_TYPE_STATIC) { render_shadows_static(dr, i, dr->render_objects[j].static_object); }
       if (dr->render_objects[j].type == RO_TYPE_ANIMATED) { render_shadows_animated(dr, i, dr->render_objects[j].animated_object); }
       if (dr->render_objects[j].type == RO_TYPE_LANDSCAPE) { render_shadows_landscape(dr, i, dr->render_objects[j].landscape); }
+      if (dr->render_objects[j].type == RO_TYPE_PROJECTILE) { render_shadows_projectile(dr, i, dr->render_objects[j].projectile); }
     }
     
     glCullFace(GL_BACK);
@@ -1390,8 +1404,8 @@ void render_projectile(deferred_renderer* dr, projectile* p) {
 
   static_object so;
   so.position = p->position;
-  so.rotation = mat4_id();
-  so.scale = vec3_new(10, 10, 10);
+  so.rotation = p->rotation;
+  so.scale = vec3_new(1, 1, 1);
   so.renderable = p->mesh;
   so.collision_body = asset_hndl_null();
   

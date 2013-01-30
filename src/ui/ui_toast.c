@@ -106,7 +106,7 @@ void ui_toast_event(ui_toast* t, SDL_Event e) {
 
 void ui_toast_update(ui_toast* t) {
   
-  t->opacity -= frame_time() * 0.25;
+  t->opacity -= frame_time() * 0.1;
   
   if (t->opacity < 0 || toast_index(t) > 50) {
     ui_elem_delete(ui_elem_name(t));

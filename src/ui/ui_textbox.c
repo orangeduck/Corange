@@ -138,6 +138,9 @@ void ui_textbox_enable(ui_textbox* tb) {
   tb->enabled = true;
 }
 
+static const float timer_delete = 0.05;
+static float time_delete = 0;
+
 void ui_textbox_event(ui_textbox* tb, SDL_Event e) {
   
   if (e.type == SDL_MOUSEBUTTONDOWN) {
@@ -150,78 +153,34 @@ void ui_textbox_event(ui_textbox* tb, SDL_Event e) {
   
   if (tb->selected) {
     
-    if (e.type == SDL_KEYUP) {
+    if (e.type == SDL_KEYDOWN) {
       
       if (e.key.keysym.sym == SDLK_BACKSPACE) {
+        time_delete = -0.5;
         ui_textbox_rmchar(tb);
         return;
       }
       
-      char ch;
-      switch (e.key.keysym.sym) {
-        case SDLK_a: ch = 'a'; break;
-        case SDLK_b: ch = 'b'; break;
-        case SDLK_c: ch = 'c'; break;
-        case SDLK_d: ch = 'd'; break;
-        case SDLK_e: ch = 'e'; break;
-        case SDLK_f: ch = 'f'; break;
-        case SDLK_g: ch = 'g'; break;
-        case SDLK_h: ch = 'h'; break;
-        case SDLK_i: ch = 'i'; break;
-        case SDLK_j: ch = 'j'; break;
-        case SDLK_k: ch = 'k'; break;
-        case SDLK_l: ch = 'l'; break;
-        case SDLK_m: ch = 'm'; break;
-        case SDLK_n: ch = 'n'; break;
-        case SDLK_o: ch = 'o'; break;
-        case SDLK_p: ch = 'p'; break;
-        case SDLK_q: ch = 'q'; break;
-        case SDLK_r: ch = 'r'; break;
-        case SDLK_s: ch = 's'; break;
-        case SDLK_t: ch = 't'; break;
-        case SDLK_u: ch = 'u'; break;
-        case SDLK_v: ch = 'v'; break;
-        case SDLK_w: ch = 'w'; break;
-        case SDLK_x: ch = 'x'; break;
-        case SDLK_y: ch = 'y'; break;
-        case SDLK_z: ch = 'z'; break;
-        
-        case SDLK_1: ch = '1'; break;
-        case SDLK_2: ch = '2'; break;
-        case SDLK_3: ch = '3'; break;
-        case SDLK_4: ch = '4'; break;
-        case SDLK_5: ch = '5'; break;
-        case SDLK_6: ch = '6'; break;
-        case SDLK_7: ch = '7'; break;
-        case SDLK_8: ch = '8'; break;
-        case SDLK_9: ch = '9'; break;
-        case SDLK_0: ch = '0'; break;
-        
-        case SDLK_SPACE:     ch = ' '; break;
-        
-        default: ch = 0; break;
+      if (e.key.keysym.sym == SDLK_SPACE) {
+          ui_textbox_addchar(tb, ' ');
+          return;
       }
       
-      bool uppercase = 
-        (e.key.keysym.mod & KMOD_RSHIFT) ||
-        (e.key.keysym.mod & KMOD_LSHIFT) ||
-        (e.key.keysym.mod & KMOD_CAPS);
-      
-      if ((ch >= 'a') && (ch <= 'z') && uppercase) { ch = ch - 32; }
-      if (ch == '1' && uppercase) { ch = '!'; }
-      if (ch == '2' && uppercase) { ch = '"'; }
-      if (ch == '2' && uppercase) { ch = '£'; }
-      if (ch == '4' && uppercase) { ch = '$'; }
-      if (ch == '5' && uppercase) { ch = '%'; }
-      if (ch == '6' && uppercase) { ch = '^'; }
-      if (ch == '7' && uppercase) { ch = '&'; }
-      if (ch == '8' && uppercase) { ch = '*'; }
-      if (ch == '9' && uppercase) { ch = '('; }
-      if (ch == '0' && uppercase) { ch = ')'; }
-      
-      if (ch != 0) {
-        ui_textbox_addchar(tb, ch);
+      if ( e.key.keysym.unicode >= 0x80 || e.key.keysym.unicode <= 0 ) {
+        return;
       }
+      
+      char keypress = (char)e.key.keysym.unicode;
+
+      const char* valid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!\"$%^&*()-=_+[{}]:;@'~#<,>.?/\\| \0";     
+      
+      for (int i = 0; i < strlen(valid)-1; i++) {
+        if (valid[i] == keypress) {
+          ui_textbox_addchar(tb, keypress);
+          return;
+        }
+      }
+      
     }
     
   }
@@ -229,7 +188,21 @@ void ui_textbox_event(ui_textbox* tb, SDL_Event e) {
 }
 
 void ui_textbox_update(ui_textbox* tb) {
-
+  
+  Uint8* keystate = SDL_GetKeyState(NULL);
+  
+  if (keystate[SDLK_BACKSPACE]) {
+    
+    time_delete += frame_time();
+    if (time_delete > timer_delete) {
+      time_delete = 0;
+      ui_textbox_rmchar(tb);
+    }
+    
+  } else {
+    time_delete = 0;
+  }
+  
 }
 
 void ui_textbox_render(ui_textbox* tb) {

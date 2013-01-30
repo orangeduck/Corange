@@ -42,7 +42,6 @@ void corange_init(const char* core_assets_path) {
     FILE* ferr = freopen( "CON", "w", stderr );
   #endif
   
-  
   /* Attach signal handlers */
   signal(SIGABRT, corange_signal);
   signal(SIGFPE, corange_signal);

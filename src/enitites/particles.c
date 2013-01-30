@@ -199,8 +199,6 @@ void particles_update(particles* p, float timestep, camera* cam) {
       0, 0, 0, 1);
     
     vec3 scale = p->actives[i] ? p->scales[i] : vec3_zero();
-
-    debug("Rotation: %f", p->rotations[i] * 2 * M_PI);
     
     mat3 rot_axis = mat3_rotation_z(p->rotations[i] * 2 * M_PI);
     

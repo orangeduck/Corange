@@ -348,28 +348,28 @@ float binearest_interp(float tl, float tr, float bl, float br, float x_amount, f
 }
 
 float bilinear_interp(float tl, float tr, float bl, float br, float x_amount, float y_amount) {
-  float left = lerp(bl, tl, y_amount);
-  float right = lerp(br, tr, y_amount);
-  return lerp(left, right, x_amount);
+  float left = lerp(tl, bl, y_amount);
+  float right = lerp(tr,br,  y_amount);
+  return lerp(right, left, x_amount);
 }
 
 float bicosine_interp(float tl, float tr, float bl, float br, float x_amount, float y_amount) {
-  float left = cosine_interp(bl, tl, y_amount);
-  float right = cosine_interp(br, tr, y_amount);
-  return cosine_interp(left, right, x_amount);
+  float left = cosine_interp(tl, bl, y_amount);
+  float right = cosine_interp(tr, br, y_amount);
+  return cosine_interp(right, left, x_amount);
 }
 
 float bismoothstep_interp(float tl, float tr, float bl, float br, float x_amount, float y_amount) {
-  float left = smoothstep(bl, tl, y_amount);
-  float right = smoothstep(br, tr, y_amount);
-  return smoothstep(left, right, x_amount);
+  float left = smoothstep(tl, bl, y_amount);
+  float right = smoothstep(tr, br, y_amount);
+  return smoothstep(right, left, x_amount);
 }
 
 float bismootherstep_interp(float tl, float tr, float bl, float br, float x_amount, float y_amount) {
 
-  float left = smootherstep(bl, tl, y_amount);
-  float right = smootherstep(br, tr, y_amount);
-  return smootherstep(left, right, x_amount);
+  float left = smootherstep(tl, bl, y_amount);
+  float right = smootherstep(tr, br, y_amount);
+  return smootherstep(right, left, x_amount);
 }
 
 vec2 vec2_new(float x, float y) {
