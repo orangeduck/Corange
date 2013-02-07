@@ -50,7 +50,6 @@ void* dict_get(dict* d, char* key) {
   struct bucket* b = d->buckets[index];
   
   while(true){
-    
     if (b == NULL) { return NULL; }
     if ( strcmp(b->key, key) == 0 ){ return b->item; }
     b = b->next;
@@ -58,7 +57,7 @@ void* dict_get(dict* d, char* key) {
   
   return NULL;
 
-};
+}
 
 void dict_set(dict* d, char* key, void* item) {
 

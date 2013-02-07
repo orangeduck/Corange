@@ -91,5 +91,6 @@ void corange_finish();
 #include "data/vertex_list.h"
 #include "data/vertex_hashtable.h"
 #include "data/spline.h"
+#include "data/randf.h"
 
 #endif

@@ -698,9 +698,59 @@ void SDL_GL_LoadExtensions() {
 void SDL_PrintStackTrace() {
 }
 
-#else
+#elif _WIN32
 
-void SDL_PrintStackTrace() {}
+#include "DbgHelp.h"
+
+void SDL_PrintStackTrace() {
+
+  /*
+	HANDLE process = GetCurrentProcess();
+	HANDLE thread = GetCurrentThread();
+  CONTEXT context;
+	BOOL walking = TRUE;
+	STACKFRAME64 stackframe;
+
+  context.ContextFlags = CONTEXT_CONTROL;
+  GetThreadContext(thread, &context);
+  
+	ZeroMemory(&stackframe, sizeof(STACKFRAME64));
+	stackframe.AddrPC.Offset = context.Eip;
+	stackframe.AddrPC.Mode = AddrModeFlat;
+	stackframe.AddrFrame.Offset = context.Ebp;
+	stackframe.AddrFrame.Mode = AddrModeFlat;
+	stackframe.AddrStack.Offset = context.Esp;
+	stackframe.AddrStack.Mode = AddrModeFlat;
+
+	SymInitialize(process, NULL, TRUE);
+
+	while (walking) {
+		walking = StackWalk64(
+      IMAGE_FILE_MACHINE_I386, process, thread, 
+      &stackframe, &context, 
+      NULL, SymFunctionTableAccess64, SymGetModuleBase64, NULL);
+
+		unsigned char buffer[sizeof(IMAGEHLP_SYMBOL64) + 256];
+		PIMAGEHLP_SYMBOL64 symbol = (PIMAGEHLP_SYMBOL64)&buffer;
+		
+		ZeroMemory(symbol, sizeof(IMAGEHLP_SYMBOL64) + 256);
+		symbol->SizeOfStruct = sizeof(IMAGEHLP_SYMBOL64);
+		symbol->MaxNameLength = 256;
+
+		if (SymGetSymFromAddr64(process, stackframe.AddrPC.Offset, NULL, symbol)) {
+      printf("[STACK] 0x%08I64X (%s+0x%I64X)\n",
+        stackframe.AddrPC.Offset,
+        symbol->Name,
+        stackframe.AddrPC.Offset - symbol->Address);
+    } else {
+      printf("[STACK] ???\n");
+    }
+	}
+	
+	SymCleanup(process);
+  */
+
+}
 
 #endif
 

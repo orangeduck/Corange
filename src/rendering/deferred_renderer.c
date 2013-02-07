@@ -54,11 +54,10 @@ render_object render_object_particles(particles* p) {
   return ro;
 }
 
-render_object render_object_paint(vec3 paint_pos, vec3 paint_norm, float paint_radius) {
+render_object render_object_paint(mat4 paint_axis, float paint_radius) {
   render_object ro;
   ro.type = RO_TYPE_PAINT;
-  ro.paint_pos = paint_pos;
-  ro.paint_norm = paint_norm;
+  ro.paint_axis = paint_axis;
   ro.paint_radius = paint_radius;
   return ro;
 }
@@ -323,9 +322,9 @@ deferred_renderer* deferred_renderer_new() {
   int shadow_width  = option_graphics_int(options, "graphics_shadows", 4096, 2048, 1024);
   int shadow_height = option_graphics_int(options, "graphics_shadows", 4096, 2048, 1024);
   
-  dr->shadows_start[0] = 0.00; dr->shadows_end[0] = 0.05;
-  dr->shadows_start[1] = 0.05; dr->shadows_end[1] = 0.20;
-  dr->shadows_start[2] = 0.20; dr->shadows_end[2] = 0.50;
+  dr->shadows_start[0] = 0.00; dr->shadows_end[0] = 0.10;
+  dr->shadows_start[1] = 0.10; dr->shadows_end[1] = 0.25;
+  dr->shadows_start[2] = 0.25; dr->shadows_end[2] = 0.50;
   
   dr->shadows_widths[0] = shadow_width; dr->shadows_heights[0] = shadow_height;
   dr->shadows_widths[1] = shadow_width; dr->shadows_heights[1] = shadow_height;
@@ -373,6 +372,8 @@ deferred_renderer* deferred_renderer_new() {
   /* Objects */
   dr->render_objects_num = 0;
   dr->render_objects = NULL;
+  
+  glTexEnvf(GL_TEXTURE_FILTER_CONTROL, GL_TEXTURE_LOD_BIAS, config_float(options, "graphics_lod_bias"));
   
   return dr;
   
@@ -459,8 +460,12 @@ void deferred_renderer_add(deferred_renderer* dr, render_object ro) {
   dr->render_objects[dr->render_objects_num-1] = ro;
 }
 
+static int round_to(float x, int multiple) {
+  return (int)(x / multiple) * multiple;
+}
+
 static void shadow_mapper_transforms(deferred_renderer* dr, int i, mat4* view, mat4* proj, float* nearclip, float* farclip) {
-    
+  
   mat4 inv_view = mat4_inverse(camera_view_matrix(dr->camera));
   mat4 inv_proj = mat4_inverse(camera_proj_matrix(dr->camera));
   
@@ -486,10 +491,22 @@ static void shadow_mapper_transforms(deferred_renderer* dr, int i, mat4* view, m
   float rangex = max(maximums.x, -minimums.x);
   float rangey = max(maximums.y, -minimums.y);
   float rangez = max(maximums.z, -minimums.z);
+  float range  = round_to(max(max(rangex, rangey), rangez), 10);
   
-  *nearclip = -rangey;
-  *farclip = rangey;
-  *proj = mat4_orthographic(-rangex, rangex, -rangez, rangez, -rangey, rangey);
+  float pixel = dr->shadows_widths[i] / range;
+  
+  vec3 offset = vec3_fmod(center, pixel);
+  center = vec3_sub(center, offset);
+  
+  if (sky_isday(dr->time_of_day)) {
+    *view = mat4_view_look_at(center, vec3_add(center, sky_sun_direction(dr->time_of_day)), vec3_up());
+  } else {
+    *view = mat4_view_look_at(center, vec3_add(center, sky_moon_direction(dr->time_of_day)), vec3_up());
+  }
+  
+  *nearclip = -range;
+  *farclip = range;
+  *proj = mat4_orthographic(-range, range, -range, range, -range, range);
   
 }
 
@@ -1413,18 +1430,9 @@ void render_projectile(deferred_renderer* dr, projectile* p) {
 
 }
 
-void render_paint_circle(deferred_renderer* dr, vec3 position, vec3 normal, float radius) {
+void render_paint_circle(deferred_renderer* dr, mat4 axis, float radius) {
   
-  vec3 axis_x = vec3_cross(normal, vec3_new(1, 0, 0));
-  vec3 axis_z = vec3_cross(normal, axis_x);
-  
-  mat4 world = mat4_new(
-    axis_z.x, axis_z.y, axis_z.z, position.x,
-    normal.x, normal.y, normal.z, position.y,
-    axis_x.x, axis_x.y, axis_x.z, position.z,
-           0,        0,        0,          1);
-  
-  render_axis(dr, world);
+  render_axis(dr, axis);
   
   shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_ui));
   shader_program_enable(shader);
@@ -1446,8 +1454,8 @@ void render_paint_circle(deferred_renderer* dr, vec3 position, vec3 normal, floa
     vec3 point0 = vec3_mul(vec3_new(sin(i+0.0), 0, cos(i+0.0)), radius);
     vec3 point1 = vec3_mul(vec3_new(sin(i+0.1), 0, cos(i+0.1)), radius);
     
-    point0 = mat4_mul_vec3(world, point0);
-    point1 = mat4_mul_vec3(world, point1);
+    point0 = mat4_mul_vec3(axis, point0);
+    point1 = mat4_mul_vec3(axis, point1);
   
     circle_positions[circle_items] = point0.x; circle_colors[circle_items] = 0.25; circle_items++;
     circle_positions[circle_items] = point0.y; circle_colors[circle_items] = 0.25; circle_items++;
@@ -1474,7 +1482,41 @@ void render_paint_circle(deferred_renderer* dr, vec3 position, vec3 normal, floa
   
 }
 
+static camera* compare_cam = NULL;
+
+static float render_object_cost(const render_object* ro) {
+  switch (ro->type) {
+    case RO_TYPE_STATIC:     return vec3_dist(compare_cam->position, ro->static_object->position);
+    case RO_TYPE_ANIMATED:   return vec3_dist(compare_cam->position, ro->animated_object->position);
+    case RO_TYPE_PARTICLES:  return vec3_dist(compare_cam->position, ro->particles->position);
+    case RO_TYPE_LANDSCAPE:  return FLT_MAX;
+    case RO_TYPE_PROJECTILE: return vec3_dist(compare_cam->position, ro->projectile->position);
+    default: return 0.0;
+  }
+}
+
+static int render_object_sort(const void* ro0, const void* ro1) {
+  
+  float cost0 = render_object_cost(ro0);
+  float cost1 = render_object_cost(ro1);
+  
+  if (cost0 == cost1) {
+    return  0;
+  } else if (cost0 > cost1) {
+    return  1;
+  } else {
+    return -1;
+  }
+  
+}
+
 static void render_gbuffer(deferred_renderer* dr) {
+  
+  compare_cam = dr->camera;
+  qsort(dr->render_objects, 
+        dr->render_objects_num, 
+        sizeof(render_object), 
+        render_object_sort);
   
   config* options = asset_get_load(P("./assets/options.cfg"));
   
@@ -1527,8 +1569,7 @@ static void render_gbuffer(deferred_renderer* dr) {
         
     if (dr->render_objects[j].type == RO_TYPE_PAINT) {
       render_paint_circle(dr, 
-        dr->render_objects[j].paint_pos, 
-        dr->render_objects[j].paint_norm, 
+        dr->render_objects[j].paint_axis, 
         dr->render_objects[j].paint_radius); }
   }
 
@@ -1973,6 +2014,7 @@ static void render_tonemap(deferred_renderer* dr) {
   
   /* Generate Mipmaps, adjust exposure */
   
+  /*
   unsigned char color[4] = {0,0,0,0};
   int level = -1; int width = 0; int height = 0;
   
@@ -1994,6 +2036,7 @@ static void render_tonemap(deferred_renderer* dr) {
   glDisable(GL_TEXTURE_2D);
   
   float average = (float)(color[0] + color[1] + color[2]) / (3.0 * 255.0);
+  */
   
   //EXPOSURE += (EXPOSURE_TARGET - average) * EXPOSURE_SPEED;
   dr->exposure = 4.0;
@@ -2113,24 +2156,26 @@ static void render_post1(deferred_renderer* dr) {
   
 }
 
+
+
 void deferred_renderer_render(deferred_renderer* dr) {
   
   dr->time += frame_time();
   
-  //timer t = timer_start(0, "Rendering Start");
+  timer t = timer_start(0, "Rendering Start");
   
-  render_shadows(dr);   //t = timer_split(t, "Shadow");
-  render_clear(dr);     //t = timer_split(t, "Clear");
-  render_gbuffer(dr);   //t = timer_split(t, "GBuffer");
-  render_ssao(dr);      //t = timer_split(t, "SSAO");
-  render_skies(dr);     //t = timer_split(t, "Skies");
-  render_compose(dr);   //t = timer_split(t, "Compose");
-  render_particles(dr); //t = timer_split(t, "Particles");
-  render_tonemap(dr);   //t = timer_split(t, "Tonemap");
-  render_post0(dr);     //t = timer_split(t, "Post0");
-  render_post1(dr);     //t = timer_split(t, "Post1");
+  render_shadows(dr);   glFlush(); t = timer_split(t, "Shadow");
+  render_clear(dr);     glFlush(); t = timer_split(t, "Clear");
+  render_gbuffer(dr);   glFlush(); t = timer_split(t, "GBuffer");
+  render_ssao(dr);      glFlush(); t = timer_split(t, "SSAO");
+  render_skies(dr);     glFlush(); t = timer_split(t, "Skies");
+  render_compose(dr);   glFlush(); t = timer_split(t, "Compose");
+  render_particles(dr); glFlush(); t = timer_split(t, "Particles");
+  render_tonemap(dr);   glFlush(); t = timer_split(t, "Tonemap");
+  render_post0(dr);     glFlush(); t = timer_split(t, "Post0");
+  render_post1(dr);     glFlush(); t = timer_split(t, "Post1");
   
-  //timer_stop(t, "Rendering End");
+  timer_stop(t, "Rendering End");
   
   dr->render_objects_num = 0;
   dr->dyn_lights_num = 0;

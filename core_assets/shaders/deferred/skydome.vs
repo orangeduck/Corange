@@ -69,7 +69,8 @@ void main() {
 	vec3 sample_point = start + sample_ray * 0.5;
 
 	vec3 front_color = vec3(0.0, 0.0, 0.0);
-	for(int i=0; i<nsamples; i++) {
+  
+	for(int i = 0; i < nsamples; i++) {
 		float height = length(sample_point);
 		float depth = exp(scale_over_depth * (inner_radius - height));
 		float light_angle = dot(-light_direction, sample_point) / height;

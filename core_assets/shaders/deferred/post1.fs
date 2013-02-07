@@ -108,8 +108,8 @@ void main() {
   
   {
     vec2 first = mod(fTexcoord + color.rg * vec2(5.0, 5.11) + color.b * vec2(-5.41) + color.rg * time * 0.05, 1.0);
-    vec4 second = texture2D(random_perlin, first / 512.0 * vec2(width, height), 1.0);
-    vec4 third  = texture2D(random_perlin, first * 0.2 + second.rg * 0.1 + color.gb * time * 0.05, 1.0);
+    vec4 second = texture2D(random_perlin, mod(first / 512.0 * vec2(width, height), 1.0));
+    vec4 third  = texture2D(random_perlin, mod(first * 0.2 + second.rg * 0.1 + color.gb * time * 0.05, 1.0));
     color = mix(color, 1.0 * desaturate(third.rgb), glitch);
   }
   

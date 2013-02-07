@@ -138,13 +138,13 @@ void main() {
       (material == MAT_REFLECT_MAJOR) || 
       (material == MAT_LEAF)) {
     
-    float env_factor = (material == MAT_REFLECT_MAJOR) ? 2.0 : 1.0;
+    float env_factor = (material == MAT_REFLECT_MAJOR) ? 1.0 : 0.5;
     
     vec3 reflected = normalize(reflect(eye_dir, normal));
-    vec3 env = texture2D(env_texture, vec2(reflected.x, -reflected.y)).rgb * ambient * env_factor;
-    float env_amount = (1.0 - dot(eye_dir, normal)) * spec * env_factor;
+    vec3 env = texture2D(env_texture, vec2(reflected.x, -reflected.y)).rgb * ambient * env_factor * 3.0;
+    float env_amount = (1.0 - dot(eye_dir, normal)) * spec * env_factor * shadow;
     
-    diffuse = mix(diffuse, env, clamp(env_amount, 0.0, 1.0));
+    diffuse = mix(diffuse, env, clamp(env_amount, 0.0, 0.5));
   }
   
   //vec3 light_dir = normalize(light_position[0] - light_target[0]);

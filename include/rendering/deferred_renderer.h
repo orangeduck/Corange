@@ -64,7 +64,7 @@ typedef struct {
     
     /* UI */
     light* light;
-    struct { vec3 paint_pos; vec3 paint_norm; float paint_radius; };
+    struct { mat4 paint_axis; float paint_radius; };
     
   };
 } render_object;
@@ -79,7 +79,7 @@ render_object render_object_ellipsoid(ellipsoid e);
 render_object render_object_cmesh(cmesh* cm, mat4 world);
 render_object render_object_landscape(landscape* l);
 render_object render_object_projectile(projectile* p);
-render_object render_object_paint(vec3 paint_pos, vec3 paint_norm, float paint_radius);
+render_object render_object_paint(mat4 paint_axis, float paint_radius);
 
 typedef struct {
 

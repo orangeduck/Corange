@@ -1640,10 +1640,10 @@ mat4 mat3_to_mat4(mat3 m) {
   mat.zz = m.zz;
   mat.zw = 0.0f;
   
-  mat.ww = 0.0f;
   mat.wx = 0.0f;
   mat.wy = 0.0f;
-  mat.wz = 1.0f;
+  mat.wz = 0.0f;
+  mat.ww = 1.0f;
   
   return mat;
 }
