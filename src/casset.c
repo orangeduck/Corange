@@ -153,6 +153,10 @@ fpath asset_hndl_path(asset_hndl ah) {
   return ah.path;
 }
 
+bool asset_hndl_eq(asset_hndl ah0, asset_hndl ah1) {
+  return (strcmp(ah0.path.ptr, ah1.path.ptr) == 0);
+}
+
 asset* asset_hndl_ptr(asset_hndl ah) {
 
   if (strcmp(ah.path.ptr, "") == 0) {

@@ -549,6 +549,7 @@ GLDELETESHADERFN glDeleteShader = NULL;
 GLDELETEPROGRAMFN glDeleteProgram = NULL;
 GLUSEPROGRAMFN glUseProgram = NULL;
 GLVERTEXATTRIBPOINTERFN glVertexAttribPointer = NULL;
+GLVERTEXATTRIBDIVISORFN glVertexAttribDivisor = NULL;
 GLENABLEVERTEXATTRIBARRAYFN glEnableVertexAttribArray = NULL;
 GLDISABLEVERTEXATTRIBARRAYFN glDisableVertexAttribArray = NULL;
 GLUNIFORM2FFN glUniform2f = NULL;
@@ -641,6 +642,7 @@ void SDL_GL_LoadExtensions() {
   
   SDL_GL_LoadExtension(GLGETATTRIBLOCATIONFN, glGetAttribLocation);
   SDL_GL_LoadExtension(GLVERTEXATTRIBPOINTERFN, glVertexAttribPointer);
+  SDL_GL_LoadExtension(GLVERTEXATTRIBDIVISORFN, glVertexAttribDivisor);
   SDL_GL_LoadExtension(GLENABLEVERTEXATTRIBARRAYFN, glEnableVertexAttribArray);
   SDL_GL_LoadExtension(GLDISABLEVERTEXATTRIBARRAYFN, glDisableVertexAttribArray);
   SDL_GL_LoadExtension(GLBINDATTRIBLOCATIONFN, glBindAttribLocation);

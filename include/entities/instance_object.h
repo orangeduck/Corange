@@ -12,8 +12,6 @@
 #include "cengine.h"
 #include "casset.h"
 
-#define MAX_INSTANCES 128
-
 typedef struct {
   vec3 position;
   vec3 scale;
@@ -24,6 +22,8 @@ typedef struct {
 
   int num_instances;
   instance_data* instances;
+  
+  GLuint world_buffer;
   
   bool active;
   bool recieve_shadows;
@@ -37,6 +37,7 @@ typedef struct {
 instance_object* instance_object_new();
 void instance_object_delete(instance_object* io);
 
+void instance_object_update(instance_object* io);
 void instance_object_add_instance(instance_object* io, vec3 position, vec3 scale, mat4 rotation);
 
 #endif

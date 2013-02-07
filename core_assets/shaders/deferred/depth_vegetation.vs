@@ -1,10 +1,10 @@
 #version 120
 
+attribute mat4 vWorld;
 attribute vec3 vPosition;
 attribute vec2 vTexcoord;
 attribute vec4 vColor;
 
-uniform mat4 world;
 uniform mat4 proj;
 uniform mat4 view;
 
@@ -39,7 +39,7 @@ void main() {
 		( vec4( vColor.g, vColor.g, vColor.g, 0) )
   ));
 	
-  vec4 world_position = world * vec4(vPosition + wave.xyz, 1);
+  vec4 world_position = vWorld * vec4(vPosition + wave.xyz, 1);
   
   vec4 screen_position = proj * view * world_position;
   fDepth = screen_position.z / screen_position.w;

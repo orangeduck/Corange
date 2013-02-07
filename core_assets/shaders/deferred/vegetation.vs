@@ -1,5 +1,6 @@
 #version 120
 
+attribute mat4 vWorld;
 attribute vec3 vPosition;
 attribute vec2 vTexcoord;
 attribute vec3 vNormal;
@@ -7,7 +8,6 @@ attribute vec3 vTangent;
 attribute vec3 vBinormal;
 attribute vec4 vColor;
 
-uniform mat4 world;
 uniform mat4 view;
 uniform mat4 proj;
 
@@ -32,9 +32,9 @@ vec4 smooth_triangle_wave(vec4 x) {
 
 void main( void ) {
   
-  vec3 w_tangent  = normalize(mat3(world) * vTangent);
-  vec3 w_binormal = normalize(mat3(world) * vBinormal);
-  vec3 w_normal   = normalize(mat3(world) * vNormal);
+  vec3 w_tangent  = normalize(mat3(vWorld) * vTangent);
+  vec3 w_binormal = normalize(mat3(vWorld) * vBinormal);
+  vec3 w_normal   = normalize(mat3(vWorld) * vNormal);
   
   fTBN = mat4(
     w_tangent.x, w_binormal.x, w_normal.x, 0.0,
@@ -55,7 +55,7 @@ void main( void ) {
 		( vec4( vColor.g, vColor.g, vColor.g, 0) )
   ));
 	
-  vec4 world_position = world * vec4(vPosition + wave.xyz, 1);
+  vec4 world_position = vWorld * vec4(vPosition + wave.xyz, 1);
   
   fTexcoord = vTexcoord;
   fPosition = world_position.xyz / world_position.w;

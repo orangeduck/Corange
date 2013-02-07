@@ -21,6 +21,7 @@
 #include "entities/camera.h"
 #include "entities/light.h"
 #include "entities/static_object.h"
+#include "entities/instance_object.h"
 #include "entities/animated_object.h"
 #include "entities/particles.h"
 #include "entities/projectile.h"
@@ -34,15 +35,16 @@ enum {
 enum {
   RO_TYPE_AXIS       = 0,
   RO_TYPE_STATIC     = 1,
-  RO_TYPE_ANIMATED   = 2,
-  RO_TYPE_PARTICLES  = 3,
-  RO_TYPE_LIGHT      = 4, 
-  RO_TYPE_LANDSCAPE  = 5,
-  RO_TYPE_PAINT      = 6,
-  RO_TYPE_SPHERE     = 7,
-  RO_TYPE_ELLIPSOID  = 8,
-  RO_TYPE_CMESH      = 9,
-  RO_TYPE_PROJECTILE = 10,
+  RO_TYPE_INSTANCE   = 2,
+  RO_TYPE_ANIMATED   = 3,
+  RO_TYPE_PARTICLES  = 4,
+  RO_TYPE_LIGHT      = 5, 
+  RO_TYPE_LANDSCAPE  = 6,
+  RO_TYPE_PAINT      = 7,
+  RO_TYPE_SPHERE     = 8,
+  RO_TYPE_ELLIPSOID  = 9,
+  RO_TYPE_CMESH      = 10,
+  RO_TYPE_PROJECTILE = 11,
 };
 
 typedef struct {
@@ -57,6 +59,7 @@ typedef struct {
     
     /* Objects */
     static_object* static_object;
+    instance_object* instance_object;
     animated_object* animated_object;
     landscape* landscape;
     particles* particles;
@@ -70,6 +73,7 @@ typedef struct {
 } render_object;
 
 render_object render_object_static(static_object* s);
+render_object render_object_instance(instance_object* s);
 render_object render_object_animated(animated_object* a);
 render_object render_object_particles(particles* p);
 render_object render_object_light(light* l);
@@ -91,6 +95,7 @@ typedef struct {
 
   /* Materials */
   asset_hndl mat_static;
+  asset_hndl mat_instance;
   asset_hndl mat_animated;
   asset_hndl mat_vegetation;
   asset_hndl mat_terrain;
@@ -103,6 +108,7 @@ typedef struct {
   asset_hndl mat_post1;
   asset_hndl mat_skydome;
   asset_hndl mat_depth;
+  asset_hndl mat_depth_ins;
   asset_hndl mat_depth_ani;
   asset_hndl mat_depth_veg;
   asset_hndl mat_sun;

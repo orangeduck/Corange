@@ -29,6 +29,7 @@ static float world_matrix[16];
 static float lview_matrix[16];
 static float lproj_matrix[16];
 
+#define MAX_INSTANCES 128
 static float world_matricies[16*MAX_INSTANCES];
 
 static float shader_timer = 0.0;

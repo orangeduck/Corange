@@ -57,6 +57,10 @@ void shader_program_enable_texture_id(shader_program* p, char* name, int index, 
 void shader_program_disable_texture(shader_program* p, int index);
 
 void shader_program_enable_attribute(shader_program* p, char* name, int count, int stride, void* ptr);
+void shader_program_enable_attribute_instance(shader_program* p, char* name, int count, int stride, void* ptr);
 void shader_program_disable_attribute(shader_program* p, char* name);
+
+void shader_program_enable_attribute_instance_matrix(shader_program* p, char* name, void* ptr);
+void shader_program_disable_attribute_matrix(shader_program* p, char* name);
 
 #endif
