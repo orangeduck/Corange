@@ -11,11 +11,11 @@ vec3 sky_wind(float t, int seed) {
 }
 
 asset_hndl sky_mesh_sun(float t) {
-  return asset_hndl_new_load(P("$CORANGE/resources/sun_sprite.obj"));
+  return asset_hndl_new_load(P("$CORANGE/resources/sun_sprite.bmf"));
 }
 
 asset_hndl sky_mesh_moon(float t) {
-  return asset_hndl_new_load(P("$CORANGE/resources/moon_sprite.obj"));
+  return asset_hndl_new_load(P("$CORANGE/resources/moon_sprite.bmf"));
 }
 
 asset_hndl sky_mesh_stars(float t) {
@@ -61,7 +61,7 @@ vec3 sky_sun_direction(float t) {
 }
 
 vec3 sky_sun_diffuse(float t) {
-  return vec3_mul(vec3_new(1.0,  0.937, 0.8), 1.5);
+  return vec3_mul(vec3_new(1.0,  0.937, 0.8), 2.0);
   //return vec3_mul(vec3_new(1.0,  0.937, 0.8), 0);
 }
 
@@ -151,20 +151,20 @@ int sky_clouds_num() {
 
 asset_hndl sky_clouds_mesh(int i) {
   return (asset_hndl[cloud_count]) {
-    asset_hndl_new_load(P("$CORANGE/resources/clouds/cloud_horizon1.obj")),
-    asset_hndl_new_load(P("$CORANGE/resources/clouds/cloud_horizon2.obj")),
-    asset_hndl_new_load(P("$CORANGE/resources/clouds/cloud_horizon3.obj")),
-    asset_hndl_new_load(P("$CORANGE/resources/clouds/cloud_horizon4.obj")),
-    asset_hndl_new_load(P("$CORANGE/resources/clouds/cloud_lower4.obj")),
-    asset_hndl_new_load(P("$CORANGE/resources/clouds/cloud_sheet1.obj")),
-    asset_hndl_new_load(P("$CORANGE/resources/clouds/cloud_sheet2.obj")),
-    asset_hndl_new_load(P("$CORANGE/resources/clouds/cloud_sheet3.obj")),
-    asset_hndl_new_load(P("$CORANGE/resources/clouds/cloud_sheet4.obj")),
-    asset_hndl_new_load(P("$CORANGE/resources/clouds/cloud_sheet5.obj")),
-    asset_hndl_new_load(P("$CORANGE/resources/clouds/cloud_upper1.obj")),
-    asset_hndl_new_load(P("$CORANGE/resources/clouds/cloud_upper2.obj")),
-    asset_hndl_new_load(P("$CORANGE/resources/clouds/cloud_upper3.obj")),
-    asset_hndl_new_load(P("$CORANGE/resources/clouds/cloud_upper4.obj"))
+    asset_hndl_new_load(P("$CORANGE/resources/clouds/cloud_horizon1.bmf")),
+    asset_hndl_new_load(P("$CORANGE/resources/clouds/cloud_horizon2.bmf")),
+    asset_hndl_new_load(P("$CORANGE/resources/clouds/cloud_horizon3.bmf")),
+    asset_hndl_new_load(P("$CORANGE/resources/clouds/cloud_horizon4.bmf")),
+    asset_hndl_new_load(P("$CORANGE/resources/clouds/cloud_lower4.bmf")),
+    asset_hndl_new_load(P("$CORANGE/resources/clouds/cloud_sheet1.bmf")),
+    asset_hndl_new_load(P("$CORANGE/resources/clouds/cloud_sheet2.bmf")),
+    asset_hndl_new_load(P("$CORANGE/resources/clouds/cloud_sheet3.bmf")),
+    asset_hndl_new_load(P("$CORANGE/resources/clouds/cloud_sheet4.bmf")),
+    asset_hndl_new_load(P("$CORANGE/resources/clouds/cloud_sheet5.bmf")),
+    asset_hndl_new_load(P("$CORANGE/resources/clouds/cloud_upper1.bmf")),
+    asset_hndl_new_load(P("$CORANGE/resources/clouds/cloud_upper2.bmf")),
+    asset_hndl_new_load(P("$CORANGE/resources/clouds/cloud_upper3.bmf")),
+    asset_hndl_new_load(P("$CORANGE/resources/clouds/cloud_upper4.bmf"))
   }[i];
 }
 

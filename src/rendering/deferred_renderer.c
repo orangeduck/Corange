@@ -12,6 +12,13 @@
 
 #include "rendering/sky.h"
 
+render_object render_object_instance(instance_object* i) {
+  render_object ro;
+  ro.type = RO_TYPE_INSTANCE;
+  ro.instance_object = i;
+  return ro;
+}
+
 render_object render_object_static(static_object* s) {
   render_object ro;
   ro.type = RO_TYPE_STATIC;
@@ -47,11 +54,17 @@ render_object render_object_landscape(landscape* l) {
   return ro;
 }
 
-render_object render_object_paint(vec3 paint_pos, vec3 paint_norm, float paint_radius) {
+render_object render_object_particles(particles* p) {
+  render_object ro;
+  ro.type = RO_TYPE_PARTICLES;
+  ro.particles = p;
+  return ro;
+}
+
+render_object render_object_paint(mat4 paint_axis, float paint_radius) {
   render_object ro;
   ro.type = RO_TYPE_PAINT;
-  ro.paint_pos = paint_pos;
-  ro.paint_norm = paint_norm;
+  ro.paint_axis = paint_axis;
   ro.paint_radius = paint_radius;
   return ro;
 }
@@ -75,6 +88,13 @@ render_object render_object_ellipsoid(ellipsoid e) {
   render_object ro;
   ro.type = RO_TYPE_ELLIPSOID;
   ro.ellipsoid = e;
+  return ro;
+}
+
+render_object render_object_projectile(projectile* p) {
+  render_object ro;
+  ro.type = RO_TYPE_PROJECTILE;
+  ro.projectile = p;
   return ro;
 }
 
@@ -114,6 +134,7 @@ deferred_renderer* deferred_renderer_new() {
   folder_load(P("$CORANGE/shaders/deferred/"));
   
   dr->mat_static     = asset_hndl_new(P("$CORANGE/shaders/deferred/static.mat"));
+  dr->mat_instance   = asset_hndl_new(P("$CORANGE/shaders/deferred/instance.mat"));
   dr->mat_animated   = asset_hndl_new(P("$CORANGE/shaders/deferred/animated.mat"));
   dr->mat_vegetation = asset_hndl_new(P("$CORANGE/shaders/deferred/vegetation.mat"));
   dr->mat_terrain    = asset_hndl_new(P("$CORANGE/shaders/deferred/terrain.mat"));
@@ -125,6 +146,7 @@ deferred_renderer* deferred_renderer_new() {
   dr->mat_ui         = asset_hndl_new(P("$CORANGE/shaders/deferred/ui.mat"));
   dr->mat_skydome    = asset_hndl_new(P("$CORANGE/shaders/deferred/skydome.mat"));
   dr->mat_depth      = asset_hndl_new(P("$CORANGE/shaders/deferred/depth.mat"));
+  dr->mat_depth_ins  = asset_hndl_new(P("$CORANGE/shaders/deferred/depth_instance.mat"));
   dr->mat_depth_ani  = asset_hndl_new(P("$CORANGE/shaders/deferred/depth_animated.mat"));
   dr->mat_depth_veg  = asset_hndl_new(P("$CORANGE/shaders/deferred/depth_vegetation.mat"));
   dr->mat_sun        = asset_hndl_new(P("$CORANGE/shaders/deferred/sun.mat"));
@@ -309,9 +331,9 @@ deferred_renderer* deferred_renderer_new() {
   int shadow_width  = option_graphics_int(options, "graphics_shadows", 4096, 2048, 1024);
   int shadow_height = option_graphics_int(options, "graphics_shadows", 4096, 2048, 1024);
   
-  dr->shadows_start[0] = 0.00; dr->shadows_end[0] = 0.05;
-  dr->shadows_start[1] = 0.05; dr->shadows_end[1] = 0.20;
-  dr->shadows_start[2] = 0.20; dr->shadows_end[2] = 0.50;
+  dr->shadows_start[0] = 0.00; dr->shadows_end[0] = 0.10;
+  dr->shadows_start[1] = 0.10; dr->shadows_end[1] = 0.25;
+  dr->shadows_start[2] = 0.25; dr->shadows_end[2] = 0.50;
   
   dr->shadows_widths[0] = shadow_width; dr->shadows_heights[0] = shadow_height;
   dr->shadows_widths[1] = shadow_width; dr->shadows_heights[1] = shadow_height;
@@ -359,6 +381,8 @@ deferred_renderer* deferred_renderer_new() {
   /* Objects */
   dr->render_objects_num = 0;
   dr->render_objects = NULL;
+  
+  glTexEnvf(GL_TEXTURE_FILTER_CONTROL, GL_TEXTURE_LOD_BIAS, config_float(options, "graphics_lod_bias"));
   
   return dr;
   
@@ -427,10 +451,6 @@ void deferred_renderer_set_skydome_enabled(deferred_renderer* dr, bool enabled) 
   dr->skydome_enabled = enabled;
 }
 
-int deferred_renderer_num_dyn_light(deferred_renderer* dr) {
-  return dr->dyn_lights_num;
-}
-
 void deferred_renderer_add_dyn_light(deferred_renderer* dr, light* l) {
 
   if (dr->dyn_lights_num == DEFERRED_MAX_DYN_LIGHTS) {
@@ -443,35 +463,18 @@ void deferred_renderer_add_dyn_light(deferred_renderer* dr, light* l) {
 
 }
 
-void deferred_renderer_rem_dyn_light(deferred_renderer* dr, light* l) {
-  
-  bool found = false;
-  for(int i = 0; i < dr->dyn_lights_num; i++) {
-    if ((dr->dyn_light[i] == l) && !found) {
-      found = true;
-    }
-    
-    if (found) {
-      dr->dyn_light[i] = dr->dyn_light[i+1];
-    }
-  }
-  
-  if (found) {
-    dr->dyn_lights_num--;
-  } else {
-    warning("Could not find light %p to remove!", l);
-  }
-  
-}
-
 void deferred_renderer_add(deferred_renderer* dr, render_object ro) {
   dr->render_objects_num++;
   dr->render_objects = realloc(dr->render_objects, sizeof(render_object) * dr->render_objects_num);
   dr->render_objects[dr->render_objects_num-1] = ro;
 }
 
+static int round_to(float x, int multiple) {
+  return (int)(x / multiple) * multiple;
+}
+
 static void shadow_mapper_transforms(deferred_renderer* dr, int i, mat4* view, mat4* proj, float* nearclip, float* farclip) {
-    
+  
   mat4 inv_view = mat4_inverse(camera_view_matrix(dr->camera));
   mat4 inv_proj = mat4_inverse(camera_proj_matrix(dr->camera));
   
@@ -497,44 +500,46 @@ static void shadow_mapper_transforms(deferred_renderer* dr, int i, mat4* view, m
   float rangex = max(maximums.x, -minimums.x);
   float rangey = max(maximums.y, -minimums.y);
   float rangez = max(maximums.z, -minimums.z);
+  float range  = round_to(max(max(rangex, rangey), rangez), 10);
   
-  *nearclip = -rangey;
-  *farclip = rangey;
-  *proj = mat4_orthographic(-rangex, rangex, -rangez, rangez, -rangey, rangey);
+  float pixel = dr->shadows_widths[i] / range;
+  
+  vec3 offset = vec3_fmod(center, pixel);
+  center = vec3_sub(center, offset);
+  
+  if (sky_isday(dr->time_of_day)) {
+    *view = mat4_view_look_at(center, vec3_add(center, sky_sun_direction(dr->time_of_day)), vec3_up());
+  } else {
+    *view = mat4_view_look_at(center, vec3_add(center, sky_moon_direction(dr->time_of_day)), vec3_up());
+  }
+  
+  *nearclip = -range;
+  *farclip = range;
+  *proj = mat4_orthographic(-range, range, -range, range, -range, range);
   
 }
 
-static void render_shadows_vegetation(deferred_renderer* dr, int i, static_object* s) {
-
-  mat4 world = mat4_world( s->position, s->scale, s->rotation );
+static void render_shadows_vegetation(deferred_renderer* dr, int i, instance_object* io) {
+  
   mat4 view, proj;
   float clip_near, clip_far;
   shadow_mapper_transforms(dr, i, &view, &proj, &clip_near, &clip_far);
   
-  mat4 inv_view = mat4_inverse(view);
-  mat4 inv_proj = mat4_inverse(proj);
-  frustum frus = frustum_new_clipbox();
-  frus = frustum_transform(frus, inv_proj);
-  frus = frustum_transform(frus, inv_view);
-  
   shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_depth_veg));
   shader_program_enable(shader);
-  shader_program_set_mat4(shader, "world", world);
   shader_program_set_mat4(shader, "view",  view);
   shader_program_set_mat4(shader, "proj",  proj);
   shader_program_set_float(shader, "clip_near", clip_near);
   shader_program_set_float(shader, "clip_far", clip_far);
   shader_program_set_float(shader, "time", dr->time);
   
-  renderable* r = asset_hndl_ptr(s->renderable);
+  renderable* r = asset_hndl_ptr(io->renderable);
 
   if(r->is_rigged) { error("Static Object is rigged!"); }
   
   for(int j = 0; j < r->num_surfaces; j++) {
     
     renderable_surface* s = r->surfaces[j];
-    
-    if (sphere_outside_frustum(sphere_transform(s->bound, world), frus)) { continue; }
     
     material_entry* me = material_get_entry(asset_hndl_ptr(r->material), j);
     bool use_alpha =
@@ -549,17 +554,22 @@ static void render_shadows_vegetation(deferred_renderer* dr, int i, static_objec
     }
     
     glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
     
     shader_program_enable_attribute(shader, "vPosition", 3, 18, (void*)0);
     shader_program_enable_attribute(shader, "vTexcoord", 2, 18, (void*)(sizeof(float) * 12));
     shader_program_enable_attribute(shader, "vColor",    4, 18, (void*)(sizeof(float) * 14));
     
-      glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
+    glBindBuffer(GL_ARRAY_BUFFER, io->world_buffer);
+    
+    shader_program_enable_attribute_instance_matrix(shader, "vWorld", (void*)0);
+    
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
+      glDrawElementsInstanced(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0, io->num_instances);
     
     shader_program_disable_attribute(shader, "vPosition");
     shader_program_disable_attribute(shader, "vTexcoord");
     shader_program_disable_attribute(shader, "vColor");
+    shader_program_disable_attribute_matrix(shader, "vWorld");
     
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -627,6 +637,68 @@ static void render_shadows_static(deferred_renderer* dr, int i, static_object* s
     
     shader_program_disable_attribute(shader, "vPosition");
     shader_program_disable_attribute(shader, "vTexcoord");
+    
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    
+    if (use_alpha) {
+      shader_program_disable_texture(shader, 0);
+    }
+    
+  }
+  
+  shader_program_disable(shader);
+  
+}
+
+static void render_shadows_instance(deferred_renderer* dr, int i, instance_object* io) {
+  
+  mat4 view, proj;
+  float clip_near, clip_far;
+  shadow_mapper_transforms(dr, i, &view, &proj, &clip_near, &clip_far);
+  
+  shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_depth_ins));
+  shader_program_enable(shader);
+  shader_program_set_mat4(shader, "view",  view);
+  shader_program_set_mat4(shader, "proj",  proj);
+  shader_program_set_float(shader, "clip_near", clip_near);
+  shader_program_set_float(shader, "clip_far", clip_far);
+  
+  renderable* r = asset_hndl_ptr(io->renderable);
+
+  if(r->is_rigged) { error("Static Object is rigged!"); }
+  
+  for(int j = 0; j < r->num_surfaces; j++) {
+    
+    renderable_surface* s = r->surfaces[j];
+    
+    material_entry* me = material_get_entry(asset_hndl_ptr(r->material), j);
+    bool use_alpha =
+      material_entry_has_item(me, "alpha_test") &&
+      material_entry_has_item(me, "diffuse_map");
+    
+    if (use_alpha) {
+      shader_program_set_float(shader, "alpha_test", material_entry_item(me, "alpha_test").as_float);
+      shader_program_enable_texture(shader, "diffuse_map", 0, material_entry_item(me, "diffuse_map").as_asset);
+    } else {
+      shader_program_set_float(shader, "alpha_test", 0.0);
+    }
+    
+    glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
+    
+    shader_program_enable_attribute(shader, "vPosition", 3, 18, (void*)0);
+    shader_program_enable_attribute(shader, "vTexcoord", 2, 18, (void*)(sizeof(float) * 12));
+    
+    glBindBuffer(GL_ARRAY_BUFFER, io->world_buffer);
+    
+    shader_program_enable_attribute_instance_matrix(shader, "vWorld", (void*)0);
+    
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
+      glDrawElementsInstanced(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0, io->num_instances);
+    
+    shader_program_disable_attribute(shader, "vPosition");
+    shader_program_disable_attribute(shader, "vTexcoord");
+    shader_program_disable_attribute_matrix(shader, "vWorld");
     
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -772,6 +844,19 @@ static void render_shadows_landscape(deferred_renderer* dr, int i, landscape* l)
 
 }
 
+void render_shadows_projectile(deferred_renderer* dr, int i, projectile* p) {
+
+  static_object so;
+  so.position = p->position;
+  so.rotation = p->rotation;
+  so.scale = vec3_new(1, 1, 1);
+  so.renderable = p->mesh;
+  so.collision_body = asset_hndl_null();
+  
+  render_shadows_static(dr, i, &so);
+
+}
+
 static void render_shadows(deferred_renderer* dr) {
   
   for (int i = 0; i < 3; i++) {
@@ -789,13 +874,13 @@ static void render_shadows(deferred_renderer* dr) {
       
       // HACK ALERT
       bool veg_found = false;
-      if (dr->render_objects[j].type == RO_TYPE_STATIC) {
-        renderable* r = asset_hndl_ptr(dr->render_objects[j].static_object->renderable);
+      if (dr->render_objects[j].type == RO_TYPE_INSTANCE) {
+        renderable* r = asset_hndl_ptr(dr->render_objects[j].instance_object->renderable);
         material* m = asset_hndl_ptr(r->material);        
         
         for (int k = 0; k < m->num_entries; k++) {
           if (material_entry_item(m->entries[k], "material").as_int == 6) {
-            render_shadows_vegetation(dr, i, dr->render_objects[j].static_object);
+            render_shadows_vegetation(dr, i, dr->render_objects[j].instance_object);
             veg_found = true;
             break;
           }
@@ -807,8 +892,10 @@ static void render_shadows(deferred_renderer* dr) {
 
     
       if (dr->render_objects[j].type == RO_TYPE_STATIC) { render_shadows_static(dr, i, dr->render_objects[j].static_object); }
+      if (dr->render_objects[j].type == RO_TYPE_INSTANCE) { render_shadows_instance(dr, i, dr->render_objects[j].instance_object); }
       if (dr->render_objects[j].type == RO_TYPE_ANIMATED) { render_shadows_animated(dr, i, dr->render_objects[j].animated_object); }
       if (dr->render_objects[j].type == RO_TYPE_LANDSCAPE) { render_shadows_landscape(dr, i, dr->render_objects[j].landscape); }
+      if (dr->render_objects[j].type == RO_TYPE_PROJECTILE) { render_shadows_projectile(dr, i, dr->render_objects[j].projectile); }
     }
     
     glCullFace(GL_BACK);
@@ -997,30 +1084,98 @@ static void render_static(deferred_renderer* dr, static_object* so) {
 
 }
 
-static void render_vegetation(deferred_renderer* dr, static_object* so) {
-  
-  mat4 world = mat4_world( so->position, so->scale, so->rotation );
-  mat4 inv_view = mat4_inverse(camera_view_matrix(dr->camera));
-  mat4 inv_proj = mat4_inverse(camera_proj_matrix(dr->camera));
-  frustum frus = frustum_new_clipbox();
-  frus = frustum_transform(frus, inv_proj);
-  frus = frustum_transform(frus, inv_view);
+static void render_instance(deferred_renderer* dr, instance_object* io) {
   
   config* options = asset_get_load(P("./assets/options.cfg"));
   if (config_bool(options, "render_colmeshes")) {
-    if (!file_isloaded(so->collision_body.path)) {
-      file_load(so->collision_body.path);
+    if (!file_isloaded(io->collision_body.path)) {
+      file_load(io->collision_body.path);
     }
-    render_cmesh(dr, asset_hndl_ptr(so->collision_body), world);
+    //render_cmesh(dr, asset_hndl_ptr(io->collision_body), world);
   }
   
-  renderable* r = asset_hndl_ptr(so->renderable);
+  renderable* r = asset_hndl_ptr(io->renderable);
+  
+  if(r->is_rigged) { error("Static object is rigged!"); }
+  
+  shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_instance));
+  shader_program_enable(shader);
+  shader_program_set_mat4(shader, "view", camera_view_matrix(dr->camera));
+  shader_program_set_mat4(shader, "proj", camera_proj_matrix(dr->camera));
+  shader_program_set_float(shader, "near", dr->camera->near_clip);
+  shader_program_set_float(shader, "far", dr->camera->far_clip);
+  
+  for(int i=0; i < r->num_surfaces; i++) {
+    
+    renderable_surface* s = r->surfaces[i];
+    
+    int mentry_id = min(i, ((material*)asset_hndl_ptr(r->material))->num_entries-1);
+    material_entry* me = material_get_entry(asset_hndl_ptr(r->material), mentry_id);
+    
+    if (config_bool(options, "render_white")) {
+      shader_program_enable_texture(shader, "diffuse_map", 0, asset_hndl_new_load(P("$CORANGE/resources/white.dds")));
+    } else {
+      shader_program_enable_texture(shader, "diffuse_map", 0, material_entry_item(me, "diffuse_map").as_asset);
+    }
+    shader_program_enable_texture(shader, "bump_map", 1, material_entry_item(me, "bump_map").as_asset);
+    shader_program_enable_texture(shader, "spec_map", 2, material_entry_item(me, "spec_map").as_asset);
+    shader_program_set_float(shader, "glossiness", material_entry_item(me, "glossiness").as_float);
+    shader_program_set_float(shader, "bumpiness", material_entry_item(me, "bumpiness").as_float);
+    shader_program_set_float(shader, "specular_level", material_entry_item(me, "specular_level").as_float);
+    shader_program_set_float(shader, "alpha_test", material_entry_item(me, "alpha_test").as_float);
+    shader_program_set_int(shader, "material", material_entry_item(me, "material").as_int);
+    
+    glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
+    
+    shader_program_enable_attribute(shader, "vPosition",  3, 18, (void*)0);
+    shader_program_enable_attribute(shader, "vNormal",    3, 18, (void*)(sizeof(float) * 3));
+    shader_program_enable_attribute(shader, "vTangent",   3, 18, (void*)(sizeof(float) * 6));
+    shader_program_enable_attribute(shader, "vBinormal",  3, 18, (void*)(sizeof(float) * 9));
+    shader_program_enable_attribute(shader, "vTexcoord",  2, 18, (void*)(sizeof(float) * 12));
+    
+    glBindBuffer(GL_ARRAY_BUFFER, io->world_buffer);
+    
+    shader_program_enable_attribute_instance_matrix(shader, "vWorld", (void*)0);
+    
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
+      glDrawElementsInstanced(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0, io->num_instances);
+    
+    shader_program_disable_attribute(shader, "vPosition");
+    shader_program_disable_attribute(shader, "vNormal");
+    shader_program_disable_attribute(shader, "vTangent");
+    shader_program_disable_attribute(shader, "vBinormal");
+    shader_program_disable_attribute(shader, "vTexcoord");
+    shader_program_disable_attribute_matrix(shader, "vWorld");
+    
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    
+    shader_program_disable_texture(shader, 2);
+    shader_program_disable_texture(shader, 1);
+    shader_program_disable_texture(shader, 0);
+
+  }
+  
+  shader_program_disable(shader);
+
+}
+
+static void render_vegetation(deferred_renderer* dr, instance_object* io) {
+  
+  config* options = asset_get_load(P("./assets/options.cfg"));
+  if (config_bool(options, "render_colmeshes")) {
+    if (!file_isloaded(io->collision_body.path)) {
+      file_load(io->collision_body.path);
+    }
+    //render_cmesh(dr, asset_hndl_ptr(io->collision_body), world);
+  }
+  
+  renderable* r = asset_hndl_ptr(io->renderable);
   
   if(r->is_rigged) { error("Static object is rigged!"); }
   
   shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_vegetation));
   shader_program_enable(shader);
-  shader_program_set_mat4(shader, "world", world);
   shader_program_set_mat4(shader, "view", camera_view_matrix(dr->camera));
   shader_program_set_mat4(shader, "proj", camera_proj_matrix(dr->camera));
   shader_program_set_float(shader, "near", dr->camera->near_clip);
@@ -1030,8 +1185,6 @@ static void render_vegetation(deferred_renderer* dr, static_object* so) {
   for(int i=0; i < r->num_surfaces; i++) {
     
     renderable_surface* s = r->surfaces[i];
-    
-    if (sphere_outside_frustum(sphere_transform(s->bound, world), frus)) { continue; }
     
     int mentry_id = min(i, ((material*)asset_hndl_ptr(r->material))->num_entries-1);
     material_entry* me = material_get_entry(asset_hndl_ptr(r->material), mentry_id);
@@ -1058,8 +1211,12 @@ static void render_vegetation(deferred_renderer* dr, static_object* so) {
     shader_program_enable_attribute(shader, "vTexcoord",  2, 18, (void*)(sizeof(float) * 12));
     shader_program_enable_attribute(shader, "vColor",     4, 18, (void*)(sizeof(float) * 14));
     
+    glBindBuffer(GL_ARRAY_BUFFER, io->world_buffer);
+    
+    shader_program_enable_attribute_instance_matrix(shader, "vWorld", (void*)0);
+    
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
-      glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
+      glDrawElementsInstanced(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0, io->num_instances);
     
     shader_program_disable_attribute(shader, "vPosition");
     shader_program_disable_attribute(shader, "vNormal");
@@ -1067,6 +1224,7 @@ static void render_vegetation(deferred_renderer* dr, static_object* so) {
     shader_program_disable_attribute(shader, "vBinormal");
     shader_program_disable_attribute(shader, "vTexcoord");
     shader_program_disable_attribute(shader, "vColor");
+    shader_program_disable_attribute_matrix(shader, "vWorld");
     
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -1397,18 +1555,22 @@ void render_ellipsoid(deferred_renderer* dr, ellipsoid e) {
   
 }
 
-void render_paint_circle(deferred_renderer* dr, vec3 position, vec3 normal, float radius) {
+void render_projectile(deferred_renderer* dr, projectile* p) {
+
+  static_object so;
+  so.position = p->position;
+  so.rotation = p->rotation;
+  so.scale = vec3_new(1, 1, 1);
+  so.renderable = p->mesh;
+  so.collision_body = asset_hndl_null();
   
-  vec3 axis_x = vec3_cross(normal, vec3_new(1, 0, 0));
-  vec3 axis_z = vec3_cross(normal, axis_x);
+  render_static(dr, &so);
+
+}
+
+void render_paint_circle(deferred_renderer* dr, mat4 axis, float radius) {
   
-  mat4 world = mat4_new(
-    axis_z.x, axis_z.y, axis_z.z, position.x,
-    normal.x, normal.y, normal.z, position.y,
-    axis_x.x, axis_x.y, axis_x.z, position.z,
-           0,        0,        0,          1);
-  
-  render_axis(dr, world);
+  render_axis(dr, axis);
   
   shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_ui));
   shader_program_enable(shader);
@@ -1430,8 +1592,8 @@ void render_paint_circle(deferred_renderer* dr, vec3 position, vec3 normal, floa
     vec3 point0 = vec3_mul(vec3_new(sin(i+0.0), 0, cos(i+0.0)), radius);
     vec3 point1 = vec3_mul(vec3_new(sin(i+0.1), 0, cos(i+0.1)), radius);
     
-    point0 = mat4_mul_vec3(world, point0);
-    point1 = mat4_mul_vec3(world, point1);
+    point0 = mat4_mul_vec3(axis, point0);
+    point1 = mat4_mul_vec3(axis, point1);
   
     circle_positions[circle_items] = point0.x; circle_colors[circle_items] = 0.25; circle_items++;
     circle_positions[circle_items] = point0.y; circle_colors[circle_items] = 0.25; circle_items++;
@@ -1458,7 +1620,42 @@ void render_paint_circle(deferred_renderer* dr, vec3 position, vec3 normal, floa
   
 }
 
+static camera* compare_cam = NULL;
+
+static float render_object_cost(const render_object* ro) {
+  switch (ro->type) {
+    case RO_TYPE_STATIC:     return vec3_dist(compare_cam->position, ro->static_object->position);
+    case RO_TYPE_INSTANCE:   return vec3_dist(compare_cam->position, ro->instance_object->instances[0].position);
+    case RO_TYPE_ANIMATED:   return vec3_dist(compare_cam->position, ro->animated_object->position);
+    case RO_TYPE_PARTICLES:  return vec3_dist(compare_cam->position, ro->particles->position);
+    case RO_TYPE_LANDSCAPE:  return vec3_dist(compare_cam->position, vec3_zero());
+    case RO_TYPE_PROJECTILE: return vec3_dist(compare_cam->position, ro->projectile->position);
+    default: return FLT_MAX;
+  }
+}
+
+static int render_object_sort(const void* ro0, const void* ro1) {
+  
+  float cost0 = render_object_cost(ro0);
+  float cost1 = render_object_cost(ro1);
+  
+  if (cost0 == cost1) {
+    return  0;
+  } else if (cost0 > cost1) {
+    return  1;
+  } else {
+    return -1;
+  }
+  
+}
+
 static void render_gbuffer(deferred_renderer* dr) {
+  
+  compare_cam = dr->camera;
+  qsort(dr->render_objects, 
+        dr->render_objects_num, 
+        sizeof(render_object), 
+        render_object_sort);
   
   config* options = asset_get_load(P("./assets/options.cfg"));
   
@@ -1479,13 +1676,13 @@ static void render_gbuffer(deferred_renderer* dr) {
     
     // HACK ALERT
     bool veg_found = false;
-    if (dr->render_objects[j].type == RO_TYPE_STATIC) {
-      renderable* r = asset_hndl_ptr(dr->render_objects[j].static_object->renderable);
+    if (dr->render_objects[j].type == RO_TYPE_INSTANCE) {
+      renderable* r = asset_hndl_ptr(dr->render_objects[j].instance_object->renderable);
       material* m = asset_hndl_ptr(r->material);
       
       for (int i = 0; i < m->num_entries; i++) {
         if (material_entry_item(m->entries[i], "material").as_int == 6) {
-          render_vegetation(dr, dr->render_objects[j].static_object);
+          render_vegetation(dr, dr->render_objects[j].instance_object);
           veg_found = true;
           break;
         }
@@ -1495,13 +1692,15 @@ static void render_gbuffer(deferred_renderer* dr) {
     
     if (veg_found) continue;
     
-    if (dr->render_objects[j].type == RO_TYPE_STATIC)    { render_static(dr, dr->render_objects[j].static_object); }
-    if (dr->render_objects[j].type == RO_TYPE_ANIMATED)  { render_animated(dr, dr->render_objects[j].animated_object); }
-    if (dr->render_objects[j].type == RO_TYPE_LANDSCAPE) { render_landscape(dr, dr->render_objects[j].landscape); }
-    if (dr->render_objects[j].type == RO_TYPE_LIGHT)     { render_light(dr, dr->render_objects[j].light); }
-    if (dr->render_objects[j].type == RO_TYPE_AXIS)      { render_axis(dr, dr->render_objects[j].axis); }
-    if (dr->render_objects[j].type == RO_TYPE_SPHERE)    { render_ellipsoid(dr, ellipsoid_of_sphere(dr->render_objects[j].sphere)); }
-    if (dr->render_objects[j].type == RO_TYPE_ELLIPSOID) { render_ellipsoid(dr, dr->render_objects[j].ellipsoid); }
+    if (dr->render_objects[j].type == RO_TYPE_STATIC)     { render_static(dr, dr->render_objects[j].static_object); }
+    if (dr->render_objects[j].type == RO_TYPE_INSTANCE)   { render_instance(dr, dr->render_objects[j].instance_object); }
+    if (dr->render_objects[j].type == RO_TYPE_ANIMATED)   { render_animated(dr, dr->render_objects[j].animated_object); }
+    if (dr->render_objects[j].type == RO_TYPE_LANDSCAPE)  { render_landscape(dr, dr->render_objects[j].landscape); }
+    if (dr->render_objects[j].type == RO_TYPE_LIGHT)      { render_light(dr, dr->render_objects[j].light); }
+    if (dr->render_objects[j].type == RO_TYPE_AXIS)       { render_axis(dr, dr->render_objects[j].axis); }
+    if (dr->render_objects[j].type == RO_TYPE_SPHERE)     { render_ellipsoid(dr, ellipsoid_of_sphere(dr->render_objects[j].sphere)); }
+    if (dr->render_objects[j].type == RO_TYPE_ELLIPSOID)  { render_ellipsoid(dr, dr->render_objects[j].ellipsoid); }
+    if (dr->render_objects[j].type == RO_TYPE_PROJECTILE) { render_projectile(dr, dr->render_objects[j].projectile); }
     
     if (dr->render_objects[j].type == RO_TYPE_CMESH) {
       render_cmesh(dr, 
@@ -1510,8 +1709,7 @@ static void render_gbuffer(deferred_renderer* dr) {
         
     if (dr->render_objects[j].type == RO_TYPE_PAINT) {
       render_paint_circle(dr, 
-        dr->render_objects[j].paint_pos, 
-        dr->render_objects[j].paint_norm, 
+        dr->render_objects[j].paint_axis, 
         dr->render_objects[j].paint_radius); }
   }
 
@@ -1848,6 +2046,8 @@ static void render_compose(deferred_renderer* dr) {
 
 static void render_particles(deferred_renderer* dr) {
   
+  //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+  
   config* options = asset_get_load(P("./assets/options.cfg"));
   
   int width = graphics_viewport_width();
@@ -1865,27 +2065,48 @@ static void render_particles(deferred_renderer* dr) {
   shader_program_enable(shader);
   shader_program_set_mat4(shader, "view", camera_view_matrix(dr->camera));
   shader_program_set_mat4(shader, "proj", camera_proj_matrix(dr->camera));
+  shader_program_set_float(shader, "clip_near", dr->camera->near_clip);
+  shader_program_set_float(shader, "clip_far", dr->camera->far_clip);
+
+  shader_program_set_float(shader, "light_power", sky_sun_power(dr->time_of_day));
+  shader_program_set_vec3(shader, "light_direction", sky_sun_direction(dr->time_of_day));
+  shader_program_set_vec3(shader, "light_diffuse", sky_sun_diffuse(dr->time_of_day));
+  shader_program_set_vec3(shader, "light_ambient", sky_sky_ambient(dr->time_of_day));
   
   for (int i = 0; i < dr->render_objects_num; i++) {
     
     if (dr->render_objects[i].type != RO_TYPE_PARTICLES) { continue; }
     
     particles* p = dr->render_objects[i].particles;
+    effect* e = asset_hndl_ptr(p->effect);
     
-    glBlendFunc(p->blend_src, p->blend_dst);
+    glBlendFunc(e->blend_src, e->blend_dst);
+    
+    shader_program_set_float(shader, "particle_depth", e->depth);
+    shader_program_set_float(shader, "particle_thickness", e->thickness);
+    shader_program_set_float(shader, "particle_bumpiness", e->bumpiness);
+    shader_program_set_float(shader, "particle_scattering", e->scattering);
     
     shader_program_set_mat4(shader, "world", mat4_world(p->position, p->scale, p->rotation));
-    shader_program_enable_texture(shader, "diffuse_texture", 0, p->texture);
+    shader_program_enable_texture(shader, "particle_diffuse", 0, e->texture);
+    shader_program_enable_texture(shader, "particle_normals", 1, e->texture_nm);
+    shader_program_enable_texture_id(shader, "depth", 2, dr->gdepth_texture);
     
     glBindBuffer(GL_ARRAY_BUFFER, p->vertex_buff);
     
-    shader_program_enable_attribute(shader, "vPosition",  3, 9, (void*)(0));
-    shader_program_enable_attribute(shader, "vTexcoord",  2, 9, (void*)(sizeof(float) * 3));
-    shader_program_enable_attribute(shader, "vColor",     4, 9, (void*)(sizeof(float) * 5));
+    shader_program_enable_attribute(shader, "vPosition",  3, 18, (void*)(0));
+    shader_program_enable_attribute(shader, "vNormal",    3, 18, (void*)(sizeof(float) * 3));
+    shader_program_enable_attribute(shader, "vTangent",   3, 18, (void*)(sizeof(float) * 6));
+    shader_program_enable_attribute(shader, "vBinormal",  3, 18, (void*)(sizeof(float) * 9));
+    shader_program_enable_attribute(shader, "vTexcoord",  2, 18, (void*)(sizeof(float) * 12));
+    shader_program_enable_attribute(shader, "vColor",     4, 18, (void*)(sizeof(float) * 14));
     
       glDrawArrays(GL_TRIANGLES, 0, p->count * 6);
     
     shader_program_disable_attribute(shader, "vPosition");
+    shader_program_disable_attribute(shader, "vNormal");
+    shader_program_disable_attribute(shader, "vTangent");
+    shader_program_disable_attribute(shader, "vBinormal");
     shader_program_disable_attribute(shader, "vTexcoord");
     shader_program_disable_attribute(shader, "vColor");
   
@@ -1894,12 +2115,16 @@ static void render_particles(deferred_renderer* dr) {
   }
 
   glDisable(GL_BLEND);
-  
+
+  shader_program_disable_texture(shader, 2);
+  shader_program_disable_texture(shader, 1);
   shader_program_disable_texture(shader, 0);
   shader_program_disable(shader);
   
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   glViewport(0, 0, width, height);
+  
+  //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
   
 }
 
@@ -1929,6 +2154,7 @@ static void render_tonemap(deferred_renderer* dr) {
   
   /* Generate Mipmaps, adjust exposure */
   
+  /*
   unsigned char color[4] = {0,0,0,0};
   int level = -1; int width = 0; int height = 0;
   
@@ -1950,6 +2176,7 @@ static void render_tonemap(deferred_renderer* dr) {
   glDisable(GL_TEXTURE_2D);
   
   float average = (float)(color[0] + color[1] + color[2]) / (3.0 * 255.0);
+  */
   
   //EXPOSURE += (EXPOSURE_TARGET - average) * EXPOSURE_SPEED;
   dr->exposure = 4.0;
@@ -2069,26 +2296,29 @@ static void render_post1(deferred_renderer* dr) {
   
 }
 
+
+
 void deferred_renderer_render(deferred_renderer* dr) {
   
   dr->time += frame_time();
   
   //timer t = timer_start(0, "Rendering Start");
   
-  render_shadows(dr);   //t = timer_split(t, "Shadow");
-  render_clear(dr);     //t = timer_split(t, "Clear");
-  render_gbuffer(dr);   //t = timer_split(t, "GBuffer");
-  render_ssao(dr);      //t = timer_split(t, "SSAO");
-  render_skies(dr);     //t = timer_split(t, "Skies");
-  render_compose(dr);   //t = timer_split(t, "Compose");
-  render_particles(dr); //t = timer_split(t, "Particles");
-  render_tonemap(dr);   //t = timer_split(t, "Tonemap");
-  render_post0(dr);     //t = timer_split(t, "Post0");
-  render_post1(dr);     //t = timer_split(t, "Post1");
+  render_shadows(dr);   //glFlush(); t = timer_split(t, "Shadow");
+  render_clear(dr);     //glFlush(); t = timer_split(t, "Clear");
+  render_gbuffer(dr);   //glFlush(); t = timer_split(t, "GBuffer");
+  render_ssao(dr);      //glFlush(); t = timer_split(t, "SSAO");
+  render_skies(dr);     //glFlush(); t = timer_split(t, "Skies");
+  render_compose(dr);   //glFlush(); t = timer_split(t, "Compose");
+  render_particles(dr); //glFlush(); t = timer_split(t, "Particles");
+  render_tonemap(dr);   //glFlush(); t = timer_split(t, "Tonemap");
+  render_post0(dr);     //glFlush(); t = timer_split(t, "Post0");
+  render_post1(dr);     //glFlush(); t = timer_split(t, "Post1");
   
   //timer_stop(t, "Rendering End");
   
   dr->render_objects_num = 0;
+  dr->dyn_lights_num = 0;
   
 }
  

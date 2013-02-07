@@ -1,0 +1,2 @@
+shader vert = $CORANGE/shaders/deferred/instance.vs
+shader frag = $CORANGE/shaders/deferred/static.fs

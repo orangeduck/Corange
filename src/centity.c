@@ -17,6 +17,8 @@ static list* entity_names;
 static dict* entities;
 static dict* entity_types;
 
+static char entity_name_buff[512];
+
 void entity_init() {
   
   entities = dict_new(512);
@@ -58,17 +60,17 @@ void entity_handler_cast(int type_id, void* entity_new_func() , void entity_del_
   num_entity_handlers++;
 }
 
-bool entity_exists(char* name) {
-  return dict_contains(entities, name);
-}
+entity* entity_new_type_id(char* fmt, int type_id, ...) {
 
-entity* entity_new_type_id(char* name, int type_id) {
+  va_list args;
+  va_start(args, type_id);
+  vsnprintf(entity_name_buff, 511, fmt, args);
 
-  if ( dict_contains(entities, name) ) {
-    error("Entity Manager already contains entity called %s!", name);
+  if ( dict_contains(entities, entity_name_buff) ) {
+    error("Entity Manager already contains entity called %s!", entity_name_buff);
   }
   
-  debug("Creating Entity %s (%s)", name, type_id_name(type_id));
+  debug("Creating Entity %s (%s)", entity_name_buff, type_id_name(type_id));
   
   entity* e = NULL;
   
@@ -80,62 +82,95 @@ entity* entity_new_type_id(char* name, int type_id) {
   }
   
   if (e == NULL) {
-    error("Don't know how to create entity %s. No handler for type %s!", name, type_id_name(type_id));
+    error("Don't know how to create entity %s. No handler for type %s!", entity_name_buff, type_id_name(type_id));
   }
   
-  dict_set(entities, name, e);
+  dict_set(entities, entity_name_buff, e);
   
   int* type_ptr = malloc(sizeof(int));
   *type_ptr = type_id;
-  dict_set(entity_types, name, type_ptr);
+  dict_set(entity_types, entity_name_buff, type_ptr);
   
-  char* name_copy = malloc(strlen(name) + 1);
-  strcpy(name_copy, name);
+  char* name_copy = malloc(strlen(entity_name_buff) + 1);
+  strcpy(name_copy, entity_name_buff);
   list_push_back(entity_names, name_copy);
   
   return e;
 }
 
-void entity_add_type_id(char* name, int type_id, entity* entity) {
+bool entity_exists(char* fmt, ...) {
 
-  if ( entity_exists(name) ) {
-    error("Entity Manager already contains entity called %s!", name);
-  }
+  va_list args;
+  va_start(args, fmt);
+  vsnprintf(entity_name_buff, 511, fmt, args);
   
-  dict_set(entities, name, entity);
-  
-  int* type_ptr = malloc(sizeof(int));
-  *type_ptr = type_id;
-  dict_set(entity_types, name, type_ptr);
-  
-  char* name_copy = malloc(strlen(name) + 1);
-  strcpy(name_copy, name);
-  list_push_back(entity_names, name_copy);
-}
-
-entity* entity_get(char* name) {
-  
-  if ( !entity_exists(name) ) {
-    error("Entity %s does not exist!", name);
-  }
-  
-  return dict_get(entities, name);
+  return dict_contains(entities, entity_name_buff);
   
 }
 
-entity* entity_get_as_type_id(char* name, int type_id) {
+entity* entity_get(char* fmt, ...) {
   
-  if ( !entity_exists(name) ) {
-    error("Entity %s does not exist!", name);
+  va_list args;
+  va_start(args, fmt);
+  vsnprintf(entity_name_buff, 511, fmt, args);
+  
+  if ( !entity_exists(entity_name_buff) ) {
+    error("Entity %s does not exist!", entity_name_buff);
+  }
+
+  return dict_get(entities, entity_name_buff);
+  
+}
+
+entity* entity_get_as_type_id(char* fmt, int type_id, ...) {
+  
+  va_list args;
+  va_start(args, type_id);
+  vsnprintf(entity_name_buff, 511, fmt, args);
+  
+  if ( !entity_exists(entity_name_buff) ) {
+    error("Entity %s does not exist!", entity_name_buff);
   }
   
-  int* entity_type = dict_get(entity_types, name);
+  int* entity_type = dict_get(entity_types, entity_name_buff);
   
   if (*entity_type != type_id) {
-    error("Entity %s was created/added as a %s, but you requested it as a %s!", name, type_id_name(*entity_type), type_id_name(type_id));
+    error("Entity %s was created/added as a %s, but you requested it as a %s!", entity_name_buff, type_id_name(*entity_type), type_id_name(type_id));
   }
   
-  return dict_get(entities, name);
+  return dict_get(entities, entity_name_buff);
+}
+
+void entity_delete(char* fmt, ...) {
+  
+  va_list args;
+  va_start(args, fmt);
+  vsnprintf(entity_name_buff, 511, fmt, args);
+  
+  int* type_ptr = dict_get(entity_types, entity_name_buff);
+  int type_id = *type_ptr;
+  
+  debug("Deleting Entity %s (%s)", entity_name_buff, type_id_name(type_id));
+  
+  for(int i = 0; i < num_entity_handlers; i++) {
+    entity_handler eh = entity_handlers[i];
+    if (eh.type_id == type_id) {
+      dict_remove_with(entities, entity_name_buff, eh.del_func);
+      break;
+    }
+  }
+  
+  for(int i = 0; i < entity_names->num_items; i++) {
+    if ( strcmp(list_get(entity_names, i), entity_name_buff) == 0 ) {
+      list_pop_at(entity_names, i);
+      break;
+    }
+  }
+  
+  if (entity_exists(entity_name_buff)) {
+    error("Don't know how to delete entity %s. No handler for type %s!", entity_name_buff, type_id_name(type_id));
+  }
+  
 }
 
 int entity_type_count_type_id(int type_id) {
@@ -152,34 +187,6 @@ int entity_type_count_type_id(int type_id) {
   }
   
   return count;
-  
-}
-
-void entity_delete(char* name) {
-  
-  int* type_ptr = dict_get(entity_types, name);
-  int type_id = *type_ptr;
-  
-  debug("Deleting Entity %s (%s)", name, type_id_name(type_id));
-  
-  for(int i = 0; i < num_entity_handlers; i++) {
-    entity_handler eh = entity_handlers[i];
-    if (eh.type_id == type_id) {
-      dict_remove_with(entities, name, eh.del_func);
-      break;
-    }
-  }
-  
-  for(int i = 0; i < entity_names->num_items; i++) {
-    if ( strcmp(list_get(entity_names, i), name) == 0 ) {
-      list_pop_at(entity_names, i);
-      break;
-    }
-  }
-  
-  if (entity_exists(name)) {
-    error("Don't know how to delete entity %s. No handler for type %s!", name, type_id_name(type_id));
-  }
   
 }
 

@@ -26,6 +26,8 @@ void ui_init() {
   ui_elems = dict_new(512);
   ui_elem_types = dict_new(512);
   ui_elem_names = list_new(512);
+  
+  SDL_EnableUNICODE(true);
 }
 
 void ui_finish() {

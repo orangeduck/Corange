@@ -397,6 +397,43 @@ void shader_program_enable_attribute(shader_program* p, char* name, int count, i
   }
 }
 
+void shader_program_enable_attribute_instance(shader_program* p, char* name, int count, int stride, void* ptr) {
+  GLint attr = glGetAttribLocation(shader_program_handle(p), name);
+  if (attr == -1) {
+    warning("Shader has no attribute called '%s'", name);
+  } else {
+    glEnableVertexAttribArray(attr);  
+    glVertexAttribPointer(attr, count, GL_FLOAT, GL_FALSE, sizeof(float) * stride, ptr);
+    SDL_GL_CheckError();
+    glVertexAttribDivisor(attr, 1);
+    SDL_GL_CheckError();
+  }
+}
+
+void shader_program_enable_attribute_instance_matrix(shader_program* p, char* name, void* ptr) {
+  GLint attr = glGetAttribLocation(shader_program_handle(p), name);
+  if (attr == -1) {
+    warning("Shader has no attribute called '%s'", name);
+  } else {
+    glEnableVertexAttribArray(attr+0);  
+    glEnableVertexAttribArray(attr+1);  
+    glEnableVertexAttribArray(attr+2);  
+    glEnableVertexAttribArray(attr+3);
+    SDL_GL_CheckError();
+    glVertexAttribPointer(attr+0, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 4 * 4, ptr);
+    glVertexAttribPointer(attr+1, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 4 * 4, ptr + sizeof(float) * 4);
+    glVertexAttribPointer(attr+2, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 4 * 4, ptr + sizeof(float) * 8);
+    glVertexAttribPointer(attr+3, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 4 * 4, ptr + sizeof(float) * 12);
+    SDL_GL_CheckError();
+    glVertexAttribDivisor(attr+0, 1);
+    glVertexAttribDivisor(attr+1, 1);
+    glVertexAttribDivisor(attr+2, 1);
+    glVertexAttribDivisor(attr+3, 1);
+    SDL_GL_CheckError();
+  }
+}
+
+
 void shader_program_disable_attribute(shader_program* p, char* name) {
   GLint attr = glGetAttribLocation(shader_program_handle(p), name);
   if (attr == -1) {
@@ -406,3 +443,21 @@ void shader_program_disable_attribute(shader_program* p, char* name) {
     SDL_GL_CheckError();
   }
 }
+
+void shader_program_disable_attribute_matrix(shader_program* p, char* name) {
+  GLint attr = glGetAttribLocation(shader_program_handle(p), name);
+  if (attr == -1) {
+    warning("Shader has no attribute called '%s'", name);
+  } else {
+    glVertexAttribDivisor(attr+0, 0);
+    glVertexAttribDivisor(attr+1, 0);
+    glVertexAttribDivisor(attr+2, 0);
+    glVertexAttribDivisor(attr+3, 0);
+    glDisableVertexAttribArray(attr+0);  
+    glDisableVertexAttribArray(attr+1);  
+    glDisableVertexAttribArray(attr+2);  
+    glDisableVertexAttribArray(attr+3);
+    SDL_GL_CheckError();
+  }
+}
+

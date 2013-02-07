@@ -21,8 +21,10 @@
 #include "entities/camera.h"
 #include "entities/light.h"
 #include "entities/static_object.h"
+#include "entities/instance_object.h"
 #include "entities/animated_object.h"
 #include "entities/particles.h"
+#include "entities/projectile.h"
 #include "entities/landscape.h"
 
 enum {
@@ -31,16 +33,18 @@ enum {
 };
 
 enum {
-  RO_TYPE_AXIS      = 0,
-  RO_TYPE_STATIC    = 1,
-  RO_TYPE_ANIMATED  = 2,
-  RO_TYPE_PARTICLES = 3,
-  RO_TYPE_LIGHT     = 4, 
-  RO_TYPE_LANDSCAPE = 5,
-  RO_TYPE_PAINT     = 6,
-  RO_TYPE_SPHERE    = 7,
-  RO_TYPE_ELLIPSOID = 8,
-  RO_TYPE_CMESH     = 9,
+  RO_TYPE_AXIS       = 0,
+  RO_TYPE_STATIC     = 1,
+  RO_TYPE_INSTANCE   = 2,
+  RO_TYPE_ANIMATED   = 3,
+  RO_TYPE_PARTICLES  = 4,
+  RO_TYPE_LIGHT      = 5, 
+  RO_TYPE_LANDSCAPE  = 6,
+  RO_TYPE_PAINT      = 7,
+  RO_TYPE_SPHERE     = 8,
+  RO_TYPE_ELLIPSOID  = 9,
+  RO_TYPE_CMESH      = 10,
+  RO_TYPE_PROJECTILE = 11,
 };
 
 typedef struct {
@@ -55,18 +59,21 @@ typedef struct {
     
     /* Objects */
     static_object* static_object;
+    instance_object* instance_object;
     animated_object* animated_object;
     landscape* landscape;
     particles* particles;
+    projectile* projectile;
     
     /* UI */
     light* light;
-    struct { vec3 paint_pos; vec3 paint_norm; float paint_radius; };
+    struct { mat4 paint_axis; float paint_radius; };
     
   };
 } render_object;
 
 render_object render_object_static(static_object* s);
+render_object render_object_instance(instance_object* s);
 render_object render_object_animated(animated_object* a);
 render_object render_object_particles(particles* p);
 render_object render_object_light(light* l);
@@ -75,7 +82,8 @@ render_object render_object_sphere(sphere s);
 render_object render_object_ellipsoid(ellipsoid e);
 render_object render_object_cmesh(cmesh* cm, mat4 world);
 render_object render_object_landscape(landscape* l);
-render_object render_object_paint(vec3 paint_pos, vec3 paint_norm, float paint_radius);
+render_object render_object_projectile(projectile* p);
+render_object render_object_paint(mat4 paint_axis, float paint_radius);
 
 typedef struct {
 
@@ -87,6 +95,7 @@ typedef struct {
 
   /* Materials */
   asset_hndl mat_static;
+  asset_hndl mat_instance;
   asset_hndl mat_animated;
   asset_hndl mat_vegetation;
   asset_hndl mat_terrain;
@@ -99,6 +108,7 @@ typedef struct {
   asset_hndl mat_post1;
   asset_hndl mat_skydome;
   asset_hndl mat_depth;
+  asset_hndl mat_depth_ins;
   asset_hndl mat_depth_ani;
   asset_hndl mat_depth_veg;
   asset_hndl mat_sun;
@@ -179,11 +189,9 @@ void deferred_renderer_set_vignetting(deferred_renderer* dr, asset_hndl v);
 void deferred_renderer_set_glitch(deferred_renderer* dr, float glitch);
 void deferred_renderer_set_skydome_enabled(deferred_renderer* dr, bool enabled);
 
-int  deferred_renderer_num_dyn_light(deferred_renderer* dr);
-void deferred_renderer_add_dyn_light(deferred_renderer* dr, light* l);
-void deferred_renderer_rem_dyn_light(deferred_renderer* dr, light* l);
-
 void deferred_renderer_add(deferred_renderer* dr, render_object ro);
+void deferred_renderer_add_dyn_light(deferred_renderer* dr, light* l);
+
 void deferred_renderer_render(deferred_renderer* dr);
 
 #endif

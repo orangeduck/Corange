@@ -1,3 +1,2 @@
 shader vertex = $CORANGE/shaders/deferred/animated.vs
 shader fragment = $CORANGE/shaders/deferred/static.fs
-shader colors = $CORANGE/shaders/colors.fs

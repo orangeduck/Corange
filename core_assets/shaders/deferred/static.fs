@@ -17,15 +17,36 @@ varying vec3 fColor;
 varying vec3 fPosition;
 varying mat4 fTBN;
 
-/* Headers */
+vec3 to_gamma(vec3 color) {
+  vec3 ret;
+  ret.r = pow(color.r, 2.2);
+  ret.g = pow(color.g, 2.2);
+  ret.b = pow(color.b, 2.2);
+	return ret;
+}
 
-float to_gamma(float color);
-float from_gamma(float color);
-vec3 to_gamma(vec3 color);
-vec3 from_gamma(vec3 color);
-vec3 swap_red_green_inv(vec3 color);
+vec3 from_gamma(vec3 color) {
+  vec3 ret;
+  ret.r = pow(color.r, 1.0/2.2);
+  ret.g = pow(color.g, 1.0/2.2);
+  ret.b = pow(color.b, 1.0/2.2);
+	return ret;
+}
 
-/* End */
+float to_gamma(float color) {
+	return pow(color, 2.2);
+}
+
+float from_gamma(float color) {
+	return pow(color, 1.0/2.2);
+}
+
+vec3 swap_red_green_inv(vec3 color) {
+  float temp = 1.0-color.r;
+  color.r = 1.0-color.g;
+  color.g = temp;
+  return color;
+}
 
 float linear_depth(float depth, float near, float far){
   return (2.0 * near) / (far + near - depth * (far - near));

@@ -42,7 +42,6 @@ void corange_init(const char* core_assets_path) {
     FILE* ferr = freopen( "CON", "w", stderr );
   #endif
   
-  
   /* Attach signal handlers */
   signal(SIGABRT, corange_signal);
   signal(SIGFPE, corange_signal);
@@ -97,16 +96,18 @@ void corange_init(const char* core_assets_path) {
   asset_handler(texture, "lut", lut_load_file, texture_delete);
   asset_handler(texture, "acv", acv_load_file, texture_delete);
   
-  asset_handler(shader, "vs" , vs_load_file,  shader_delete);
-  asset_handler(shader, "fs" , fs_load_file,  shader_delete);
-  asset_handler(shader, "gs" , gs_load_file,  shader_delete);
-  asset_handler(shader, "tcs" , tcs_load_file,  shader_delete);
-  asset_handler(shader, "tes" , tes_load_file,  shader_delete);
+  asset_handler(shader, "vs" , vs_load_file, shader_delete);
+  asset_handler(shader, "fs" , fs_load_file, shader_delete);
+  asset_handler(shader, "gs" , gs_load_file, shader_delete);
+  asset_handler(shader, "tcs" , tcs_load_file, shader_delete);
+  asset_handler(shader, "tes" , tes_load_file, shader_delete);
   
   asset_handler(config, "cfg", cfg_load_file, config_delete);
   asset_handler(lang, "lang", lang_load_file, lang_delete);
   asset_handler(font, "fnt", font_load_file, font_delete);
+
   asset_handler(material, "mat", mat_load_file, material_delete);
+  asset_handler(effect, "effect" , effect_load_file, effect_delete);
   
   asset_handler(sound, "wav", wav_load_file, sound_delete);
   asset_handler(music, "ogg", ogg_load_file, music_delete);
@@ -125,6 +126,8 @@ void corange_init(const char* core_assets_path) {
   entity_handler(camera, camera_new, camera_delete);
   entity_handler(light, light_new, light_delete);
   entity_handler(landscape, landscape_new, landscape_delete);
+  entity_handler(particles, particles_new, particles_delete);
+  entity_handler(projectile, projectile_new, projectile_delete);
   
   /* UI Manager */
   debug("Creating UI Manager...");
