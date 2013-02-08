@@ -138,7 +138,7 @@ void ui_textbox_enable(ui_textbox* tb) {
   tb->enabled = true;
 }
 
-static const float timer_delete = 0.05;
+static const float time_to_delete = 0.05;
 static float time_delete = 0;
 
 void ui_textbox_event(ui_textbox* tb, SDL_Event e) {
@@ -194,7 +194,7 @@ void ui_textbox_update(ui_textbox* tb) {
   if (keystate[SDLK_BACKSPACE]) {
     
     time_delete += frame_time();
-    if (time_delete > timer_delete) {
+    if (time_delete > time_to_delete) {
       time_delete = 0;
       ui_textbox_rmchar(tb);
     }

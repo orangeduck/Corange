@@ -1,13 +1,17 @@
 #include "entities/instance_object.h"
 
+#include "cnet.h"
+
 instance_object* instance_object_new() {
   instance_object* io = malloc(sizeof(instance_object));
   
   io->num_instances = 0;
   io->instances = malloc(sizeof(instance_data) * 0);
   
-  glGenBuffers(1, &io->world_buffer);
-  
+  if (net_is_client()) {
+    glGenBuffers(1, &io->world_buffer);
+  }
+
   io->active = true;
   io->recieve_shadows = true;
   io->cast_shadows = true;
@@ -20,14 +24,18 @@ instance_object* instance_object_new() {
 
 void instance_object_delete(instance_object* io) {
   
-  glDeleteBuffers(1, &io->world_buffer);
-  
+  if (net_is_client()) {
+    glDeleteBuffers(1, &io->world_buffer);
+  }
+
   free(io->instances);
   free(io);
 }
 
 void instance_object_update(instance_object* io) {
   
+  if (!net_is_client()) { return; }
+
   mat4* world_data = malloc(sizeof(mat4) * io->num_instances);
   
   for (int i = 0; i < io->num_instances; i++) {
