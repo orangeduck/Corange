@@ -17,8 +17,6 @@ static list* entity_names;
 static dict* entities;
 static dict* entity_types;
 
-static char entity_name_buff[512];
-
 void entity_init() {
   
   entities = dict_new(512);
@@ -62,6 +60,8 @@ void entity_handler_cast(int type_id, void* entity_new_func() , void entity_del_
 
 entity* entity_new_type_id(char* fmt, int type_id, ...) {
 
+  static char entity_name_buff[512];
+  
   va_list args;
   va_start(args, type_id);
   vsnprintf(entity_name_buff, 511, fmt, args);
@@ -100,6 +100,8 @@ entity* entity_new_type_id(char* fmt, int type_id, ...) {
 
 bool entity_exists(char* fmt, ...) {
 
+  static char entity_name_buff[512];
+
   va_list args;
   va_start(args, fmt);
   vsnprintf(entity_name_buff, 511, fmt, args);
@@ -109,6 +111,8 @@ bool entity_exists(char* fmt, ...) {
 }
 
 entity* entity_get(char* fmt, ...) {
+  
+  static char entity_name_buff[512];
   
   va_list args;
   va_start(args, fmt);
@@ -123,6 +127,8 @@ entity* entity_get(char* fmt, ...) {
 }
 
 entity* entity_get_as_type_id(char* fmt, int type_id, ...) {
+  
+  static char entity_name_buff[512];
   
   va_list args;
   va_start(args, type_id);
@@ -142,6 +148,8 @@ entity* entity_get_as_type_id(char* fmt, int type_id, ...) {
 }
 
 void entity_delete(char* fmt, ...) {
+  
+  static char entity_name_buff[512];
   
   va_list args;
   va_start(args, fmt);
