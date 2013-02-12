@@ -39,5 +39,6 @@ void instance_object_delete(instance_object* io);
 
 void instance_object_update(instance_object* io);
 void instance_object_add_instance(instance_object* io, vec3 position, vec3 scale, mat4 rotation);
+mat4 instance_object_world(instance_object* io, int i);
 
 #endif

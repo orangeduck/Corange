@@ -77,6 +77,7 @@ void corange_finish();
 #include "ui/ui_textbox.h"
 #include "ui/ui_browser.h"
 #include "ui/ui_toast.h"
+#include "ui/ui_dialog.h"
 
 /* Rendering */
 

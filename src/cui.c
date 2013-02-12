@@ -238,6 +238,8 @@ void ui_elem_delete(char* name) {
   int* type_ptr = dict_get(ui_elem_types, name);
   int type_id = *type_ptr;
 
+  debug("Deleting UI Element %s (%s)", name, type_id_name(type_id));
+  
   for(int i = 0; i < num_ui_elem_handlers; i++) {
     ui_elem_handler ui_hand = ui_elem_handlers[i];
     if (ui_hand.type_id == type_id) {

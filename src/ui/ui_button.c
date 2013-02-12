@@ -53,7 +53,7 @@ void ui_button_event(ui_button* b, SDL_Event e) {
     if (b->pressed) {
       b->pressed = false;
       if (b->onclick) {
-        b->onclick();
+        b->onclick(b);
       }
     }
   }
@@ -85,11 +85,17 @@ void ui_button_set_label(ui_button* b, char* label) {
   ui_text_draw_string(b->label, label);
 }
 
-void ui_button_set_onclick(ui_button* b, void(*onclick)(void)) {
+void ui_button_set_onclick(ui_button* b, void(*onclick)(ui_button*)) {
   b->onclick = onclick;
 }
 
+void ui_button_set_active(ui_button* b, bool active) {
+  b->active = active;
+}
+
 void ui_button_render(ui_button* b) {
+  
+  if (!b->active) { return; }
   
   if (b->pressed || !b->enabled) {
     ui_rectangle_set_color(b->back, b->down_color);

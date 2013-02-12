@@ -5,6 +5,7 @@
 
 #include "entities/landscape.h"
 #include "entities/static_object.h"
+#include "entities/instance_object.h"
 
 
 projectile* projectile_new() {
@@ -58,14 +59,31 @@ static void projectile_collide(projectile* p, float timestep) {
       landscape_world(l)));
   }
   
-  int entities_num;
-  static_object* entities[512];
-  entities_get(entities, &entities_num, static_object);
-  for (int i = 0; i < entities_num; i++) {
+  int objects_num;
+  entity* objects[512];
+  
+  entities_get(objects, &objects_num, static_object);
+  
+  for (int i = 0; i < objects_num; i++) {
+    static_object* so = objects[i];
     col = collision_merge(col, sphere_collide_mesh(
       bound, velocity,
-      asset_hndl_ptr(entities[i]->collision_body),
-      static_object_world(entities[i])));
+      asset_hndl_ptr(so->collision_body),
+      static_object_world(so)));
+  }
+  
+  entities_get(objects, &objects_num, instance_object);
+  
+  for (int i = 0; i < objects_num; i++) {
+    instance_object* io = objects[i];
+    
+    for (int j = 0; j < io->num_instances; j++) {
+      col = collision_merge(col, sphere_collide_mesh(
+        bound, velocity,
+        asset_hndl_ptr(io->collision_body),
+        instance_object_world(io, j)));
+    }
+    
   }
   
   if (col.collided) {

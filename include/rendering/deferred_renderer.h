@@ -87,6 +87,9 @@ render_object render_object_paint(mat4 paint_axis, float paint_radius);
 
 typedef struct {
 
+  /* Options */
+  asset_hndl options;
+
   /* Camera */
   camera* camera;
   
@@ -178,9 +181,23 @@ typedef struct {
   int render_objects_num;
   render_object* render_objects;
   
+  /* Preprocessed */
+  
+  mat4  camera_view;
+  mat4  camera_proj;
+  float camera_near;
+  float camera_far;
+  box   camera_frustum;
+  
+  mat4  shadow_view[3];
+  mat4  shadow_proj[3];
+  float shadow_near[3];
+  float shadow_far[3];
+  box   shadow_frustum[3];
+  
 } deferred_renderer;
 
-deferred_renderer* deferred_renderer_new();
+deferred_renderer* deferred_renderer_new(asset_hndl options);
 void deferred_renderer_delete(deferred_renderer* dr);
 
 void deferred_renderer_set_camera(deferred_renderer* dr, camera* cam);

@@ -65,3 +65,11 @@ void instance_object_add_instance(instance_object* io, vec3 position, vec3 scale
   instance_object_update(io);
   
 }
+
+mat4 instance_object_world(instance_object* io, int i) {
+  
+  instance_data id = io->instances[i]; 
+  return mat4_world(id.position, id.scale, id.rotation);
+  
+}
+
