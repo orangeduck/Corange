@@ -19,8 +19,10 @@ void main() {
   float cosa = dot(light_direction, fDirection) / length(fDirection);
   float cos2a = cosa * cosa;
   
-	gl_FragColor.rgb =
+	gl_FragColor.rgb = clamp(
     0.5 * (rayleigh_phase(cos2a)  * fR_color) + 
-    1.0 * (mei_phase(cosa, cos2a) * fM_color);
+    1.0 * (mei_phase(cosa, cos2a) * fM_color),
+    vec3(0,0,0),
+    vec3(100,100,100));
   gl_FragColor.a = 1.0;
 }

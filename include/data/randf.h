@@ -20,4 +20,6 @@ float randf_nscale(float s);
 /* Random float in range s to e */
 float randf_range(float s, float e);
 
+vec2 randf_circle(float radius);
+
 #endif

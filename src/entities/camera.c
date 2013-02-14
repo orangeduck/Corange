@@ -10,7 +10,7 @@ camera* camera_new() {
   c->target = vec3_zero();
   c->fov = 0.785398163;
   c->near_clip = 0.1;
-  c->far_clip = 256.0;
+  c->far_clip = 512.0;
   
   return c;
 }
@@ -55,7 +55,7 @@ void camera_control_orbit(camera* c, SDL_Event e) {
         a2 = e.motion.yrel * 0.005;
         c->position = mat3_mul_vec3(mat3_rotation_y( a1 ), c->position );
         axis = vec3_normalize(vec3_cross( vec3_sub(c->position, c->target) , vec3_new(0,1,0) ));
-        c->position = mat3_mul_vec3(mat3_rotation_axis_angle(axis, a2 ), c->position );
+        c->position = mat3_mul_vec3(mat3_rotation_angle_axis(a2, axis), c->position );
       }
     break;
     
@@ -144,7 +144,7 @@ void camera_control_joyorbit(camera* c, float timestep) {
   
   c->position = mat3_mul_vec3(mat3_rotation_y( a1 ), c->position );
   vec3 axis = vec3_normalize(vec3_cross( vec3_sub(c->position, c->target) , vec3_new(0,1,0) ));
-  c->position = mat3_mul_vec3(mat3_rotation_axis_angle(axis, a2 ), c->position );
+  c->position = mat3_mul_vec3(mat3_rotation_angle_axis(a2, axis), c->position );
   
   c->position = vec3_add(c->position, translation);
   c->target = vec3_add(c->target, translation);

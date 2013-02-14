@@ -153,6 +153,7 @@ deferred_renderer* deferred_renderer_new(asset_hndl options) {
   dr->mat_sun        = asset_hndl_new(P("$CORANGE/shaders/deferred/sun.mat"));
   dr->mat_clouds     = asset_hndl_new(P("$CORANGE/shaders/deferred/clouds.mat"));
   dr->mat_particles  = asset_hndl_new(P("$CORANGE/shaders/deferred/particles.mat"));
+  dr->mat_sea        = asset_hndl_new(P("$CORANGE/shaders/deferred/sea.mat"));
   
   dr->mat_compose = option_graphics_asset(asset_hndl_ptr(dr->options), "lighting",
     asset_hndl_new(P("$CORANGE/shaders/deferred/compose.mat")),
@@ -162,6 +163,7 @@ deferred_renderer* deferred_renderer_new(asset_hndl options) {
   /* Meshes */
   dr->mesh_skydome  = asset_hndl_new_load(P("$CORANGE/resources/skydome.obj"));
   dr->mesh_sphere   = asset_hndl_new_load(P("$CORANGE/resources/sphere.obj"));
+  dr->mesh_sea      = asset_hndl_new_load(P("$CORANGE/resources/sea.obj"));
   
   /* Textures */
   dr->tex_color_correction  = asset_hndl_new_load(P("$CORANGE/resources/identity.lut"));
@@ -169,6 +171,11 @@ deferred_renderer* deferred_renderer_new(asset_hndl options) {
   dr->tex_random_perlin     = asset_hndl_new_load(P("$CORANGE/resources/random_perlin.dds"));
   dr->tex_environment       = asset_hndl_new_load(P("$CORANGE/resources/envmap.dds"));
   dr->tex_vignetting        = asset_hndl_new_load(P("$CORANGE/resources/vignetting.dds"));
+  dr->tex_sea_bump0         = asset_hndl_new_load(P("$CORANGE/resources/bump0.dds"));
+  dr->tex_sea_bump1         = asset_hndl_new_load(P("$CORANGE/resources/bump1.dds"));
+  dr->tex_sea_bump2         = asset_hndl_new_load(P("$CORANGE/resources/bump2.dds"));
+  dr->tex_sea_bump3         = asset_hndl_new_load(P("$CORANGE/resources/bump3.dds"));
+  dr->tex_sea_env           = asset_hndl_new_load(P("$CORANGE/resources/envmap_sea.dds"));
   
   /* Buffers */
   
@@ -378,6 +385,7 @@ deferred_renderer* deferred_renderer_new(asset_hndl options) {
   dr->exposure_speed = 1.0;
   dr->exposure_target = 0.4;
   dr->skydome_enabled = true;
+  dr->sea_enabled = false;
   
   /* Objects */
   dr->render_objects_num = 0;
@@ -450,6 +458,14 @@ void deferred_renderer_set_glitch(deferred_renderer* dr, float glitch) {
 
 void deferred_renderer_set_skydome_enabled(deferred_renderer* dr, bool enabled) {
   dr->skydome_enabled = enabled;
+}
+
+void deferred_renderer_set_sea_enabled(deferred_renderer* dr, bool enabled) {
+  dr->sea_enabled = enabled;
+}
+
+void deferred_renderer_set_tod(deferred_renderer* dr, float tod) {
+  dr->time_of_day = tod;
 }
 
 void deferred_renderer_add_dyn_light(deferred_renderer* dr, light* l) {
@@ -1753,7 +1769,7 @@ static void render_skies(deferred_renderer* dr) {
   
     shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_skydome));
     shader_program_enable(shader);
-    shader_program_set_mat4(shader, "world", mat4_world(dr->camera->position, vec3_new(10, 10, 10), mat4_id()));
+    shader_program_set_mat4(shader, "world", mat4_world(dr->camera->position, vec3_new(200, 200, 200), mat4_id()));
     shader_program_set_mat4(shader, "view", dr->camera_view);
     shader_program_set_mat4(shader, "proj", dr->camera_proj);
     shader_program_set_vec3(shader, "light_direction", sky_sun_direction(dr->time_of_day));
@@ -1865,6 +1881,95 @@ static void render_skies(deferred_renderer* dr) {
   
   glDepthMask(GL_TRUE);
   glBindFramebuffer(GL_FRAMEBUFFER, 0);  
+  
+}
+
+static void render_sea(deferred_renderer* dr) {
+  
+  if (!dr->sea_enabled) { return; } 
+  
+  //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+  
+  int width = graphics_viewport_width();
+  int height = graphics_viewport_height();
+  
+  int hdrwidth  = width  * option_graphics_int(asset_hndl_ptr(dr->options), "msaa", 4, 2, 1);
+  int hdrheight = height * option_graphics_int(asset_hndl_ptr(dr->options), "msaa", 4, 2, 1);
+  
+  glBindFramebuffer(GL_FRAMEBUFFER, dr->hdr_fbo);
+  glViewport(0, 0, hdrwidth, hdrheight);
+  
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  
+  vec3 position = vec3_new(dr->camera->position.x, 0, dr->camera->position.z);
+  vec3 scale = vec3_new(1, 1, 1);
+  
+  shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_sea));
+  shader_program_enable(shader);
+  shader_program_set_mat4(shader, "world", mat4_world(position, scale, mat4_id()));
+  shader_program_set_mat4(shader, "view", dr->camera_view);
+  shader_program_set_mat4(shader, "proj", dr->camera_proj);
+  shader_program_set_float(shader, "clip_near", dr->camera_near);
+  shader_program_set_float(shader, "clip_far",  dr->camera_far);
+  shader_program_set_float(shader, "time", dr->time);
+  
+  float factor = fmod(dr->time, 4.0);
+  
+  vec4 bump_factor = vec4_zero();
+  if (between_or(factor, 0, 1)) {
+    bump_factor = vec4_new(fmod(factor-0, 1.0), 0, 0, 1-fmod(factor-0, 1.0));
+  } else if (between_or(factor, 1, 2)) {
+    bump_factor = vec4_new(1-fmod(factor-1, 1.0), fmod(factor-1, 1.0), 0, 0);
+  } else if (between_or(factor, 2, 3)) {
+    bump_factor = vec4_new(0, 1-fmod(factor-2, 1.0), fmod(factor-2, 1.0), 0);
+  } else if (between_or(factor, 3, 4)) {
+    bump_factor = vec4_new(0, 0, 1-fmod(factor-2, 1.0), fmod(factor-2, 1.0));
+  }
+  
+  shader_program_set_float(shader, "light_power", sky_sun_power(dr->time_of_day));
+  shader_program_set_vec3(shader, "light_direction", sky_sun_direction(dr->time_of_day));
+  shader_program_set_vec3(shader, "light_diffuse", sky_sun_diffuse(dr->time_of_day));
+  shader_program_set_vec3(shader, "light_ambient", sky_sky_ambient(dr->time_of_day));
+  shader_program_set_vec3(shader, "light_specular", sky_sky_specular(dr->time_of_day));
+  shader_program_set_vec3(shader, "camera_direction", camera_direction(dr->camera));
+  shader_program_set_vec4(shader, "bump_factor", bump_factor);
+  
+  shader_program_enable_texture_id(shader, "depth", 0, dr->gdepth_texture);
+  shader_program_enable_texture(shader, "bump0", 1, dr->tex_sea_bump0);
+  shader_program_enable_texture(shader, "bump1", 2, dr->tex_sea_bump1);
+  shader_program_enable_texture(shader, "bump2", 3, dr->tex_sea_bump2);
+  shader_program_enable_texture(shader, "bump3", 4, dr->tex_sea_bump3);
+  shader_program_enable_texture(shader, "env_texture", 5, dr->tex_sea_env);
+  
+  renderable* sea_r = asset_hndl_ptr(dr->mesh_sea);
+  renderable_surface* s = sea_r->surfaces[0];
+  
+  glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
+  
+  shader_program_enable_attribute(shader, "vPosition",  3, 18, (void*)0);
+  
+    glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
+  
+  shader_program_disable_attribute(shader, "vPosition");
+  
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  
+  shader_program_disable_texture(shader, 5);
+  shader_program_disable_texture(shader, 4);
+  shader_program_disable_texture(shader, 3);
+  shader_program_disable_texture(shader, 2);
+  shader_program_disable_texture(shader, 1);
+  shader_program_disable_texture(shader, 0);
+  shader_program_disable(shader);
+  
+  glDisable(GL_BLEND);
+  
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);  
+  
+  //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
   
 }
 
@@ -2249,6 +2354,7 @@ void deferred_renderer_render(deferred_renderer* dr) {
   render_ssao(dr);      //glFlush(); t = timer_split(t, "SSAO");
   render_skies(dr);     //glFlush(); t = timer_split(t, "Skies");
   render_compose(dr);   //glFlush(); t = timer_split(t, "Compose");
+  render_sea(dr);       //glFlush(); t = timer_split(t, "Sea");
   render_particles(dr); //glFlush(); t = timer_split(t, "Particles");
   render_tonemap(dr);   //glFlush(); t = timer_split(t, "Tonemap");
   render_post0(dr);     //glFlush(); t = timer_split(t, "Post0");

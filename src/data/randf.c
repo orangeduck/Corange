@@ -37,3 +37,17 @@ float randf_nscale(float s) {
 float randf_range(float s, float e) {
   return s + randf() * (e - s);
 }
+
+vec2 randf_circle(float radius) {
+  
+  vec2 p = vec2_new(FLT_MAX, FLT_MAX);
+  
+  while (vec2_length(p) > radius) {
+    p.x = randf_nscale(radius);
+    p.y = randf_nscale(radius);
+  }
+  
+  return p;
+
+}
+

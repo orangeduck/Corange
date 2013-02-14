@@ -66,6 +66,19 @@ void instance_object_add_instance(instance_object* io, vec3 position, vec3 scale
   
 }
 
+void instance_object_rem_instance(instance_object* io, int i) {
+  
+  
+  memmove( &io->instances[i+0], &io->instances[i+1],
+    sizeof(instance_data) * (io->num_instances-i-1));
+  
+  io->num_instances--;
+  io->instances = realloc(io->instances, sizeof(instance_data) * io->num_instances);
+  
+  instance_object_update(io);
+  
+}
+
 mat4 instance_object_world(instance_object* io, int i) {
   
   instance_data id = io->instances[i]; 

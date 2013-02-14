@@ -117,10 +117,12 @@ typedef struct {
   asset_hndl mat_sun;
   asset_hndl mat_clouds;
   asset_hndl mat_particles;
+  asset_hndl mat_sea;
 
   /* Meshes */
   asset_hndl mesh_skydome;
   asset_hndl mesh_sphere;
+  asset_hndl mesh_sea;
 
   /* Textures */
   asset_hndl tex_color_correction;
@@ -128,6 +130,11 @@ typedef struct {
   asset_hndl tex_random_perlin;
   asset_hndl tex_environment;
   asset_hndl tex_vignetting;
+  asset_hndl tex_sea_bump0;
+  asset_hndl tex_sea_bump1;
+  asset_hndl tex_sea_bump2;
+  asset_hndl tex_sea_bump3;
+  asset_hndl tex_sea_env;
   
   /* Buffers */
   GLuint gfbo;
@@ -176,6 +183,7 @@ typedef struct {
   float exposure_speed;
   float exposure_target;
   bool skydome_enabled;
+  bool sea_enabled;
   
   /* Objects */
   int render_objects_num;
@@ -205,6 +213,8 @@ void deferred_renderer_set_color_correction(deferred_renderer* dr, asset_hndl t)
 void deferred_renderer_set_vignetting(deferred_renderer* dr, asset_hndl v);
 void deferred_renderer_set_glitch(deferred_renderer* dr, float glitch);
 void deferred_renderer_set_skydome_enabled(deferred_renderer* dr, bool enabled);
+void deferred_renderer_set_sea_enabled(deferred_renderer* dr, bool enabled);
+void deferred_renderer_set_tod(deferred_renderer* dr, float tod);
 
 void deferred_renderer_add(deferred_renderer* dr, render_object ro);
 void deferred_renderer_add_dyn_light(deferred_renderer* dr, light* l);

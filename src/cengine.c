@@ -1501,12 +1501,12 @@ mat3 mat3_rotation_z(float a) {
   
 }
 
-mat3 mat3_rotation_axis_angle(vec3 v, float angle) {
+mat3 mat3_rotation_angle_axis(float a, vec3 v) {
   
   mat3 m;
 
-  float c = cos(angle);
-  float s = sin(angle);
+  float c = cos(a);
+  float s = sin(a);
   float nc = 1 - c;
   
   m.xx = v.x * v.x * nc + c;

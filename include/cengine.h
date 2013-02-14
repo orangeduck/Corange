@@ -407,7 +407,7 @@ void mat3_print(mat3 m);
 mat3 mat3_rotation_x(float a);
 mat3 mat3_rotation_y(float a);
 mat3 mat3_rotation_z(float a);
-mat3 mat3_rotation_axis_angle(vec3 axis, float angle);
+mat3 mat3_rotation_angle_axis(float angle, vec3 axis);
 
 /* mat4 */
 

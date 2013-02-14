@@ -110,7 +110,7 @@ void landscape_paint_height(landscape* l, vec2 pos, float radius, float value) {
     
     float dist = saturate(1 - vec2_dist(pos, vec2_new(x, y)) / radius);
     
-    t->heightmap[x + y * t->width] += value * dist;
+    t->heightmap[x + y * t->width] = max(t->heightmap[x + y * t->width] + value * dist, 0);
   }
   
   int chunk_x = base_x / t->chunk_width;

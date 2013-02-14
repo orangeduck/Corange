@@ -1,0 +1,2 @@
+shader vert = $CORANGE/shaders/deferred/sea.vs
+shader frag = $CORANGE/shaders/deferred/sea.fs
