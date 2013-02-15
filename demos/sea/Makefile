@@ -1,42 +1,28 @@
 DEMO=sea
 CC=gcc
 
-INCS= -I ./include -I ../../include
-LIBS= -L ./lib
-
-CFLAGS= $(INCS) -std=gnu99 -Wall -Werror -Wno-unused -O3 -g
-C_FILES= $(wildcard src/*.c)
-OBJ_FILES= $(addprefix obj/,$(notdir $(C_FILES:.c=.o)))
+CFLAGS= -I../../include -std=gnu99 -Wall -Werror -Wno-unused -O3 -g
 
 PLATFORM = $(shell uname)
 
 ifeq ($(findstring Linux,$(PLATFORM)),Linux)
 	OUT=$(DEMO)
-	LFLAGS= $(LIBS) -lcorange -lGL -lSDLmain -lSDL -lSDL_Net -lSDL_Mixer
+	LFLAGS= -lcorange -lGL -lSDLmain -lSDL -lSDL_Net -lSDL_Mixer
 endif
 
 ifeq ($(findstring Darwin,$(PLATFORM)),Darwin)
 	OUT=$(DEMO)
-	LFLAGS= $(LIBS) -lcorange -lGL -lSDLmain -lSDL -lSDL_Net -lSDL_Mixer
+	LFLAGS= -lcorange -lGL -lSDLmain -lSDL -lSDL_Net -lSDL_Mixer
 endif
 
 ifeq ($(findstring MINGW,$(PLATFORM)),MINGW)
 	OUT=$(DEMO).exe
-	LFLAGS= $(LIBS) -L../../lib ../../corange.res -lcorange -lmingw32 -lSDLmain -lSDL -lSDL_Net -lSDL_Mixer -lopengl32
+	LFLAGS= ../../corange.res -lcorange -lmingw32 -lSDLmain -lSDL -lSDL_Net -lSDL_Mixer -lopengl32
 endif
 
-$(OUT): $(OBJ_FILES)
-	$(CC) -g $(OBJ_FILES) $(LFLAGS) -o $@
-
-obj/%.o: src/%.c | obj
-	$(CC) $< -c $(CFLAGS) -o $@
-
-obj:
-	mkdir obj
-	
-lib:
-	mkdir lib
+$(OUT): sea.c
+	$(CC) $< $(CFLAGS) $(LFLAGS) -o $@
 	
 clean:
-	rm $(OUT) $(OBJ_FILES)
+	rm $(OUT)
 

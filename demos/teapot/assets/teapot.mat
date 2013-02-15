@@ -1,0 +1,2 @@
+shader vertex = ./assets/teapot.vs
+shader fragment = ./assets/teapot.fs
