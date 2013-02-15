@@ -49,20 +49,22 @@ void teapot_render() {
     
     glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
     
+    shader_program_set_texture(shader, "cube_beach", 0, asset_hndl_new_load(P("$CORANGE/resources/cube_sea.dds")));
+    
     shader_program_enable_attribute(shader, "vPosition",  3, 18, (void*)0);
     shader_program_enable_attribute(shader, "vNormal",    3, 18, (void*)(sizeof(float) * 3));
-    shader_program_enable_attribute(shader, "vTangent",   3, 18, (void*)(sizeof(float) * 6));
-    shader_program_enable_attribute(shader, "vBinormal",  3, 18, (void*)(sizeof(float) * 9));
-    shader_program_enable_attribute(shader, "vTexcoord",  2, 18, (void*)(sizeof(float) * 12));
+    //shader_program_enable_attribute(shader, "vTangent",   3, 18, (void*)(sizeof(float) * 6));
+    //shader_program_enable_attribute(shader, "vBinormal",  3, 18, (void*)(sizeof(float) * 9));
+    //shader_program_enable_attribute(shader, "vTexcoord",  2, 18, (void*)(sizeof(float) * 12));
     
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
       glDrawElements(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0);
     
     shader_program_disable_attribute(shader, "vPosition");
     shader_program_disable_attribute(shader, "vNormal");
-    shader_program_disable_attribute(shader, "vTangent");
-    shader_program_disable_attribute(shader, "vBinormal");
-    shader_program_disable_attribute(shader, "vTexcoord");
+    //shader_program_disable_attribute(shader, "vTangent");
+    //shader_program_disable_attribute(shader, "vBinormal");
+    //shader_program_disable_attribute(shader, "vTexcoord");
     
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);

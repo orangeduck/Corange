@@ -8,212 +8,209 @@
 
 ui_rectangle* ui_rectangle_new() {
 
-  ui_rectangle* rect = malloc(sizeof(ui_rectangle));
+  ui_rectangle* r = malloc(sizeof(ui_rectangle));
   
-  rect->top_left = vec2_new(10, 10);
-  rect->bottom_right = vec2_new(20, 20);
-  rect->color = vec4_white();
-  rect->glitch = 0.0;
+  r->top_left = vec2_new(10, 10);
+  r->bottom_right = vec2_new(20, 20);
+  r->color = vec4_white();
+  r->glitch = 0.0;
+  r->time = 0.0;
   
-  rect->texture = asset_hndl_null();
-  rect->texture_width = 1;
-  rect->texture_height = 1;
-  rect->texture_tile = false;
+  r->texture = asset_hndl_null();
+  r->texture_width = 1;
+  r->texture_height = 1;
+  r->texture_tile = false;
 
-  rect->border_size = 0.0;
-  rect->border_color = vec4_black();
+  r->border_size = 0.0;
+  r->border_color = vec4_black();
   
-  rect->active = true;
-  rect->blend_add = false;
+  r->blend_src = GL_SRC_ALPHA;
+  r->blend_dst = GL_ONE_MINUS_SRC_ALPHA;
+
+  r->active = true;
   
-  return rect;
-  
-}
-
-void ui_rectangle_delete(ui_rectangle* rect) {
-  free(rect);
-}
-
-void ui_rectangle_event(ui_rectangle* rect, SDL_Event e) {
-
-}
-
-void ui_rectangle_update(ui_rectangle* rect) {
+  return r;
   
 }
 
-void ui_rectangle_move(ui_rectangle* rect, vec2 pos) {
-  vec2 size = vec2_sub(rect->bottom_right, rect->top_left);
-  rect->top_left = pos;
-  rect->bottom_right = vec2_add(pos, size);
+void ui_rectangle_delete(ui_rectangle* r) {
+  free(r);
 }
 
-void ui_rectangle_resize(ui_rectangle* rect, vec2 size) {
-  rect->bottom_right = vec2_add(rect->top_left, size);
+void ui_rectangle_event(ui_rectangle* r, SDL_Event e) {
+
 }
 
-void ui_rectangle_set_texture(ui_rectangle* rect, asset_hndl tex, int width, int height, bool tile) {
-  rect->texture = tex;
-  rect->texture_width = width;
-  rect->texture_height = height;
-  rect->texture_tile = tile;
+void ui_rectangle_update(ui_rectangle* r) {
+  r->time += frame_time();
 }
 
-void ui_rectangle_set_border(ui_rectangle* rect, float size, vec4 color) {
-  rect->border_size = size;
-  rect->border_color = color;
+void ui_rectangle_move(ui_rectangle* r, vec2 pos) {
+  vec2 size = vec2_sub(r->bottom_right, r->top_left);
+  r->top_left = pos;
+  r->bottom_right = vec2_add(pos, size);
 }
 
-void ui_rectangle_set_color(ui_rectangle* rect, vec4 color) {
-  rect->color = color;
+void ui_rectangle_resize(ui_rectangle* r, vec2 size) {
+  r->bottom_right = vec2_add(r->top_left, size);
 }
 
-vec2 ui_rectangle_center(ui_rectangle* rect) {
-  return vec2_div(vec2_add(rect->top_left, rect->bottom_right), 2);
+void ui_rectangle_set_texture(ui_rectangle* r, asset_hndl tex, int width, int height, bool tile) {
+  r->texture = tex;
+  r->texture_width = width;
+  r->texture_height = height;
+  r->texture_tile = tile;
 }
 
-void ui_rectangle_set_glitch(ui_rectangle* rect, float glitch) {
-  rect->glitch = glitch;
+void ui_rectangle_set_border(ui_rectangle* r, float size, vec4 color) {
+  r->border_size = size;
+  r->border_color = color;
 }
 
-void ui_rectangle_blend_add(ui_rectangle* rect) {
-  rect->blend_add = true;
+void ui_rectangle_set_color(ui_rectangle* r, vec4 color) {
+  r->color = color;
 }
 
-static float TIME = 0;
+vec2 ui_rectangle_center(ui_rectangle* r) {
+  return vec2_div(vec2_add(r->top_left, r->bottom_right), 2);
+}
 
-void ui_rectangle_render(ui_rectangle* rect) {
+void ui_rectangle_set_glitch(ui_rectangle* r, float glitch) {
+  r->glitch = glitch;
+}
+
+void ui_rectangle_blend(ui_rectangle* r, GLenum blend_src, GLenum blend_dst) {
+  r->blend_src = blend_src;
+  r->blend_dst = blend_dst;
+}
+
+void ui_rectangle_render(ui_rectangle* r) {
   
-  if(!rect->active) {
-    return;
-  }
+  if(!r->active) { return; }
   
-  SDL_GL_CheckError();
-  asset_hndl mat = asset_hndl_new_load(P("$CORANGE/shaders/ui.mat"));
+  int width = graphics_viewport_width();
+  int height = graphics_viewport_height();
   
+  asset_hndl mat = asset_hndl_new_load(P("$CORANGE/shaders/ui.mat"));  
   shader_program* program_ui = material_get_entry(asset_hndl_ptr(mat), 0)->program;
   
-  SDL_GL_CheckError();
-  
-  GLuint ui_handle = shader_program_handle(program_ui);
-  glUseProgram(ui_handle);
-  
-	SDL_GL_CheckError();
-  
-  glMatrixMode(GL_PROJECTION);
-  glPushMatrix();
-	glLoadIdentity();
-  SDL_GL_CheckError();
-	glOrtho(0, graphics_viewport_width(), graphics_viewport_height(), 0, -1, 1);
-  
-  SDL_GL_CheckError();
-	
-  glMatrixMode(GL_MODELVIEW);
-  glPushMatrix();
-	glLoadIdentity();
-  
-  SDL_GL_CheckError();
+  shader_program_enable(program_ui);  
+  shader_program_set_mat4(program_ui, "world", mat4_id());
+  shader_program_set_mat4(program_ui, "view", mat4_id());
+  shader_program_set_mat4(program_ui, "proj", mat4_orthographic(0, width, height, 0, -1, 1));
   
   glEnable(GL_BLEND);
-  if (rect->blend_add) {
-    glBlendFunc(GL_ONE, GL_ONE);
-  } else {
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glBlendFunc(r->blend_src, r->blend_dst);
+  
+  if (!asset_hndl_isnull(r->texture)) {
+    shader_program_set_texture(program_ui, "diffuse", 0, r->texture);
+    shader_program_set_texture(program_ui, "random",  1, asset_hndl_new_load(P("$CORANGE/resources/random.dds")));
   }
   
-  if(!asset_hndl_isnull(rect->texture)) {
-    glActiveTexture(GL_TEXTURE0 + 0);
-    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, texture_handle(asset_hndl_ptr(rect->texture)) );
-    glUniform1i(glGetUniformLocation(ui_handle, "diffuse"), 0);
+  shader_program_set_float(program_ui, "time", r->time);
+  shader_program_set_float(program_ui, "glitch", r->glitch);
+  
+  float rect_colors[] = {
+    r->color.x, r->color.y, r->color.z, r->color.w,
+    r->color.x, r->color.y, r->color.z, r->color.w,
+    r->color.x, r->color.y, r->color.z, r->color.w,
+    r->color.x, r->color.y, r->color.z, r->color.w,
+    r->color.x, r->color.y, r->color.z, r->color.w,
+    r->color.x, r->color.y, r->color.z, r->color.w
+  };
+  
+  float rect_positions[] = {
+    r->top_left.x,     r->top_left.y,
+    r->top_left.x,     r->bottom_right.y,
+    r->bottom_right.x, r->bottom_right.y,
+    r->top_left.x,     r->top_left.y,
+    r->bottom_right.x, r->top_left.y,
+    r->bottom_right.x, r->bottom_right.y,
+  };
+  
+  float rect_texcoords[12];
+  
+  if (r->texture_tile) {
+  
+    float width = r->bottom_right.x - r->top_left.x;
+    float height = r->bottom_right.y - r->top_left.y;
     
-    glActiveTexture(GL_TEXTURE0 + 1);
-    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, texture_handle(asset_hndl_ptr(asset_hndl_new_load(P("$CORANGE/resources/random.dds")))) );
-    glUniform1i(glGetUniformLocation(ui_handle, "random"), 1);
+    rect_texcoords[0]  = 0; 
+    rect_texcoords[1]  = height / r->texture_height;
+    rect_texcoords[2]  = width  / r->texture_width;
+    rect_texcoords[3]  = height / r->texture_height;
+    rect_texcoords[4]  = width  / r->texture_width;
+    rect_texcoords[5]  = 0;
+    rect_texcoords[6]  = 0; 
+    rect_texcoords[7]  = height / r->texture_height;
+    rect_texcoords[8]  = 0;
+    rect_texcoords[9]  = 0;
+    rect_texcoords[10] = width  / r->texture_width;
+    rect_texcoords[11] = 0;
+      
+  } else {
+  
+    rect_texcoords[0]  = 0; rect_texcoords[1]  = 0; 
+    rect_texcoords[2]  = 1; rect_texcoords[3]  = 0; 
+    rect_texcoords[4]  = 1; rect_texcoords[5]  = 1; 
+    rect_texcoords[6]  = 0; rect_texcoords[7]  = 0; 
+    rect_texcoords[8]  = 0; rect_texcoords[9]  = 1; 
+    rect_texcoords[10] = 1; rect_texcoords[11] = 1; 
+  
   }
+  
+  shader_program_enable_attribute(program_ui, "vPosition", 2, 2, rect_positions);
+  shader_program_enable_attribute(program_ui, "vTexcoord", 2, 2, rect_texcoords);
+  shader_program_enable_attribute(program_ui, "vColor", 4, 4, rect_colors);
+    
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    
+  shader_program_disable_attribute(program_ui, "vPosition");
+  shader_program_disable_attribute(program_ui, "vTexcoord");
+  shader_program_disable_attribute(program_ui, "vColor");
   
   SDL_GL_CheckError();
   
-  TIME += frame_time();
-  glUniform1f(glGetUniformLocation(ui_handle, "time"), TIME);
-  glUniform1f(glGetUniformLocation(ui_handle, "glitch"), rect->glitch);
-  
-  glColor4f(rect->color.x, rect->color.y, rect->color.z, rect->color.w);  
-  
-  if (rect->texture_tile) {
-  
-  float width = rect->bottom_right.x - rect->top_left.x;
-  float height = rect->bottom_right.y - rect->top_left.y;
-  
-    glBegin(GL_QUADS);
-      glTexCoord2f(0, height / rect->texture_height);
-      glVertex3f(rect->top_left.x, rect->top_left.y, 0);
-      
-      glTexCoord2f(width / rect->texture_width, height / rect->texture_height);
-      glVertex3f(rect->bottom_right.x, rect->top_left.y, 0);
-      
-      glTexCoord2f(width / rect->texture_width, 0);
-      glVertex3f(rect->bottom_right.x, rect->bottom_right.y, 0);
-      
-      glTexCoord2f(0, 0);
-      glVertex3f(rect->top_left.x, rect->bottom_right.y, 0);
-    glEnd();
-  
-  } else {
-  
-    glBegin(GL_QUADS);
-      glTexCoord2f(0, 1); glVertex3f(rect->top_left.x, rect->top_left.y, 0);
-      glTexCoord2f(1, 1); glVertex3f(rect->bottom_right.x, rect->top_left.y, 0);
-      glTexCoord2f(1, 0); glVertex3f(rect->bottom_right.x, rect->bottom_right.y, 0);
-      glTexCoord2f(0, 0); glVertex3f(rect->top_left.x, rect->bottom_right.y, 0);
-    glEnd();
-  
-  }
-  
-  SDL_GL_CheckError();
-  
-  if(rect->border_size > 0) {
-  
-    glColor4f(rect->border_color.x, rect->border_color.y, rect->border_color.z, rect->border_color.w);  
-    glLineWidth(rect->border_size);
+  if (r->border_size > 0) {
     
-    glBegin(GL_LINE_STRIP);
+    glLineWidth(r->border_size);
+    
+    float border_colors[] = {
+      r->border_color.x, r->border_color.y, r->border_color.z, r->border_color.w,
+      r->border_color.x, r->border_color.y, r->border_color.z, r->border_color.w,
+      r->border_color.x, r->border_color.y, r->border_color.z, r->border_color.w,
+      r->border_color.x, r->border_color.y, r->border_color.z, r->border_color.w,
+      r->border_color.x, r->border_color.y, r->border_color.z, r->border_color.w
+    };
+    
+    float border_positions[] = {
+      r->top_left.x,     r->top_left.y,
+      r->bottom_right.x, r->top_left.y,
+      r->bottom_right.x, r->bottom_right.y,
+      r->top_left.x,     r->bottom_right.y,
+      r->top_left.x,     r->top_left.y
+    };
+    
+    float border_texcoord[] = {
+      0, 0,  0, 0,  0, 0,  0, 0,  0, 0
+    };
+    
+    shader_program_enable_attribute(program_ui, "vPosition", 2, 2, border_positions);
+    shader_program_enable_attribute(program_ui, "vTexcoord", 2, 2, border_texcoord);
+    shader_program_enable_attribute(program_ui, "vColor", 4, 4, border_colors);
       
-      glVertex3f(rect->top_left.x, rect->top_left.y, 0);
-      glVertex3f(rect->bottom_right.x, rect->top_left.y, 0);
-      glVertex3f(rect->bottom_right.x, rect->bottom_right.y, 0);
-      glVertex3f(rect->top_left.x, rect->bottom_right.y, 0);
-      glVertex3f(rect->top_left.x, rect->top_left.y, 0);
+      glDrawArrays(GL_LINE_STRIP, 0, 5);
       
-    glEnd();
+    shader_program_disable_attribute(program_ui, "vPosition");
+    shader_program_disable_attribute(program_ui, "vTexcoord");
+    shader_program_disable_attribute(program_ui, "vColor");
   
     glLineWidth(1);
   }
   
-  glColor4f(1, 1, 1, 1);
-  
   glDisable(GL_BLEND);
   
-  glMatrixMode(GL_PROJECTION);
-  glPopMatrix();
-  
-	glMatrixMode(GL_MODELVIEW);
-  glPopMatrix();
-  
-  SDL_GL_CheckError();
-  
-  if(!asset_hndl_isnull(rect->texture)) {
-    glActiveTexture(GL_TEXTURE0 + 1);
-    glDisable(GL_TEXTURE_2D);
-  
-    glActiveTexture(GL_TEXTURE0 + 0);
-    glDisable(GL_TEXTURE_2D);
-  }
-  
-  glUseProgram(0);
-  
-  SDL_GL_CheckError();
+  shader_program_disable(program_ui);
   
 }
 

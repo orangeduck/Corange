@@ -30,10 +30,10 @@ typedef struct {
   
   /* private */
   char* string;
-  int buffersize;
   
   GLuint positions_buffer;
   GLuint texcoords_buffer;
+  GLuint colors_buffer;
   
   int num_positions;
   int num_texcoords;

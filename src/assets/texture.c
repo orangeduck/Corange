@@ -459,8 +459,6 @@ texture* dds_load_file( char* filename ) {
   int y = hdr.dwHeight;
   int mip_map_num = (hdr.dwFlags & DDSD_MIPMAPCOUNT) ? hdr.dwMipMapCount : 1;
   
-  debug("Mipmap Count: %i", mip_map_num);
-  
   if (!is_power_of_two(x)) { error("Texture %s with is %i pixels which is not a power of two!", filename, x); }
   if (!is_power_of_two(y)) { error("Texture %s height is %i pixels which is not a power of two!", filename, y); }
   
@@ -485,14 +483,18 @@ texture* dds_load_file( char* filename ) {
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_GENERATE_MIPMAP, GL_FALSE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_BASE_LEVEL, 0);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAX_LEVEL, 0);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAX_LEVEL, mip_map_num-1);
   } else {
     t->type = GL_TEXTURE_2D;
     glBindTexture(GL_TEXTURE_2D, texture_handle(t));
     glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_FALSE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, mip_map_num-1);
+    texture_set_filtering_anisotropic(t);
   }
-  
+ 
   SDL_GL_CheckError();
   
   for (int i = 0; i < (t->type == GL_TEXTURE_CUBE_MAP ? 6 : 1); i++) {
@@ -506,7 +508,7 @@ texture* dds_load_file( char* filename ) {
     SDL_GL_CheckError();
     
     if ( li->compressed ) {
-        
+      
       size_t size = max(li->div_size, x) / li->div_size * max(li->div_size, y) / li->div_size * li->block_bytes;
       char* data = malloc(size);
       
@@ -583,17 +585,6 @@ texture* dds_load_file( char* filename ) {
   }
   
   SDL_RWclose(f);
-  
-  if (t->type == GL_TEXTURE_CUBE_MAP) {
-    SDL_GL_CheckError();
-  } else {
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, mip_map_num-1);
-    SDL_GL_CheckError();
-    texture_set_filtering_anisotropic(t);
-    SDL_GL_CheckError();
-  }
-  
-  SDL_GL_CheckError();
   
   return t;
   

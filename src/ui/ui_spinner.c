@@ -2,6 +2,7 @@
 
 #include "cgraphics.h"
 
+#include "assets/material.h"
 #include "assets/texture.h"
 
 ui_spinner* ui_spinner_new() {
@@ -58,40 +59,54 @@ void ui_spinner_render(ui_spinner* s) {
   bot_left = vec2_add(bot_left, center);
   bot_right = vec2_add(bot_right, center);
   
-	glMatrixMode(GL_PROJECTION);
-  glPushMatrix();
-	glLoadIdentity();
-	glOrtho(0, graphics_viewport_width(), graphics_viewport_height(), 0, -1, 1);
+  int width = graphics_viewport_width();
+  int height = graphics_viewport_height();
   
-	glMatrixMode(GL_MODELVIEW);
-  glPushMatrix();
-	glLoadIdentity();
+  asset_hndl mat = asset_hndl_new_load(P("$CORANGE/shaders/ui.mat"));  
+  shader_program* program_ui = material_get_entry(asset_hndl_ptr(mat), 0)->program;
   
-  glEnable(GL_TEXTURE_2D);
-  glBindTexture(GL_TEXTURE_2D, texture_handle(asset_hndl_ptr(s->texture)) );
+  shader_program_enable(program_ui);  
+  shader_program_set_mat4(program_ui, "world", mat4_id());
+  shader_program_set_mat4(program_ui, "view", mat4_id());
+  shader_program_set_mat4(program_ui, "proj", mat4_orthographic(0, width, height, 0, -1, 1));
+  shader_program_set_float(program_ui, "glitch", 0);
+  shader_program_set_float(program_ui, "time", 0);
+  shader_program_set_texture(program_ui, "diffuse", 0, s->texture);
+  shader_program_set_texture(program_ui, "random",  1, asset_hndl_new_load(P("$CORANGE/resources/random.dds")));  
   
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   
-  glColor4f(s->color.x, s->color.y, s->color.z, s->color.w);
+  float spinner_color[] = {
+    s->color.x, s->color.y, s->color.z, s->color.w,
+    s->color.x, s->color.y, s->color.z, s->color.w,
+    s->color.x, s->color.y, s->color.z, s->color.w,
+    s->color.x, s->color.y, s->color.z, s->color.w
+  };
   
-  glBegin(GL_QUADS);
-    glTexCoord2f(0, 1); glVertex3f(top_left.x, top_left.y, 0);
-    glTexCoord2f(1, 1); glVertex3f(bot_left.x, bot_left.y, 0);
-    glTexCoord2f(1, 0); glVertex3f(bot_right.x, bot_right.y, 0);
-    glTexCoord2f(0, 0); glVertex3f(top_right.x, top_right.y, 0);
-  glEnd();
+  float spinner_position[] = {
+    top_left.x, top_left.y,
+    bot_left.x, bot_left.y,
+    bot_right.x, bot_right.y,
+    top_right.x, top_right.y
+  };
   
-  glColor4f(1, 1, 1, 1);
+  float spinner_texcoord[] = {
+    0, 1, 1, 1, 1, 0, 0, 0
+  };
+  
+  shader_program_enable_attribute(program_ui, "vPosition", 2, 2, spinner_position);
+  shader_program_enable_attribute(program_ui, "vTexcoord", 2, 2, spinner_texcoord);
+  shader_program_enable_attribute(program_ui, "vColor", 4, 4, spinner_color);
+  
+    glDrawArrays(GL_QUADS, 0, 4);
+  
+  shader_program_disable_attribute(program_ui, "vPosition");
+  shader_program_disable_attribute(program_ui, "vTexcoord");
+  shader_program_disable_attribute(program_ui, "vColor");
   
   glDisable(GL_BLEND);
   
-  glDisable(GL_TEXTURE_2D);
-  
-  glMatrixMode(GL_PROJECTION);
-  glPopMatrix();
-  
-	glMatrixMode(GL_MODELVIEW);
-  glPopMatrix();
+  shader_program_disable(program_ui);
   
 }

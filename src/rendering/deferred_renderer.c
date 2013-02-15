@@ -767,11 +767,11 @@ static void render_shadows_landscape(deferred_renderer* dr, int i, landscape* l)
   vec3 scale = vec3_new(-(1.0 / terr->width) * l->size_x, 0.25, -(1.0 / terr->height) * l->size_y);
   vec3 translation = vec3_new(l->size_x / 2, 0, l->size_y / 2);
   mat4 rotation = mat4_id();
-  
+    
   // This assumes that X or Z scale of a chunk will never exceed the height.
   float bound_scale_val = max(scale.x, scale.z);
   vec3 bound_scale = vec3_new(bound_scale_val, bound_scale_val, bound_scale_val);
-  
+    
   shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_depth));
   shader_program_enable(shader);
   shader_program_set_mat4(shader, "world", mat4_world( translation, scale, rotation ));
@@ -780,7 +780,7 @@ static void render_shadows_landscape(deferred_renderer* dr, int i, landscape* l)
   shader_program_set_float(shader, "clip_near", dr->shadow_near[i]);
   shader_program_set_float(shader, "clip_far",  dr->shadow_far[i]);
   shader_program_set_float(shader, "alpha_test",  0.0);
-  
+    
   for(int j = 0; j < terr->num_chunks; j++) {
     terrain_chunk* tc = terr->chunks[j];
     
@@ -800,7 +800,7 @@ static void render_shadows_landscape(deferred_renderer* dr, int i, landscape* l)
     
     glBindBuffer(GL_ARRAY_BUFFER, tc->vertex_buffer);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tc->index_buffers[buff_index]);
-  
+    
     shader_program_enable_attribute(shader, "vPosition", 3, 12, (void*)0);
       
       glDrawElements(GL_TRIANGLES, tc->num_indicies[buff_index], GL_UNSIGNED_INT, (void*)0);
@@ -847,7 +847,7 @@ static void render_shadows(deferred_renderer* dr) {
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_FRONT);
-  
+    
     for ( int j = 0; j < dr->render_objects_num; j++) {
       
       // HACK ALERT
@@ -867,13 +867,13 @@ static void render_shadows(deferred_renderer* dr) {
       }
       
       if (veg_found) continue;
-
-    
+      
       if (dr->render_objects[j].type == RO_TYPE_STATIC) { render_shadows_static(dr, i, dr->render_objects[j].static_object); }
       if (dr->render_objects[j].type == RO_TYPE_INSTANCE) { render_shadows_instance(dr, i, dr->render_objects[j].instance_object); }
       if (dr->render_objects[j].type == RO_TYPE_ANIMATED) { render_shadows_animated(dr, i, dr->render_objects[j].animated_object); }
       if (dr->render_objects[j].type == RO_TYPE_LANDSCAPE) { render_shadows_landscape(dr, i, dr->render_objects[j].landscape); }
       if (dr->render_objects[j].type == RO_TYPE_PROJECTILE) { render_shadows_projectile(dr, i, dr->render_objects[j].projectile); }
+      
     }
     
     glCullFace(GL_BACK);
