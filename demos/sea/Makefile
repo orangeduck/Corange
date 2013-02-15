@@ -12,17 +12,17 @@ PLATFORM = $(shell uname)
 
 ifeq ($(findstring Linux,$(PLATFORM)),Linux)
 	OUT=$(DEMO)
-	LFLAGS= $(LIBS) -lcorange -lGL -lSDLmain -lSDL -lSDL_Net -lSDL_Mixer
+	LFLAGS= $(LIBS) -lcorange -lGL -lSDLmain -lSDL -lSDL_net -lSDL_mixer
 endif
 
 ifeq ($(findstring Darwin,$(PLATFORM)),Darwin)
 	OUT=$(DEMO)
-	LFLAGS= $(LIBS) -lcorange -lGL -lSDLmain -lSDL -lSDL_Net -lSDL_Mixer
+	LFLAGS= $(LIBS) -lcorange -lGL -lSDLmain -lSDL -lSDL_net -lSDL_mixer
 endif
 
 ifeq ($(findstring MINGW,$(PLATFORM)),MINGW)
 	OUT=$(DEMO).exe
-	LFLAGS= $(LIBS) -L../../lib ../../corange.res -lcorange -lmingw32 -lSDLmain -lSDL -lSDL_Net -lSDL_Mixer -lopengl32
+	LFLAGS= $(LIBS) -L../../lib ../../corange.res -lcorange -lmingw32 -lSDLmain -lSDL -lSDL_net -lSDL_mixer -lopengl32
 endif
 
 $(OUT): $(OBJ_FILES)

@@ -14,12 +14,16 @@
 #include "cengine.h"
 #include "assets/image.h"
 
-typedef GLuint texture;
+typedef struct {
+  GLuint handle;
+  GLenum type;
+} texture;
 
 texture* texture_new();
 void texture_delete(texture* t);
 
 GLuint texture_handle(texture* t);
+GLenum texture_type(texture* t);
 
 void texture_set_image(texture* t, image* i);
 image* texture_get_image(texture* t);

@@ -5,27 +5,23 @@
 texture* texture_new() {
   
   texture* t = malloc(sizeof(texture));
-  
-  texture tex_id;
-  glGenTextures(1, &tex_id);
-  
-  *t = tex_id;
+  glGenTextures(1, &t->handle);
+  t->type = GL_TEXTURE_2D;
   
   return t;
 }
 
 void texture_delete(texture* t) {
-  texture tex = *t;
-  glDeleteTextures(1, &tex);
+  glDeleteTextures(1, &t->handle);
   free(t);
 }
 
 GLuint texture_handle(texture* t) {
-  if (t == NULL) {
-    error("Cannot get handle for NULL texture");
-  }
-  
-  return *t;
+  return t->handle;
+}
+
+GLenum texture_type(texture* t) {
+  return t->type;
 }
 
 void texture_set_image(texture* t, image* i) {
@@ -39,14 +35,10 @@ texture* tga_load_file( char* filename ) {
   
   image* i = image_tga_load_file(filename);
   
-  texture my_texture;
-  glGenTextures(1, &my_texture);
-  glBindTexture(GL_TEXTURE_2D, my_texture);
-  glTexParameteri( GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_FALSE );
-  glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0 );
-  
-  texture* t = malloc(sizeof(texture));
-  *t = my_texture;
+  texture* t = texture_new();
+  glBindTexture(GL_TEXTURE_2D, texture_handle(t));
+  glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_FALSE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
   
   texture_set_image(t, i);
   texture_set_filtering_anisotropic(t);
@@ -60,14 +52,10 @@ texture* bmp_load_file( char* filename ) {
 
   image* i = image_bmp_load_file(filename);
   
-  texture my_texture;
-  glGenTextures(1, &my_texture);
-  glBindTexture(GL_TEXTURE_2D, my_texture);
+  texture* t = texture_new();
+  glBindTexture(GL_TEXTURE_2D, texture_handle(t));
   glTexParameteri( GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_FALSE );
   glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0 );
-  
-  texture* t = malloc(sizeof(texture));
-  *t = my_texture;
   
   texture_set_image(t, i);
   texture_set_filtering_anisotropic(t);
@@ -177,38 +165,42 @@ image* texture_get_image(texture* t) {
 
 void texture_generate_mipmaps(texture* t) {
 
-  glBindTexture(GL_TEXTURE_2D, texture_handle(t));
-  glGenerateMipmap(GL_TEXTURE_2D);
+  glBindTexture(t->type, texture_handle(t));
+  glGenerateMipmap(t->type);
+  SDL_GL_CheckError();
   
 }
 
 void texture_set_filtering_nearest(texture* t) {
   
-  glBindTexture(GL_TEXTURE_2D, texture_handle(t));
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 0);
+  glBindTexture(t->type, texture_handle(t));
+  glTexParameteri(t->type, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(t->type, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(t->type, GL_TEXTURE_MAX_ANISOTROPY_EXT, 0);
+  SDL_GL_CheckError();
   
 }
 
 void texture_set_filtering_linear(texture* t) {
 
-  glBindTexture(GL_TEXTURE_2D, texture_handle(t));
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 0);
+  glBindTexture(t->type, texture_handle(t));
+  glTexParameteri(t->type, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(t->type, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(t->type, GL_TEXTURE_MAX_ANISOTROPY_EXT, 0);
+  SDL_GL_CheckError();
   
 }
 
 void texture_set_filtering_anisotropic(texture* t) {
 
-  float max;
+  float max = 0;
   glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &max);
 
-  glBindTexture(GL_TEXTURE_2D, texture_handle(t));
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, max);
+  glBindTexture(t->type, texture_handle(t));
+  glTexParameteri(t->type, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+  glTexParameteri(t->type, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(t->type, GL_TEXTURE_MAX_ANISOTROPY_EXT, max);
+  SDL_GL_CheckError();
 
 }
 
@@ -241,21 +233,17 @@ texture* lut_load_file( char* filename ) {
   
   int offset = head + 3;
   
-  texture* t = malloc(sizeof(texture));
+  texture* t = texture_new();
+  t->type = GL_TEXTURE_3D;
   
-  texture tex_id;
-  glEnable(GL_TEXTURE_3D);
-  glGenTextures(1, &tex_id);
-  glBindTexture(GL_TEXTURE_3D, tex_id);
-  glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB, lut_size, lut_size, lut_size, 0, GL_RGB, GL_UNSIGNED_BYTE, contents + offset);
-  glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-  glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-  glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_MIRRORED_REPEAT);
-  glDisable(GL_TEXTURE_3D);
-  
-  *t = tex_id;
+  glBindTexture(t->type, texture_handle(t));
+  glTexImage3D(t->type, 0, GL_RGB, lut_size, lut_size, lut_size, 0, GL_RGB, GL_UNSIGNED_BYTE, contents + offset);
+  glTexParameteri(t->type, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(t->type, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(t->type, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+  glTexParameteri(t->type, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+  glTexParameteri(t->type, GL_TEXTURE_WRAP_R, GL_MIRRORED_REPEAT);
+  SDL_GL_CheckError();
   
   free(contents);
   
@@ -269,19 +257,17 @@ void texture3d_write_to_file(texture* t, char* filename) {
   int t_height;
   int t_depth;
   
-  glEnable(GL_TEXTURE_3D);
-  glBindTexture(GL_TEXTURE_3D, *t);
-  glGetTexLevelParameteriv(GL_TEXTURE_3D, 0, GL_TEXTURE_WIDTH, &t_width);
-  glGetTexLevelParameteriv(GL_TEXTURE_3D, 0, GL_TEXTURE_HEIGHT, &t_height);
-  glGetTexLevelParameteriv(GL_TEXTURE_3D, 0, GL_TEXTURE_DEPTH, &t_depth);
+  glBindTexture(t->type, texture_handle(t));
+  glGetTexLevelParameteriv(t->type, 0, GL_TEXTURE_WIDTH, &t_width);
+  glGetTexLevelParameteriv(t->type, 0, GL_TEXTURE_HEIGHT, &t_height);
+  glGetTexLevelParameteriv(t->type, 0, GL_TEXTURE_DEPTH, &t_depth);
   
   int width = t_width;
   int height = t_height * t_depth;
   
   unsigned char* data = malloc(width * height * 4);
   
-  glGetTexImage(GL_TEXTURE_3D, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-  glDisable(GL_TEXTURE_3D);
+  glGetTexImage(t->type, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
   
   int xa= width % 256;
   int xb= (width-xa)/256;
@@ -427,36 +413,33 @@ typedef struct {
 
 typedef struct {
 
-  int compressed;
-  int swap;
-  int palette;
-  int divSize;
-  int blockBytes;
-  GLenum internalFormat;
-  GLenum externalFormat;
+  bool compressed;
+  bool swap;
+  bool palette;
+  int div_size;
+  int block_bytes;
+  GLenum internal_format;
+  GLenum external_format;
   GLenum type;
   
 } DdsLoadInfo;
 
 
 static bool is_power_of_two(unsigned int x) {
- while (((x % 2) == 0) && x > 1) /* While x is even and > 1 */
-   x /= 2;
- return (x == 1);
+  while (((x % 2) == 0) && x > 1) { x /= 2; }
+  return (x == 1);
 }
 
 texture* dds_load_file( char* filename ) {
   
-  SDL_GL_CheckError();
-  
-  DdsLoadInfo loadInfoDXT1 =   { 1, 0, 0, 4, 8,  GL_COMPRESSED_RGBA_S3TC_DXT1 };
-  DdsLoadInfo loadInfoDXT3 =   { 1, 0, 0, 4, 16, GL_COMPRESSED_RGBA_S3TC_DXT3 };
-  DdsLoadInfo loadInfoDXT5 =   { 1, 0, 0, 4, 16, GL_COMPRESSED_RGBA_S3TC_DXT5 };
-  DdsLoadInfo loadInfoBGRA8 =  { 0, 0, 0, 1, 4,  GL_RGBA8, GL_BGRA, GL_UNSIGNED_BYTE };
-  DdsLoadInfo loadInfoBGR8 =   { 0, 0, 0, 1, 3,  GL_RGB8, GL_BGR, GL_UNSIGNED_BYTE };
-  DdsLoadInfo loadInfoBGR5A1 = { 0, 1, 0, 1, 2,  GL_RGB5_A1, GL_BGRA, GL_UNSIGNED_SHORT_1_5_5_5_REV };
-  DdsLoadInfo loadInfoBGR565 = { 0, 1, 0, 1, 2,  GL_RGB5, GL_RGB, GL_UNSIGNED_SHORT_5_6_5 };
-  DdsLoadInfo loadInfoIndex8 = { 0, 0, 1, 1, 1,  GL_RGB8, GL_BGRA, GL_UNSIGNED_BYTE };
+  DdsLoadInfo loadInfoDXT1 =   { true,  false, false, 4, 8,  GL_COMPRESSED_RGBA_S3TC_DXT1 };
+  DdsLoadInfo loadInfoDXT3 =   { true,  false, false, 4, 16, GL_COMPRESSED_RGBA_S3TC_DXT3 };
+  DdsLoadInfo loadInfoDXT5 =   { true,  false, false, 4, 16, GL_COMPRESSED_RGBA_S3TC_DXT5 };
+  DdsLoadInfo loadInfoBGRA8 =  { false, false, false, 1, 4,  GL_RGBA8,   GL_BGRA, GL_UNSIGNED_BYTE };
+  DdsLoadInfo loadInfoBGR8 =   { false, false, false, 1, 3,  GL_RGB8,    GL_BGR,  GL_UNSIGNED_BYTE };
+  DdsLoadInfo loadInfoBGR5A1 = { false, true,  false, 1, 2,  GL_RGB5_A1, GL_BGRA, GL_UNSIGNED_SHORT_1_5_5_5_REV };
+  DdsLoadInfo loadInfoBGR565 = { false, true,  false, 1, 2,  GL_RGB5,    GL_RGB,  GL_UNSIGNED_SHORT_5_6_5 };
+  DdsLoadInfo loadInfoIndex8 = { false, false, true,  1, 1,  GL_RGB8,    GL_BGRA, GL_UNSIGNED_BYTE };
   
   SDL_RWops* f = SDL_RWFromFile(filename, "rb");
   
@@ -465,7 +448,7 @@ texture* dds_load_file( char* filename ) {
   }
   
   DDS_header hdr;
-  SDL_RWread(f, &hdr, 1, sizeof(hdr));
+  SDL_RWread(f, &hdr, 1, sizeof(DDS_header));
   
   if( hdr.dwMagic != DDS_MAGIC || hdr.dwSize != 124 ||
     !(hdr.dwFlags & DDSD_PIXELFORMAT) || !(hdr.dwFlags & DDSD_CAPS) ) {
@@ -474,117 +457,145 @@ texture* dds_load_file( char* filename ) {
 
   int x = hdr.dwWidth;
   int y = hdr.dwHeight;
+  int mip_map_num = (hdr.dwFlags & DDSD_MIPMAPCOUNT) ? hdr.dwMipMapCount : 1;
+  
+  debug("Mipmap Count: %i", mip_map_num);
   
   if (!is_power_of_two(x)) { error("Texture %s with is %i pixels which is not a power of two!", filename, x); }
   if (!is_power_of_two(y)) { error("Texture %s height is %i pixels which is not a power of two!", filename, y); }
   
   DdsLoadInfo* li = &loadInfoDXT1;
-
-  if( PF_IS_DXT1( hdr.sPixelFormat ) ) { li = &loadInfoDXT1; }
-  else if( PF_IS_DXT3( hdr.sPixelFormat ) ) { li = &loadInfoDXT3; }
-  else if( PF_IS_DXT5( hdr.sPixelFormat ) ) { li = &loadInfoDXT5; } 
-  else if( PF_IS_BGRA8( hdr.sPixelFormat ) ) { li = &loadInfoBGRA8; }
-  else if( PF_IS_BGR8( hdr.sPixelFormat ) ) { li = &loadInfoBGR8; }
-  else if( PF_IS_BGR5A1( hdr.sPixelFormat ) ) { li = &loadInfoBGR5A1; }
-  else if( PF_IS_BGR565( hdr.sPixelFormat ) ) { li = &loadInfoBGR565; } 
-  else if( PF_IS_INDEX8( hdr.sPixelFormat ) ) { li = &loadInfoIndex8; }
+  if      (PF_IS_DXT1(hdr.sPixelFormat  )) { li = &loadInfoDXT1;   }
+  else if (PF_IS_DXT3(hdr.sPixelFormat  )) { li = &loadInfoDXT3;   }
+  else if (PF_IS_DXT5(hdr.sPixelFormat  )) { li = &loadInfoDXT5;   } 
+  else if (PF_IS_BGRA8(hdr.sPixelFormat )) { li = &loadInfoBGRA8;  }
+  else if (PF_IS_BGR8(hdr.sPixelFormat  )) { li = &loadInfoBGR8;   }
+  else if (PF_IS_BGR5A1(hdr.sPixelFormat)) { li = &loadInfoBGR5A1; }
+  else if (PF_IS_BGR565(hdr.sPixelFormat)) { li = &loadInfoBGR565; } 
+  else if (PF_IS_INDEX8(hdr.sPixelFormat)) { li = &loadInfoIndex8; }
   else { error("Cannot Load File %s: Unknown DDS File format type.", filename); }
   
-  texture my_texture;
-  glGenTextures(1, &my_texture);
-  glBindTexture(GL_TEXTURE_2D, my_texture);
-  glTexParameteri( GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_FALSE );
+  texture* t = texture_new();
   
-  int mipMapCount = (hdr.dwFlags & DDSD_MIPMAPCOUNT) ? hdr.dwMipMapCount : 1;
-  
-  if( li->compressed ) {
-    
-    size_t size = max( li->divSize, x )/li->divSize * max( li->divSize, y )/li->divSize * li->blockBytes;
-    char* data = malloc( size );
-    
-    GLenum cFormat = li->internalFormat;
-    GLenum format = li->internalFormat;
-    
-    for( int ix = 0; ix < mipMapCount; ++ix ) {
-    
-      SDL_RWread(f, data, 1, size);
-      glCompressedTexImage2D( GL_TEXTURE_2D, ix, li->internalFormat, x, y, 0, size, data );
-      
-      x = (x+1)>>1;
-      y = (y+1)>>1;
-      
-      size = max( li->divSize, x )/li->divSize * max( li->divSize, y )/li->divSize * li->blockBytes;
-    }
-    
-    free( data );
-    
-  } else if( li->palette ) {
-  
-    size_t size = hdr.dwPitchOrLinearSize * y;
-    GLenum format = li->externalFormat;
-    GLenum cFormat = li->internalFormat;
-    char* data = malloc( size );
-    int palette[256];
-    int* unpacked = malloc( size * sizeof(int) );
-    
-    SDL_RWread(f, palette, 4, 256);
-    for( int ix = 0; ix < mipMapCount; ++ix ) {
-    
-      SDL_RWread(f, data, 1, size);
-      
-      for( int zz = 0; zz < size; ++zz ) {
-        unpacked[ zz ] = palette[ (short)data[ zz ] ];
-      }
-      
-      glPixelStorei( GL_UNPACK_ROW_LENGTH, y );
-      glTexImage2D( GL_TEXTURE_2D, ix, li->internalFormat, x, y, 0, li->externalFormat, li->type, unpacked );
-      
-      x = (x+1)>>1;
-      y = (y+1)>>1;
-      
-      size = x * y * li->blockBytes;
-    }
-    
-    free( data );
-    free( unpacked );
-    
+  if (hdr.sCaps.dwCaps2 & DDSCAPS2_CUBEMAP) {
+    t->type = GL_TEXTURE_CUBE_MAP;
+    glBindTexture(GL_TEXTURE_CUBE_MAP, texture_handle(t));
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_BASE_LEVEL, 0);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAX_LEVEL, 0);
   } else {
-  
-    if( li->swap ) { glPixelStorei( GL_UNPACK_SWAP_BYTES, GL_TRUE ); }
-    
-    size_t size = x * y * li->blockBytes;
-    GLenum format = li->externalFormat;
-    GLenum cFormat = li->internalFormat;
-    char* data = malloc( size );
-    
-    /* fixme: how are MIP maps stored for 24-bit if pitch != ySize*3 ? */
-    for( int ix = 0; ix < mipMapCount; ++ix ) {
-    
-      SDL_RWread(f, data, 1, size);
-      
-      glPixelStorei( GL_UNPACK_ROW_LENGTH, y );
-      glTexImage2D( GL_TEXTURE_2D, ix, li->internalFormat, x, y, 0, li->externalFormat, li->type, data );
-      
-      x = (x+1)>>1;
-      y = (y+1)>>1;
-      size = x * y * li->blockBytes;
-    }
-    
-    free( data );
-    
-    glPixelStorei( GL_UNPACK_SWAP_BYTES, GL_FALSE );
+    t->type = GL_TEXTURE_2D;
+    glBindTexture(GL_TEXTURE_2D, texture_handle(t));
+    glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_FALSE);
   }
   
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, mipMapCount-1 );
+  SDL_GL_CheckError();
+  
+  for (int i = 0; i < (t->type == GL_TEXTURE_CUBE_MAP ? 6 : 1); i++) {
+  
+    GLenum target = t->type;
+    
+    if (t->type == GL_TEXTURE_CUBE_MAP) {
+      target = GL_TEXTURE_CUBE_MAP_POSITIVE_X + i;
+    }
+    
+    SDL_GL_CheckError();
+    
+    if ( li->compressed ) {
+        
+      size_t size = max(li->div_size, x) / li->div_size * max(li->div_size, y) / li->div_size * li->block_bytes;
+      char* data = malloc(size);
+      
+      for(int ix = 0; ix < mip_map_num; ix++) {
+      
+        SDL_RWread(f, data, 1, size);
+        glCompressedTexImage2D(target, ix, li->internal_format, x, y, 0, size, data);
+        SDL_GL_CheckError();
+        
+        x = (x+1)>>1;
+        y = (y+1)>>1;
+        
+        size = max(li->div_size, x) / li->div_size * max(li->div_size, y) / li->div_size * li->block_bytes;
+      }
+      
+      free(data);
+      
+    } else if ( li->palette ) {
+      
+      size_t size = hdr.dwPitchOrLinearSize * y;
+      char* data = malloc(size);
+      int palette[256];
+      int* unpacked = malloc(size * sizeof(int));
+      
+      SDL_RWread(f, palette, 4, 256);
+      for(int ix = 0; ix < mip_map_num; ix++) {
+      
+        SDL_RWread(f, data, 1, size);
+        
+        for( int zz = 0; zz < size; ++zz ) {
+          unpacked[ zz ] = palette[ (short)data[ zz ] ];
+        }
+        
+        glPixelStorei(GL_UNPACK_ROW_LENGTH, y);
+        glTexImage2D(target, ix, li->internal_format, x, y, 0, li->external_format, li->type, unpacked);
+        SDL_GL_CheckError();
+        
+        x = (x+1)>>1;
+        y = (y+1)>>1;
+        
+        size = x * y * li->block_bytes;
+      }
+      
+      free(data);
+      free(unpacked);
+      
+    } else {
+    
+      if (li->swap) { glPixelStorei(GL_UNPACK_SWAP_BYTES, GL_TRUE); }
+      
+      size_t size = x * y * li->block_bytes;
+      char* data = malloc(size);
+      
+      for (int ix = 0; ix < mip_map_num; ix++) {
+      
+        SDL_RWread(f, data, 1, size);
+        glPixelStorei(GL_UNPACK_ROW_LENGTH, y);
+        glTexImage2D(target, ix, li->internal_format, x, y, 0, li->external_format, li->type, data);
+        SDL_GL_CheckError();
+        
+        x = (x+1)>>1;
+        y = (y+1)>>1;
+        size = x * y * li->block_bytes;
+      }
+      
+      free(data);
+      
+      if (li->swap) { glPixelStorei(GL_UNPACK_SWAP_BYTES, GL_FALSE); }
+      
+    }
+  
+    SDL_GL_CheckError();
+  
+  }
   
   SDL_RWclose(f);
   
-  texture* tex = malloc(sizeof(texture));
-  *tex = my_texture;
+  if (t->type == GL_TEXTURE_CUBE_MAP) {
+    SDL_GL_CheckError();
+  } else {
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, mip_map_num-1);
+    SDL_GL_CheckError();
+    texture_set_filtering_anisotropic(t);
+    SDL_GL_CheckError();
+  }
   
-  texture_set_filtering_anisotropic(tex);
+  SDL_GL_CheckError();
   
-  return tex;
+  return t;
   
 }
 
@@ -624,16 +635,16 @@ texture* acv_load_file( char* filename ) {
   color_curves_delete(cc);
 
   texture* t = texture_new();
+  t->type = GL_TEXTURE_3D;
   
-  glEnable(GL_TEXTURE_3D);
-  glBindTexture(GL_TEXTURE_3D, texture_handle(t));
-  glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB, lut_size, lut_size, lut_size, 0, GL_RGB, GL_UNSIGNED_BYTE, lut_data);
-  glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-  glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-  glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_MIRRORED_REPEAT);
-  glDisable(GL_TEXTURE_3D);
+  glBindTexture(t->type, texture_handle(t));
+  glTexImage3D(t->type, 0, GL_RGB, lut_size, lut_size, lut_size, 0, GL_RGB, GL_UNSIGNED_BYTE, lut_data);
+  glTexParameteri(t->type, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(t->type, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(t->type, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+  glTexParameteri(t->type, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+  glTexParameteri(t->type, GL_TEXTURE_WRAP_R, GL_MIRRORED_REPEAT);
+  SDL_GL_CheckError();
   
   free(lut_data);
   

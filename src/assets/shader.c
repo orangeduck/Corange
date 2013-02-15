@@ -299,40 +299,31 @@ void shader_program_set_mat4(shader_program* p, char* name, mat4 val) {
   }
 }
 
-void shader_program_enable_texture(shader_program* p, char* name, int index, asset_hndl t) {
+void shader_program_set_texture(shader_program* p, char* name, int index, asset_hndl t) {
 
   GLint location = glGetUniformLocation(shader_program_handle(p), name);
   if ( location == -1) {
     warning("Shader has no uniform called '%s'", name);
   } else {
-    glActiveTexture(GL_TEXTURE0 + index );
-    glBindTexture(GL_TEXTURE_2D, texture_handle(asset_hndl_ptr(t)));
-    glEnable(GL_TEXTURE_2D);
+    glActiveTexture(GL_TEXTURE0 + index);
+    glBindTexture(texture_type(asset_hndl_ptr(t)), texture_handle(asset_hndl_ptr(t)));
     glUniform1i(location, index);
     SDL_GL_CheckError();
   }
   
 }
 
-void shader_program_enable_texture_id(shader_program* p, char* name, int index, GLint t) {
+void shader_program_set_texture_id(shader_program* p, char* name, int index, GLint t) {
 
   GLint location = glGetUniformLocation(shader_program_handle(p), name);
   if ( location == -1) {
     warning("Shader has no uniform called '%s'", name);
   } else {
-    glActiveTexture(GL_TEXTURE0 + index );
+    glActiveTexture(GL_TEXTURE0 + index);
     glBindTexture(GL_TEXTURE_2D, t);
-    glEnable(GL_TEXTURE_2D);
     glUniform1i(location, index);
     SDL_GL_CheckError();
   }
-
-}
-
-void shader_program_disable_texture(shader_program* p, int index) {
-
-  glActiveTexture(GL_TEXTURE0 + index );
-  glDisable(GL_TEXTURE_2D);
 
 }
 
