@@ -176,6 +176,7 @@ deferred_renderer* deferred_renderer_new(asset_hndl options) {
   dr->tex_sea_bump2         = asset_hndl_new_load(P("$CORANGE/resources/bump2.dds"));
   dr->tex_sea_bump3         = asset_hndl_new_load(P("$CORANGE/resources/bump3.dds"));
   dr->tex_sea_env           = asset_hndl_new_load(P("$CORANGE/resources/envmap_sea.dds"));
+  dr->tex_cube_sea          = asset_hndl_new_load(P("$CORANGE/resources/cube_sea.dds"));
   
   /* Buffers */
   
@@ -561,7 +562,7 @@ static void render_shadows_vegetation(deferred_renderer* dr, int i, instance_obj
     
     if (use_alpha) {
       shader_program_set_float(shader, "alpha_test", material_entry_item(me, "alpha_test").as_float);
-      shader_program_enable_texture(shader, "diffuse_map", 0, material_entry_item(me, "diffuse_map").as_asset);
+      shader_program_set_texture(shader, "diffuse_map", 0, material_entry_item(me, "diffuse_map").as_asset);
     } else {
       shader_program_set_float(shader, "alpha_test", 0.0);
     }
@@ -586,10 +587,6 @@ static void render_shadows_vegetation(deferred_renderer* dr, int i, instance_obj
     
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-    
-    if (use_alpha) {
-      shader_program_disable_texture(shader, 0);
-    }
     
   }
   
@@ -626,7 +623,7 @@ static void render_shadows_static(deferred_renderer* dr, int i, static_object* s
     
     if (use_alpha) {
       shader_program_set_float(shader, "alpha_test", material_entry_item(me, "alpha_test").as_float);
-      shader_program_enable_texture(shader, "diffuse_map", 0, material_entry_item(me, "diffuse_map").as_asset);
+      shader_program_set_texture(shader, "diffuse_map", 0, material_entry_item(me, "diffuse_map").as_asset);
     } else {
       shader_program_set_float(shader, "alpha_test", 0.0);
     }
@@ -644,11 +641,6 @@ static void render_shadows_static(deferred_renderer* dr, int i, static_object* s
     
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-    
-    if (use_alpha) {
-      shader_program_disable_texture(shader, 0);
-    }
-    
   }
   
   shader_program_disable(shader);
@@ -679,7 +671,7 @@ static void render_shadows_instance(deferred_renderer* dr, int i, instance_objec
     
     if (use_alpha) {
       shader_program_set_float(shader, "alpha_test", material_entry_item(me, "alpha_test").as_float);
-      shader_program_enable_texture(shader, "diffuse_map", 0, material_entry_item(me, "diffuse_map").as_asset);
+      shader_program_set_texture(shader, "diffuse_map", 0, material_entry_item(me, "diffuse_map").as_asset);
     } else {
       shader_program_set_float(shader, "alpha_test", 0.0);
     }
@@ -702,10 +694,6 @@ static void render_shadows_instance(deferred_renderer* dr, int i, instance_objec
     
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-    
-    if (use_alpha) {
-      shader_program_disable_texture(shader, 0);
-    }
     
   }
   
@@ -944,9 +932,9 @@ static void render_cmesh(deferred_renderer* dr, cmesh* cm, mat4 world) {
   
   material_entry* me = material_get_entry(asset_get_load(P("$CORANGE/shaders/basic.mat")), 0);
   
-  shader_program_enable_texture(shader, "diffuse_map", 0, material_entry_item(me, "diffuse_map").as_asset);
-  shader_program_enable_texture(shader, "bump_map", 1, material_entry_item(me, "bump_map").as_asset);
-  shader_program_enable_texture(shader, "spec_map", 2, material_entry_item(me, "spec_map").as_asset);
+  shader_program_set_texture(shader, "diffuse_map", 0, material_entry_item(me, "diffuse_map").as_asset);
+  shader_program_set_texture(shader, "bump_map", 1, material_entry_item(me, "bump_map").as_asset);
+  shader_program_set_texture(shader, "spec_map", 2, material_entry_item(me, "spec_map").as_asset);
   shader_program_set_float(shader, "glossiness", material_entry_item(me, "glossiness").as_float);
   shader_program_set_float(shader, "bumpiness", material_entry_item(me, "bumpiness").as_float);
   shader_program_set_float(shader, "specular_level", material_entry_item(me, "specular_level").as_float);
@@ -984,10 +972,6 @@ static void render_cmesh(deferred_renderer* dr, cmesh* cm, mat4 world) {
   
   free(positions);
   free(normals);
-  
-  shader_program_disable_texture(shader, 2);
-  shader_program_disable_texture(shader, 1);
-  shader_program_disable_texture(shader, 0);
   
   shader_program_disable(shader);
     
@@ -1031,12 +1015,12 @@ static void render_static(deferred_renderer* dr, static_object* so) {
     material_entry* me = material_get_entry(asset_hndl_ptr(r->material), mentry_id);
     
     if (config_bool(asset_hndl_ptr(dr->options), "render_white")) {
-      shader_program_enable_texture(shader, "diffuse_map", 0, asset_hndl_new_load(P("$CORANGE/resources/white.dds")));
+      shader_program_set_texture(shader, "diffuse_map", 0, asset_hndl_new_load(P("$CORANGE/resources/white.dds")));
     } else {
-      shader_program_enable_texture(shader, "diffuse_map", 0, material_entry_item(me, "diffuse_map").as_asset);
+      shader_program_set_texture(shader, "diffuse_map", 0, material_entry_item(me, "diffuse_map").as_asset);
     }
-    shader_program_enable_texture(shader, "bump_map", 1, material_entry_item(me, "bump_map").as_asset);
-    shader_program_enable_texture(shader, "spec_map", 2, material_entry_item(me, "spec_map").as_asset);
+    shader_program_set_texture(shader, "bump_map", 1, material_entry_item(me, "bump_map").as_asset);
+    shader_program_set_texture(shader, "spec_map", 2, material_entry_item(me, "spec_map").as_asset);
     shader_program_set_float(shader, "glossiness", material_entry_item(me, "glossiness").as_float);
     shader_program_set_float(shader, "bumpiness", material_entry_item(me, "bumpiness").as_float);
     shader_program_set_float(shader, "specular_level", material_entry_item(me, "specular_level").as_float);
@@ -1062,10 +1046,6 @@ static void render_static(deferred_renderer* dr, static_object* so) {
     
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-    
-    shader_program_disable_texture(shader, 2);
-    shader_program_disable_texture(shader, 1);
-    shader_program_disable_texture(shader, 0);
 
   }
   
@@ -1101,12 +1081,12 @@ static void render_instance(deferred_renderer* dr, instance_object* io) {
     material_entry* me = material_get_entry(asset_hndl_ptr(r->material), mentry_id);
     
     if (config_bool(asset_hndl_ptr(dr->options), "render_white")) {
-      shader_program_enable_texture(shader, "diffuse_map", 0, asset_hndl_new_load(P("$CORANGE/resources/white.dds")));
+      shader_program_set_texture(shader, "diffuse_map", 0, asset_hndl_new_load(P("$CORANGE/resources/white.dds")));
     } else {
-      shader_program_enable_texture(shader, "diffuse_map", 0, material_entry_item(me, "diffuse_map").as_asset);
+      shader_program_set_texture(shader, "diffuse_map", 0, material_entry_item(me, "diffuse_map").as_asset);
     }
-    shader_program_enable_texture(shader, "bump_map", 1, material_entry_item(me, "bump_map").as_asset);
-    shader_program_enable_texture(shader, "spec_map", 2, material_entry_item(me, "spec_map").as_asset);
+    shader_program_set_texture(shader, "bump_map", 1, material_entry_item(me, "bump_map").as_asset);
+    shader_program_set_texture(shader, "spec_map", 2, material_entry_item(me, "spec_map").as_asset);
     shader_program_set_float(shader, "glossiness", material_entry_item(me, "glossiness").as_float);
     shader_program_set_float(shader, "bumpiness", material_entry_item(me, "bumpiness").as_float);
     shader_program_set_float(shader, "specular_level", material_entry_item(me, "specular_level").as_float);
@@ -1137,10 +1117,6 @@ static void render_instance(deferred_renderer* dr, instance_object* io) {
     
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-    
-    shader_program_disable_texture(shader, 2);
-    shader_program_disable_texture(shader, 1);
-    shader_program_disable_texture(shader, 0);
 
   }
   
@@ -1177,12 +1153,12 @@ static void render_vegetation(deferred_renderer* dr, instance_object* io) {
     material_entry* me = material_get_entry(asset_hndl_ptr(r->material), mentry_id);
     
     if (config_bool(asset_hndl_ptr(dr->options), "render_white")) {
-      shader_program_enable_texture(shader, "diffuse_map", 0, asset_hndl_new_load(P("$CORANGE/resources/white.dds")));
+      shader_program_set_texture(shader, "diffuse_map", 0, asset_hndl_new_load(P("$CORANGE/resources/white.dds")));
     } else {
-      shader_program_enable_texture(shader, "diffuse_map", 0, material_entry_item(me, "diffuse_map").as_asset);
+      shader_program_set_texture(shader, "diffuse_map", 0, material_entry_item(me, "diffuse_map").as_asset);
     }
-    shader_program_enable_texture(shader, "bump_map", 1, material_entry_item(me, "bump_map").as_asset);
-    shader_program_enable_texture(shader, "spec_map", 2, material_entry_item(me, "spec_map").as_asset);
+    shader_program_set_texture(shader, "bump_map", 1, material_entry_item(me, "bump_map").as_asset);
+    shader_program_set_texture(shader, "spec_map", 2, material_entry_item(me, "spec_map").as_asset);
     shader_program_set_float(shader, "glossiness", material_entry_item(me, "glossiness").as_float);
     shader_program_set_float(shader, "bumpiness", material_entry_item(me, "bumpiness").as_float);
     shader_program_set_float(shader, "specular_level", material_entry_item(me, "specular_level").as_float);
@@ -1215,10 +1191,6 @@ static void render_vegetation(deferred_renderer* dr, instance_object* io) {
     
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-    
-    shader_program_disable_texture(shader, 2);
-    shader_program_disable_texture(shader, 1);
-    shader_program_disable_texture(shader, 0);
 
   }
   
@@ -1262,12 +1234,12 @@ static void render_animated(deferred_renderer* dr, animated_object* ao) {
     material_entry* me = material_get_entry(asset_hndl_ptr(r->material), mat_id);
     
     if (config_bool(asset_hndl_ptr(dr->options), "render_white")) {
-      shader_program_enable_texture(shader, "diffuse_map", 0, asset_hndl_new_load(P("$CORANGE/resources/white.dds")));
+      shader_program_set_texture(shader, "diffuse_map", 0, asset_hndl_new_load(P("$CORANGE/resources/white.dds")));
     } else {
-      shader_program_enable_texture(shader, "diffuse_map", 0, material_entry_item(me, "diffuse_map").as_asset);
+      shader_program_set_texture(shader, "diffuse_map", 0, material_entry_item(me, "diffuse_map").as_asset);
     }
-    shader_program_enable_texture(shader, "bump_map", 1, material_entry_item(me, "bump_map").as_asset);
-    shader_program_enable_texture(shader, "spec_map", 2, material_entry_item(me, "spec_map").as_asset);
+    shader_program_set_texture(shader, "bump_map", 1, material_entry_item(me, "bump_map").as_asset);
+    shader_program_set_texture(shader, "spec_map", 2, material_entry_item(me, "spec_map").as_asset);
     shader_program_set_float(shader, "glossiness", material_entry_item(me, "glossiness").as_float);
     shader_program_set_float(shader, "bumpiness", material_entry_item(me, "bumpiness").as_float);
     shader_program_set_float(shader, "specular_level", material_entry_item(me, "specular_level").as_float);
@@ -1296,10 +1268,6 @@ static void render_animated(deferred_renderer* dr, animated_object* ao) {
     
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-    
-    shader_program_disable_texture(shader, 2);
-    shader_program_disable_texture(shader, 1);
-    shader_program_disable_texture(shader, 0);
 
   }
   
@@ -1343,22 +1311,22 @@ void render_landscape(deferred_renderer* dr, landscape* l) {
   shader_program_set_float(shader, "size_y", l->size_y);
   
   if (config_bool(asset_hndl_ptr(dr->options), "render_white")) {
-    shader_program_enable_texture(shader, "ground0", 0, asset_hndl_new_load(P("$CORANGE/resources/white.dds")));
-    shader_program_enable_texture(shader, "ground1", 1, asset_hndl_new_load(P("$CORANGE/resources/white.dds")));
-    shader_program_enable_texture(shader, "ground2", 2, asset_hndl_new_load(P("$CORANGE/resources/white.dds")));
-    shader_program_enable_texture(shader, "ground3", 3, asset_hndl_new_load(P("$CORANGE/resources/white.dds")));
+    shader_program_set_texture(shader, "ground0", 0, asset_hndl_new_load(P("$CORANGE/resources/white.dds")));
+    shader_program_set_texture(shader, "ground1", 1, asset_hndl_new_load(P("$CORANGE/resources/white.dds")));
+    shader_program_set_texture(shader, "ground2", 2, asset_hndl_new_load(P("$CORANGE/resources/white.dds")));
+    shader_program_set_texture(shader, "ground3", 3, asset_hndl_new_load(P("$CORANGE/resources/white.dds")));
   } else {
-    shader_program_enable_texture(shader, "ground0", 0, l->ground0);
-    shader_program_enable_texture(shader, "ground1", 1, l->ground1);
-    shader_program_enable_texture(shader, "ground2", 2, l->ground2);
-    shader_program_enable_texture(shader, "ground3", 3, l->ground3);
+    shader_program_set_texture(shader, "ground0", 0, l->ground0);
+    shader_program_set_texture(shader, "ground1", 1, l->ground1);
+    shader_program_set_texture(shader, "ground2", 2, l->ground2);
+    shader_program_set_texture(shader, "ground3", 3, l->ground3);
   }
   
-  shader_program_enable_texture(shader, "ground0_nm", 4, l->ground0_nm);
-  shader_program_enable_texture(shader, "ground1_nm", 5, l->ground1_nm);
-  shader_program_enable_texture(shader, "ground2_nm", 6, l->ground2_nm);
-  shader_program_enable_texture(shader, "ground3_nm", 7, l->ground3_nm);
-  shader_program_enable_texture(shader, "attribmap", 8, l->attribmap);
+  shader_program_set_texture(shader, "ground0_nm", 4, l->ground0_nm);
+  shader_program_set_texture(shader, "ground1_nm", 5, l->ground1_nm);
+  shader_program_set_texture(shader, "ground2_nm", 6, l->ground2_nm);
+  shader_program_set_texture(shader, "ground3_nm", 7, l->ground3_nm);
+  shader_program_set_texture(shader, "attribmap", 8, l->attribmap);
   
   for(int i = 0; i < terr->num_chunks; i++) {
     
@@ -1398,15 +1366,6 @@ void render_landscape(deferred_renderer* dr, landscape* l) {
   
   }
   
-  shader_program_disable_texture(shader, 0);
-  shader_program_disable_texture(shader, 1);
-  shader_program_disable_texture(shader, 2);
-  shader_program_disable_texture(shader, 3);
-  shader_program_disable_texture(shader, 4);
-  shader_program_disable_texture(shader, 5);
-  shader_program_disable_texture(shader, 6);
-  shader_program_disable_texture(shader, 7);
-  shader_program_disable_texture(shader, 8);
   shader_program_disable(shader);
   
   //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -1422,7 +1381,7 @@ void render_light(deferred_renderer* dr, light* l) {
   
   shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_ui));
   shader_program_enable(shader);
-  shader_program_enable_texture(shader, "diffuse", 0, asset_hndl_new_load(P("$CORANGE/ui/lightbulb.dds")));
+  shader_program_set_texture(shader, "diffuse", 0, asset_hndl_new_load(P("$CORANGE/ui/lightbulb.dds")));
   shader_program_set_float(shader, "alpha_test", 0.5);
   shader_program_set_mat4(shader, "world", mat4_id());
   shader_program_set_mat4(shader, "view", mat4_id());
@@ -1447,7 +1406,6 @@ void render_light(deferred_renderer* dr, light* l) {
 	glEnd();
   */
   
-  shader_program_disable_texture(shader, 0);
   shader_program_disable(shader);
 
 }
@@ -1470,7 +1428,7 @@ void render_axis(deferred_renderer* dr, mat4 world) {
   shader_program_set_mat4(shader, "view", dr->camera_view);
   shader_program_set_mat4(shader, "proj", dr->camera_proj);
   shader_program_set_float(shader, "alpha_test", 0.0);
-  shader_program_enable_texture(shader, "diffuse", 0, asset_hndl_new_load(P("$CORANGE/ui/white.dds")));
+  shader_program_set_texture(shader, "diffuse", 0, asset_hndl_new_load(P("$CORANGE/ui/white.dds")));
   
   float axis_line_color[] = {1,0,0, 1,0,0, 0,1,0, 0,1,0, 0,0,1, 0,0,1};
   float axis_line_position[] = {
@@ -1508,7 +1466,6 @@ void render_axis(deferred_renderer* dr, mat4 world) {
   glLineWidth(1.0);  
   glEnable(GL_DEPTH_TEST);
 
-  shader_program_disable_texture(shader, 0);
   shader_program_disable(shader);
   
 }
@@ -1548,7 +1505,7 @@ void render_paint_circle(deferred_renderer* dr, mat4 axis, float radius) {
   shader_program_set_mat4(shader, "world", mat4_id());
   shader_program_set_mat4(shader, "view", dr->camera_view);
   shader_program_set_mat4(shader, "proj", dr->camera_proj);
-  shader_program_enable_texture(shader, "diffuse", 0, asset_hndl_new_load(P("$CORANGE/ui/white.dds")));
+  shader_program_set_texture(shader, "diffuse", 0, asset_hndl_new_load(P("$CORANGE/ui/white.dds")));
   shader_program_set_float(shader, "alpha_test", 0.0);
   
   glDisable(GL_DEPTH_TEST);
@@ -1586,7 +1543,6 @@ void render_paint_circle(deferred_renderer* dr, mat4 axis, float radius) {
   glLineWidth(1.0);
   glEnable(GL_DEPTH_TEST);
   
-  shader_program_disable_texture(shader, 0);
   shader_program_disable(shader);
   
 }
@@ -1717,10 +1673,10 @@ static void render_ssao(deferred_renderer* dr) {
   shader_program_set_mat4(shader, "view", mat4_id());
   shader_program_set_mat4(shader, "proj", mat4_orthographic(-1, 1, -1, 1, -1, 1));
   
-  shader_program_enable_texture(shader, "random_texture", 0, dr->tex_random);
-  shader_program_enable_texture_id(shader, "depth_texture", 1, dr->gdepth_texture);
-  shader_program_enable_texture_id(shader, "normals_texture", 2, dr->gnormals_texture);  
-  shader_program_enable_texture_id(shader, "positions_texture", 3, dr->gpositions_texture);
+  shader_program_set_texture(shader, "random_texture", 0, dr->tex_random);
+  shader_program_set_texture_id(shader, "depth_texture", 1, dr->gdepth_texture);
+  shader_program_set_texture_id(shader, "normals_texture", 2, dr->gnormals_texture);  
+  shader_program_set_texture_id(shader, "positions_texture", 3, dr->gpositions_texture);
 
   shader_program_set_int(shader, "width", graphics_viewport_width());
   shader_program_set_int(shader, "height", graphics_viewport_height());
@@ -1734,11 +1690,6 @@ static void render_ssao(deferred_renderer* dr) {
   
   shader_program_disable_attribute(shader, "vPosition");
   shader_program_disable_attribute(shader, "vTexcoord");
-  
-  shader_program_disable_texture(shader, 3);
-  shader_program_disable_texture(shader, 2);
-  shader_program_disable_texture(shader, 1);
-  shader_program_disable_texture(shader, 0);
   shader_program_disable(shader);
   
   glViewport(0, 0, graphics_viewport_width(), graphics_viewport_height());
@@ -1746,9 +1697,7 @@ static void render_ssao(deferred_renderer* dr) {
   
   glActiveTexture(GL_TEXTURE0 + 0 );
   glBindTexture(GL_TEXTURE_2D, dr->ssao_texture);
-  glEnable(GL_TEXTURE_2D);
   glGenerateMipmap(GL_TEXTURE_2D);
-  glDisable(GL_TEXTURE_2D);
 }
 
 static void render_skies(deferred_renderer* dr) {
@@ -1806,7 +1755,7 @@ static void render_skies(deferred_renderer* dr) {
     shader_program_set_mat4(shader, "proj", dr->camera_proj);
     shader_program_set_float(shader, "sun_brightness", 1.5w);
     shader_program_set_vec4(shader, "sun_color", vec4_one());
-    shader_program_enable_texture(shader, "sun_texture", 0, sky_tex_sun(dr->time_of_day));
+    shader_program_set_texture(shader, "sun_texture", 0, sky_tex_sun(dr->time_of_day));
     
     renderable* sun_r = asset_hndl_ptr(sky_mesh_sun(dr->time_of_day));
     renderable_surface* s = sun_r->surfaces[0];
@@ -1825,7 +1774,6 @@ static void render_skies(deferred_renderer* dr) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     
-    shader_program_disable_texture(shader, 0);
     shader_program_disable(shader);
     
     glDisable(GL_BLEND);
@@ -1849,7 +1797,7 @@ static void render_skies(deferred_renderer* dr) {
     
     for (int i = 0; i < sky_clouds_num(); i++) {
     
-      shader_program_enable_texture(shader, "cloud_texture", 0, sky_clouds_tex(i));
+      shader_program_set_texture(shader, "cloud_texture", 0, sky_clouds_tex(i));
       shader_program_set_float(shader, "opacity", sky_clouds_opacity(i, dr->time_of_day, dr->seed));
       
       renderable* sun_r = asset_hndl_ptr(sky_clouds_mesh(i));
@@ -1868,8 +1816,6 @@ static void render_skies(deferred_renderer* dr) {
       
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
       glBindBuffer(GL_ARRAY_BUFFER, 0);
-      
-      shader_program_disable_texture(shader, 0);
     
     }
     
@@ -1935,12 +1881,12 @@ static void render_sea(deferred_renderer* dr) {
   shader_program_set_vec3(shader, "camera_direction", camera_direction(dr->camera));
   shader_program_set_vec4(shader, "bump_factor", bump_factor);
   
-  shader_program_enable_texture_id(shader, "depth", 0, dr->gdepth_texture);
-  shader_program_enable_texture(shader, "bump0", 1, dr->tex_sea_bump0);
-  shader_program_enable_texture(shader, "bump1", 2, dr->tex_sea_bump1);
-  shader_program_enable_texture(shader, "bump2", 3, dr->tex_sea_bump2);
-  shader_program_enable_texture(shader, "bump3", 4, dr->tex_sea_bump3);
-  shader_program_enable_texture(shader, "env_texture", 5, dr->tex_sea_env);
+  shader_program_set_texture_id(shader, "depth", 0, dr->gdepth_texture);
+  shader_program_set_texture(shader, "bump0", 1, dr->tex_sea_bump0);
+  shader_program_set_texture(shader, "bump1", 2, dr->tex_sea_bump1);
+  shader_program_set_texture(shader, "bump2", 3, dr->tex_sea_bump2);
+  shader_program_set_texture(shader, "bump3", 4, dr->tex_sea_bump3);
+  shader_program_set_texture(shader, "cube_sea", 5, dr->tex_cube_sea);
   
   renderable* sea_r = asset_hndl_ptr(dr->mesh_sea);
   renderable_surface* s = sea_r->surfaces[0];
@@ -1957,12 +1903,6 @@ static void render_sea(deferred_renderer* dr) {
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   
-  shader_program_disable_texture(shader, 5);
-  shader_program_disable_texture(shader, 4);
-  shader_program_disable_texture(shader, 3);
-  shader_program_disable_texture(shader, 2);
-  shader_program_disable_texture(shader, 1);
-  shader_program_disable_texture(shader, 0);
   shader_program_disable(shader);
   
   glDisable(GL_BLEND);
@@ -1990,16 +1930,16 @@ static void render_compose(deferred_renderer* dr) {
   shader_program_set_mat4(shader, "view", mat4_id());
   shader_program_set_mat4(shader, "proj", mat4_orthographic(-1, 1, -1, 1, -1, 1));
 
-  shader_program_enable_texture(shader, "env_texture", 0, dr->tex_environment);  
-  shader_program_enable_texture(shader, "random_texture", 1, dr->tex_random);
-  shader_program_enable_texture_id(shader, "diffuse_texture", 2, dr->gdiffuse_texture);
-  shader_program_enable_texture_id(shader, "positions_texture", 3, dr->gpositions_texture);
-  shader_program_enable_texture_id(shader, "normals_texture", 4, dr->gnormals_texture);
-  shader_program_enable_texture_id(shader, "ssao_texture", 5, dr->ssao_texture);
-  shader_program_enable_texture_id(shader, "depth_texture", 6, dr->gdepth_texture);
-  shader_program_enable_texture_id(shader, "shadows_texture0", 7, dr->shadows_texture[0]);
-  shader_program_enable_texture_id(shader, "shadows_texture1", 8, dr->shadows_texture[1]);
-  shader_program_enable_texture_id(shader, "shadows_texture2", 9, dr->shadows_texture[2]);
+  shader_program_set_texture(shader, "env_texture", 0, dr->tex_environment);  
+  shader_program_set_texture(shader, "random_texture", 1, dr->tex_random);
+  shader_program_set_texture_id(shader, "diffuse_texture", 2, dr->gdiffuse_texture);
+  shader_program_set_texture_id(shader, "positions_texture", 3, dr->gpositions_texture);
+  shader_program_set_texture_id(shader, "normals_texture", 4, dr->gnormals_texture);
+  shader_program_set_texture_id(shader, "ssao_texture", 5, dr->ssao_texture);
+  shader_program_set_texture_id(shader, "depth_texture", 6, dr->gdepth_texture);
+  shader_program_set_texture_id(shader, "shadows_texture0", 7, dr->shadows_texture[0]);
+  shader_program_set_texture_id(shader, "shadows_texture1", 8, dr->shadows_texture[1]);
+  shader_program_set_texture_id(shader, "shadows_texture2", 9, dr->shadows_texture[2]);
   
   shader_program_set_vec3(shader, "camera_position", dr->camera->position);
   //shader_program_set_float_array(shader, "light_clip_near", dr->shadow_near, 3);
@@ -2076,17 +2016,6 @@ static void render_compose(deferred_renderer* dr) {
   
   shader_program_disable_attribute(shader, "vPosition");
   shader_program_disable_attribute(shader, "vTexcoord");
-  
-  shader_program_disable_texture(shader, 9);
-  shader_program_disable_texture(shader, 8);
-  shader_program_disable_texture(shader, 7);
-  shader_program_disable_texture(shader, 6);
-  shader_program_disable_texture(shader, 5);
-  shader_program_disable_texture(shader, 4);
-  shader_program_disable_texture(shader, 3);
-  shader_program_disable_texture(shader, 2);
-  shader_program_disable_texture(shader, 1);
-  shader_program_disable_texture(shader, 0);
   shader_program_disable(shader);
   
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -2136,9 +2065,9 @@ static void render_particles(deferred_renderer* dr) {
     shader_program_set_float(shader, "particle_scattering", e->scattering);
     
     shader_program_set_mat4(shader, "world", mat4_world(p->position, p->scale, p->rotation));
-    shader_program_enable_texture(shader, "particle_diffuse", 0, e->texture);
-    shader_program_enable_texture(shader, "particle_normals", 1, e->texture_nm);
-    shader_program_enable_texture_id(shader, "depth", 2, dr->gdepth_texture);
+    shader_program_set_texture(shader, "particle_diffuse", 0, e->texture);
+    shader_program_set_texture(shader, "particle_normals", 1, e->texture_nm);
+    shader_program_set_texture_id(shader, "depth", 2, dr->gdepth_texture);
     
     glBindBuffer(GL_ARRAY_BUFFER, p->vertex_buff);
     
@@ -2164,9 +2093,6 @@ static void render_particles(deferred_renderer* dr) {
 
   glDisable(GL_BLEND);
 
-  shader_program_disable_texture(shader, 2);
-  shader_program_disable_texture(shader, 1);
-  shader_program_disable_texture(shader, 0);
   shader_program_disable(shader);
   
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -2187,7 +2113,7 @@ static void render_tonemap(deferred_renderer* dr) {
   shader_program_set_mat4(shader, "view", mat4_id());
   shader_program_set_mat4(shader, "proj", mat4_orthographic(-1, 1, -1, 1, -1, 1));
   shader_program_set_float(shader, "exposure", dr->exposure);
-  shader_program_enable_texture_id(shader, "hdr_texture", 0, dr->hdr_texture);
+  shader_program_set_texture_id(shader, "hdr_texture", 0, dr->hdr_texture);
   
   shader_program_enable_attribute(shader, "vPosition",  3, 3, quad_position);
   shader_program_enable_attribute(shader, "vTexcoord",  2, 2, quad_texcoord);
@@ -2196,8 +2122,6 @@ static void render_tonemap(deferred_renderer* dr) {
   
   shader_program_disable_attribute(shader, "vPosition");
   shader_program_disable_attribute(shader, "vTexcoord");
-  
-  shader_program_disable_texture(shader, 0);
   shader_program_disable(shader);
   
   /* Generate Mipmaps, adjust exposure */
@@ -2207,7 +2131,6 @@ static void render_tonemap(deferred_renderer* dr) {
   
   glActiveTexture(GL_TEXTURE0 + 0 );
   glBindTexture(GL_TEXTURE_2D, dr->ldr_back_texture);
-  glEnable(GL_TEXTURE_2D);
   glGenerateMipmap(GL_TEXTURE_2D);
   
   do {
@@ -2218,9 +2141,6 @@ static void render_tonemap(deferred_renderer* dr) {
   } while ((width > 1) || (height > 1));
   
   glGetTexImage(GL_TEXTURE_2D, level, GL_RGBA, GL_UNSIGNED_BYTE, color);
-  
-  glActiveTexture(GL_TEXTURE0 + 0 );
-  glDisable(GL_TEXTURE_2D);
   
   float average = (float)(color[0] + color[1] + color[2]) / (3.0 * 255.0);
   
@@ -2244,13 +2164,12 @@ static void render_post0(deferred_renderer* dr) {
   shader_program_set_mat4(shader, "world", mat4_id());
   shader_program_set_mat4(shader, "view", mat4_id());
   shader_program_set_mat4(shader, "proj", mat4_orthographic(-1, 1, -1, 1, -1, 1));
-  shader_program_enable_texture_id(shader, "ldr_texture", 0, dr->ldr_back_texture);
-  //shader_program_enable_texture(shader, "random_texture", 1, dr->tex_random);
+  shader_program_set_texture_id(shader, "ldr_texture", 0, dr->ldr_back_texture);
+  //shader_program_set_texture(shader, "random_texture", 1, dr->tex_random);
   
   /*
   glActiveTexture(GL_TEXTURE0 + 2 );
   glBindTexture(GL_TEXTURE_2D, dr->gdepth_texture);
-  glEnable(GL_TEXTURE_2D);
   glGenerateMipmap(GL_TEXTURE_2D);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 3);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 3);
@@ -2268,22 +2187,12 @@ static void render_post0(deferred_renderer* dr) {
   shader_program_disable_attribute(shader, "vPosition");
   shader_program_disable_attribute(shader, "vTexcoord");
   
-  glActiveTexture(GL_TEXTURE0 + 2 );
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 1000);
-  glDisable(GL_TEXTURE_2D);
-  
-  //shader_program_disable_texture(shader, 1);
-  shader_program_disable_texture(shader, 0);
   shader_program_disable(shader);
 
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   
-  glActiveTexture(GL_TEXTURE0 + 0 );
   glBindTexture(GL_TEXTURE_2D, dr->ldr_front_texture);
-  glEnable(GL_TEXTURE_2D);
   glGenerateMipmap(GL_TEXTURE_2D);
-  glDisable(GL_TEXTURE_2D);
   
 }
 
@@ -2301,14 +2210,10 @@ static void render_post1(deferred_renderer* dr) {
   shader_program_set_mat4(shader, "view", mat4_id());
   shader_program_set_mat4(shader, "proj", mat4_orthographic(-1, 1, -1, 1, -1, 1));
   
-  shader_program_enable_texture_id(shader, "ldr_texture", 0, dr->ldr_front_texture);
-  shader_program_enable_texture(shader, "random_perlin", 1, dr->tex_random_perlin);
-  shader_program_enable_texture(shader, "vignetting_texture", 2, dr->tex_vignetting);
-  
-  glActiveTexture(GL_TEXTURE0 + 3 );
-  glBindTexture(GL_TEXTURE_3D, texture_handle(asset_hndl_ptr(dr->tex_color_correction)));
-  glEnable(GL_TEXTURE_3D);
-  shader_program_set_int(shader, "lut", 3);
+  shader_program_set_texture_id(shader, "ldr_texture", 0, dr->ldr_front_texture);
+  shader_program_set_texture(shader, "random_perlin", 1, dr->tex_random_perlin);
+  shader_program_set_texture(shader, "vignetting_texture", 2, dr->tex_vignetting);
+  shader_program_set_texture(shader, "lut", 3, dr->tex_color_correction);
   
   shader_program_set_float(shader, "glitch", dr->glitch);
   shader_program_set_float(shader, "time", dr->time);
@@ -2323,20 +2228,11 @@ static void render_post1(deferred_renderer* dr) {
   
   shader_program_disable_attribute(shader, "vPosition");
   shader_program_disable_attribute(shader, "vTexcoord");
-  
-  glActiveTexture(GL_TEXTURE0 + 3 );
-  glDisable(GL_TEXTURE_3D);
-  
-  shader_program_disable_texture(shader, 2);
-  shader_program_disable_texture(shader, 1);
-  shader_program_disable_texture(shader, 0);
   shader_program_disable(shader);
   
   glActiveTexture(GL_TEXTURE0 + 0 );
   glBindTexture(GL_TEXTURE_2D, dr->ldr_back_texture);
-  glEnable(GL_TEXTURE_2D);
   glGenerateMipmap(GL_TEXTURE_2D);
-  glDisable(GL_TEXTURE_2D);
   
 }
 

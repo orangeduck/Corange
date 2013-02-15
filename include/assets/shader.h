@@ -51,10 +51,8 @@ void shader_program_set_vec2_array(shader_program* p, char* name, vec2* vals, in
 void shader_program_set_vec3_array(shader_program* p, char* name, vec3* vals, int count);
 void shader_program_set_vec4_array(shader_program* p, char* name, vec4* vals, int count);
 void shader_program_set_mat4_array(shader_program* p, char* name, mat4* vals, int count);
-
-void shader_program_enable_texture(shader_program* p, char* name, int index, asset_hndl t);
-void shader_program_enable_texture_id(shader_program* p, char* name, int index, GLint t);
-void shader_program_disable_texture(shader_program* p, int index);
+void shader_program_set_texture(shader_program* p, char* name, int index, asset_hndl t);
+void shader_program_set_texture_id(shader_program* p, char* name, int index, GLint t);
 
 void shader_program_enable_attribute(shader_program* p, char* name, int count, int stride, void* ptr);
 void shader_program_enable_attribute_instance(shader_program* p, char* name, int count, int stride, void* ptr);

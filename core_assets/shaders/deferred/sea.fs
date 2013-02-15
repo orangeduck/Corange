@@ -5,7 +5,7 @@ uniform sampler2D bump0;
 uniform sampler2D bump1;
 uniform sampler2D bump2;
 uniform sampler2D bump3;
-uniform sampler2D env_texture;
+uniform samplerCube cube_sea;
 
 uniform vec4 bump_factor;
 
@@ -51,7 +51,7 @@ void main() {
      bump2_norm.xyz * bump_factor.b +
      bump3_norm.xyz * bump_factor.a);
   
-  vec3 normal = normalize(fNormal + 1 * vec3(bump.x-0.5, 0, bump.y-0.5));
+  vec3 normal = normalize(fNormal + 0.1 * vec3(bump.x-0.5, 0, bump.y-0.5));
   
   vec3 light_half = normalize(light_direction + camera_direction);
   
@@ -66,12 +66,12 @@ void main() {
 	const vec3 albedo_up   = 0.1 * vec3(1.0, 5.0, 7.00);
 	vec3 albedo = (0.1 * fresnel * albedo_sky) + mix( albedo_down, albedo_up, n_dot_c);
   
-  vec3 env      = 1.0 * texture2D(env_texture, reflect(camera_direction, normal).xz).rgb;
+  vec3 env      = 1.0 * textureCube(cube_sea, reflect(camera_direction, normal)).rgb;
   vec3 ambient  = 2.0 * albedo * light_power * light_ambient;
   vec3 specular = 100 * light_power * light_specular * n_dot_h; 
   vec3 diffuse  = 0.5 * albedo * light_power * light_diffuse * n_dot_l;
   
-  diffuse = mix(diffuse, env, clamp(n_dot_c, 0.1, 0.25));
+  diffuse = mix(diffuse, env, clamp(n_dot_c, 1.0, 1.0));
   
 	gl_FragColor.rgb = diffuse + ambient + specular;
 	gl_FragColor.a = transparency;
