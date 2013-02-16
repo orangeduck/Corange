@@ -58,6 +58,7 @@ void noise_render() {
 static bool currently_saving = false;
 static int save_noise_to_file_thread(void* unused) {
 
+  /*
   image* noise = perlin_noise_generate(512, 512, 8);
   tga_save_file(noise, "./perlin_noise.tga");
   debug("Noise saved as perlin_noise.tga");
@@ -70,6 +71,7 @@ static int save_noise_to_file_thread(void* unused) {
   spinner_box->border_color = vec4_new(1,1,1,0);
   
   currently_saving = false;
+  */
   
   return 0;
 }
@@ -77,6 +79,7 @@ static int save_noise_to_file_thread(void* unused) {
 static SDL_Thread* save_thread = NULL;
 static void save_noise_to_file(ui_button* b, SDL_Event event) {
   
+  /*
   if (currently_saving) {
     return;
   }
@@ -100,6 +103,7 @@ static void save_noise_to_file(ui_button* b, SDL_Event event) {
       
     }
   }
+  */
   
 }
 
@@ -122,11 +126,10 @@ int main(int argc, char **argv) {
   ui_button_set_label(info_button, "Procedural texture from perlin noise and feedback functions.");
   
   ui_button* save_button = ui_elem_new("save_button", ui_button);
-  save_button->bottom_right = vec2_new(860, 35);
   ui_button_move(save_button, vec2_new(480, 10));
   ui_button_resize(save_button, vec2_new(380,25));
   ui_button_set_label(save_button, "Click Here to save tileable perlin noise to file.");
-  ui_elem_add_event("save_button", save_noise_to_file);
+  //ui_elem_add_event("save_button", save_noise_to_file);
   
   ui_rectangle* spinner_box = ui_elem_new("spinner_box", ui_rectangle);
   spinner_box->color = vec4_black();

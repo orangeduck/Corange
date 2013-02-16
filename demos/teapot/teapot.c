@@ -37,6 +37,9 @@ void teapot_render() {
   shader_program_set_mat4(shader, "world", mat4_id());
   shader_program_set_mat4(shader, "view", camera_view_matrix(cam));
   shader_program_set_mat4(shader, "proj", camera_proj_matrix(cam));
+    
+  shader_program_set_texture(shader, "cube_beach", 0, asset_hndl_new_load(P("$CORANGE/resources/cube_sea.dds")));
+  shader_program_set_vec3(shader, "camera_direction", camera_direction(cam));
   
   renderable* r = asset_hndl_ptr(teapot_object);
   
@@ -48,8 +51,6 @@ void teapot_render() {
     material_entry* me = material_get_entry(asset_hndl_ptr(r->material), mentry_id);
     
     glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
-    
-    shader_program_set_texture(shader, "cube_beach", 0, asset_hndl_new_load(P("$CORANGE/resources/cube_sea.dds")));
     
     shader_program_enable_attribute(shader, "vPosition",  3, 18, (void*)0);
     shader_program_enable_attribute(shader, "vNormal",    3, 18, (void*)(sizeof(float) * 3));
@@ -95,7 +96,7 @@ int main(int argc, char **argv) {
   teapot_init();
   
   int running = 1;
-  SDL_Event e;
+  SDL_Event e = {0};
   
   while(running) {
     

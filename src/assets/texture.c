@@ -507,6 +507,10 @@ texture* dds_load_file( char* filename ) {
     
     SDL_GL_CheckError();
     
+    int x = hdr.dwWidth;
+    int y = hdr.dwHeight;
+    int mip_map_num = (hdr.dwFlags & DDSD_MIPMAPCOUNT) ? hdr.dwMipMapCount : 1;
+    
     if ( li->compressed ) {
       
       size_t size = max(li->div_size, x) / li->div_size * max(li->div_size, y) / li->div_size * li->block_bytes;

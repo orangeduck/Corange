@@ -399,22 +399,20 @@ void bmf_save_file(renderable* r, char* filename) {
     SDL_RWwrite(file, &num_verticies, sizeof(uint32_t), 1);
     
     uint32_t vert_data_size = sizeof(float) * vertsize * num_verticies;
-    float* vert_data = malloc(vert_data_size); assert(vert_data);
-    memset(vert_data, 0, vert_data_size);
+    float* vert_data = calloc(vert_data_size, 1);
     glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
     glGetBufferSubData(GL_ARRAY_BUFFER, 0, vert_data_size, vert_data);
-    SDL_RWwrite(file, vert_data, vert_data_size, 1);
+    SDL_RWwrite(file, vert_data, 1, vert_data_size);
     free(vert_data);
     
     uint32_t num_indicies = s->num_triangles * 3;
     SDL_RWwrite(file, &num_indicies, sizeof(uint32_t), 1);
     
     uint32_t index_data_size = sizeof(uint32_t) * num_indicies;
-    uint32_t* index_data = malloc(index_data_size);
-    memset(index_data, 0, index_data_size);
+    uint32_t* index_data = calloc(index_data_size, 1);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
     glGetBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, index_data_size, index_data);
-    SDL_RWwrite(file, index_data, index_data_size, 1);
+    SDL_RWwrite(file, index_data, 1, index_data_size);
     free(index_data);
     
   }

@@ -2264,7 +2264,7 @@ frustum frustum_slice(frustum f, float start, float end) {
 }
 
 vec3 frustum_center(frustum f) {
-  vec3 total;
+  vec3 total = vec3_zero();
   total = vec3_add(total, f.ntr);
   total = vec3_add(total, f.ftr);
   total = vec3_add(total, f.ntl);

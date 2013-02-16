@@ -177,6 +177,7 @@ deferred_renderer* deferred_renderer_new(asset_hndl options) {
   dr->tex_sea_bump3         = asset_hndl_new_load(P("$CORANGE/resources/bump3.dds"));
   dr->tex_sea_env           = asset_hndl_new_load(P("$CORANGE/resources/envmap_sea.dds"));
   dr->tex_cube_sea          = asset_hndl_new_load(P("$CORANGE/resources/cube_sea.dds"));
+  dr->tex_cube_field        = asset_hndl_new_load(P("$CORANGE/resources/cube_field.dds"));
   
   /* Buffers */
   
@@ -1860,26 +1861,12 @@ static void render_sea(deferred_renderer* dr) {
   shader_program_set_float(shader, "clip_far",  dr->camera_far);
   shader_program_set_float(shader, "time", dr->time);
   
-  float factor = fmod(dr->time, 4.0);
-  
-  vec4 bump_factor = vec4_zero();
-  if (between_or(factor, 0, 1)) {
-    bump_factor = vec4_new(fmod(factor-0, 1.0), 0, 0, 1-fmod(factor-0, 1.0));
-  } else if (between_or(factor, 1, 2)) {
-    bump_factor = vec4_new(1-fmod(factor-1, 1.0), fmod(factor-1, 1.0), 0, 0);
-  } else if (between_or(factor, 2, 3)) {
-    bump_factor = vec4_new(0, 1-fmod(factor-2, 1.0), fmod(factor-2, 1.0), 0);
-  } else if (between_or(factor, 3, 4)) {
-    bump_factor = vec4_new(0, 0, 1-fmod(factor-2, 1.0), fmod(factor-2, 1.0));
-  }
-  
   shader_program_set_float(shader, "light_power", sky_sun_power(dr->time_of_day));
   shader_program_set_vec3(shader, "light_direction", sky_sun_direction(dr->time_of_day));
   shader_program_set_vec3(shader, "light_diffuse", sky_sun_diffuse(dr->time_of_day));
   shader_program_set_vec3(shader, "light_ambient", sky_sky_ambient(dr->time_of_day));
   shader_program_set_vec3(shader, "light_specular", sky_sky_specular(dr->time_of_day));
-  shader_program_set_vec3(shader, "camera_direction", camera_direction(dr->camera));
-  shader_program_set_vec4(shader, "bump_factor", bump_factor);
+  shader_program_set_vec3(shader, "camera_position", dr->camera->position);
   
   shader_program_set_texture_id(shader, "depth", 0, dr->gdepth_texture);
   shader_program_set_texture(shader, "bump0", 1, dr->tex_sea_bump0);
@@ -1930,7 +1917,7 @@ static void render_compose(deferred_renderer* dr) {
   shader_program_set_mat4(shader, "view", mat4_id());
   shader_program_set_mat4(shader, "proj", mat4_orthographic(-1, 1, -1, 1, -1, 1));
 
-  shader_program_set_texture(shader, "env_texture", 0, dr->tex_environment);  
+  shader_program_set_texture(shader, "env_texture", 0, dr->tex_cube_field);  
   shader_program_set_texture(shader, "random_texture", 1, dr->tex_random);
   shader_program_set_texture_id(shader, "diffuse_texture", 2, dr->gdiffuse_texture);
   shader_program_set_texture_id(shader, "positions_texture", 3, dr->gpositions_texture);

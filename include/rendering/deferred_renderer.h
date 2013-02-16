@@ -136,6 +136,7 @@ typedef struct {
   asset_hndl tex_sea_bump3;
   asset_hndl tex_sea_env;
   asset_hndl tex_cube_sea;
+  asset_hndl tex_cube_field;
   
   /* Buffers */
   GLuint gfbo;

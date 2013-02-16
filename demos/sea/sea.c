@@ -29,7 +29,7 @@ void sea_init() {
   
   folder_load(P("./assets/corvette/"));
   
-  renderable* r_corvette = asset_get(P("./assets/corvette/corvette.obj"));
+  renderable* r_corvette = asset_get(P("./assets/corvette/corvette.bmf"));
   r_corvette->material = asset_hndl_new_load(P("./assets/corvette/corvette.mat"));
   
   static_object* s_corvette = entity_new("corvette", static_object);

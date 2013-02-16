@@ -6,5 +6,6 @@ libcorange.a
 *~
 *.o
 *.log
+*.exe
 stdout.txt
 stderr.txt

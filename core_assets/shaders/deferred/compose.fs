@@ -18,7 +18,7 @@ uniform sampler2D shadows_texture0;
 uniform sampler2D shadows_texture1;
 uniform sampler2D shadows_texture2;
 uniform sampler2D ssao_texture;
-uniform sampler2D env_texture;
+uniform samplerCube env_texture;
 
 uniform vec3 camera_position;
 
@@ -139,9 +139,7 @@ void main() {
       (material == MAT_LEAF)) {
     
     float env_factor = (material == MAT_REFLECT_MAJOR) ? 1.0 : 0.5;
-    
-    vec3 reflected = normalize(reflect(eye_dir, normal));
-    vec3 env = texture2D(env_texture, vec2(reflected.x, -reflected.y)).rgb * ambient * env_factor * 3.0;
+    vec3 env = textureCube(env_texture, reflect(-eye_dir, normal)).rgb * ambient * env_factor * 5.0;
     float env_amount = (1.0 - dot(eye_dir, normal)) * spec * env_factor * shadow;
     
     diffuse = mix(diffuse, env, clamp(env_amount, 0.0, 0.5));

@@ -12,14 +12,14 @@ PLATFORM = $(shell uname)
 
 ifeq ($(findstring Linux,$(PLATFORM)),Linux)
 	OUT=$(DEMO)
-	LFLAGS= $(LIBS) -lcorange -lGL -lSDLmain -lSDL
+	LFLAGS= $(LIBS) -lcorange -lGL -lSDLmain -lSDL -lSDL_net -lSDL_mixer
 	CORANGE= ./lib/libcorange.a
 	CORANGE_LIB= ../../libcorange.a
 endif
 
 ifeq ($(findstring Darwin,$(PLATFORM)),Darwin)
 	OUT=$(DEMO)
-	LFLAGS= $(LIBS) -lcorange -lGL -lSDLmain -lSDL
+	LFLAGS= $(LIBS) -lcorange -lGL -lSDLmain -lSDL -lSDL_net -lSDL_mixer
 	CORANGE= ./lib/libcorange.a
 	CORANGE_LIB= ../../libcorange.a
 endif

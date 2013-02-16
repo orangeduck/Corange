@@ -11,7 +11,8 @@ ui_text* ui_text_new() {
 
   ui_text* t = malloc(sizeof(ui_text));
   
-  t->string = NULL;
+  t->string = malloc(strlen("")+1);
+  strcpy(t->string, "");
   
   glGenBuffers(1, &t->positions_buffer);
   glGenBuffers(1, &t->texcoords_buffer);
@@ -121,8 +122,6 @@ static int ui_text_charcount(ui_text* t) {
   
     i++;
   }
-  
-  debug("Count: %i", count);
   
   return count;
 }

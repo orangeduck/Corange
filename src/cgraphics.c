@@ -10,16 +10,16 @@
 #define DEFAULT_WIDTH 800
 #define DEFAULT_HEIGHT 600
 
-static SDL_Surface* screen;
+static SDL_Surface* screen = NULL;
 
-static int window_width;
-static int window_height;
+static int window_width = 0;
+static int window_height = 0;
 
-static int window_flags;
-static bool window_vsync;
-static int window_multisamples;
-static int window_multisamplesbuffs;
-static int window_antialiasing;
+static int window_flags = 0;
+static bool window_vsync = 0;
+static int window_multisamples = 0;
+static int window_multisamplesbuffs = 0;
+static int window_antialiasing = 0;
 
 static void graphics_viewport_start() {
   
@@ -49,7 +49,7 @@ void graphics_init() {
   window_width = 0;
   window_height = 0;
   window_flags = SDL_OPENGL;
-  window_vsync = 1;
+  window_vsync = true;
   window_multisamples = 4;
   window_multisamplesbuffs = 1;
   window_antialiasing = 1;
