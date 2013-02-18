@@ -68,6 +68,10 @@ void instance_object_add_instance(instance_object* io, vec3 position, vec3 scale
 
 void instance_object_rem_instance(instance_object* io, int i) {
   
+  if (i >= io->num_instances) {
+    error("Cannot remove instance %i: instance object only has %i instances!", i, io->num_instances);
+    return;
+  }  
   
   memmove( &io->instances[i+0], &io->instances[i+1],
     sizeof(instance_data) * (io->num_instances-i-1));

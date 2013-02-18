@@ -49,8 +49,8 @@ void main(){
   fPosition = world_pos.xyz / world_pos.w;
   gl_Position = proj * view * world_pos;
   
-  blendnorm = mat3(world) * blendnorm;
-  blendtang = mat3(world) * blendtang;
+  blendnorm   = mat3(world) * blendnorm;
+  blendtang   = mat3(world) * blendtang;
   blendbinorm = mat3(world) * blendbinorm;
   
   fTBN = mat4(

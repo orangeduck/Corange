@@ -352,6 +352,9 @@ void ui_text_render(ui_text* t) {
   
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   
+  shader_program_disable_attribute(program_ui, "vPosition");
+  shader_program_disable_attribute(program_ui, "vTexcoord");
+  shader_program_disable_attribute(program_ui, "vColor");
   shader_program_disable(program_ui);
   
   glDisable(GL_BLEND);

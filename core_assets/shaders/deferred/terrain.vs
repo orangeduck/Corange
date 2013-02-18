@@ -15,9 +15,9 @@ varying mat4 fTBN;
 void main( void ) {
   
   vec4 w_position = world * vec4(vPosition, 1);
-  vec3 w_tangent  = normalize(mat3(world) * vTangent);
-  vec3 w_binormal = normalize(mat3(world) * vBinormal);
-  vec3 w_normal   = normalize(mat3(world) * vNormal);
+  vec3 w_tangent  = mat3(world) * vTangent;
+  vec3 w_binormal = mat3(world) * vBinormal;
+  vec3 w_normal   = mat3(world) * vNormal;
   
   fTBN = mat4(
     w_tangent.x, w_binormal.x, w_normal.x, 0.0,

@@ -114,6 +114,7 @@ typedef struct {
   asset_hndl mat_depth_ins;
   asset_hndl mat_depth_ani;
   asset_hndl mat_depth_veg;
+  asset_hndl mat_depth_ter;
   asset_hndl mat_sun;
   asset_hndl mat_clouds;
   asset_hndl mat_particles;
@@ -137,6 +138,7 @@ typedef struct {
   asset_hndl tex_sea_env;
   asset_hndl tex_cube_sea;
   asset_hndl tex_cube_field;
+  asset_hndl tex_white;
   
   /* Buffers */
   GLuint gfbo;

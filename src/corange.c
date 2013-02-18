@@ -142,6 +142,7 @@ void corange_init(const char* core_assets_path) {
   ui_handler(ui_browser, ui_browser_new, ui_browser_delete, ui_browser_event, ui_browser_update, ui_browser_render);
   ui_handler(ui_toast, ui_toast_new, ui_toast_delete, ui_toast_event, ui_toast_update, ui_toast_render);
   ui_handler(ui_dialog, ui_dialog_new, ui_dialog_delete, ui_dialog_event, ui_dialog_update, ui_dialog_render);
+  ui_handler(ui_listbox, ui_listbox_new, ui_listbox_delete, ui_listbox_event, ui_listbox_update, ui_listbox_render);
   
   debug("Finished!");
 }

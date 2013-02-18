@@ -150,6 +150,7 @@ deferred_renderer* deferred_renderer_new(asset_hndl options) {
   dr->mat_depth_ins  = asset_hndl_new(P("$CORANGE/shaders/deferred/depth_instance.mat"));
   dr->mat_depth_ani  = asset_hndl_new(P("$CORANGE/shaders/deferred/depth_animated.mat"));
   dr->mat_depth_veg  = asset_hndl_new(P("$CORANGE/shaders/deferred/depth_vegetation.mat"));
+  dr->mat_depth_ter  = asset_hndl_new(P("$CORANGE/shaders/deferred/depth_terrain.mat"));
   dr->mat_sun        = asset_hndl_new(P("$CORANGE/shaders/deferred/sun.mat"));
   dr->mat_clouds     = asset_hndl_new(P("$CORANGE/shaders/deferred/clouds.mat"));
   dr->mat_particles  = asset_hndl_new(P("$CORANGE/shaders/deferred/particles.mat"));
@@ -178,6 +179,7 @@ deferred_renderer* deferred_renderer_new(asset_hndl options) {
   dr->tex_sea_env           = asset_hndl_new_load(P("$CORANGE/resources/envmap_sea.dds"));
   dr->tex_cube_sea          = asset_hndl_new_load(P("$CORANGE/resources/cube_sea.dds"));
   dr->tex_cube_field        = asset_hndl_new_load(P("$CORANGE/resources/cube_field.dds"));
+  dr->tex_white             = asset_hndl_new_load(P("$CORANGE/resources/white.dds"));
   
   /* Buffers */
   
@@ -557,14 +559,12 @@ static void render_shadows_vegetation(deferred_renderer* dr, int i, instance_obj
     renderable_surface* s = r->surfaces[j];
     
     material_entry* me = material_get_entry(asset_hndl_ptr(r->material), j);
-    bool use_alpha =
-      material_entry_has_item(me, "alpha_test") &&
-      material_entry_has_item(me, "diffuse_map");
     
-    if (use_alpha) {
-      shader_program_set_float(shader, "alpha_test", material_entry_item(me, "alpha_test").as_float);
+    if (material_entry_has_item(me, "alpha_test")) {
       shader_program_set_texture(shader, "diffuse_map", 0, material_entry_item(me, "diffuse_map").as_asset);
+      shader_program_set_float(shader, "alpha_test", material_entry_item(me, "alpha_test").as_float);
     } else {
+      shader_program_set_texture(shader, "diffuse_map", 0, dr->tex_white);
       shader_program_set_float(shader, "alpha_test", 0.0);
     }
     
@@ -618,14 +618,12 @@ static void render_shadows_static(deferred_renderer* dr, int i, static_object* s
     if (sphere_outside_box(sphere_transform(s->bound, world), dr->shadow_frustum[i])) { continue; }
     
     material_entry* me = material_get_entry(asset_hndl_ptr(r->material), j);
-    bool use_alpha =
-      material_entry_has_item(me, "alpha_test") &&
-      material_entry_has_item(me, "diffuse_map");
     
-    if (use_alpha) {
-      shader_program_set_float(shader, "alpha_test", material_entry_item(me, "alpha_test").as_float);
+    if (material_entry_has_item(me, "alpha_test")) {
       shader_program_set_texture(shader, "diffuse_map", 0, material_entry_item(me, "diffuse_map").as_asset);
+      shader_program_set_float(shader, "alpha_test", material_entry_item(me, "alpha_test").as_float);
     } else {
+      shader_program_set_texture(shader, "diffuse_map", 0, dr->tex_white);
       shader_program_set_float(shader, "alpha_test", 0.0);
     }
     
@@ -666,14 +664,12 @@ static void render_shadows_instance(deferred_renderer* dr, int i, instance_objec
     renderable_surface* s = r->surfaces[j];
     
     material_entry* me = material_get_entry(asset_hndl_ptr(r->material), j);
-    bool use_alpha =
-      material_entry_has_item(me, "alpha_test") &&
-      material_entry_has_item(me, "diffuse_map");
     
-    if (use_alpha) {
-      shader_program_set_float(shader, "alpha_test", material_entry_item(me, "alpha_test").as_float);
+    if (material_entry_has_item(me, "alpha_test")) {
       shader_program_set_texture(shader, "diffuse_map", 0, material_entry_item(me, "diffuse_map").as_asset);
+      shader_program_set_float(shader, "alpha_test", material_entry_item(me, "alpha_test").as_float);
     } else {
+      shader_program_set_texture(shader, "diffuse_map", 0, dr->tex_white);
       shader_program_set_float(shader, "alpha_test", 0.0);
     }
     
@@ -738,6 +734,16 @@ static void render_shadows_animated(deferred_renderer* dr, int i, animated_objec
     
     if (sphere_outside_box(sphere_transform(s->bound, world), dr->shadow_frustum[i])) { continue; }
     
+    material_entry* me = material_get_entry(asset_hndl_ptr(r->material), j);
+    
+    if (material_entry_has_item(me, "alpha_test")) {
+      shader_program_set_texture(shader, "diffuse_map", 0, material_entry_item(me, "diffuse_map").as_asset);
+      shader_program_set_float(shader, "alpha_test", material_entry_item(me, "alpha_test").as_float);
+    } else {
+      shader_program_set_texture(shader, "diffuse_map", 0, dr->tex_white);
+      shader_program_set_float(shader, "alpha_test", 0.0);
+    }
+    
     glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
     
@@ -768,21 +774,21 @@ static void render_shadows_landscape(deferred_renderer* dr, int i, landscape* l)
   vec3 scale = vec3_new(-(1.0 / terr->width) * l->size_x, 0.25, -(1.0 / terr->height) * l->size_y);
   vec3 translation = vec3_new(l->size_x / 2, 0, l->size_y / 2);
   mat4 rotation = mat4_id();
-    
+  
   // This assumes that X or Z scale of a chunk will never exceed the height.
   float bound_scale_val = max(scale.x, scale.z);
   vec3 bound_scale = vec3_new(bound_scale_val, bound_scale_val, bound_scale_val);
-    
-  shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_depth));
+  
+  shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_depth_ter));
   shader_program_enable(shader);
   shader_program_set_mat4(shader, "world", mat4_world( translation, scale, rotation ));
   shader_program_set_mat4(shader, "view",  dr->shadow_view[i]);
   shader_program_set_mat4(shader, "proj",  dr->shadow_proj[i]);
   shader_program_set_float(shader, "clip_near", dr->shadow_near[i]);
   shader_program_set_float(shader, "clip_far",  dr->shadow_far[i]);
-  shader_program_set_float(shader, "alpha_test",  0.0);
-    
+  
   for(int j = 0; j < terr->num_chunks; j++) {
+    
     terrain_chunk* tc = terr->chunks[j];
     
     float chunkx = (1.0 / (terr->num_rows-1)) *  l->size_x;
@@ -797,18 +803,22 @@ static void render_shadows_landscape(deferred_renderer* dr, int i, landscape* l)
       vec2_new(dr->camera->position.x, dr->camera->position.z), 
       vec2_new(-posx, -posy)) / (100 * NUM_TERRAIN_BUFFERS);
     
-    int buff_index = clamp((int)dist, 0, NUM_TERRAIN_BUFFERS-1);
+    int buff_index = clamp(dist, 0, NUM_TERRAIN_BUFFERS-1);
     
     glBindBuffer(GL_ARRAY_BUFFER, tc->vertex_buffer);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tc->index_buffers[buff_index]);
     
     shader_program_enable_attribute(shader, "vPosition", 3, 12, (void*)0);
       
+      SDL_GL_CheckError();
       glDrawElements(GL_TRIANGLES, tc->num_indicies[buff_index], GL_UNSIGNED_INT, (void*)0);
     
     shader_program_disable_attribute(shader, "vPosition");
     
   }
+  
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
   
   shader_program_disable(shader);
 
@@ -1016,7 +1026,7 @@ static void render_static(deferred_renderer* dr, static_object* so) {
     material_entry* me = material_get_entry(asset_hndl_ptr(r->material), mentry_id);
     
     if (config_bool(asset_hndl_ptr(dr->options), "render_white")) {
-      shader_program_set_texture(shader, "diffuse_map", 0, asset_hndl_new_load(P("$CORANGE/resources/white.dds")));
+      shader_program_set_texture(shader, "diffuse_map", 0, dr->tex_white);
     } else {
       shader_program_set_texture(shader, "diffuse_map", 0, material_entry_item(me, "diffuse_map").as_asset);
     }
@@ -1082,7 +1092,7 @@ static void render_instance(deferred_renderer* dr, instance_object* io) {
     material_entry* me = material_get_entry(asset_hndl_ptr(r->material), mentry_id);
     
     if (config_bool(asset_hndl_ptr(dr->options), "render_white")) {
-      shader_program_set_texture(shader, "diffuse_map", 0, asset_hndl_new_load(P("$CORANGE/resources/white.dds")));
+      shader_program_set_texture(shader, "diffuse_map", 0, dr->tex_white);
     } else {
       shader_program_set_texture(shader, "diffuse_map", 0, material_entry_item(me, "diffuse_map").as_asset);
     }
@@ -1154,7 +1164,7 @@ static void render_vegetation(deferred_renderer* dr, instance_object* io) {
     material_entry* me = material_get_entry(asset_hndl_ptr(r->material), mentry_id);
     
     if (config_bool(asset_hndl_ptr(dr->options), "render_white")) {
-      shader_program_set_texture(shader, "diffuse_map", 0, asset_hndl_new_load(P("$CORANGE/resources/white.dds")));
+      shader_program_set_texture(shader, "diffuse_map", 0, dr->tex_white);
     } else {
       shader_program_set_texture(shader, "diffuse_map", 0, material_entry_item(me, "diffuse_map").as_asset);
     }
@@ -1235,7 +1245,7 @@ static void render_animated(deferred_renderer* dr, animated_object* ao) {
     material_entry* me = material_get_entry(asset_hndl_ptr(r->material), mat_id);
     
     if (config_bool(asset_hndl_ptr(dr->options), "render_white")) {
-      shader_program_set_texture(shader, "diffuse_map", 0, asset_hndl_new_load(P("$CORANGE/resources/white.dds")));
+      shader_program_set_texture(shader, "diffuse_map", 0, dr->tex_white);
     } else {
       shader_program_set_texture(shader, "diffuse_map", 0, material_entry_item(me, "diffuse_map").as_asset);
     }
@@ -1277,7 +1287,7 @@ static void render_animated(deferred_renderer* dr, animated_object* ao) {
 }
 
 void render_landscape(deferred_renderer* dr, landscape* l) {
-
+  
   //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
   terrain* terr = asset_hndl_ptr(l->heightmap);
@@ -1312,10 +1322,10 @@ void render_landscape(deferred_renderer* dr, landscape* l) {
   shader_program_set_float(shader, "size_y", l->size_y);
   
   if (config_bool(asset_hndl_ptr(dr->options), "render_white")) {
-    shader_program_set_texture(shader, "ground0", 0, asset_hndl_new_load(P("$CORANGE/resources/white.dds")));
-    shader_program_set_texture(shader, "ground1", 1, asset_hndl_new_load(P("$CORANGE/resources/white.dds")));
-    shader_program_set_texture(shader, "ground2", 2, asset_hndl_new_load(P("$CORANGE/resources/white.dds")));
-    shader_program_set_texture(shader, "ground3", 3, asset_hndl_new_load(P("$CORANGE/resources/white.dds")));
+    shader_program_set_texture(shader, "ground0", 0, dr->tex_white);
+    shader_program_set_texture(shader, "ground1", 1, dr->tex_white);
+    shader_program_set_texture(shader, "ground2", 2, dr->tex_white);
+    shader_program_set_texture(shader, "ground3", 3, dr->tex_white);
   } else {
     shader_program_set_texture(shader, "ground0", 0, l->ground0);
     shader_program_set_texture(shader, "ground1", 1, l->ground1);
@@ -1429,7 +1439,7 @@ void render_axis(deferred_renderer* dr, mat4 world) {
   shader_program_set_mat4(shader, "view", dr->camera_view);
   shader_program_set_mat4(shader, "proj", dr->camera_proj);
   shader_program_set_float(shader, "alpha_test", 0.0);
-  shader_program_set_texture(shader, "diffuse", 0, asset_hndl_new_load(P("$CORANGE/ui/white.dds")));
+  shader_program_set_texture(shader, "diffuse", 0, dr->tex_white);
   
   float axis_line_color[] = {1,0,0, 1,0,0, 0,1,0, 0,1,0, 0,0,1, 0,0,1};
   float axis_line_position[] = {
@@ -1506,7 +1516,7 @@ void render_paint_circle(deferred_renderer* dr, mat4 axis, float radius) {
   shader_program_set_mat4(shader, "world", mat4_id());
   shader_program_set_mat4(shader, "view", dr->camera_view);
   shader_program_set_mat4(shader, "proj", dr->camera_proj);
-  shader_program_set_texture(shader, "diffuse", 0, asset_hndl_new_load(P("$CORANGE/ui/white.dds")));
+  shader_program_set_texture(shader, "diffuse", 0, dr->tex_white);
   shader_program_set_float(shader, "alpha_test", 0.0);
   
   glDisable(GL_DEPTH_TEST);

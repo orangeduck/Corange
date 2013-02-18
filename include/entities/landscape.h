@@ -48,8 +48,8 @@ float landscape_height(landscape* l, vec2 pos);
 vec3  landscape_normal(landscape* l, vec2 pos);
 mat3  landscape_axis(landscape* l, vec2 pos);
 
-void landscape_paint_height(landscape* l, vec2 pos, float radius, float value);
-void landscape_paint_color(landscape* l, vec2 pos, float radius, int type);
+void landscape_paint_height(landscape* l, vec2 pos, float radius, float value, float opacity);
+void landscape_paint_color(landscape* l, vec2 pos, float radius, int type, float opacity);
 
 void landscape_chunks(landscape* l, vec2 pos, struct terrain_chunk** chunks_out);
 

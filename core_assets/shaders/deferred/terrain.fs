@@ -59,7 +59,7 @@ void main( void ) {
   
 	normal.rgb = swap_red_green_inv(normal.rgb);
   normal = mix(vec4( 0.5, 0.5, 1.0, 1.0 ), normal, bumpiness);
-	normal = normalize(normal * 2.0 - vec4(1.0,1.0,1.0,0.0)) * fTBN;
+	normal = (normal * 2.0 - vec4(1.0,1.0,1.0,0.0)) * fTBN;
 	
   vec4 diffuse0 = texture2D(ground0, uvs) * attrib.r;
   vec4 diffuse1 = texture2D(ground1, uvs) * attrib.g;

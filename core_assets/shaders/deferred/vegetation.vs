@@ -32,9 +32,9 @@ vec4 smooth_triangle_wave(vec4 x) {
 
 void main( void ) {
   
-  vec3 w_tangent  = normalize(mat3(vWorld) * vTangent);
-  vec3 w_binormal = normalize(mat3(vWorld) * vBinormal);
-  vec3 w_normal   = normalize(mat3(vWorld) * vNormal);
+  vec3 w_tangent  = mat3(vWorld) * vTangent;
+  vec3 w_binormal = mat3(vWorld) * vBinormal;
+  vec3 w_normal   = mat3(vWorld) * vNormal;
   
   fTBN = mat4(
     w_tangent.x, w_binormal.x, w_normal.x, 0.0,
@@ -43,7 +43,7 @@ void main( void ) {
     0.0, 0.0, 0.0, 1.0 );
   
   float ambient = clamp(vColor.a * 2 + 0.25, 0.0, 1.0);
-  fColor = vec3(ambient, ambient,ambient);
+  fColor = vec3(ambient, ambient, ambient);
   
 	vec4 amplitude  = vColor.r * vec4(0.058512, 0.02282 * vColor.b, 0.062, 1.0);
 	vec4 wavelength = vec4(24.213, 1.124, 18.181, 1.0);

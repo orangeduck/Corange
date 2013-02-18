@@ -90,7 +90,7 @@ mat3 landscape_axis(landscape* l, vec2 pos) {
 
 }
 
-void landscape_paint_height(landscape* l, vec2 pos, float radius, float value) {
+void landscape_paint_height(landscape* l, vec2 pos, float radius, float value, float opacity) {
 
   terrain* t = asset_hndl_ptr(l->heightmap);
 
@@ -110,7 +110,7 @@ void landscape_paint_height(landscape* l, vec2 pos, float radius, float value) {
     
     float dist = saturate(1 - vec2_dist(pos, vec2_new(x, y)) / radius);
     
-    t->heightmap[x + y * t->width] = max(t->heightmap[x + y * t->width] + value * dist, 0);
+    t->heightmap[x + y * t->width] = max(t->heightmap[x + y * t->width] + value * dist * opacity, 0);
   }
   
   int chunk_x = base_x / t->chunk_width;
@@ -146,7 +146,7 @@ void landscape_chunks(landscape* l, vec2 pos, struct terrain_chunk** chunks_out)
   
 }
 
-void landscape_paint_color(landscape* l, vec2 pos, float radius, int type) {
+void landscape_paint_color(landscape* l, vec2 pos, float radius, int type, float opacity) {
   
   if (l->attribimage == NULL) {
     l->attribimage = texture_get_image(asset_hndl_ptr(l->attribmap));
@@ -166,7 +166,7 @@ void landscape_paint_color(landscape* l, vec2 pos, float radius, int type) {
     if (x >= l->attribimage->width) continue;
     if (y >= l->attribimage->height) continue;
     
-    float dist = saturate(1 - vec2_dist(pos, vec2_new(x, y)) / radius);
+    float dist = saturate(1 - vec2_dist(pos, vec2_new(x, y)) / radius) * opacity;
     
     vec4 pix = image_get_pixel(l->attribimage, x, y);
     
