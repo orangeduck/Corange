@@ -796,8 +796,8 @@ static void render_shadows_landscape(deferred_renderer* dr, int i, landscape* l)
     float posx = ((float)(j % terr->num_cols)) * chunkx - l->size_x / 2;
     float posy = ((float)(j / terr->num_cols)) * chunky - l->size_y / 2;
     
-    sphere bound = sphere_transform(tc->bound, mat4_world(translation, bound_scale, mat4_id()));
-    if (sphere_outside_box(bound, dr->shadow_frustum[i])) { continue; }
+    //sphere bound = sphere_transform(tc->bound, mat4_world(translation, bound_scale, mat4_id()));
+    //if (sphere_outside_box(bound, dr->shadow_frustum[i])) { continue; }
     
     float dist = vec2_dist_sqrd(
       vec2_new(dr->camera->position.x, dr->camera->position.z), 
@@ -1348,8 +1348,8 @@ void render_landscape(deferred_renderer* dr, landscape* l) {
     float posx = ((float)(i % terr->num_cols)) * chunkx - l->size_x / 2;
     float posy = ((float)(i / terr->num_cols)) * chunky - l->size_y / 2;
     
-    sphere bound = sphere_transform(tc->bound, mat4_world(translation, bound_scale, mat4_id()));
-    if (sphere_outside_box(bound, dr->camera_frustum)) { continue; }
+    //sphere bound = sphere_transform(tc->bound, mat4_world(translation, bound_scale, mat4_id()));
+    //if (sphere_outside_box(bound, dr->camera_frustum)) { continue; }
     
     float dist = vec2_dist_sqrd(
       vec2_new(dr->camera->position.x, dr->camera->position.z), 
