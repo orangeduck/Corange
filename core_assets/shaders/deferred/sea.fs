@@ -20,6 +20,7 @@ uniform float clip_far;
 
 uniform vec3 camera_position;
 
+varying vec4 fHeight;
 varying vec3 fPosition;
 varying vec2 fTexcoord;
 varying vec3 fNormal;
@@ -68,12 +69,15 @@ void main() {
 	const vec3 albedo_up   = 0.1 * vec3(1.0, 5.0, 7.00);
 	vec3 albedo = (0.25 * fresnel * albedo_sky) + mix( albedo_down, albedo_up, n_dot_c);
   
+  //float albedo_foam = clamp(pow(fHeight.y - 0.5, 10.0), 0, 1);
+  //albedo = mix(albedo, vec3(1,1,1), albedo_foam);
+  
   vec3 env      = 1.0 * textureCube(cube_sea, reflect(camera_direction, normal)).rgb;
   vec3 ambient  = 2.0 * albedo * light_power * light_ambient;
   vec3 specular = 100 * light_power * light_specular * n_dot_h; 
   vec3 diffuse  = 0.5 * albedo * light_power * light_diffuse * n_dot_l;
   
-  diffuse = mix(diffuse, env, clamp(n_dot_c, 0.4, 0.6));
+  diffuse = mix(diffuse, env, clamp(n_dot_c, 0.4, 0.5));
   
 	gl_FragColor.rgb = diffuse + ambient + specular;
 	gl_FragColor.a = transparency;

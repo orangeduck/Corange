@@ -44,7 +44,7 @@ mat4  landscape_world(landscape* l) {
   vec3 scale = vec3_new(-(1.0 / terr->width) * l->size_x, l->scale, -(1.0 / terr->height) * l->size_y);
   vec3 translation = vec3_new(l->size_x / 2, 0, l->size_y / 2);
   
-  return mat4_world(translation, scale, mat4_id());
+  return mat4_world(translation, scale, quat_id());
   
 }
 
@@ -71,7 +71,7 @@ vec3 landscape_normal(landscape* l, vec2 pos) {
   vec3 scale = vec3_new(-(1.0 / t->width) * l->size_x, l->scale, -(1.0 / t->height) * l->size_y);
   vec3 translation = vec3_new(l->size_x / 2, 0, l->size_y / 2);
   
-  mat4 world = mat4_world(translation, scale, mat4_id());
+  mat4 world = mat4_world(translation, scale, quat_id());
   
   return mat3_mul_vec3(mat4_to_mat3(world), norm);
 

@@ -36,6 +36,8 @@ static void graphics_viewport_start() {
   }
 
   glViewport(0, 0, window_width, window_height);
+
+  SDL_GL_LoadExtensions();
   
 }
 
@@ -62,7 +64,6 @@ void graphics_init() {
   
   SDL_GL_PrintInfo();
   SDL_GL_PrintExtensions();
-  SDL_GL_LoadExtensions();
 
   SDL_WM_UseResourceIcon();
 }

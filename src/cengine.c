@@ -1130,84 +1130,305 @@ vec4 vec4_bilinear_interp(vec4 tl, vec4 tr, vec4 bl, vec4 br, float x_amount, fl
 
 }
 
-vec4 quaternion_id() {
-  return vec4_new(0, 0, 0, 1);
+quat quat_id() {
+  return quat_new(0, 0, 0, 1);
 }
 
-vec4 quaternion_mul(vec4 v1, vec4 v2) {
-  
-  vec4 q;
-  
-  q.x = (v1.w * v2.x) + (v1.x * v2.w) + (v1.y * v2.z) - (v1.z * v2.y);
-  q.y = (v1.w * v2.y) - (v1.x * v2.z) + (v1.y * v2.w) + (v1.z * v2.x);
-  q.z = (v1.w * v2.z) + (v1.x * v2.y) - (v1.y * v2.x) + (v1.z * v2.w);
-  q.w = (v1.w * v2.w) - (v1.x * v2.x) - (v1.y * v2.y) - (v1.z * v2.z);
- 
+quat quat_new(float x, float y, float z, float w) {
+  quat q;
+  q.x = x;
+  q.y = y;
+  q.z = z;
+  q.w = w;
   return q;
 }
 
-vec4 quaternion_angle_axis(float angle, vec3 axis) {
+float quat_at(quat q, int i) {
   
-  vec4 q;
+  float* values = (float*)(&q);
+  return values[i];
+
+}
+
+float quat_real(quat q) {
+  return q.w;
+}
+
+vec3 quat_imaginaries(quat q) {
+  return vec3_new(q.x, q.y, q.z);
+}
+
+quat quat_from_euler(vec3 r) {
   
-  q.x = axis.x * sinf(angle / 2);
-  q.y = axis.y * sinf(angle / 2);
-  q.z = axis.z * sinf(angle / 2);
-  q.w = cosf(angle / 2);
+  float fc1 = cosf( r.z / 2.0f );
+  float fc2 = cosf( r.x / 2.0f );
+  float fc3 = cosf( r.y / 2.0f );
+
+  float fs1 = sinf( r.z / 2.0f );
+  float fs2 = sinf( r.x / 2.0f );
+  float fs3 = sinf( r.y / 2.0f );
+
+  return quat_new(
+    fc1 * fc2 * fs3 - fs1 * fs2 * fc3,
+    fc1 * fs2 * fc3 + fs1 * fc2 * fs3,
+    fs1 * fc2 * fc3 - fc1 * fs2 * fs3,
+    fc1 * fc2 * fc3 + fs1 * fs2 * fs3
+  );
   
+}
+
+quat quat_angle_axis(float angle, vec3 axis) {
+
+  float sine = sinf( angle / 2.0f );
+  float cosine = cosf( angle / 2.0f );
+
+  return quat_normalize(quat_new(
+    axis.x * sine,
+    axis.y * sine,
+    axis.z * sine,
+    cosine));
+    
+}
+
+void quat_to_angle_axis(quat q, vec3* axis, float* angle) {
+
+  *angle = 2.0f * acosf( q.w );
+
+  float divisor = sinf( *angle / 2.0f );
+
+  if( fabs( divisor ) < FLT_EPSILON ) {
+  
+    axis->x = 0.0f;
+    axis->y = 1.0f;
+    axis->z = 0.0f;
+    
+  } else {
+    
+    axis->x = q.x / divisor;
+    axis->y = q.y / divisor;
+    axis->z = q.z / divisor;
+    *axis = vec3_normalize(*axis);
+    
+  }
+
+}
+
+vec3 quat_to_euler(quat q) {
+
+  float sqrx = q.x * q.x;
+  float sqry = q.y * q.y;
+  float sqrz = q.z * q.z;
+  float sqrw = q.w * q.w;
+  
+  return vec3_new(
+    asinf( -2.0f * ( q.x * q.z - q.y * q.w ) ),
+    atan2f( 2.0f * ( q.y * q.z + q.x * q.w ), (-sqrx - sqry + sqrz + sqrw) ),
+    atan2f( 2.0f * ( q.x * q.y + q.z * q.w ), ( sqrx - sqry - sqrz + sqrw) ));
+    
+}
+
+quat quat_mul_quat(quat q1, quat q2) {
+
+  return quat_new(
+    (q1.w * q2.x) + (q1.x * q2.w) + (q1.y * q2.z) - (q1.z * q2.y),
+    (q1.w * q2.y) - (q1.x * q2.z) + (q1.y * q2.w) + (q1.z * q2.x),
+    (q1.w * q2.z) + (q1.x * q2.y) - (q1.y * q2.x) + (q1.z * q2.w),
+    (q1.w * q2.w) - (q1.x * q2.x) - (q1.y * q2.y) - (q1.z * q2.z));
+
+}
+
+vec3 quat_mul_vec3(quat q, vec3 v) {
+
+  quat work = q;
+  work = quat_mul_quat(work, quat_normalize(quat_new(v.x, v.y, v.z, 0.0)));
+  work = quat_mul_quat(work, quat_inverse(q));
+
+  vec3 res = vec3_new(work.x, work.y, work.z);
+  
+  return vec3_mul(res, vec3_length(v));
+
+}
+
+quat quat_inverse(quat q) {
+
+  float	scale = quat_length(q);
+  quat result = quat_unit_inverse(q);
+
+  if ( scale > FLT_EPSILON ) {    
+    result.x /= scale;
+    result.y /= scale;
+    result.z /= scale;
+    result.w /= scale;
+  }
+  
+  return result;
+}
+
+quat quat_unit_inverse(quat q) {
+  return quat_new(-q.x, -q.y, -q.z, q.w);
+}
+
+float quat_length(quat q) {
+  return sqrtf(q.x*q.x + q.y*q.y + q.z*q.z + q.w*q.w);
+}
+
+quat quat_normalize(quat q) {
+
+  float scale = quat_length(q);
+
+  if ( scale > FLT_EPSILON ) {
+    return quat_new(
+      q.x / scale,
+      q.y / scale,
+      q.z / scale,
+      q.w / scale);
+  } else {
+    return quat_new(0,0,0,0);
+  }
+  
+}
+
+quat quat_slerp(quat from, quat to, float amount) {
+  
+  float scale0, scale1;
+  float	afto1[4];
+  float cosom = from.x * to.x + from.y * to.y + from.z * to.z + from.w * to.w;
+  
+  if ( cosom < 0.0f ) {
+    cosom = -cosom; 
+    afto1[0] = -to.x;
+    afto1[1] = -to.y;
+    afto1[2] = -to.z;
+    afto1[3] = -to.w;
+  } else {
+    afto1[0] = to.x;
+    afto1[1] = to.y;
+    afto1[2] = to.z;
+    afto1[3] = to.w;
+  }
+  
+  const float QUATERNION_DELTA_COS_MIN = 0.01f;
+
+  if ( (1.0f - cosom) > QUATERNION_DELTA_COS_MIN ) {
+    /* This is a standard case (slerp). */
+    float omega = acosf(cosom);
+    float sinom = sinf(omega);
+    scale0 = sinf((1.0f - amount) * omega) / sinom;
+    scale1 = sinf(amount * omega) / sinom;
+  } else {
+    /* "from" and "to" quaternions are very close */
+    /*  so we can do a linear interpolation.      */
+    scale0 = 1.0f - amount;
+    scale1 = amount;
+  }
+
+  return quat_new(
+    (scale0 * from.x) + (scale1 * afto1[0]),
+    (scale0 * from.y) + (scale1 * afto1[1]),
+    (scale0 * from.z) + (scale1 * afto1[2]),
+    (scale0 * from.w) + (scale1 * afto1[3]));
+
+}
+
+float quat_dot(quat q1, quat q2) {
+  return q1.x * q2.x + q1.y * q2.y + q1.z * q2.z + q1.w * q2.w;
+}
+
+quat quat_exp(vec3 w) {
+
+  float theta = sqrt(vec3_dot(w, w));
+  float len = theta < FLT_EPSILON ? 1 : sin(theta) / theta;
+  vec3 v = vec3_mul(w, len);
+  
+  return quat_new(v.x, v.y, v.z, cos(theta));
+}
+
+vec3 quat_log(quat q) {
+  
+  float len = vec3_length(quat_imaginaries(q));
+  float angle = atan2(len, q.w);
+  
+  len = len > FLT_EPSILON ? angle / len : 1;
+  
+  return vec3_mul(quat_imaginaries(q), len);
+  
+}
+
+static quat quat_get_value(float t, vec3 axis) {
+	return quat_exp( vec3_mul(axis, t / 2.0) );
+}
+
+quat quat_constrain(quat q, vec3 axis) {
+
+  const quat orient = quat_new(0, 0, 0, 1);
+	
+	vec3 vs = quat_imaginaries(q);
+	vec3 v0 = quat_imaginaries(orient);
+
+	float a = q.w * orient.w + vec3_dot(vs, v0);
+	float b = orient.w * vec3_dot(axis, vs) - q.w * vec3_dot(axis, v0) + vec3_dot(vs, vec3_mul_vec3(axis, v0));
+
+	float alpha = atan2(a, b);
+
+	float t1 = -2 * alpha + M_PI;
+	float t2 = -2 * alpha - M_PI;
+  
+	if ( quat_dot(q, quat_get_value(t1, axis)) > 
+       quat_dot(q, quat_get_value(t2, axis)) ) {
+		return quat_get_value(t1, axis);
+	}
+
+	return quat_get_value(t2, axis);
+}
+
+quat quat_constrain_y(quat q) {
+  return quat_constrain(q, vec3_new(0, 1, 0)); 
+}
+
+float quat_distance(quat q0, quat q1) {
+  quat comb = quat_mul_quat(quat_inverse(q0), q1);
+  return sin(vec3_length(quat_log(comb)));
+}
+
+quat quat_neg(quat q) {
+  q.x = -q.x;
+  q.y = -q.y;
+  q.z = -q.z;
+  q.w = -q.w;
   return q;
 }
 
-vec4 quaternion_rot(vec3 from, vec3 to) {
-  
-  vec3 h = vec3_normalize(vec3_add(from, to));
-  
-  vec4 q;
-  q.x = from.y * h.z - from.z * h.y;
-  q.y = from.z * h.x - from.x * h.z;
-  q.z = from.x * h.y - from.y * h.x;
-  q.w = vec3_dot(from, h);
-  
+quat quat_scale(quat q, float f) {
+  q.x = q.x * f;
+  q.y = q.y * f;
+  q.z = q.z * f;
+  q.w = q.w * f;
   return q;
 }
 
-vec4 quaternion_roll(float a) {
-  return vec4_new( 0, 0, sin(a/2), cos(a/2) );
-}
+quat quat_interpolate(quat* qs, float* ws, int count) {
+  
+	quat ref = quat_id();
+  quat ref_inv = quat_inverse(ref);
+	
+  vec3 acc = vec3_zero();
 
-vec4 quaternion_yaw(float a) {
-  return vec4_new( 0, sin(a/2), 0, cos(a/2) );
-}
-
-vec4 quaternion_pitch(float a) {
-  return vec4_new( sin(a/2), 0, 0,  cos(a/2) );
-}
-
-vec4 quaternion_euler(float roll, float pitch, float yaw) {
-  vec4 q;
-  q.x = sin(roll/2)*cos(pitch/2)*cos(yaw/2) - cos(roll/2)*sin(pitch/2)*sin(yaw/2);
-  q.y = cos(roll/2)*sin(pitch/2)*cos(yaw/2) + sin(roll/2)*cos(pitch/2)*sin(yaw/2);
-  q.z = cos(roll/2)*cos(pitch/2)*sin(yaw/2) - sin(roll/2)*sin(pitch/2)*cos(yaw/2);
-  q.w = cos(roll/2)*cos(pitch/2)*cos(yaw/2) + sin(roll/2)*sin(pitch/2)*sin(yaw/2);
-  return q;
-}
-
-vec4 quaternion_normalize(vec4 q) {
-  float length = sqrt(q.x*q.x + q.y*q.y + q.z*q.z + q.w*q.w);
-  q.x /= length;
-  q.y /= length;
-  q.z /= length;
-  q.w /= length;
-  return q;
-}
-
-vec4 quaternion_swap_handedness(vec4 q) {
-  vec4 quat;
-  quat.x = -q.x;
-  quat.y = -q.z;
-  quat.z = -q.y;
-  quat.w =  q.w;
-  return quat;
+	for (int i = 0; i < count; i++ ) {
+    
+    vec3 qlog0 = quat_log(quat_mul_quat(ref_inv, qs[i]));
+    vec3 qlog1 = quat_log(quat_mul_quat(ref_inv, quat_neg(qs[i])));
+    
+		if (vec3_length(qlog0) < vec3_length(qlog1) ) {
+			acc = vec3_add(acc, vec3_mul(qlog0, ws[i]));
+		} else {
+			acc = vec3_add(acc, vec3_mul(qlog1, ws[i]));
+    }
+  }
+  
+  quat res = quat_mul_quat(ref, quat_exp(acc));
+  
+	return quat_normalize(res);
+  
 }
 
 /* Matrix Functions */
@@ -1565,6 +1786,19 @@ mat4 mat4_id(){
   return mat;
 }
 
+float mat4_at(mat4 m, int x, int y) {
+  float* arr = (float*)(&m);
+  return arr[x + (y*4)];  
+}
+
+mat4 mat4_set(mat4 m, int x, int y, float v) {
+  
+  float* arr = (float*)(&m);
+  arr[x + (y*4)] = v;
+  
+  return m;
+}
+
 mat4 mat4_new(float xx, float xy, float xz, float xw,
               float yx, float yy, float yz, float yw,
               float zx, float zy, float zz, float zw,
@@ -1716,6 +1950,47 @@ mat3 mat4_to_mat3(mat4 m) {
   
   return mat;
   
+}
+
+quat mat4_to_quat(mat4 m) {
+
+  float tr = m.xx + m.yy + m.zz;
+
+  if (tr > 0.0f) {
+    
+    float s = sqrtf( tr + 1.0f );
+    
+    float w = s / 2.0f;
+    float x = ( mat4_at(m, 1, 2) - mat4_at(m, 2, 1) ) * (0.5f / s);
+    float y = ( mat4_at(m, 2, 0) - mat4_at(m, 0, 2) ) * (0.5f / s);
+    float z = ( mat4_at(m, 0, 1) - mat4_at(m, 1, 0) ) * (0.5f / s);
+    return quat_new(x, y, z, w);
+    
+  } else {
+    
+    int nxt[3] = {1, 2, 0};
+    float q[4];
+    int  i, j, k;
+    
+    i = 0;
+    if ( mat4_at(m, 1, 1) > mat4_at(m, 0, 0) ) {	i = 1;	}
+    if ( mat4_at(m, 2, 2) > mat4_at(m, i, i) ) {	i = 2;	}
+    j = nxt[i];
+    k = nxt[j];
+
+    float s = sqrtf( (mat4_at(m, i, i) - (mat4_at(m, j, j) + mat4_at(m, k, k))) + 1.0f );
+
+    q[i] = s * 0.5f;
+
+    if ( s != 0.0f )	{	s = 0.5f / s;	}
+
+    q[3] = ( mat4_at(m, j, k) - mat4_at(m, k, j) ) * s;
+    q[j] = ( mat4_at(m, i, j) + mat4_at(m, j, i) ) * s;
+    q[k] = ( mat4_at(m, i, k) + mat4_at(m, k, i) ) * s;
+
+    return quat_new(q[0], q[1], q[2], q[3]);
+  }
+
 }
 
 float mat4_det(mat4 m) {
@@ -1990,33 +2265,35 @@ mat4 mat4_rotation_euler(float x, float y, float z) {
   return m;
 }
 
-mat4 mat4_rotation_quaternion(vec4 q) {
+mat4 mat4_rotation_quat(vec4 q) {
 
-  q = quaternion_normalize(q);
+  float x2 = q.x + q.x; 
+  float y2 = q.y + q.y; 
+  float z2 = q.z + q.z;
+  float xx = q.x * x2;  
+  float yy = q.y * y2;  
+  float wx = q.w * x2;  
+  float xy = q.x * y2;   
+  float yz = q.y * z2;   
+  float wy = q.w * y2;
+  float xz = q.x * z2;
+  float zz = q.z * z2;  
+  float wz = q.w * z2;  
   
-  mat4 m = mat4_id();
-  
-  m.xx = 1.0 - 2 * q.y * q.y - 2 * q.z * q.z;
-  m.xy = 2 * q.x * q.y - 2 * q.w * q.z;
-  m.xz = 2 * q.x * q.z + 2 * q.w * q.y;
-  
-  m.yx = 2 * q.x * q.y + 2 * q.w * q.z;
-  m.yy = 1.0 - 2 * q.x * q.x - 2 * q.z * q.z;
-  m.yz = 2 * q.y * q.z + 2 * q.w * q.x;
-  
-  m.zx = 2 * q.x * q.z - 2 * q.w * q.y;
-  m.zy = 2 * q.y * q.z - 2 * q.w * q.x;
-  m.zz = 1.0 - 2 * q.x * q.x - 2 * q.y * q.y;
-  
-  return m;
+  return mat4_new(
+    1.0f - ( yy + zz ),	xy - wz, xz + wy,	0.0f,
+    xy + wz, 1.0f - ( xx + zz ), yz - wx, 0.0f,
+    xz - wy, yz + wx, 1.0f - ( xx + yy ), 0.0f,
+    0.0f,	0.0f, 0.0f,	1.0f);
+    
 }
 
-mat4 mat4_world(vec3 position, vec3 scale, mat4 rotation) {
+mat4 mat4_world(vec3 position, vec3 scale, quat rotation) {
   
   mat4 pos_m, sca_m, rot_m, result;
   
   pos_m = mat4_translation(position);
-  rot_m = rotation;
+  rot_m = mat4_rotation_quat(rotation);
   sca_m = mat4_scale(scale);
   
   result = mat4_id();
@@ -2078,15 +2355,6 @@ mat4 mat4_smoothstep(mat4 m1, mat4 m2, float amount) {
   m.ww = smoothstep(m1.ww, m2.ww, amount);
   
   return m;
-}
-
-vec4 mat4_to_quaternion(mat4 m) {
-  vec4 q;
-  q.w = sqrt(1+ m.xx + m.yy + m.zz) / 2;
-  q.x = (m.zy - m.yz) / (4 * q.w);
-  q.y = (m.xz - m.zx) / (4 * q.w);
-  q.z = (m.yx - m.xy) / (4 * q.w);
-  return q;
 }
 
 /* Geometry Functions */

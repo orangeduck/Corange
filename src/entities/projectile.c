@@ -14,7 +14,7 @@ projectile* projectile_new() {
   p->collided = true;
   p->position = vec3_zero();
   p->velocity = vec3_zero();
-  p->rotation = mat4_id();
+  p->rotation = quat_id();
   p->radius = 1;
   p->mesh = asset_hndl_null();
   
@@ -97,11 +97,11 @@ static void projectile_collide(projectile* p, float timestep) {
   vec3 xaxis = vec3_cross(zaxis, vec3_up());
   vec3 yaxis = vec3_cross(zaxis, xaxis);
   
-  p->rotation = mat4_new( 
+  p->rotation = mat4_to_quat(mat4_new( 
     xaxis.x, xaxis.y, xaxis.z, 0,
     yaxis.x, yaxis.y, yaxis.z, 0,
     zaxis.x, zaxis.y, zaxis.z, 0,
-    0, 0, 0, 1);
+    0, 0, 0, 1));
 
 }
 

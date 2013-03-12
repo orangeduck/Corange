@@ -898,18 +898,18 @@ void forward_renderer_render_animated(animated_object* ao) {
 
   skeleton* skel = asset_hndl_ptr(ao->skeleton);
 
-  if (skel->num_bones > MAX_BONES) {
+  if (skel->joint_count > MAX_BONES) {
     error("animated object skeleton has too many bones (over %i)", MAX_BONES);
   }
   
   mat4 r_world_matrix = mat4_world( ao->position, ao->scale, ao->rotation );
   mat4_to_array(r_world_matrix, world_matrix);
   
-  skeleton_gen_transforms(ao->pose);
+  frame_gen_transforms(ao->pose);
   
-  for(int i = 0; i < skel->num_bones; i++) {
+  for(int i = 0; i < skel->joint_count; i++) {
     mat4 base, ani;
-    base = skel->inv_transforms[i];
+    base = skel->rest_pose->transforms_inv[i];
     ani = ao->pose->transforms[i];
     
     bone_matrices[i] = mat4_mul_mat4(ani, base);
@@ -935,17 +935,12 @@ void forward_renderer_render_animated(animated_object* ao) {
     
     GLint bone_world_matrices_u = glGetUniformLocation(shader_program_handle(prog), "bone_world_matrices");
     if (bone_world_matrices_u != -1) {
-      glUniformMatrix4fv(bone_world_matrices_u, skel->num_bones, GL_FALSE, bone_matrix_data);
+      glUniformMatrix4fv(bone_world_matrices_u, skel->joint_count, GL_FALSE, bone_matrix_data);
     }
     
     GLint bone_count_u = glGetUniformLocation(shader_program_handle(prog), "bone_count");
     if (bone_count_u != -1) {
-      glUniform1i(bone_count_u, skel->num_bones);
-    }
-    
-    GLint recieve_shadows = glGetUniformLocation(shader_program_handle(prog), "recieve_shadows");
-    if (recieve_shadows != -1) {
-      glUniform1i(recieve_shadows, ao->recieve_shadows);
+      glUniform1i(bone_count_u, skel->joint_count);
     }
     
     glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
@@ -968,9 +963,10 @@ void forward_renderer_render_animated(animated_object* ao) {
 
 void forward_renderer_render_skeleton(skeleton* s) {
   
-  skeleton_gen_transforms(s);
+  /*
+  frame_gen_transforms(s->rest_pose);
   
-  for(int i = 0; i < s->num_bones; i++) {
+  for(int i = 0; i < s->joint_count; i++) {
     bone* main_bone = s->bones[i];
     vec4 pos = mat4_mul_vec4(s->transforms[i], vec4_new(0,0,0,1));
     forward_renderer_render_axis(s->transforms[i]);
@@ -988,6 +984,7 @@ void forward_renderer_render_skeleton(skeleton* s) {
     }
     
   }
+  */
   
 }
 

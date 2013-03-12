@@ -342,19 +342,41 @@ vec4 vec4_bilinear_interp(vec4 top_left, vec4 top_right, vec4 bottom_left, vec4 
 
 /* quaterion */
 
-vec4 quaternion_id();
-vec4 quaternion_mul(vec4 v1, vec4 v2);
-vec4 quaternion_angle_axis(float angle, vec3 axis);
-vec4 quaternion_rot(vec3 from, vec3 to);
+typedef vec4 quat;
 
-vec4 quaternion_yaw(float angle);
-vec4 quaternion_pitch(float angle);
-vec4 quaternion_roll(float angle);
+quat quat_id();
+quat quat_new(float x, float y, float z, float w);
+quat quat_from_euler(vec3 r);
+quat quat_angle_axis(float angle, vec3 axis);
 
-vec4 quaternion_euler(float roll, float pitch, float yaw);
+float quat_at(quat q, int i);
+float quat_real(quat q);
+vec3 quat_imaginaries(quat q);
 
-vec4 quaternion_normalize(vec4 q);
-vec4 quaternion_swap_handedness(vec4 q);
+void quat_to_angle_axis(quat q, vec3* axis, float* angle);
+vec3 quat_to_euler(quat q);
+
+quat quat_neg(quat q);
+float quat_dot(quat q1, quat q2);
+quat quat_scale(quat q, float f);
+quat quat_mul_quat(quat q1, quat q2);
+vec3 quat_mul_vec3(quat q, vec3 v);
+
+quat quat_inverse(quat q);
+quat quat_unit_inverse(quat q);
+float quat_length(quat q);
+quat quat_normalize(quat q);
+
+quat quat_exp(vec3 w);
+vec3 quat_log(quat q);
+
+quat quat_slerp(quat q1, quat q2, float amount);
+
+quat quat_constrain(quat q, vec3 axis);
+quat quat_constrain_y(quat q);
+
+float quat_distance(quat q0, quat q1);
+quat quat_interpolate(quat* qs, float* ws, int count);
 
 /*
 ** == Matrix Maths ==
@@ -424,6 +446,8 @@ mat4 mat4_new(float xx, float xy, float xz, float xw,
               float yx, float yy, float yz, float yw,
               float zx, float zy, float zz, float zw,
               float wx, float wy, float wz, float ww);
+float mat4_at(mat4 m, int i, int j);
+mat4 mat4_set(mat4 m, int x, int y, float v);
 mat4 mat4_transpose(mat4 m);
 
 mat4 mat4_mul_mat4(mat4 m1, mat4 mat2);
@@ -436,6 +460,7 @@ mat4 mat4_inverse(mat4 m);
 
 mat4 mat3_to_mat4(mat3 m);
 mat3 mat4_to_mat3(mat4 m);
+quat mat4_to_quat(mat4 m);
 
 void mat4_to_array(mat4 m, float* out);
 void mat4_to_array_trans(mat4 m, float* out);
@@ -451,13 +476,13 @@ mat4 mat4_rotation_z(float a);
 mat4 mat4_rotation_axis_angle(vec3 axis, float angle);
 
 mat4 mat4_rotation_euler(float x, float y, float z);
-mat4 mat4_rotation_quaternion(vec4 q);
+mat4 mat4_rotation_quat(quat q);
 
 mat4 mat4_view_look_at(vec3 position, vec3 target, vec3 up);
 mat4 mat4_perspective(float fov, float near_clip, float far_clip, float ratio);
 mat4 mat4_orthographic(float left, float right, float bottom, float top, float near, float far);
 
-mat4 mat4_world(vec3 position, vec3 scale, mat4 rotation);
+mat4 mat4_world(vec3 position, vec3 scale, quat rotation);
 
 mat4 mat4_lerp(mat4 m1, mat4 mat2, float amount);
 mat4 mat4_smoothstep(mat4 m1, mat4 mat2, float amount);

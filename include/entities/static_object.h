@@ -16,7 +16,7 @@
 typedef struct {
   vec3 position;
   vec3 scale;
-  mat4 rotation;
+  quat rotation;
   
   bool active;
   bool recieve_shadows;

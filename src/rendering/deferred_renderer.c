@@ -135,6 +135,7 @@ deferred_renderer* deferred_renderer_new(asset_hndl options) {
   folder_load(P("$CORANGE/shaders/deferred/"));
   
   dr->mat_static     = asset_hndl_new(P("$CORANGE/shaders/deferred/static.mat"));
+  dr->mat_skin       = asset_hndl_new(P("$CORANGE/shaders/deferred/skin.mat"));
   dr->mat_instance   = asset_hndl_new(P("$CORANGE/shaders/deferred/instance.mat"));
   dr->mat_animated   = asset_hndl_new(P("$CORANGE/shaders/deferred/animated.mat"));
   dr->mat_vegetation = asset_hndl_new(P("$CORANGE/shaders/deferred/vegetation.mat"));
@@ -180,6 +181,8 @@ deferred_renderer* deferred_renderer_new(asset_hndl options) {
   dr->tex_cube_sea          = asset_hndl_new_load(P("$CORANGE/resources/cube_sea.dds"));
   dr->tex_cube_field        = asset_hndl_new_load(P("$CORANGE/resources/cube_field.dds"));
   dr->tex_white             = asset_hndl_new_load(P("$CORANGE/resources/white.dds"));
+  dr->tex_grey              = asset_hndl_new_load(P("$CORANGE/resources/grey.dds"));
+  dr->tex_skin_lookup       = asset_hndl_new_load(P("$CORANGE/resources/skin_lookup.dds"));
   
   /* Buffers */
   
@@ -707,12 +710,12 @@ static void render_shadows_animated(deferred_renderer* dr, int i, animated_objec
   
   skeleton* skel = asset_hndl_ptr(ao->skeleton);
 
-  if (skel->num_bones > MAX_BONES) { error("animated object skeleton has too many bones (over %i)", MAX_BONES); }
+  if (skel->joint_count > MAX_BONES) { error("animated object skeleton has too many bones (over %i)", MAX_BONES); }
   if (ao->pose == NULL) { return; }
   
-  for(int j = 0; j < skel->num_bones; j++) {
-    mat4 base = bone_transform(skel->bones[j]);
-    mat4 ani = bone_transform(ao->pose->bones[j]);
+  for(int j = 0; j < skel->joint_count; j++) {
+    mat4 base = frame_joint_transform(skel->rest_pose, j);
+    mat4 ani = frame_joint_transform(ao->pose, j);
     bone_matrices[j] = mat4_mul_mat4(ani, mat4_inverse(base));
   }
   
@@ -721,7 +724,7 @@ static void render_shadows_animated(deferred_renderer* dr, int i, animated_objec
   shader_program_set_mat4(shader, "world", world);
   shader_program_set_mat4(shader, "view",  dr->shadow_view[i]);
   shader_program_set_mat4(shader, "proj",  dr->shadow_proj[i]);
-  shader_program_set_mat4_array(shader, "world_bones", bone_matrices, skel->num_bones);
+  shader_program_set_mat4_array(shader, "world_bones", bone_matrices, skel->joint_count);
   shader_program_set_float(shader, "clip_near", dr->shadow_near[i]);
   shader_program_set_float(shader, "clip_far",  dr->shadow_far[i]);
   
@@ -773,15 +776,14 @@ static void render_shadows_landscape(deferred_renderer* dr, int i, landscape* l)
   terrain* terr = asset_hndl_ptr(l->heightmap);
   vec3 scale = vec3_new(-(1.0 / terr->width) * l->size_x, 0.25, -(1.0 / terr->height) * l->size_y);
   vec3 translation = vec3_new(l->size_x / 2, 0, l->size_y / 2);
-  mat4 rotation = mat4_id();
   
   // This assumes that X or Z scale of a chunk will never exceed the height.
-  float bound_scale_val = max(scale.x, scale.z);
+  float bound_scale_val = sqrt(pow(max(scale.x, scale.z), 2.0) * 2);
   vec3 bound_scale = vec3_new(bound_scale_val, bound_scale_val, bound_scale_val);
   
   shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_depth_ter));
   shader_program_enable(shader);
-  shader_program_set_mat4(shader, "world", mat4_world( translation, scale, rotation ));
+  shader_program_set_mat4(shader, "world", mat4_world( translation, scale, quat_id() ));
   shader_program_set_mat4(shader, "view",  dr->shadow_view[i]);
   shader_program_set_mat4(shader, "proj",  dr->shadow_proj[i]);
   shader_program_set_float(shader, "clip_near", dr->shadow_near[i]);
@@ -790,14 +792,13 @@ static void render_shadows_landscape(deferred_renderer* dr, int i, landscape* l)
   for(int j = 0; j < terr->num_chunks; j++) {
     
     terrain_chunk* tc = terr->chunks[j];
+    sphere bound = sphere_transform(tc->bound, mat4_world(translation, bound_scale, quat_id()));
+    if (sphere_outside_box(bound, dr->shadow_frustum[i])) { continue; }
     
     float chunkx = (1.0 / (terr->num_rows-1)) *  l->size_x;
     float chunky = (1.0 / (terr->num_cols-1)) *  l->size_y;
     float posx = ((float)(j % terr->num_cols)) * chunkx - l->size_x / 2;
     float posy = ((float)(j / terr->num_cols)) * chunky - l->size_y / 2;
-    
-    //sphere bound = sphere_transform(tc->bound, mat4_world(translation, bound_scale, mat4_id()));
-    //if (sphere_outside_box(bound, dr->shadow_frustum[i])) { continue; }
     
     float dist = vec2_dist_sqrd(
       vec2_new(dr->camera->position.x, dr->camera->position.z), 
@@ -1022,11 +1023,10 @@ static void render_static(deferred_renderer* dr, static_object* so) {
     
     if (sphere_outside_box(sphere_transform(s->bound, world), dr->camera_frustum)) { continue; }
     
-    int mentry_id = min(i, ((material*)asset_hndl_ptr(r->material))->num_entries-1);
-    material_entry* me = material_get_entry(asset_hndl_ptr(r->material), mentry_id);
+    material_entry* me = material_get_entry(asset_hndl_ptr(r->material), i);
     
     if (config_bool(asset_hndl_ptr(dr->options), "render_white")) {
-      shader_program_set_texture(shader, "diffuse_map", 0, dr->tex_white);
+      shader_program_set_texture(shader, "diffuse_map", 0, dr->tex_grey);
     } else {
       shader_program_set_texture(shader, "diffuse_map", 0, material_entry_item(me, "diffuse_map").as_asset);
     }
@@ -1064,6 +1064,76 @@ static void render_static(deferred_renderer* dr, static_object* so) {
 
 }
 
+static void render_skin(deferred_renderer* dr, instance_object* io) {
+  
+  if (config_bool(asset_hndl_ptr(dr->options), "render_colmeshes")) {
+    if (!file_isloaded(io->collision_body.path)) {
+      file_load(io->collision_body.path);
+    }
+    //render_cmesh(dr, asset_hndl_ptr(io->collision_body), world);
+  }
+  
+  renderable* r = asset_hndl_ptr(io->renderable);
+  
+  if(r->is_rigged) { error("Static object is rigged!"); }
+  
+  shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_skin));
+  shader_program_enable(shader);
+  shader_program_set_mat4(shader, "view", dr->camera_view);
+  shader_program_set_mat4(shader, "proj", dr->camera_proj);
+  shader_program_set_float(shader, "near", dr->camera_near);
+  shader_program_set_float(shader, "far",  dr->camera_far);
+  
+  for(int i=0; i < r->num_surfaces; i++) {
+    
+    renderable_surface* s = r->surfaces[i];
+    
+    material_entry* me = material_get_entry(asset_hndl_ptr(r->material), i);
+    
+    if (config_bool(asset_hndl_ptr(dr->options), "render_white")) {
+      shader_program_set_texture(shader, "diffuse_map", 0, dr->tex_grey);
+    } else {
+      shader_program_set_texture(shader, "diffuse_map", 0, material_entry_item(me, "diffuse_map").as_asset);
+    }
+    shader_program_set_texture(shader, "bump_map", 1, material_entry_item(me, "bump_map").as_asset);
+    shader_program_set_texture(shader, "spec_map", 2, material_entry_item(me, "spec_map").as_asset);
+    shader_program_set_texture(shader, "curvature_map", 3, material_entry_item(me, "curvature_map").as_asset);
+    shader_program_set_float(shader, "bumpiness", material_entry_item(me, "bumpiness").as_float);
+    shader_program_set_float(shader, "specular_level", material_entry_item(me, "specular_level").as_float);
+    shader_program_set_float(shader, "alpha_test", material_entry_item(me, "alpha_test").as_float);
+    shader_program_set_int(shader, "material", material_entry_item(me, "material").as_int);
+    
+    glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
+    
+    shader_program_enable_attribute(shader, "vPosition",  3, 18, (void*)0);
+    shader_program_enable_attribute(shader, "vNormal",    3, 18, (void*)(sizeof(float) * 3));
+    shader_program_enable_attribute(shader, "vTangent",   3, 18, (void*)(sizeof(float) * 6));
+    shader_program_enable_attribute(shader, "vBinormal",  3, 18, (void*)(sizeof(float) * 9));
+    shader_program_enable_attribute(shader, "vTexcoord",  2, 18, (void*)(sizeof(float) * 12));
+    
+    glBindBuffer(GL_ARRAY_BUFFER, io->world_buffer);
+    
+    shader_program_enable_attribute_instance_matrix(shader, "vWorld", (void*)0);
+    
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
+      glDrawElementsInstanced(GL_TRIANGLES, s->num_triangles * 3, GL_UNSIGNED_INT, (void*)0, io->num_instances);
+    
+    shader_program_disable_attribute(shader, "vPosition");
+    shader_program_disable_attribute(shader, "vNormal");
+    shader_program_disable_attribute(shader, "vTangent");
+    shader_program_disable_attribute(shader, "vBinormal");
+    shader_program_disable_attribute(shader, "vTexcoord");
+    shader_program_disable_attribute_matrix(shader, "vWorld");
+    
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+  }
+  
+  shader_program_disable(shader);
+
+}
+
 static void render_instance(deferred_renderer* dr, instance_object* io) {
   
   if (config_bool(asset_hndl_ptr(dr->options), "render_colmeshes")) {
@@ -1088,11 +1158,10 @@ static void render_instance(deferred_renderer* dr, instance_object* io) {
     
     renderable_surface* s = r->surfaces[i];
     
-    int mentry_id = min(i, ((material*)asset_hndl_ptr(r->material))->num_entries-1);
-    material_entry* me = material_get_entry(asset_hndl_ptr(r->material), mentry_id);
+    material_entry* me = material_get_entry(asset_hndl_ptr(r->material), i);
     
     if (config_bool(asset_hndl_ptr(dr->options), "render_white")) {
-      shader_program_set_texture(shader, "diffuse_map", 0, dr->tex_white);
+      shader_program_set_texture(shader, "diffuse_map", 0, dr->tex_grey);
     } else {
       shader_program_set_texture(shader, "diffuse_map", 0, material_entry_item(me, "diffuse_map").as_asset);
     }
@@ -1160,11 +1229,10 @@ static void render_vegetation(deferred_renderer* dr, instance_object* io) {
     
     renderable_surface* s = r->surfaces[i];
     
-    int mentry_id = min(i, ((material*)asset_hndl_ptr(r->material))->num_entries-1);
-    material_entry* me = material_get_entry(asset_hndl_ptr(r->material), mentry_id);
+    material_entry* me = material_get_entry(asset_hndl_ptr(r->material), i);
     
     if (config_bool(asset_hndl_ptr(dr->options), "render_white")) {
-      shader_program_set_texture(shader, "diffuse_map", 0, dr->tex_white);
+      shader_program_set_texture(shader, "diffuse_map", 0, dr->tex_grey);
     } else {
       shader_program_set_texture(shader, "diffuse_map", 0, material_entry_item(me, "diffuse_map").as_asset);
     }
@@ -1215,12 +1283,12 @@ static void render_animated(deferred_renderer* dr, animated_object* ao) {
   skeleton* skel = asset_hndl_ptr(ao->skeleton);
   
   if (!r->is_rigged) { error("Animated object is not rigged!"); }
-  if (skel->num_bones > MAX_BONES) { error("animated object skeleton has too many bones (over %i)", MAX_BONES); }
+  if (skel->joint_count > MAX_BONES) { error("animated object skeleton has too many bones (over %i)", MAX_BONES); }
   if (ao->pose == NULL) { return; }
   
-  for(int i = 0; i < skel->num_bones; i++) {
-    mat4 base = bone_transform(skel->bones[i]);
-    mat4 ani = bone_transform(ao->pose->bones[i]);
+  for(int i = 0; i < skel->joint_count; i++) {
+    mat4 base = frame_joint_transform(skel->rest_pose, i);
+    mat4 ani = frame_joint_transform(ao->pose, i);
     bone_matrices[i] = mat4_mul_mat4(ani, mat4_inverse(base));
   }
   
@@ -1233,7 +1301,7 @@ static void render_animated(deferred_renderer* dr, animated_object* ao) {
   shader_program_set_mat4(shader, "proj", dr->camera_proj);
   shader_program_set_float(shader, "near", dr->camera_near);
   shader_program_set_float(shader, "far",  dr->camera_far);
-  shader_program_set_mat4_array(shader, "world_bones", bone_matrices, skel->num_bones);
+  shader_program_set_mat4_array(shader, "world_bones", bone_matrices, skel->joint_count);
   
   for(int i=0; i < r->num_surfaces; i++) {
     
@@ -1241,11 +1309,10 @@ static void render_animated(deferred_renderer* dr, animated_object* ao) {
     
     if (sphere_outside_box(sphere_transform(s->bound, world), dr->camera_frustum)) { continue; }
     
-    int mat_id = min(i, ((material*)asset_hndl_ptr(r->material))->num_entries-1);
-    material_entry* me = material_get_entry(asset_hndl_ptr(r->material), mat_id);
+    material_entry* me = material_get_entry(asset_hndl_ptr(r->material), i);
     
     if (config_bool(asset_hndl_ptr(dr->options), "render_white")) {
-      shader_program_set_texture(shader, "diffuse_map", 0, dr->tex_white);
+      shader_program_set_texture(shader, "diffuse_map", 0, dr->tex_grey);
     } else {
       shader_program_set_texture(shader, "diffuse_map", 0, material_entry_item(me, "diffuse_map").as_asset);
     }
@@ -1307,7 +1374,7 @@ void render_landscape(deferred_renderer* dr, landscape* l) {
   }
   
   /* This assumes that X or Z scale of a chunk will never exceed the height. */
-  float bound_scale_val = max(scale.x, scale.z);
+  float bound_scale_val = sqrt(pow(max(scale.x, scale.z), 2.0) * 2);
   vec3 bound_scale = vec3_new(bound_scale_val, bound_scale_val, bound_scale_val);  
   
   shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_terrain));
@@ -1322,10 +1389,10 @@ void render_landscape(deferred_renderer* dr, landscape* l) {
   shader_program_set_float(shader, "size_y", l->size_y);
   
   if (config_bool(asset_hndl_ptr(dr->options), "render_white")) {
-    shader_program_set_texture(shader, "ground0", 0, dr->tex_white);
-    shader_program_set_texture(shader, "ground1", 1, dr->tex_white);
-    shader_program_set_texture(shader, "ground2", 2, dr->tex_white);
-    shader_program_set_texture(shader, "ground3", 3, dr->tex_white);
+    shader_program_set_texture(shader, "ground0", 0, dr->tex_grey);
+    shader_program_set_texture(shader, "ground1", 1, dr->tex_grey);
+    shader_program_set_texture(shader, "ground2", 2, dr->tex_grey);
+    shader_program_set_texture(shader, "ground3", 3, dr->tex_grey);
   } else {
     shader_program_set_texture(shader, "ground0", 0, l->ground0);
     shader_program_set_texture(shader, "ground1", 1, l->ground1);
@@ -1342,14 +1409,13 @@ void render_landscape(deferred_renderer* dr, landscape* l) {
   for(int i = 0; i < terr->num_chunks; i++) {
     
     terrain_chunk* tc = terr->chunks[i];
+    sphere bound = sphere_transform(tc->bound, mat4_world(translation, bound_scale, quat_id()));
+    if (sphere_outside_box(bound, dr->camera_frustum)) { continue; }
     
     float chunkx = (1.0 / (terr->num_rows-1)) *  l->size_x;
     float chunky = (1.0 / (terr->num_cols-1)) *  l->size_y;
     float posx = ((float)(i % terr->num_cols)) * chunkx - l->size_x / 2;
     float posy = ((float)(i / terr->num_cols)) * chunky - l->size_y / 2;
-    
-    //sphere bound = sphere_transform(tc->bound, mat4_world(translation, bound_scale, mat4_id()));
-    //if (sphere_outside_box(bound, dr->camera_frustum)) { continue; }
     
     float dist = vec2_dist_sqrd(
       vec2_new(dr->camera->position.x, dr->camera->position.z), 
@@ -1485,7 +1551,7 @@ void render_ellipsoid(deferred_renderer* dr, ellipsoid e) {
   
   static_object so;
   so.position = e.center;
-  so.rotation = mat4_id();
+  so.rotation = quat_id();
   so.scale = vec3_new(e.radiuses.x, e.radiuses.y, e.radiuses.z);
   so.renderable = dr->mesh_sphere;
   so.collision_body = asset_hndl_new(P("$CORANGE/resources/sphere.col"));
@@ -1636,6 +1702,22 @@ static void render_gbuffer(deferred_renderer* dr) {
       
     }
     
+    bool skin_found = false;
+    if (dr->render_objects[j].type == RO_TYPE_INSTANCE) {
+      renderable* r = asset_hndl_ptr(dr->render_objects[j].instance_object->renderable);
+      material* m = asset_hndl_ptr(r->material);
+      
+      for (int i = 0; i < m->num_entries; i++) {
+        if (material_entry_item(m->entries[i], "material").as_int == 7) {
+          render_skin(dr, dr->render_objects[j].instance_object);
+          skin_found = true;
+          break;
+        }
+      }
+      
+    }
+    
+    if (skin_found) continue;
     if (veg_found) continue;
     
     if (dr->render_objects[j].type == RO_TYPE_STATIC)     { render_static(dr, dr->render_objects[j].static_object); }
@@ -1729,7 +1811,7 @@ static void render_skies(deferred_renderer* dr) {
   
     shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_skydome));
     shader_program_enable(shader);
-    shader_program_set_mat4(shader, "world", mat4_world(dr->camera->position, vec3_new(200, 200, 200), mat4_id()));
+    shader_program_set_mat4(shader, "world", mat4_world(dr->camera->position, vec3_new(200, 200, 200), quat_id()));
     shader_program_set_mat4(shader, "view", dr->camera_view);
     shader_program_set_mat4(shader, "proj", dr->camera_proj);
     shader_program_set_vec3(shader, "light_direction", sky_sun_direction(dr->time_of_day));
@@ -1761,7 +1843,7 @@ static void render_skies(deferred_renderer* dr) {
   
     shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_sun));
     shader_program_enable(shader);
-    shader_program_set_mat4(shader, "world", mat4_world(dr->camera->position, vec3_one(), sky_mesh_sun_world(dr->time_of_day)));
+    shader_program_set_mat4(shader, "world", mat4_world(dr->camera->position, vec3_one(), mat4_to_quat(sky_mesh_sun_world(dr->time_of_day))));
     shader_program_set_mat4(shader, "view", dr->camera_view);
     shader_program_set_mat4(shader, "proj", dr->camera_proj);
     shader_program_set_float(shader, "sun_brightness", 1.5w);
@@ -1798,7 +1880,7 @@ static void render_skies(deferred_renderer* dr) {
   
     shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_clouds));
     shader_program_enable(shader);
-    shader_program_set_mat4(shader, "world", mat4_world(dr->camera->position, vec3_new(10, 10, 10), mat4_id()));
+    shader_program_set_mat4(shader, "world", mat4_world(dr->camera->position, vec3_new(10, 10, 10), quat_id()));
     shader_program_set_mat4(shader, "view", dr->camera_view);
     shader_program_set_mat4(shader, "proj", dr->camera_proj);
     shader_program_set_float(shader, "time", dr->time);
@@ -1864,7 +1946,7 @@ static void render_sea(deferred_renderer* dr) {
   
   shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_sea));
   shader_program_enable(shader);
-  shader_program_set_mat4(shader, "world", mat4_world(position, scale, mat4_id()));
+  shader_program_set_mat4(shader, "world", mat4_world(position, scale, quat_id()));
   shader_program_set_mat4(shader, "view", dr->camera_view);
   shader_program_set_mat4(shader, "proj", dr->camera_proj);
   shader_program_set_float(shader, "clip_near", dr->camera_near);
@@ -1911,7 +1993,7 @@ static void render_sea(deferred_renderer* dr) {
 }
 
 static void render_compose(deferred_renderer* dr) {
-    
+  
   int width = graphics_viewport_width();
   int height = graphics_viewport_height();
   
@@ -1937,6 +2019,7 @@ static void render_compose(deferred_renderer* dr) {
   shader_program_set_texture_id(shader, "shadows_texture0", 7, dr->shadows_texture[0]);
   shader_program_set_texture_id(shader, "shadows_texture1", 8, dr->shadows_texture[1]);
   shader_program_set_texture_id(shader, "shadows_texture2", 9, dr->shadows_texture[2]);
+  shader_program_set_texture(shader, "skin_lookup", 10, dr->tex_skin_lookup);
   
   shader_program_set_vec3(shader, "camera_position", dr->camera->position);
   //shader_program_set_float_array(shader, "light_clip_near", dr->shadow_near, 3);
@@ -2142,7 +2225,7 @@ static void render_tonemap(deferred_renderer* dr) {
   float average = (float)(color[0] + color[1] + color[2]) / (3.0 * 255.0);
   
   //EXPOSURE += (EXPOSURE_TARGET - average) * EXPOSURE_SPEED;
-  dr->exposure = 4.0;
+  dr->exposure = 3.0;
   
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   glViewport(0, 0, graphics_viewport_width(), graphics_viewport_height());

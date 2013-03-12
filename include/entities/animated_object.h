@@ -19,19 +19,16 @@ typedef struct {
   
   vec3 position;
   vec3 scale;
-  mat4 rotation;
-  
-  bool active;
-  bool recieve_shadows;
-  bool cast_shadows;
+  quat rotation;
 
+  bool loop;
   float animation_time;
 
   asset_hndl renderable;
   asset_hndl animation;
   asset_hndl skeleton;
   
-  skeleton* pose;
+  frame* pose;
   
 } animated_object;
 

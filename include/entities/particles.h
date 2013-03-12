@@ -11,7 +11,7 @@
 typedef struct particles {
   
   vec3 position;
-  mat4 rotation;
+  quat rotation;
   vec3 scale;
   
   asset_hndl effect;

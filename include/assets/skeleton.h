@@ -1,12 +1,6 @@
 /**
 *** :: Skeleton ::
 ***
-***   A collection of bones in some
-***   particular orientation.
-***
-***   Used as an asset but also generated
-***   dynamically by animation assets and
-***   others.
 ***
 **/
 
@@ -15,43 +9,34 @@
 
 #include "cengine.h"
 
-struct bone {
-  int id;
-  char* name;
-  vec3 position;
-  mat4 rotation;
-  struct bone* parent;
-};
+typedef struct {
+  int joint_count;
+  int* joint_parents;
+  vec3* joint_positions;
+  quat* joint_rotations;
+  mat4* transforms;
+  mat4* transforms_inv;
+} frame;
 
-struct bone;
-typedef struct bone bone;
+frame* frame_new();
+frame* frame_copy(frame* f);
+void frame_delete(frame* f);
 
-bone* bone_new(int id, char* name);
-void bone_delete(bone* b);
-mat4 bone_transform(bone* b);
+mat4 frame_joint_transform(frame* f, int i);
+void frame_joint_add(frame* f, int parent, vec3 position, quat rotation);
 
-/* This is fairly work in process */
-void inverse_kinematics_solve(bone* base, bone* end, vec3 target);
+void frame_gen_transforms(frame* f);
+void frame_gen_inv_transforms(frame* f);
 
 typedef struct {
-  int num_bones;
-  bone** bones;
-  mat4* transforms;
-  mat4* inv_transforms;
+  int joint_count;
+  char** joint_names;
+  frame* rest_pose;
 } skeleton;
 
 skeleton* skeleton_new();
-skeleton* skeleton_copy(skeleton* s);
 void skeleton_delete(skeleton* s);
-
-bone* skeleton_bone_id(skeleton* s, int id);
-bone* skeleton_bone_name(skeleton* s, char* name);
-void skeleton_add_bone(skeleton* s, char* name, int id, int parent_id);
-
-void skeleton_gen_transforms(skeleton* s);
-void skeleton_gen_inv_transforms(skeleton* s);
-
-void skeleton_print(skeleton* s);
+void skeleton_joint_add(skeleton* s, char* name, int parent);
 
 skeleton* skl_load_file(char* filename);
 

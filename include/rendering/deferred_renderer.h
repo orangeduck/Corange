@@ -98,6 +98,7 @@ typedef struct {
 
   /* Materials */
   asset_hndl mat_static;
+  asset_hndl mat_skin;
   asset_hndl mat_instance;
   asset_hndl mat_animated;
   asset_hndl mat_vegetation;
@@ -139,6 +140,8 @@ typedef struct {
   asset_hndl tex_cube_sea;
   asset_hndl tex_cube_field;
   asset_hndl tex_white;
+  asset_hndl tex_grey;
+  asset_hndl tex_skin_lookup;
   
   /* Buffers */
   GLuint gfbo;

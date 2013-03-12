@@ -1,8 +1,7 @@
 /**
 *** :: Animation ::
 ***  
-***   Contains an array of frames (skeletons)
-***   and frame times.
+***   Contains an array of frames and frame times.
 ***
 **/
 
@@ -12,19 +11,17 @@
 #include "skeleton.h"
 
 typedef struct {
-
-  float start_time, end_time;
   
-  int num_frames;
+  int frame_count;
   float* frame_times;
-  skeleton** frames;
+  frame** frames;
 
 } animation;
 
 animation* animation_new();
 void animation_delete(animation* a);
 
-skeleton* animation_new_frame(animation* a, float frametime, skeleton* base);
+frame* animation_new_frame(animation* a, float frametime, frame* base);
 
 animation* ani_load_file(char* filename);
 

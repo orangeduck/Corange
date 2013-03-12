@@ -893,12 +893,15 @@ static void renderable_add_mesh_rigged(renderable* r, mesh* m, vertex_weight* we
   
 }
 
-static int state_load_empty = 0;
-static int state_load_triangles = 1;
+enum {
+  STATE_LOAD_EMPTY     = 0,
+  STATE_LOAD_TRIANGLES = 1,
+};
 
 renderable* smd_load_file(char* filename) {
   
-  int state = state_load_empty;
+  int state = STATE_LOAD_EMPTY;
+  char state_material[1024];
   
   vertex_hashtable* hashes = vertex_hashtable_new(1024);
   vertex_list* vert_list = vertex_list_new();
@@ -915,10 +918,17 @@ renderable* smd_load_file(char* filename) {
     error("Could not load file %s", filename);
   }
   
+  renderable* r = renderable_new();
+  r->is_rigged = true;
+  
   char line[1024];
   while(SDL_RWreadline(file, line, 1024)) {
     
-    if (state == state_load_empty) {
+    if (strstr(line, "end")) {
+      state = STATE_LOAD_EMPTY;
+    }
+    
+    if (state == STATE_LOAD_EMPTY) {
       
       int version;
       if (sscanf(line, "version %i", &version) > 0) {
@@ -928,26 +938,26 @@ renderable* smd_load_file(char* filename) {
       }
       
       if (strstr(line, "triangles")) {
-        state = state_load_triangles;
+        state = STATE_LOAD_TRIANGLES;
       }
     }
     
-    else if (state == state_load_triangles) {
+    if (state == STATE_LOAD_TRIANGLES) {
       
       int id, l1_id, l2_id, l3_id;
       int num_links = 0;
       float x, y, z, nx, ny, nz, u, v, l1_amount, l2_amount, l3_amount;
       if (sscanf(line, "%i %f %f %f %f %f %f %f %f %i %i %f %i %f %i %f", 
           &id, &x, &y, &z, &nx, &ny, &nz, &u, &v, &num_links, 
-          &l1_id, &l1_amount, &l2_id, &l2_amount, &l3_id, &l3_amount) > 0) {
+          &l1_id, &l1_amount, &l2_id, &l2_amount, &l3_id, &l3_amount) > 9) {
         
         if (num_links > 3) {
-          warning("Loading file %s. More than 3 bones rigged to vertex. Ignoring other bones", filename);
+          warning("Loading file '%s'. More than 3 bones rigged to vertex. Ignoring other bones", filename);
           num_links = 3;
         }
         
         if (num_links == 0) {
-          warning("Loading file %s. Vertex has no direct bone links", filename);
+          warning("Loading file '%s'. Vertex has no direct bone links", filename);
           num_links = 1;
           l1_id = id;
         }
@@ -997,45 +1007,82 @@ renderable* smd_load_file(char* filename) {
         
         int_list_push_back(tri_list, vert_pos);
         
+      } else {
+        
+        if (vert_index == 0) {
+          strcpy(state_material, line);
+        }
+        
+        else if (strcmp(state_material, line)) {
+          
+          strcpy(state_material, line);
+          
+          mesh* m = malloc(sizeof(mesh));
+          m->num_verts = vert_list->num_items;
+          m->num_triangles = tri_list->num_items / 3;
+          
+          m->verticies = malloc(sizeof(vertex) * m->num_verts);
+          m->triangles = malloc(sizeof(int) * m->num_triangles * 3);
+          
+          for(int i = 0; i < m->num_verts; i++) {
+            m->verticies[i] = vertex_list_get(vert_list, i);
+          }
+          
+          for(int i = 0; i < m->num_triangles * 3; i+=3) {
+            m->triangles[i+0] = int_list_get(tri_list, i+2);
+            m->triangles[i+1] = int_list_get(tri_list, i+1);
+            m->triangles[i+2] = int_list_get(tri_list, i+0);
+          }
+          
+          mesh_generate_tangents(m);
+          renderable_add_mesh_rigged(r, m, weights);
+          mesh_delete(m);
+          
+          vertex_hashtable_delete(hashes);
+          vertex_list_delete(vert_list);
+          int_list_delete(tri_list);
+          
+          vert_index = 0;
+          hashes = vertex_hashtable_new(1024);
+          vert_list = vertex_list_new();
+          tri_list = int_list_new();
+          
+          allocated_weights = 1024;
+          weights = realloc(weights, sizeof(vertex_weight) * 1024);
+          
+        }
+        
       }
       
-    }
-    
-    if (strstr(line, "end")) {
-      state = state_load_empty;
     }
     
   }
   
   SDL_RWclose(file);
   
-  mesh* smd_mesh = malloc(sizeof(mesh));
-  smd_mesh->num_verts = vert_list->num_items;
-  smd_mesh->num_triangles = tri_list->num_items / 3;
+  mesh* m = malloc(sizeof(mesh));
+  m->num_verts = vert_list->num_items;
+  m->num_triangles = tri_list->num_items / 3;
+  m->verticies = malloc(sizeof(vertex) * m->num_verts);
+  m->triangles = malloc(sizeof(int) * m->num_triangles * 3);
   
-  smd_mesh->verticies = malloc(sizeof(vertex) * smd_mesh->num_verts);
-  smd_mesh->triangles = malloc(sizeof(int) * smd_mesh->num_triangles * 3);
-  
-  for(int i = 0; i < smd_mesh->num_verts; i++) {
-    smd_mesh->verticies[i] = vertex_list_get(vert_list, i);
+  for(int i = 0; i < m->num_verts; i++) {
+    m->verticies[i] = vertex_list_get(vert_list, i);
   }
   
-  for(int i = 0; i < smd_mesh->num_triangles * 3; i+=3) {
-    smd_mesh->triangles[i] = int_list_get(tri_list, i+2);
-    smd_mesh->triangles[i+1] = int_list_get(tri_list, i+1);
-    smd_mesh->triangles[i+2] = int_list_get(tri_list, i);
+  for(int i = 0; i < m->num_triangles * 3; i+=3) {
+    m->triangles[i+0] = int_list_get(tri_list, i+2);
+    m->triangles[i+1] = int_list_get(tri_list, i+1);
+    m->triangles[i+2] = int_list_get(tri_list, i+0);
   }
   
-  mesh_generate_tangents(smd_mesh);
-  
-  renderable* r = renderable_new();
-  renderable_add_mesh_rigged(r, smd_mesh, weights);
-  r->is_rigged = true;
+  mesh_generate_tangents(m);  
+  renderable_add_mesh_rigged(r, m, weights);
+  mesh_delete(m);
   
   vertex_hashtable_delete(hashes);
   vertex_list_delete(vert_list);
   int_list_delete(tri_list);
-  mesh_delete(smd_mesh);
   free(weights);
 
   fpath mat_file;

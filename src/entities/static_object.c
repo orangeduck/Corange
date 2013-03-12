@@ -4,7 +4,7 @@ static_object* static_object_new() {
   static_object* s = malloc(sizeof(static_object));
   
   s->position = vec3_zero();
-  s->rotation = mat4_id();
+  s->rotation = quat_id();
   s->scale = vec3_one();
   
   s->active = true;

@@ -12,7 +12,7 @@ particles* particles_new() {
   particles* p = malloc(sizeof(particles));
   
   p->position = vec3_zero();
-  p->rotation = mat4_id();
+  p->rotation = quat_id();
   p->scale = vec3_one();
   
   p->effect = asset_hndl_null();

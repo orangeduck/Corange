@@ -4,59 +4,51 @@ animation* animation_new() {
   
   animation* a = malloc(sizeof(animation));
   
-  a->start_time = 1;
-  a->end_time = 1;
-  
-  a->num_frames = 0;
-  a->frame_times = malloc(sizeof(float) * 0);
-  a->frames = malloc(sizeof(skeleton*) * 0);
+  a->frame_count = 0;
+  a->frame_times = NULL;
+  a->frames = NULL;
   
   return a;
 }
 
-animation* animation_identity(skeleton* s);
-
 void animation_delete(animation* a) {
   
-  for(int i = 0; i < a->num_frames; i++) {
-    skeleton_delete(a->frames[i]);
+  for(int i = 0; i < a->frame_count; i++) {
+    frame_delete(a->frames[i]);
   }
   
   free(a->frame_times);
+  free(a->frames);
   free(a);
 }
 
-skeleton* animation_new_frame(animation* a, float frametime, skeleton* base) {
+frame* animation_new_frame(animation* a, float frametime, frame* base) {
   
-  skeleton* frame;
+  frame* f = frame_copy(base);
   
-  if(a->num_frames == 0) {
-    frame = skeleton_copy(base);
-  } else {
-    frame = skeleton_copy(a->frames[a->num_frames-1]);
-  }
+  a->frame_count++;
+  a->frame_times = realloc(a->frame_times, sizeof(float) * a->frame_count);
+  a->frames = realloc(a->frames, sizeof(frame*) * a->frame_count);
+  a->frame_times[a->frame_count-1] = frametime;
+  a->frames[a->frame_count-1] = f;
   
-  a->num_frames++;
-  a->frame_times = realloc(a->frame_times, sizeof(float) * a->num_frames);
-  a->frames = realloc(a->frames, sizeof(skeleton*) * a->num_frames);
-  a->frame_times[a->num_frames-1] = frametime;
-  a->frames[a->num_frames-1] = frame;
-    
-  return frame;
+  return f;
   
 }
 
-static int state_load_empty = 0;
-static int state_load_skeleton = 1;
-static int state_load_nodes = 2;
+enum {
+  STATE_LOAD_EMPTY    = 0,
+  STATE_LOAD_SKELETON = 1,
+  STATE_LOAD_NODES    = 2,
+};
 
 animation* ani_load_file(char* filename) {
   
-  int state = state_load_empty;
+  int state = STATE_LOAD_EMPTY;
   
   animation* a =  animation_new();
   skeleton* base = skeleton_new();
-  skeleton* frame = NULL;
+  frame* f = NULL;
   
   SDL_RWops* file = SDL_RWFromFile(filename, "r");
   
@@ -67,74 +59,74 @@ animation* ani_load_file(char* filename) {
   char line[1024];
   while(SDL_RWreadline(file, line, 1024)) {
     
-    /* Process line */
-    if (state == state_load_empty) {
+    if (state == STATE_LOAD_EMPTY) {
       
       int version;
       if (sscanf(line, "version %i", &version) > 0) {
         if (version != 1) {
-          error("Can't load skl file %s. Don't know how to load version %i\n", filename, version);
+          error("Can't load ani file '%s'. Don't know how to load version %i\n", filename, version);
         }
       }
       
       if (strstr(line, "nodes")) {
-        state = state_load_nodes;
+        state = STATE_LOAD_NODES;
       }
       
       if (strstr(line, "skeleton")) {
-        state = state_load_skeleton;
+        state = STATE_LOAD_SKELETON;
       }
     }
     
-    else if (state == state_load_nodes) {
+    else if (state == STATE_LOAD_NODES) {
       char name[1024];
-      int id, parent_id;
-      if (sscanf(line, "%i %1024s %i", &id, name, &parent_id) == 3) {
-        skeleton_add_bone(base, name, id, parent_id);
+      int id, parent;
+      if (sscanf(line, "%i \"%[^\"]\" %i", &id, name, &parent) == 3) {
+        skeleton_joint_add(base, name, parent);
       }
       
       if (strstr(line, "end")) {
-        state = state_load_empty;
+        state = STATE_LOAD_EMPTY;
       }
     }
     
-    else if (state == state_load_skeleton) {
+    else if (state == STATE_LOAD_SKELETON) {
     
       float time;
       if (sscanf(line, "time %f", &time) == 1) {
-        frame = animation_new_frame(a, time, base);
-        a->end_time = max(a->end_time, time);
-        if(time != 0)
-        a->start_time = min(a->start_time, time);
+        const int fps = 24;
+        f = animation_new_frame(a, time / fps, base->rest_pose);
       }
     
       int id;
       float x, y, z, rx, ry, rz;
       if (sscanf(line, "%i %f %f %f %f %f %f", &id, &x, &y, &z, &rx, &ry, &rz) > 0) {
-        bone* b = skeleton_bone_id(frame, id);
-        /* Swap z and y */
-        b->position = vec3_new(x, z, y);
+        
+        f->joint_positions[id] = vec3_new(x, z, y);
         
         mat4 rotation = mat4_rotation_euler(rx, ry, rz);
         mat4 handedflip = mat4_new(1,0,0,0,
                                    0,0,1,0,
                                    0,1,0,0,
                                    0,0,0,1);
-        
+      
         rotation = mat4_mul_mat4(handedflip, rotation);
         rotation = mat4_mul_mat4(rotation, handedflip);
         rotation = mat4_transpose(rotation);
-        b->rotation = rotation;
+        
+        f->joint_rotations[id] = mat4_to_quat(rotation);
         
       }
       
       if (strstr(line, "end")) {
-        state = state_load_empty;
+        state = STATE_LOAD_EMPTY;
       }
+      
     }
   }
   
   SDL_RWclose(file);
+  
+  skeleton_delete(base);
   
   return a;
 }

@@ -42,11 +42,9 @@ bool material_entry_has_item(material_entry* me, char* name) {
 }
 
 material* material_new() {
-  SDL_GL_CheckError();
   material* m = malloc(sizeof(material));
   m->num_entries = 0;
-  m->entries = malloc(sizeof(material_entry) * m->num_entries);
-  SDL_GL_CheckError();
+  m->entries = NULL;
   return m;
 }
 
@@ -112,7 +110,7 @@ void material_entry_add_item(material_entry* me, char* name, int type, material_
 }
 
 material_entry* material_add_entry(material* m) {
-  SDL_GL_CheckError();
+  
   m->num_entries++;
   m->entries = realloc(m->entries, sizeof(material_entry*) * m->num_entries);
   m->entries[m->num_entries-1] = malloc(sizeof(material_entry));
@@ -129,48 +127,35 @@ material_entry* material_add_entry(material* m) {
 
 material* mat_load_file(char* filename) {
   
-  SDL_GL_CheckError();
-  
   SDL_RWops* file = SDL_RWFromFile(filename, "r");
   if(file == NULL) {
     error("Cannot load file %s", filename);
   }
   
   material* m = material_new();
-  
-  /* Create first entry */
-  m->num_entries++;
-  m->entries = realloc(m->entries, sizeof(material_entry*) * m->num_entries);
-  m->entries[m->num_entries-1] = malloc(sizeof(material_entry));
-
-  SDL_GL_CheckError();
-  
-  /* Fill in first entry */
-  material_entry* me = m->entries[m->num_entries-1];
-  me->program = NULL;
-  me->num_items = 0;
-  me->types = malloc(sizeof(int) * me->num_items);
-  me->names = malloc(sizeof(char*) * me->num_items);
-  me->items = malloc(sizeof(material_item) * me->num_items);
+  material_entry* me = material_add_entry(m);
   
   char line[1024];
   while(SDL_RWreadline(file, line, 1024)) {
     
-    if (line[0] == '#') continue;
+    if (line[0] == '#') { continue; }
+    if (line[0] == '\r') { continue; }
+    if (line[0] == '\n') { continue; }
     
-    char type[512]; char name[512]; char value[512];
-    int matches = sscanf(line, "%511s %511s = %511s", type, name, value);
-        
-    if (strcmp(type, "submaterial") == 0) {
+    if (strstr(line, "submaterial")) {
       
-      /* Skip first submaterial entry if required. */
-      if ((me->num_items == 0) && (m->num_entries == 1)) {
+      /* Skip Empty Submaterials */
+      if (me->num_items == 0) {
+        continue;
+      } else {
+        me = material_add_entry(m);
         continue;
       }
       
-      me = material_add_entry(m);
-      continue;
     }
+    
+    char type[512]; char name[512]; char value[512];
+    int matches = sscanf(line, "%511s %511s = %511s", type, name, value);
     
     if (matches != 3) continue;
     
@@ -224,25 +209,19 @@ material* mat_load_file(char* filename) {
       return NULL;
     }
     
-    SDL_GL_CheckError();
-    material_entry_add_item(m->entries[m->num_entries-1], name, type_id, mi);
-    SDL_GL_CheckError();
+    material_entry_add_item(me, name, type_id, mi);
   
   }
   
   SDL_RWclose(file);
   
-  SDL_GL_CheckError();
-  
   material_generate_programs(m);
-  
-  SDL_GL_CheckError();
   
   return m;
 }
 
 material_entry* material_get_entry(material* m, int index) {
-  return m->entries[index];
+  return m->entries[(int)clamp(index, 0, m->num_entries-1)];
 }
 
 shader_program* material_first_program(material* m) {

@@ -1,0 +1,2 @@
+shader vert = $CORANGE/shaders/deferred/skin.vs
+shader frag = $CORANGE/shaders/deferred/skin.fs

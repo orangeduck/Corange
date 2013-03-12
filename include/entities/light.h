@@ -15,10 +15,12 @@
 
 #include "cengine.h"
 
-static const int light_type_point = 0;
-static const int light_type_directional = 1;
-static const int light_type_sun = 2;
-static const int light_type_spot = 3;
+enum {
+  LIGHT_TYPE_POINT        = 0,
+  LIGHT_TYPE_DIRECTIONAL  = 1,
+  LIGHT_TYPE_SUN          = 2,
+  LIGHT_TYPE_SPOT         = 3,
+};
 
 typedef struct {
   vec3 position;

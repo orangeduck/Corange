@@ -51,7 +51,7 @@ void instance_object_update(instance_object* io) {
   
 }
 
-void instance_object_add_instance(instance_object* io, vec3 position, vec3 scale, mat4 rotation) {
+void instance_object_add_instance(instance_object* io, vec3 position, vec3 scale, quat rotation) {
   
   instance_data id;
   id.position = position;

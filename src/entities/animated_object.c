@@ -7,15 +7,12 @@ animated_object* animated_object_new() {
   animated_object* ao = malloc(sizeof(animated_object));
   ao->position = vec3_zero();
   ao->scale = vec3_one();
-  ao->rotation = mat4_id();
-  
-  ao->active = true;
-  ao->recieve_shadows = true;
-  ao->cast_shadows = true;
+  ao->rotation = quat_id();
   
   ao->renderable = asset_hndl_null();
   ao->skeleton = asset_hndl_null();
   ao->animation = asset_hndl_null();
+  ao->loop = true;
   ao->animation_time = 0;
   
   ao->pose = NULL;
@@ -24,62 +21,57 @@ animated_object* animated_object_new() {
 }
 
 void animated_object_delete(animated_object* ao) {
-  if (ao->pose) { skeleton_delete(ao->pose); }
+  if (ao->pose) { frame_delete(ao->pose); }
   free(ao);
 }
 
 void animated_object_load_skeleton(animated_object* ao, asset_hndl ah) {
-  if(ao->pose != NULL) {
-    skeleton_delete(ao->pose);
-  }
+  if(ao->pose != NULL) { frame_delete(ao->pose); }
   ao->skeleton = ah;
-  ao->pose = skeleton_copy(asset_hndl_ptr(ao->skeleton));
+  ao->pose = frame_copy(((skeleton*)asset_hndl_ptr(ao->skeleton))->rest_pose);
 }
 
 void animated_object_update(animated_object* ao, float timestep) {
   
-  ao->animation_time += timestep;
-  animation* animation = asset_hndl_ptr(ao->animation);
+  animation* a = asset_hndl_ptr(ao->animation);
+  if (a == NULL) { return; }
   
-  if (animation == NULL) { return; }
+  if (ao->loop) {
+    float maxtime = a->frame_times[a->frame_count-1];
+    ao->animation_time = fmod(ao->animation_time + timestep, maxtime);
+  } else {
+    ao->animation_time = ao->animation_time + timestep;
+  }  
   
   if (ao->pose == NULL) {
     error("Animated object needs skeleton loaded with 'animated_object_load_skeleton'.");
   }
   
-  float time_diff = animation->end_time - animation->start_time;
-  float timepoint = animation->start_time + fmod(ao->animation_time, time_diff);
+  frame* frame0 = a->frames[0];
+  frame* frame1 = a->frames[a->frame_count-1];
   
-  skeleton* frame0 = animation->frames[0];
-  skeleton* frame1 = animation->frames[animation->num_frames-1];
   float frame0_time = 0;
   float frame1_time = FLT_MAX;
   
-  for(int i = 0; i < animation->num_frames; i++) {
-    if ((timepoint > animation->frame_times[i]) && (frame0_time < animation->frame_times[i])) {
-      frame0 = animation->frames[i];
-      frame0_time = animation->frame_times[i];
+  for(int i = 0; i < a->frame_count; i++) {
+    if ((ao->animation_time > a->frame_times[i]) && (frame0_time < a->frame_times[i])) {
+      frame0 = a->frames[i];
+      frame0_time = a->frame_times[i];
     }
     
-    if ((timepoint < animation->frame_times[i]) && (frame1_time > animation->frame_times[i])) {
-      frame1 = animation->frames[i];
-      frame1_time = animation->frame_times[i];
+    if ((ao->animation_time < a->frame_times[i]) && (frame1_time > a->frame_times[i])) {
+      frame1 = a->frames[i];
+      frame1_time = a->frame_times[i];
     }
   }
   
-  float amount = (timepoint - frame0_time) / (frame1_time - frame0_time);
+  float amount = (ao->animation_time - frame0_time) / (frame1_time - frame0_time);
   
-  skeleton* skel = asset_hndl_ptr(ao->skeleton);
-  
-  if (skel->num_bones != frame0->num_bones) { error("Animation has a different number of bones to skeleton"); }
-  if (skel->num_bones != frame1->num_bones) { error("Animation has a different number of bones to skeleton"); }
-  
-  for(int i = 0; i < skel->num_bones; i++) {
-    vec3 position = vec3_smoothstep(frame0->bones[i]->position, frame1->bones[i]->position, amount);
-    mat4 rotation = mat4_smoothstep(frame0->bones[i]->rotation, frame1->bones[i]->rotation, amount);
-    
-    ao->pose->bones[i]->position = position;
-    ao->pose->bones[i]->rotation = rotation;
+  for(int i = 0; i < ao->pose->joint_count; i++) {
+    vec3 position = vec3_lerp(frame0->joint_positions[i], frame1->joint_positions[i], amount);
+    quat rotation = quat_slerp(frame0->joint_rotations[i], frame1->joint_rotations[i], amount);
+    ao->pose->joint_positions[i] = position;
+    ao->pose->joint_rotations[i] = rotation;
   }
   
 }

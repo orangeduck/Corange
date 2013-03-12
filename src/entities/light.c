@@ -9,7 +9,7 @@ light* light_new() {
 }
 
 light* light_new_position(vec3 position) {
-  return light_new_type(position, light_type_point);
+  return light_new_type(position, LIGHT_TYPE_POINT);
 }
 
 light* light_new_type(vec3 position, int type) {
@@ -29,9 +29,9 @@ light* light_new_type(vec3 position, int type) {
 
 void light_set_type(light* l, int type) {
 
-  if(type == light_type_directional) {
+  if(type == LIGHT_TYPE_DIRECTIONAL) {
     
-    l->type = light_type_directional;
+    l->type = LIGHT_TYPE_DIRECTIONAL;
     
     l->power = 1;
     l->falloff = 0;
@@ -50,9 +50,9 @@ void light_set_type(light* l, int type) {
     l->shadow_map_width = -1;
     l->shadow_map_height = -1;
   
-  } else if (type == light_type_point) {
+  } else if (type == LIGHT_TYPE_POINT) {
     
-    l->type = light_type_point;
+    l->type = LIGHT_TYPE_POINT;
     
     l->power = 5;
     l->falloff = 0.5;
@@ -71,9 +71,9 @@ void light_set_type(light* l, int type) {
     l->shadow_map_width = -1;
     l->shadow_map_height = -1;
   
-  } else if (type == light_type_sun) {
+  } else if (type == LIGHT_TYPE_SUN) {
     
-    l->type = light_type_sun;
+    l->type = LIGHT_TYPE_SUN;
     
     l->position = vec3_new(0,512,0);
     l->target = vec3_new(512, 0, 512);
@@ -98,9 +98,9 @@ void light_set_type(light* l, int type) {
     l->shadow_map_width = 2048;
     l->shadow_map_height = 2048;
   
-  } else if (type == light_type_spot) {
+  } else if (type == LIGHT_TYPE_SPOT) {
     
-    l->type = light_type_spot;
+    l->type = LIGHT_TYPE_SPOT;
     
     l->power = 5;
     l->falloff = 0.5;
