@@ -2366,19 +2366,6 @@ plane plane_new(vec3 position, vec3 direction) {
   return p;
 }
 
-bool point_behind_plane(vec3 point, plane plane) {
-  
-  vec3 to_point = vec3_sub(point, plane.position);
-  float dist = vec3_dot(to_point, plane.direction);
-  
-  if (dist < 0) {
-    return true;
-  } else {
-    return false;
-  }
-  
-}
-
 float plane_distance(plane p, vec3 point) {
   vec3 to_point = vec3_sub(point, p.position);
   return vec3_dot(to_point, p.direction);
@@ -2443,16 +2430,77 @@ box box_sphere(vec3 center, float radius) {
   
 }
 
-bool box_contains(box bb, vec3 point) {
+bool point_inside_box(vec3 point, box b) {
   
-  if ( !point_behind_plane(point, bb.top)    ) { return false; }
-  if ( !point_behind_plane(point, bb.bottom) ) { return false; }
-  if ( !point_behind_plane(point, bb.left)   ) { return false; }
-  if ( !point_behind_plane(point, bb.right)  ) { return false; }
-  if ( !point_behind_plane(point, bb.front)  ) { return false; }
-  if ( !point_behind_plane(point, bb.back)   ) { return false; }
+  if (!point_inside_plane(point, b.top))    { return false; }
+  if (!point_inside_plane(point, b.bottom)) { return false; }
+  if (!point_inside_plane(point, b.left))   { return false; }
+  if (!point_inside_plane(point, b.right))  { return false; }
+  if (!point_inside_plane(point, b.front))  { return false; }
+  if (!point_inside_plane(point, b.back))   { return false; }
   
   return true;
+  
+}
+
+bool point_outside_box(vec3 point, box b) {
+
+  return !(point_intersects_box(point, b) || point_inside_box(point, b));
+
+}
+
+bool point_intersects_box(vec3 point, box b) {
+  
+  if (point_intersects_plane(point, b.top) &&
+      !point_outside_plane(point, b.left) &&
+      !point_outside_plane(point, b.right) &&
+      !point_outside_plane(point, b.front) &&
+      !point_outside_plane(point, b.back)) {
+    return true;
+  }
+  
+  if (point_intersects_plane(point, b.bottom) &&
+      !point_outside_plane(point, b.left) &&
+      !point_outside_plane(point, b.right) &&
+      !point_outside_plane(point, b.front) &&
+      !point_outside_plane(point, b.back)) {
+    return true;
+  }
+  
+  if (point_intersects_plane(point, b.left) &&
+      !point_outside_plane(point, b.top) &&
+      !point_outside_plane(point, b.bottom) &&
+      !point_outside_plane(point, b.front) &&
+      !point_outside_plane(point, b.back)) {
+    return true;
+  }
+  
+  if (point_intersects_plane(point, b.right) &&
+      !point_outside_plane(point, b.top) &&
+      !point_outside_plane(point, b.bottom) &&
+      !point_outside_plane(point, b.front) &&
+      !point_outside_plane(point, b.back)) {
+    return true;
+  }
+  
+  if (point_intersects_plane(point, b.front) &&
+      !point_outside_plane(point, b.top) &&
+      !point_outside_plane(point, b.bottom) &&
+      !point_outside_plane(point, b.left) &&
+      !point_outside_plane(point, b.right)) {
+    return true;
+  }
+  
+  if (point_intersects_plane(point, b.back) &&
+      !point_outside_plane(point, b.top) &&
+      !point_outside_plane(point, b.bottom) &&
+      !point_outside_plane(point, b.left) &&
+      !point_outside_plane(point, b.right)) {
+    return true;
+  }
+  
+  return false;
+  
 }
 
 box box_merge(box b1, box b2) {
@@ -2513,6 +2561,15 @@ frustum frustum_new_clipbox() {
     vec3_new( 1,-1,-1), vec3_new(-1,-1,-1),
     vec3_new( 1, 1, 1), vec3_new(-1, 1, 1),
     vec3_new( 1,-1, 1), vec3_new(-1,-1, 1)); 
+}
+
+frustum frustum_new_camera(mat4 view, mat4 proj) {
+
+  frustum f = frustum_new_clipbox();
+  f = frustum_transform(f, mat4_inverse(proj));
+  f = frustum_transform(f, mat4_inverse(view));
+  return f;
+  
 }
 
 frustum frustum_slice(frustum f, float start, float end) {
@@ -2592,8 +2649,8 @@ box frustum_box(frustum f) {
   b.bottom  = plane_new(f.nbr, vec3_normalize(vec3_cross(vec3_sub(f.nbl, f.nbr), vec3_sub(f.fbr, f.nbr))));
   b.left    = plane_new(f.ntl, vec3_normalize(vec3_cross(vec3_sub(f.ftl, f.ntl), vec3_sub(f.nbl, f.ntl))));
   b.right   = plane_new(f.ntr, vec3_normalize(vec3_cross(vec3_sub(f.nbr, f.ntr), vec3_sub(f.ftr, f.ntr))));
-  b.front   = plane_new(f.ftr, vec3_normalize(vec3_cross(vec3_sub(f.ftl, f.ftr), vec3_sub(f.fbr, f.ftr))));
-  b.back    = plane_new(f.ntr, vec3_normalize(vec3_cross(vec3_sub(f.nbr, f.ntr), vec3_sub(f.ntl, f.ntr))));
+  b.front   = plane_new(f.ftr, vec3_normalize(vec3_cross(vec3_sub(f.fbr, f.ftr), vec3_sub(f.ftl, f.ftr))));
+  b.back    = plane_new(f.ntr, vec3_normalize(vec3_cross(vec3_sub(f.ntl, f.ntr), vec3_sub(f.nbr, f.ntr))));
   return b;
 }
 
@@ -2680,14 +2737,26 @@ sphere sphere_of_frustum(frustum f) {
 
 sphere sphere_merge(sphere bs1, sphere bs2) {
   
-  vec3 center = vec3_div(vec3_add(bs1.center, bs2.center), 2);
+  vec3 dir = vec3_sub(bs2.center, bs1.center);
+  vec3 dirnorm = vec3_normalize(dir);
   
-  vec3 dir = vec3_normalize(vec3_sub(bs2.center, bs1.center));
-  vec3 edge = vec3_add(vec3_mul(dir, bs2.radius), bs2.center);
+  vec3 p0 = vec3_sub(bs1.center, vec3_mul(dirnorm, bs1.radius));
+  vec3 p1 = vec3_add(bs2.center, vec3_mul(dirnorm, bs2.radius));
   
-  float dist = vec3_dist(edge, center);
+  vec3 center = vec3_div(vec3_add(p0, p1), 2);
+  float dist = vec3_dist(center, p0);
   
   return sphere_new(center, dist);
+}
+
+sphere sphere_merge_many(sphere* s, int count) {
+  
+  sphere ret = s[0];
+  for (int i = 1; i < count; i++) {
+    ret = sphere_merge(ret, s[i]);
+  }
+  
+  return ret;
 }
 
 bool sphere_inside_box(sphere s, box b) {
@@ -2704,20 +2773,61 @@ bool sphere_inside_box(sphere s, box b) {
 }
 
 bool sphere_outside_box(sphere s, box b) {
-  
-  if (!sphere_outside_plane(s, b.front))  { return false; }
-  if (!sphere_outside_plane(s, b.back))   { return false; }
-  if (!sphere_outside_plane(s, b.top))    { return false; }
-  if (!sphere_outside_plane(s, b.bottom)) { return false; }
-  if (!sphere_outside_plane(s, b.left))   { return false; }
-  if (!sphere_outside_plane(s, b.right))  { return false; }
-  
-  return true;
-  
+  return !(sphere_inside_box(s, b) || sphere_intersects_box(s, b));
 }
 
 bool sphere_intersects_box(sphere s, box b) {
-  return !(sphere_inside_box(s, b) || sphere_outside_box(s, b));
+  
+  if (sphere_intersects_plane(s, b.front) &&
+      !sphere_outside_plane(s, b.left) &&
+      !sphere_outside_plane(s, b.right) &&
+      !sphere_outside_plane(s, b.bottom) &&
+      !sphere_outside_plane(s, b.top)) {
+    return true;
+  }
+
+  if (sphere_intersects_plane(s, b.back) &&
+      !sphere_outside_plane(s, b.left) &&
+      !sphere_outside_plane(s, b.right) &&
+      !sphere_outside_plane(s, b.bottom) &&
+      !sphere_outside_plane(s, b.top)) {
+    return true;
+  }
+  
+  if (sphere_intersects_plane(s, b.left) &&
+      !sphere_outside_plane(s, b.front) &&
+      !sphere_outside_plane(s, b.back) &&
+      !sphere_outside_plane(s, b.bottom) &&
+      !sphere_outside_plane(s, b.top)) {
+    return true;
+  }
+  
+  if (sphere_intersects_plane(s, b.right) &&
+      !sphere_outside_plane(s, b.front) &&
+      !sphere_outside_plane(s, b.back) &&
+      !sphere_outside_plane(s, b.bottom) &&
+      !sphere_outside_plane(s, b.top)) {
+    return true;
+  }
+  
+  if (sphere_intersects_plane(s, b.top) &&
+      !sphere_outside_plane(s, b.front) &&
+      !sphere_outside_plane(s, b.back) &&
+      !sphere_outside_plane(s, b.left) &&
+      !sphere_outside_plane(s, b.right)) {
+    return true;
+  }
+  
+  if (sphere_intersects_plane(s, b.bottom) &&
+      !sphere_outside_plane(s, b.front) &&
+      !sphere_outside_plane(s, b.back) &&
+      !sphere_outside_plane(s, b.left) &&
+      !sphere_outside_plane(s, b.right)) {
+    return true;
+  }
+  
+  return false;
+  
 }
 
 sphere sphere_transform(sphere s, mat4 world) {

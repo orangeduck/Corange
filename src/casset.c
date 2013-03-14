@@ -163,7 +163,7 @@ bool asset_hndl_eq(asset_hndl* ah0, asset_hndl* ah1) {
 
 asset* asset_hndl_ptr(asset_hndl* ah) {
 
-  if (ah->path.ptr[0] == '\0') {
+  if (unlikely(ah->path.ptr[0] == '\0')) {
     error("Cannot load NULL asset handle");
     return NULL;
   }
@@ -175,7 +175,7 @@ asset* asset_hndl_ptr(asset_hndl* ah) {
     ah->ptr = dict_get(asset_dict, ah->path.ptr);
     ah->timestamp = SDL_GetTicks();
     
-    if (ah->ptr == NULL) {
+    if (unlikely(ah->ptr == NULL)) {
       error("Failed to get Asset '%s', is it loaded yet?", ah->path.ptr);
       return NULL;
     }

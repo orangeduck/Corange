@@ -17,6 +17,19 @@
 #include "assets/image.h"
 #include "assets/terrain.h"
 
+typedef struct landscape_blobtree {
+  
+  sphere bound;
+
+  bool is_leaf;
+  terrain_chunk* chunk;
+  struct landscape_blobtree* child0;
+  struct landscape_blobtree* child1;
+  struct landscape_blobtree* child2;
+  struct landscape_blobtree* child3;
+  
+} landscape_blobtree;
+
 typedef struct {
   
   asset_hndl heightmap;
@@ -27,6 +40,7 @@ typedef struct {
   float scale;
   float size_x;
   float size_y;
+  landscape_blobtree* blobtree;
   
   asset_hndl ground0;
   asset_hndl ground1;
@@ -42,6 +56,10 @@ typedef struct {
 
 landscape* landscape_new();
 void landscape_delete(landscape* l);
+
+landscape_blobtree* landscape_blobtree_new(landscape* ls);
+void landscape_blobtree_delete(landscape_blobtree* lbt);
+void landscape_blobtree_generate(landscape* l);
 
 mat4  landscape_world(landscape* l);
 float landscape_height(landscape* l, vec2 pos);

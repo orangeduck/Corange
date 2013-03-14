@@ -3,6 +3,97 @@
 #include "assets/terrain.h"
 #include "assets/texture.h"
 
+landscape_blobtree* landscape_blobtree_new(landscape* l) {
+
+  terrain* terr = asset_hndl_ptr(&l->heightmap);
+  
+  vec3 scale = vec3_new(-(1.0 / terr->width) * l->size_x, l->scale, -(1.0 / terr->height) * l->size_y);
+  vec3 translation = vec3_new(l->size_x / 2, 0, l->size_y / 2);
+  float scale_bound = sqrt(pow(max(scale.x, scale.z), 2.0) * 2);
+  
+  int blob_step = 1;
+  landscape_blobtree** blobs = malloc(sizeof(landscape_blobtree*) * terr->num_chunks);
+
+  while (blob_step <= terr->num_rows) {
+  
+    for (int x = 0; x < terr->num_rows; x += blob_step)
+    for (int y = 0; y < terr->num_cols; y += blob_step) {
+      
+      if (blob_step == 1) {
+        
+        terrain_chunk* tc = terr->chunks[x + y * terr->num_rows];
+        
+        sphere bbound = tc->bound;
+        bbound.center = vec3_mul_vec3(bbound.center, scale);
+        bbound.center = vec3_add(bbound.center, translation);
+        bbound.radius = bbound.radius * scale_bound;
+        
+        blobs[x + y * terr->num_rows] = malloc(sizeof(landscape_blobtree));
+        blobs[x + y * terr->num_rows]->bound = bbound;
+        blobs[x + y * terr->num_rows]->is_leaf = true;
+        blobs[x + y * terr->num_rows]->chunk = tc;
+        blobs[x + y * terr->num_rows]->child0 = NULL;
+        blobs[x + y * terr->num_rows]->child1 = NULL;
+        blobs[x + y * terr->num_rows]->child2 = NULL;
+        blobs[x + y * terr->num_rows]->child3 = NULL;
+        
+      } else {
+        
+        int i = blob_step/2;
+        landscape_blobtree* child0 = blobs[(x+0) + (y+0) * terr->num_rows];
+        landscape_blobtree* child1 = blobs[(x+i) + (y+0) * terr->num_rows];
+        landscape_blobtree* child2 = blobs[(x+0) + (y+i) * terr->num_rows];
+        landscape_blobtree* child3 = blobs[(x+i) + (y+i) * terr->num_rows];
+        
+        sphere bounds[4] = { child0->bound, child1->bound, child2->bound, child3->bound };
+        
+        blobs[x + y * terr->num_rows] = malloc(sizeof(landscape_blobtree));
+        blobs[x + y * terr->num_rows]->bound = sphere_merge_many(bounds, 4);
+        blobs[x + y * terr->num_rows]->is_leaf = false;
+        blobs[x + y * terr->num_rows]->chunk = NULL;
+        blobs[x + y * terr->num_rows]->child0 = child0;
+        blobs[x + y * terr->num_rows]->child1 = child1;
+        blobs[x + y * terr->num_rows]->child2 = child2;
+        blobs[x + y * terr->num_rows]->child3 = child3;
+        
+      }
+      
+    }
+    
+    blob_step *= 2;
+    
+  }
+  
+  landscape_blobtree* root = blobs[0];
+  free(blobs);
+  
+  return root;
+  
+}
+
+void landscape_blobtree_delete(landscape_blobtree* lbt) {
+  
+  if (!lbt->is_leaf) {
+    landscape_blobtree_delete(lbt->child0);
+    landscape_blobtree_delete(lbt->child1);
+    landscape_blobtree_delete(lbt->child2);
+    landscape_blobtree_delete(lbt->child3);
+  }
+  
+  free(lbt);
+  
+}
+
+void landscape_blobtree_generate(landscape* l) {
+  
+  if (l->blobtree != NULL) {
+    landscape_blobtree_delete(l->blobtree);
+  }
+  
+  l->blobtree = landscape_blobtree_new(l);
+  
+}
+
 landscape* landscape_new() {
   
   landscape* l = malloc(sizeof(landscape));
@@ -15,6 +106,7 @@ landscape* landscape_new() {
   l->scale = 0.25;
   l->size_x = 128;
   l->size_y = 128;
+  l->blobtree = NULL;
   
   l->ground0 = asset_hndl_null();
   l->ground1 = asset_hndl_null();
@@ -33,7 +125,8 @@ landscape* landscape_new() {
 void landscape_delete(landscape* l) {
   
   if (l->attribimage != NULL) { image_delete(l->attribimage); }
-
+  if (l->blobtree != NULL) { landscape_blobtree_delete(l->blobtree); }
+  
   free(l);
 }
 

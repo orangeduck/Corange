@@ -536,7 +536,9 @@ box box_sphere(vec3 center, float radius);
 box box_merge(box b1, box b2);
 box box_transform(box b1, mat4 world);
 
-bool box_contains(box b1, vec3 point);
+bool point_inside_box(vec3 point, box b);
+bool point_outside_box(vec3 point, box b);
+bool point_intersects_box(vec3 point, box b);
 
 /* Frustum */
 
@@ -547,6 +549,7 @@ typedef struct {
 
 frustum frustum_new(vec3 ntr, vec3 ntl, vec3 nbr, vec3 nbl, vec3 ftr, vec3 ftl, vec3 fbr, vec3 fbl);
 frustum frustum_new_clipbox();
+frustum frustum_new_camera(mat4 view, mat4 proj);
 frustum frustum_slice(frustum f, float start, float end);
 frustum frustum_transform(frustum f, mat4 m);
 frustum frustum_translate(frustum f, vec3 v);
@@ -569,6 +572,7 @@ typedef struct {
 sphere sphere_unit();
 sphere sphere_new(vec3 center, float radius);
 sphere sphere_merge(sphere s1, sphere s2);
+sphere sphere_merge_many(sphere* s, int count);
 sphere sphere_transform(sphere s, mat4 world);
 sphere sphere_translate(sphere s, vec3 x);
 sphere sphere_scale(sphere s, float x);

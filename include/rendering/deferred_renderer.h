@@ -47,6 +47,8 @@ enum {
   RO_TYPE_ELLIPSOID  = 9,
   RO_TYPE_CMESH      = 10,
   RO_TYPE_PROJECTILE = 11,
+  RO_TYPE_FRUSTUM    = 12,
+  RO_TYPE_PLANE      = 13,
 };
 
 typedef struct {
@@ -58,6 +60,8 @@ typedef struct {
     sphere sphere;
     ellipsoid ellipsoid;
     struct { cmesh* colmesh; mat4 colworld; };
+    frustum frustum;
+    plane plane;
     
     /* Objects */
     static_object* static_object;
@@ -82,6 +86,8 @@ render_object render_object_light(light* l);
 render_object render_object_axis(mat4 a);
 render_object render_object_sphere(sphere s);
 render_object render_object_ellipsoid(ellipsoid e);
+render_object render_object_frustum(frustum f);
+render_object render_object_plane(plane p);
 render_object render_object_cmesh(cmesh* cm, mat4 world);
 render_object render_object_landscape(landscape* l);
 render_object render_object_projectile(projectile* p);

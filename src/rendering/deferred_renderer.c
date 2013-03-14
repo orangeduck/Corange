@@ -91,6 +91,20 @@ render_object render_object_ellipsoid(ellipsoid e) {
   return ro;
 }
 
+render_object render_object_frustum(frustum f) {
+  render_object ro;
+  ro.type = RO_TYPE_FRUSTUM;
+  ro.frustum = f;
+  return ro;
+}
+
+render_object render_object_plane(plane p) {
+  render_object ro;
+  ro.type = RO_TYPE_PLANE;
+  ro.plane = p;
+  return ro;
+}
+
 render_object render_object_projectile(projectile* p) {
   render_object ro;
   ro.type = RO_TYPE_PROJECTILE;
@@ -778,50 +792,47 @@ static void render_shadows_animated(deferred_renderer* dr, int i, animated_objec
 
 }
 
+static void render_shadows_landscape_blobtree(deferred_renderer* dr, int i, shader* shader, landscape_blobtree* lbt) {
+
+  if (sphere_outside_box(lbt->bound, dr->shadow_frustum[i])) { return; }
+  
+  if (!lbt->is_leaf) {
+    render_shadows_landscape_blobtree(dr, i, shader, lbt->child0);
+    render_shadows_landscape_blobtree(dr, i, shader, lbt->child1);
+    render_shadows_landscape_blobtree(dr, i, shader, lbt->child2);
+    render_shadows_landscape_blobtree(dr, i, shader, lbt->child3);
+    return;
+  }
+  
+  terrain_chunk* tc = lbt->chunk;
+    
+  float dist = vec3_dist_sqrd(dr->camera->position, lbt->bound.center) / (100 * NUM_TERRAIN_BUFFERS);
+  int buff_index = clamp(dist, 0, NUM_TERRAIN_BUFFERS-1);
+  
+  glBindBuffer(GL_ARRAY_BUFFER, tc->vertex_buffer);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tc->index_buffers[buff_index]);
+  
+  shader_program_enable_attribute(shader, "vPosition", 3, 12, (void*)0);
+    
+    glDrawElements(GL_TRIANGLES, tc->num_indicies[buff_index], GL_UNSIGNED_INT, (void*)0);
+  
+  shader_program_disable_attribute(shader, "vPosition");
+
+}
+
 static void render_shadows_landscape(deferred_renderer* dr, int i, landscape* l) {
 
-  terrain* terr = asset_hndl_ptr(&l->heightmap);
-  vec3 scale = vec3_new(-(1.0 / terr->width) * l->size_x, 0.25, -(1.0 / terr->height) * l->size_y);
-  vec3 translation = vec3_new(l->size_x / 2, 0, l->size_y / 2);
-  
-  // This assumes that X or Z scale of a chunk will never exceed the height.
-  float bound_scale = sqrt(pow(max(scale.x, scale.z), 2.0) * 2);
-  
   shader_program* shader = material_first_program(asset_hndl_ptr(&dr->mat_depth_ter));
   shader_program_enable(shader);
-  shader_program_set_mat4(shader, "world", mat4_world( translation, scale, quat_id() ));
+  shader_program_set_mat4(shader, "world", landscape_world(l));
   shader_program_set_mat4(shader, "view",  dr->shadow_view[i]);
   shader_program_set_mat4(shader, "proj",  dr->shadow_proj[i]);
   shader_program_set_float(shader, "clip_near", dr->shadow_near[i]);
   shader_program_set_float(shader, "clip_far",  dr->shadow_far[i]);
   
-  for(int j = 0; j < terr->num_chunks; j++) {
-    
-    terrain_chunk* tc = terr->chunks[j];
-    sphere bound = sphere_scale(sphere_translate(tc->bound, translation), bound_scale);
-    if (sphere_outside_box(bound, dr->shadow_frustum[i])) { continue; }
-    
-    float chunkx = (1.0 / (terr->num_rows-1)) *  l->size_x;
-    float chunky = (1.0 / (terr->num_cols-1)) *  l->size_y;
-    float posx = ((float)(j % terr->num_cols)) * chunkx - l->size_x / 2;
-    float posy = ((float)(j / terr->num_cols)) * chunky - l->size_y / 2;
-    
-    float dist = vec2_dist_sqrd(
-      vec2_new(dr->camera->position.x, dr->camera->position.z), 
-      vec2_new(-posx, -posy)) / (100 * NUM_TERRAIN_BUFFERS);
-    
-    int buff_index = clamp(dist, 0, NUM_TERRAIN_BUFFERS-1);
-    
-    glBindBuffer(GL_ARRAY_BUFFER, tc->vertex_buffer);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tc->index_buffers[buff_index]);
-    
-    shader_program_enable_attribute(shader, "vPosition", 3, 12, (void*)0);
-      
-      glDrawElements(GL_TRIANGLES, tc->num_indicies[buff_index], GL_UNSIGNED_INT, (void*)0);
-    
-    shader_program_disable_attribute(shader, "vPosition");
-    
-  }
+  if (unlikely(l->blobtree == NULL)) { error("Blobtree must be generated for landscape"); }
+  
+  render_shadows_landscape_blobtree(dr, i, shader, l->blobtree);
   
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
@@ -850,11 +861,8 @@ static void render_shadows(deferred_renderer* dr) {
     shadow_mapper_transforms(dr, i,
       &dr->shadow_view[i], &dr->shadow_proj[i],
       &dr->shadow_near[i], &dr->shadow_far[i]);
-      
-    frustum frus = frustum_new_clipbox();
-    frus = frustum_transform(frus, mat4_inverse(dr->shadow_proj[i]));
-    frus = frustum_transform(frus, mat4_inverse(dr->shadow_view[i]));
-    dr->shadow_frustum[i] = frustum_box(frus);
+    
+    dr->shadow_frustum[i] = frustum_box(frustum_new_camera(dr->shadow_view[i], dr->shadow_proj[i]));
     
     glBindFramebuffer(GL_FRAMEBUFFER, dr->shadows_fbo[i]);  
     glViewport( 0, 0, dr->shadows_widths[i], dr->shadows_heights[i]);
@@ -997,11 +1005,6 @@ static void render_cmesh(deferred_renderer* dr, cmesh* cm, mat4 world) {
 static void render_static(deferred_renderer* dr, static_object* so) {
   
   mat4 world = mat4_world( so->position, so->scale, so->rotation );
-  mat4 inv_view = mat4_inverse(camera_view_matrix(dr->camera));
-  mat4 inv_proj = mat4_inverse(camera_proj_matrix(dr->camera));
-  frustum frus = frustum_new_clipbox();
-  frus = frustum_transform(frus, inv_proj);
-  frus = frustum_transform(frus, inv_view);
   
   if (config_bool(asset_hndl_ptr(&dr->options), "render_colmeshes")) {
     if (!file_isloaded(so->collision_body.path)) {
@@ -1358,28 +1361,56 @@ static void render_animated(deferred_renderer* dr, animated_object* ao) {
   
 }
 
-void render_landscape(deferred_renderer* dr, landscape* l) {
+void render_ellipsoid(deferred_renderer* dr, ellipsoid e);
+void render_plane(deferred_renderer* dr, plane p);
+
+static void render_landscape_blobtree(deferred_renderer* dr, shader* shader, landscape_blobtree* lbt) {
+  
+  if (sphere_outside_box(lbt->bound, dr->camera_frustum)) { return; }
+  
+  if (!lbt->is_leaf) {
+    render_landscape_blobtree(dr, shader, lbt->child0);
+    render_landscape_blobtree(dr, shader, lbt->child1);
+    render_landscape_blobtree(dr, shader, lbt->child2);
+    render_landscape_blobtree(dr, shader, lbt->child3);
+    return;
+  }
+  
+  //render_ellipsoid(dr, ellipsoid_of_sphere(lbt->bound));
+  
+  float dist = vec3_dist_sqrd(dr->camera->position, lbt->bound.center) / (100 * NUM_TERRAIN_BUFFERS);
+  int buff_index = clamp((int)dist, 0, NUM_TERRAIN_BUFFERS-1);
+  
+  terrain_chunk* tc = lbt->chunk;
+  
+  glBindBuffer(GL_ARRAY_BUFFER, tc->vertex_buffer);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tc->index_buffers[buff_index]);
+  
+  shader_program_enable_attribute(shader, "vPosition",  3, 12, (void*)0);
+  shader_program_enable_attribute(shader, "vNormal",    3, 12, (void*)(sizeof(float) * 3));
+  shader_program_enable_attribute(shader, "vTangent",   3, 12, (void*)(sizeof(float) * 6));
+  shader_program_enable_attribute(shader, "vBinormal",  3, 12, (void*)(sizeof(float) * 9));
+  
+    glDrawElements(GL_TRIANGLES, tc->num_indicies[buff_index], GL_UNSIGNED_INT, (void*)0);
+  
+  shader_program_disable_attribute(shader, "vPosition");
+  shader_program_disable_attribute(shader, "vNormal");
+  shader_program_disable_attribute(shader, "vTangent");
+  shader_program_disable_attribute(shader, "vBinormal");
+ 
+}
+
+static void render_landscape(deferred_renderer* dr, landscape* l) {
   
   //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-  terrain* terr = asset_hndl_ptr(&l->heightmap);
-  
-  vec3 scale = vec3_new(-(1.0 / terr->width) * l->size_x, l->scale, -(1.0 / terr->height) * l->size_y);
-  vec3 translation = vec3_new(l->size_x / 2, 0, l->size_y / 2);
-  
   if (config_bool(asset_hndl_ptr(&dr->options), "render_colmeshes")) {
-  
+    terrain* terr = asset_hndl_ptr(&l->heightmap);
     for(int i = 0; i < terr->num_chunks; i++) {
-          
       terrain_chunk* tc = terr->chunks[i];
       render_cmesh(dr, tc->colmesh, landscape_world(l));  
-      
     }
-  
   }
-  
-  /* This assumes that X or Z scale of a chunk will never exceed the height. */
-  float bound_scale = sqrt(pow(max(scale.x, scale.z), 2.0) * 2);
   
   shader_program* shader = material_first_program(asset_hndl_ptr(&dr->mat_terrain));
   
@@ -1410,42 +1441,12 @@ void render_landscape(deferred_renderer* dr, landscape* l) {
   shader_program_set_texture(shader, "ground3_nm", 7, l->ground3_nm);
   shader_program_set_texture(shader, "attribmap", 8, l->attribmap);
   
-  for(int i = 0; i < terr->num_chunks; i++) {
-    
-    terrain_chunk* tc = terr->chunks[i];
-    sphere bound = sphere_scale(sphere_translate(tc->bound, translation), bound_scale);
-    if (sphere_outside_box(bound, dr->camera_frustum)) { continue; }
-    
-    float chunkx = (1.0 / (terr->num_rows-1)) *  l->size_x;
-    float chunky = (1.0 / (terr->num_cols-1)) *  l->size_y;
-    float posx = ((float)(i % terr->num_cols)) * chunkx - l->size_x / 2;
-    float posy = ((float)(i / terr->num_cols)) * chunky - l->size_y / 2;
-    
-    float dist = vec2_dist_sqrd(
-      vec2_new(dr->camera->position.x, dr->camera->position.z), 
-      vec2_new(-posx, -posy)) / (100 * NUM_TERRAIN_BUFFERS);
-    
-    int buff_index = clamp((int)dist, 0, NUM_TERRAIN_BUFFERS-1);
-    
-    glBindBuffer(GL_ARRAY_BUFFER, tc->vertex_buffer);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tc->index_buffers[buff_index]);
-    
-    shader_program_enable_attribute(shader, "vPosition",  3, 12, (void*)0);
-    shader_program_enable_attribute(shader, "vNormal",    3, 12, (void*)(sizeof(float) * 3));
-    shader_program_enable_attribute(shader, "vTangent",   3, 12, (void*)(sizeof(float) * 6));
-    shader_program_enable_attribute(shader, "vBinormal",  3, 12, (void*)(sizeof(float) * 9));
-    
-      glDrawElements(GL_TRIANGLES, tc->num_indicies[buff_index], GL_UNSIGNED_INT, (void*)0);
-    
-    shader_program_disable_attribute(shader, "vPosition");
-    shader_program_disable_attribute(shader, "vNormal");
-    shader_program_disable_attribute(shader, "vTangent");
-    shader_program_disable_attribute(shader, "vBinormal");
-    
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+  if (unlikely(l->blobtree == NULL)) { error("Landscape blobtree must be generated!"); }
   
-  }
+  render_landscape_blobtree(dr, shader, l->blobtree);
+  
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
   
   shader_program_disable(shader);
   
@@ -1547,6 +1548,82 @@ void render_axis(deferred_renderer* dr, mat4 world) {
   glLineWidth(1.0);  
   glEnable(GL_DEPTH_TEST);
 
+  shader_program_disable(shader);
+  
+}
+
+void render_frustum(deferred_renderer* dr, frustum f) {
+
+  shader_program* shader = material_first_program(asset_hndl_ptr(&dr->mat_ui));
+  shader_program_enable(shader);
+  shader_program_set_mat4(shader, "world", mat4_id());
+  shader_program_set_mat4(shader, "view", dr->camera_view);
+  shader_program_set_mat4(shader, "proj", dr->camera_proj);
+  shader_program_set_float(shader, "alpha_test", 0.0);
+  shader_program_set_texture(shader, "diffuse", 0, dr->tex_white);
+  
+  float frustum_colors[] = {
+    1,0,0, 1,0,0, 1,0,0, 1,0,0, 1,0,0, 1,0,0, 1,0,0, 1,0,0,
+    1,0,0, 1,0,0, 1,0,0, 1,0,0, 1,0,0, 1,0,0, 1,0,0, 1,0,0,
+    1,0,0, 1,0,0, 1,0,0, 1,0,0, 1,0,0, 1,0,0, 1,0,0, 1,0,0};
+  vec3 frustum_positions[] = {
+    f.ntr, f.ntl, f.ntl, f.nbl, f.nbl, f.nbr, f.nbr, f.ntr,
+    f.ftr, f.ftl, f.ftl, f.fbl, f.fbl, f.fbr, f.fbr, f.ftr,
+    f.nbr, f.fbr, f.nbl, f.fbl, f.ntr, f.ftr, f.ntl, f.ftl};
+  
+  glDisable(GL_DEPTH_TEST);
+  glLineWidth(5.0);
+  
+    shader_program_enable_attribute(shader, "vPosition",  3, 3, frustum_positions);
+    shader_program_enable_attribute(shader, "vColor",     3, 3, frustum_colors);
+    
+    glDrawArrays(GL_LINES, 0, 24);
+  
+  shader_program_disable_attribute(shader, "vPosition");
+  shader_program_disable_attribute(shader, "vColor");
+  
+  glLineWidth(1.0);  
+  glEnable(GL_DEPTH_TEST);
+  
+  shader_program_disable(shader);
+  
+}
+
+void render_plane(deferred_renderer* dr, plane p) {
+
+  shader_program* shader = material_first_program(asset_hndl_ptr(&dr->mat_ui));
+  shader_program_enable(shader);
+  shader_program_set_mat4(shader, "world", mat4_id());
+  shader_program_set_mat4(shader, "view", dr->camera_view);
+  shader_program_set_mat4(shader, "proj", dr->camera_proj);
+  shader_program_set_float(shader, "alpha_test", 0.0);
+  shader_program_set_texture(shader, "diffuse", 0, dr->tex_white);
+  
+  vec3 left = vec3_cross(vec3_normalize(p.direction), vec3_up());
+  vec3 right = vec3_cross(vec3_normalize(p.direction), left);
+  vec3 color = vec3_div(vec3_add(p.direction, vec3_new(1.0, 1.0, 1.0)), 2.0);
+  
+  if (vec3_dot(vec3_cross(left, right), p.direction) < 0) {
+    vec3 tmp = left;
+    left = right;
+    right = tmp;
+  }  
+  
+  vec3 plane_colors[] = {color, color, color};
+  vec3 plane_positions[] = {p.position, vec3_add(p.position, left), vec3_add(p.position, right)};
+  
+  glDisable(GL_DEPTH_TEST);
+  
+    shader_program_enable_attribute(shader, "vPosition",  3, 3, plane_positions);
+    shader_program_enable_attribute(shader, "vColor",     3, 3, plane_colors);
+    
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+  
+  shader_program_disable_attribute(shader, "vPosition");
+  shader_program_disable_attribute(shader, "vColor");
+  
+  glEnable(GL_DEPTH_TEST);
+  
   shader_program_disable(shader);
   
 }
@@ -1669,12 +1746,8 @@ static void render_gbuffer(deferred_renderer* dr) {
   dr->camera_proj = camera_proj_matrix(dr->camera);
   dr->camera_near = dr->camera->near_clip;
   dr->camera_far  = dr->camera->far_clip;
+  dr->camera_frustum = frustum_box(frustum_new_camera(dr->camera_view, dr->camera_proj));
   
-  frustum frus = frustum_new_clipbox();
-  frus = frustum_transform(frus, mat4_inverse(dr->camera_proj));
-  frus = frustum_transform(frus, mat4_inverse(dr->camera_view));
-  dr->camera_frustum = frustum_box(frus);
-    
   int width = graphics_viewport_width();
   int height = graphics_viewport_height();
   
@@ -1687,6 +1760,17 @@ static void render_gbuffer(deferred_renderer* dr) {
   
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);
+  
+  /* DEBUG */
+  //camera cam;
+  //cam.position = vec3_zero();
+  //cam.target = vec3_new(sin(dr->time), 1, cos(dr->time));
+  //cam.fov = dr->camera->fov;
+  //cam.near_clip = dr->camera->near_clip;
+  //cam.far_clip = dr->camera->far_clip;
+  //frustum test_frust = frustum_new_camera(camera_view_matrix(&cam), camera_proj_matrix(&cam));
+  //dr->camera_frustum = frustum_box(test_frust);
+  /* END DEBUG */
   
   for ( int j = 0; j < dr->render_objects_num; j++) {
     
@@ -1732,6 +1816,8 @@ static void render_gbuffer(deferred_renderer* dr) {
     if (dr->render_objects[j].type == RO_TYPE_AXIS)       { render_axis(dr, dr->render_objects[j].axis); }
     if (dr->render_objects[j].type == RO_TYPE_SPHERE)     { render_ellipsoid(dr, ellipsoid_of_sphere(dr->render_objects[j].sphere)); }
     if (dr->render_objects[j].type == RO_TYPE_ELLIPSOID)  { render_ellipsoid(dr, dr->render_objects[j].ellipsoid); }
+    if (dr->render_objects[j].type == RO_TYPE_FRUSTUM)    { render_frustum(dr, dr->render_objects[j].frustum); }
+    if (dr->render_objects[j].type == RO_TYPE_PLANE)      { render_plane(dr, dr->render_objects[j].plane); }
     if (dr->render_objects[j].type == RO_TYPE_PROJECTILE) { render_projectile(dr, dr->render_objects[j].projectile); }
     
     if (dr->render_objects[j].type == RO_TYPE_CMESH) {
@@ -1745,6 +1831,10 @@ static void render_gbuffer(deferred_renderer* dr) {
         dr->render_objects[j].paint_radius); }
   }
 
+  /* DEBUG */
+  //render_frustum(dr, test_frust);
+  /* END DEBUG */
+  
   glDisable(GL_DEPTH_TEST);
   glDisable(GL_CULL_FACE);
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
