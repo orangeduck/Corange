@@ -36,6 +36,42 @@ frame* animation_new_frame(animation* a, float frametime, frame* base) {
   
 }
 
+frame* animation_sample(animation* a, float time) {
+  
+  frame* f = frame_copy(a->frames[0]);
+  animation_sample_to(a, time, f);
+  return f;
+  
+}
+
+void animation_sample_to(animation* a, float time, frame* out) {
+
+  time = fmod(time, a->frame_times[a->frame_count-1]);
+  
+  frame* frame0 = a->frames[0];
+  frame* frame1 = a->frames[a->frame_count-1];
+  
+  float frame0_time = 0;
+  float frame1_time = FLT_MAX;
+  
+  for(int i = 0; i < a->frame_count; i++) {
+    if ((time > a->frame_times[i]) && (frame0_time < a->frame_times[i])) {
+      frame0 = a->frames[i];
+      frame0_time = a->frame_times[i];
+    }
+    
+    if ((time < a->frame_times[i]) && (frame1_time > a->frame_times[i])) {
+      frame1 = a->frames[i];
+      frame1_time = a->frame_times[i];
+    }
+  }
+  
+  float amount = (time - frame0_time) / (frame1_time - frame0_time);
+  
+  frame_interpolate_to(frame0, frame1, amount, out);
+
+}
+
 enum {
   STATE_LOAD_EMPTY    = 0,
   STATE_LOAD_SKELETON = 1,

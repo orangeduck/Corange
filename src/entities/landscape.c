@@ -39,7 +39,7 @@ void landscape_delete(landscape* l) {
 
 mat4  landscape_world(landscape* l) {
   
-  terrain* terr = asset_hndl_ptr(l->heightmap);
+  terrain* terr = asset_hndl_ptr(&l->heightmap);
   
   vec3 scale = vec3_new(-(1.0 / terr->width) * l->size_x, l->scale, -(1.0 / terr->height) * l->size_y);
   vec3 translation = vec3_new(l->size_x / 2, 0, l->size_y / 2);
@@ -50,7 +50,7 @@ mat4  landscape_world(landscape* l) {
 
 float landscape_height(landscape* l, vec2 pos) {
   
-  terrain* t = asset_hndl_ptr(l->heightmap);
+  terrain* t = asset_hndl_ptr(&l->heightmap);
   
   pos.x = (1 - ((pos.x / l->size_x) + 0.5)) * t->width;
   pos.y = (1 - ((pos.y / l->size_y) + 0.5)) * t->height;
@@ -61,7 +61,7 @@ float landscape_height(landscape* l, vec2 pos) {
 
 vec3 landscape_normal(landscape* l, vec2 pos) {
   
-  terrain* t = asset_hndl_ptr(l->heightmap);
+  terrain* t = asset_hndl_ptr(&l->heightmap);
 
   pos.x = (1 - ((pos.x / l->size_x) + 0.5)) * t->width;
   pos.y = (1 - ((pos.y / l->size_y) + 0.5)) * t->height;
@@ -79,7 +79,7 @@ vec3 landscape_normal(landscape* l, vec2 pos) {
 
 mat3 landscape_axis(landscape* l, vec2 pos) {
 
-  terrain* t = asset_hndl_ptr(l->heightmap);
+  terrain* t = asset_hndl_ptr(&l->heightmap);
 
   pos.x = (1 - ((pos.x / l->size_x) + 0.5)) * t->width;
   pos.y = (1 - ((pos.y / l->size_y) + 0.5)) * t->height;
@@ -92,7 +92,7 @@ mat3 landscape_axis(landscape* l, vec2 pos) {
 
 void landscape_paint_height(landscape* l, vec2 pos, float radius, float value, float opacity) {
 
-  terrain* t = asset_hndl_ptr(l->heightmap);
+  terrain* t = asset_hndl_ptr(&l->heightmap);
 
   pos.x = (1 - ((pos.x / l->size_x) + 0.5)) * t->width;
   pos.y = (1 - ((pos.y / l->size_y) + 0.5)) * t->height;
@@ -126,7 +126,7 @@ void landscape_paint_height(landscape* l, vec2 pos, float radius, float value, f
 
 void landscape_chunks(landscape* l, vec2 pos, struct terrain_chunk** chunks_out) {
   
-  terrain* t = asset_hndl_ptr(l->heightmap);
+  terrain* t = asset_hndl_ptr(&l->heightmap);
 
   pos.x = (1 - ((pos.x / l->size_x) + 0.5)) * t->width;
   pos.y = (1 - ((pos.y / l->size_y) + 0.5)) * t->height;
@@ -149,7 +149,7 @@ void landscape_chunks(landscape* l, vec2 pos, struct terrain_chunk** chunks_out)
 void landscape_paint_color(landscape* l, vec2 pos, float radius, int type, float opacity) {
   
   if (l->attribimage == NULL) {
-    l->attribimage = texture_get_image(asset_hndl_ptr(l->attribmap));
+    l->attribimage = texture_get_image(asset_hndl_ptr(&l->attribmap));
   }
 
   pos.x = (1 - ((pos.x / l->size_x) + 0.5)) * l->attribimage->width;
@@ -180,6 +180,6 @@ void landscape_paint_color(landscape* l, vec2 pos, float radius, int type, float
     image_set_pixel(l->attribimage, x, y, pix);
   }
   
-  texture_set_image(asset_hndl_ptr(l->attribmap), l->attribimage);
+  texture_set_image(asset_hndl_ptr(&l->attribmap), l->attribimage);
   
 }

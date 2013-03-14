@@ -306,7 +306,7 @@ void shader_program_set_texture(shader_program* p, char* name, int index, asset_
     warning("Shader has no uniform called '%s'", name);
   } else {
     glActiveTexture(GL_TEXTURE0 + index);
-    glBindTexture(texture_type(asset_hndl_ptr(t)), texture_handle(asset_hndl_ptr(t)));
+    glBindTexture(texture_type(asset_hndl_ptr(&t)), texture_handle(asset_hndl_ptr(&t)));
     glUniform1i(location, index);
     SDL_GL_CheckError();
   }

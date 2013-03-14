@@ -2728,6 +2728,16 @@ sphere sphere_transform(sphere s, mat4 world) {
   return sphere_new(center, radius);
 }
 
+sphere sphere_translate(sphere s, vec3 x) {
+  s.center = vec3_add(s.center, x);
+  return s;
+}
+
+sphere sphere_scale(sphere s, float x) {
+  s.radius *= x;
+  return s;
+}
+
 sphere sphere_transform_space(sphere s, mat3 space) {
 
   vec3 center = mat3_mul_vec3(space, s.center);

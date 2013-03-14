@@ -61,7 +61,7 @@ void particles_delete(particles* p) {
 void particles_set_effect(particles* p, asset_hndl e) {
   
   p->effect = e;
-  p->count = ((effect*)asset_hndl_ptr(e))->count;
+  p->count = ((effect*)asset_hndl_ptr(&e))->count;
   p->actives = realloc(p->actives, sizeof(bool) * p->count);
   p->times = realloc(p->times, sizeof(float) * p->count);
   p->seeds = realloc(p->seeds, sizeof(float) * p->count);
@@ -119,7 +119,7 @@ static void particles_update_effect(particles* p, float timestep) {
   srand(time(NULL));
   float globseed = randf();
   
-  effect* e = asset_hndl_ptr(p->effect);
+  effect* e = asset_hndl_ptr(&p->effect);
   
   if (e->count != p->count) {
     particles_set_effect(p, p->effect);

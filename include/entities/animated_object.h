@@ -21,7 +21,6 @@ typedef struct {
   vec3 scale;
   quat rotation;
 
-  bool loop;
   float animation_time;
 
   asset_hndl renderable;

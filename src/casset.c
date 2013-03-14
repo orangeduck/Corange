@@ -4,6 +4,7 @@
 #include "data/list.h"
 
 static dict* asset_dict;
+static uint32_t asset_timestamp = 0;
 
 typedef struct {
   type_id type;
@@ -120,6 +121,7 @@ asset_hndl asset_hndl_null() {
   asset_hndl ah;
   ah.path = P("");
   ah.ptr = NULL;
+  ah.timestamp = 0;
   return ah;
 }
 
@@ -127,6 +129,7 @@ asset_hndl asset_hndl_new(fpath path) {
   asset_hndl ah;
   ah.path = asset_map_filename(path);
   ah.ptr = NULL;
+  ah.timestamp = 0;
   return ah;
 }
 
@@ -142,38 +145,49 @@ asset_hndl asset_hndl_new_ptr(asset* as) {
   asset_hndl ah;
   ah.path = P(asset_ptr_path(as));
   ah.ptr = as;
+  ah.timestamp = SDL_GetTicks();
   return ah;
 }
 
-bool asset_hndl_isnull(asset_hndl ah) {
-  return (strcmp(ah.path.ptr, "") == 0);
+bool asset_hndl_isnull(asset_hndl* ah) {
+  return (strcmp(ah->path.ptr, "") == 0);
 }
 
-fpath asset_hndl_path(asset_hndl ah) {
-  return ah.path;
+fpath asset_hndl_path(asset_hndl* ah) {
+  return ah->path;
 }
 
-bool asset_hndl_eq(asset_hndl ah0, asset_hndl ah1) {
-  return (strcmp(ah0.path.ptr, ah1.path.ptr) == 0);
+bool asset_hndl_eq(asset_hndl* ah0, asset_hndl* ah1) {
+  return (strcmp(ah0->path.ptr, ah1->path.ptr) == 0);
 }
 
-asset* asset_hndl_ptr(asset_hndl ah) {
+asset* asset_hndl_ptr(asset_hndl* ah) {
 
-  if (strcmp(ah.path.ptr, "") == 0) {
+  if (ah->path.ptr[0] == '\0') {
     error("Cannot load NULL asset handle");
-  }
-
-  ah.ptr = dict_get(asset_dict, ah.path.ptr);
-  
-  if (ah.ptr == NULL) {
-    error("Failed to get Asset '%s', is it loaded yet?", ah.path.ptr);
+    return NULL;
   }
   
-  return ah.ptr;
+  if (likely(ah->timestamp > asset_timestamp)) {
+    return ah->ptr;
+  } else {
+    
+    ah->ptr = dict_get(asset_dict, ah->path.ptr);
+    ah->timestamp = SDL_GetTicks();
+    
+    if (ah->ptr == NULL) {
+      error("Failed to get Asset '%s', is it loaded yet?", ah->path.ptr);
+      return NULL;
+    }
+    
+    return ah->ptr;
+  }
+  
 }
 
 void asset_init(char* game_name) {
   asset_dict = dict_new(1024);
+  asset_timestamp = SDL_GetTicks();
 }
 
 void asset_handler_delete(asset_handler* h) {
@@ -358,11 +372,13 @@ void folder_load_recursive(fpath folder) {
 void file_reload(fpath filename) {
   file_unload(filename);
   file_load(filename);
+  asset_timestamp = SDL_GetTicks();
 }
 
 void folder_reload(fpath folder) {
   folder_unload(folder);
   folder_load(folder);
+  asset_timestamp = SDL_GetTicks();
 }
 
 void file_unload(fpath filename) {
@@ -419,11 +435,13 @@ bool file_isloaded(fpath path) {
 }
 
 asset* asset_get_load(fpath path) {
-  return asset_hndl_ptr(asset_hndl_new_load(path));
+  asset_hndl ah = asset_hndl_new_load(path);
+  return asset_hndl_ptr(&ah);
 }
 
 asset* asset_get(fpath path) {
-  return asset_hndl_ptr(asset_hndl_new(path));
+  asset_hndl ah = asset_hndl_new(path);
+  return asset_hndl_ptr(&ah);
 }
 
 asset* asset_get_as_type(fpath path, type_id type) {
@@ -480,6 +498,7 @@ void asset_reload_type_id(type_id type) {
   
   list_delete_with(asset_names, free);
   
+  asset_timestamp = SDL_GetTicks();
 }
 
 void asset_reload_all() {
@@ -513,6 +532,8 @@ void asset_reload_all() {
   }
   
   list_delete_with(asset_names, free);
+  
+  asset_timestamp = SDL_GetTicks();
 }
 
 char* asset_ptr_path(asset* a) {

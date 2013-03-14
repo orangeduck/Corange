@@ -126,10 +126,14 @@ deferred_renderer* deferred_renderer_new(asset_hndl options) {
   /* Camera */
   dr->camera = NULL;
 
+  /* Lights */
   dr->dyn_lights_num = 0;
   for(int i = 0; i < DEFERRED_MAX_DYN_LIGHTS; i++) {
     dr->dyn_light[i] = NULL;
   }
+  
+  /* Sky */
+  dr->sky = sky_new();
   
   /* Materials */
   folder_load(P("$CORANGE/shaders/deferred/"));
@@ -157,7 +161,7 @@ deferred_renderer* deferred_renderer_new(asset_hndl options) {
   dr->mat_particles  = asset_hndl_new(P("$CORANGE/shaders/deferred/particles.mat"));
   dr->mat_sea        = asset_hndl_new(P("$CORANGE/shaders/deferred/sea.mat"));
   
-  dr->mat_compose = option_graphics_asset(asset_hndl_ptr(dr->options), "lighting",
+  dr->mat_compose = option_graphics_asset(asset_hndl_ptr(&dr->options), "lighting",
     asset_hndl_new(P("$CORANGE/shaders/deferred/compose.mat")),
     asset_hndl_new(P("$CORANGE/shaders/deferred/compose.mat")),
     asset_hndl_new(P("$CORANGE/shaders/deferred/compose_low.mat")));
@@ -189,8 +193,8 @@ deferred_renderer* deferred_renderer_new(asset_hndl options) {
   int width = graphics_viewport_width();
   int height = graphics_viewport_height();
   
-  int gwidth  = width  * option_graphics_int(asset_hndl_ptr(dr->options), "msaa", 4, 2, 1);
-  int gheight = height * option_graphics_int(asset_hndl_ptr(dr->options), "msaa", 4, 2, 1);
+  int gwidth  = width  * option_graphics_int(asset_hndl_ptr(&dr->options), "msaa", 4, 2, 1);
+  int gheight = height * option_graphics_int(asset_hndl_ptr(&dr->options), "msaa", 4, 2, 1);
   
   glGenFramebuffers(1, &dr->gfbo);
   glBindFramebuffer(GL_FRAMEBUFFER, dr->gfbo);
@@ -255,8 +259,8 @@ deferred_renderer* deferred_renderer_new(asset_hndl options) {
   
   /* SSAO Buffer */
   
-  int ssaowidth  = width  / option_graphics_int(asset_hndl_ptr(dr->options), "ssao", 1, 2, 4);
-  int ssaoheight = height / option_graphics_int(asset_hndl_ptr(dr->options), "ssao", 1, 2, 4);
+  int ssaowidth  = width  / option_graphics_int(asset_hndl_ptr(&dr->options), "ssao", 1, 2, 4);
+  int ssaoheight = height / option_graphics_int(asset_hndl_ptr(&dr->options), "ssao", 1, 2, 4);
   
   glGenFramebuffers(1, &dr->ssao_fbo);
   glBindFramebuffer(GL_FRAMEBUFFER, dr->ssao_fbo);
@@ -279,8 +283,8 @@ deferred_renderer* deferred_renderer_new(asset_hndl options) {
   
   /* HDR Buffer */
   
-  int hdrwidth  = width  * option_graphics_int(asset_hndl_ptr(dr->options), "msaa", 4, 2, 1);
-  int hdrheight = height * option_graphics_int(asset_hndl_ptr(dr->options), "msaa", 4, 2, 1);
+  int hdrwidth  = width  * option_graphics_int(asset_hndl_ptr(&dr->options), "msaa", 4, 2, 1);
+  int hdrheight = height * option_graphics_int(asset_hndl_ptr(&dr->options), "msaa", 4, 2, 1);
   
   glGenFramebuffers(1, &dr->hdr_fbo);
   glBindFramebuffer(GL_FRAMEBUFFER, dr->hdr_fbo);
@@ -343,8 +347,8 @@ deferred_renderer* deferred_renderer_new(asset_hndl options) {
   
   /* Shadow Buffers */
   
-  int shadow_width  = option_graphics_int(asset_hndl_ptr(dr->options), "shadows", 4096, 2048, 1024);
-  int shadow_height = option_graphics_int(asset_hndl_ptr(dr->options), "shadows", 4096, 2048, 1024);
+  int shadow_width  = option_graphics_int(asset_hndl_ptr(&dr->options), "shadows", 4096, 2048, 1024);
+  int shadow_height = option_graphics_int(asset_hndl_ptr(&dr->options), "shadows", 4096, 2048, 1024);
   
   dr->shadows_start[0] = 0.00; dr->shadows_end[0] = 0.10;
   dr->shadows_start[1] = 0.10; dr->shadows_end[1] = 0.25;
@@ -387,7 +391,7 @@ deferred_renderer* deferred_renderer_new(asset_hndl options) {
   dr->seed = 0;
   dr->glitch = 0.0;
   dr->time = 0.0;
-  dr->time_of_day = TIME_MORNING;
+  dr->time_of_day = 0;
   dr->exposure = 0.0;
   dr->exposure_speed = 1.0;
   dr->exposure_target = 0.4;
@@ -398,7 +402,7 @@ deferred_renderer* deferred_renderer_new(asset_hndl options) {
   dr->render_objects_num = 0;
   dr->render_objects = NULL;
   
-  glTexEnvf(GL_TEXTURE_FILTER_CONTROL, GL_TEXTURE_LOD_BIAS, config_float(asset_hndl_ptr(dr->options), "lod_bias"));
+  glTexEnvf(GL_TEXTURE_FILTER_CONTROL, GL_TEXTURE_LOD_BIAS, config_float(asset_hndl_ptr(&dr->options), "lod_bias"));
   
   return dr;
   
@@ -444,6 +448,8 @@ void deferred_renderer_delete(deferred_renderer* dr) {
   
   folder_unload(P("$CORANGE/shaders/deferred/"));
   
+  sky_delete(dr->sky);
+  
   free(dr);
 }
 
@@ -471,8 +477,9 @@ void deferred_renderer_set_sea_enabled(deferred_renderer* dr, bool enabled) {
   dr->sea_enabled = enabled;
 }
 
-void deferred_renderer_set_tod(deferred_renderer* dr, float tod) {
+void deferred_renderer_set_tod(deferred_renderer* dr, float tod, int seed) {
   dr->time_of_day = tod;
+  sky_update(dr->sky, dr->time_of_day, 0);
 }
 
 void deferred_renderer_add_dyn_light(deferred_renderer* dr, light* l) {
@@ -508,10 +515,10 @@ static void shadow_mapper_transforms(deferred_renderer* dr, int i, mat4* view, m
   f = frustum_slice(f, dr->shadows_start[i], dr->shadows_end[i]);
   
   vec3 center = frustum_center(f);
-  if (sky_isday(dr->time_of_day)) {
-    *view = mat4_view_look_at(center, vec3_add(center, sky_sun_direction(dr->time_of_day)), vec3_up());
+  if (dr->sky->is_day) {
+    *view = mat4_view_look_at(center, vec3_add(center, dr->sky->sun_direction), vec3_up());
   } else {
-    *view = mat4_view_look_at(center, vec3_add(center, sky_moon_direction(dr->time_of_day)), vec3_up());
+    *view = mat4_view_look_at(center, vec3_add(center, dr->sky->moon_direction), vec3_up());
   }
   
   f = frustum_translate(f, vec3_neg(center));
@@ -531,10 +538,10 @@ static void shadow_mapper_transforms(deferred_renderer* dr, int i, mat4* view, m
   vec3 offset = vec3_fmod(center, pixel);
   center = vec3_sub(center, offset);
   
-  if (sky_isday(dr->time_of_day)) {
-    *view = mat4_view_look_at(center, vec3_add(center, sky_sun_direction(dr->time_of_day)), vec3_up());
+  if (dr->sky->is_day) {
+    *view = mat4_view_look_at(center, vec3_add(center, dr->sky->sun_direction), vec3_up());
   } else {
-    *view = mat4_view_look_at(center, vec3_add(center, sky_moon_direction(dr->time_of_day)), vec3_up());
+    *view = mat4_view_look_at(center, vec3_add(center, dr->sky->moon_direction), vec3_up());
   }
   
   *nearclip = -range;
@@ -545,7 +552,7 @@ static void shadow_mapper_transforms(deferred_renderer* dr, int i, mat4* view, m
 
 static void render_shadows_vegetation(deferred_renderer* dr, int i, instance_object* io) {
   
-  shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_depth_veg));
+  shader_program* shader = material_first_program(asset_hndl_ptr(&dr->mat_depth_veg));
   shader_program_enable(shader);
   shader_program_set_mat4(shader, "view", dr->shadow_view[i]);
   shader_program_set_mat4(shader, "proj", dr->shadow_proj[i]);
@@ -553,7 +560,7 @@ static void render_shadows_vegetation(deferred_renderer* dr, int i, instance_obj
   shader_program_set_float(shader, "clip_far",  dr->shadow_far[i]);
   shader_program_set_float(shader, "time", dr->time);
   
-  renderable* r = asset_hndl_ptr(io->renderable);
+  renderable* r = asset_hndl_ptr(&io->renderable);
 
   if(r->is_rigged) { error("Static Object is rigged!"); }
   
@@ -561,7 +568,7 @@ static void render_shadows_vegetation(deferred_renderer* dr, int i, instance_obj
     
     renderable_surface* s = r->surfaces[j];
     
-    material_entry* me = material_get_entry(asset_hndl_ptr(r->material), j);
+    material_entry* me = material_get_entry(asset_hndl_ptr(&r->material), j);
     
     if (material_entry_has_item(me, "alpha_test")) {
       shader_program_set_texture(shader, "diffuse_map", 0, material_entry_item(me, "diffuse_map").as_asset);
@@ -602,7 +609,7 @@ static void render_shadows_static(deferred_renderer* dr, int i, static_object* s
   
   mat4 world = mat4_world(s->position, s->scale, s->rotation);
   
-  shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_depth));
+  shader_program* shader = material_first_program(asset_hndl_ptr(&dr->mat_depth));
   shader_program_enable(shader);
   shader_program_set_mat4(shader, "world", world);
   shader_program_set_mat4(shader, "view",  dr->shadow_view[i]);
@@ -610,7 +617,7 @@ static void render_shadows_static(deferred_renderer* dr, int i, static_object* s
   shader_program_set_float(shader, "clip_near", dr->shadow_near[i]);
   shader_program_set_float(shader, "clip_far",  dr->shadow_far[i]);
   
-  renderable* r = asset_hndl_ptr(s->renderable);
+  renderable* r = asset_hndl_ptr(&s->renderable);
 
   if(r->is_rigged) { error("Static Object is rigged!"); }
   
@@ -620,7 +627,7 @@ static void render_shadows_static(deferred_renderer* dr, int i, static_object* s
     
     if (sphere_outside_box(sphere_transform(s->bound, world), dr->shadow_frustum[i])) { continue; }
     
-    material_entry* me = material_get_entry(asset_hndl_ptr(r->material), j);
+    material_entry* me = material_get_entry(asset_hndl_ptr(&r->material), j);
     
     if (material_entry_has_item(me, "alpha_test")) {
       shader_program_set_texture(shader, "diffuse_map", 0, material_entry_item(me, "diffuse_map").as_asset);
@@ -651,14 +658,14 @@ static void render_shadows_static(deferred_renderer* dr, int i, static_object* s
 
 static void render_shadows_instance(deferred_renderer* dr, int i, instance_object* io) {
   
-  shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_depth_ins));
+  shader_program* shader = material_first_program(asset_hndl_ptr(&dr->mat_depth_ins));
   shader_program_enable(shader);
   shader_program_set_mat4(shader, "view",  dr->shadow_view[i]);
   shader_program_set_mat4(shader, "proj",  dr->shadow_proj[i]);
   shader_program_set_float(shader, "clip_near", dr->shadow_near[i]);
   shader_program_set_float(shader, "clip_far",  dr->shadow_far[i]);
   
-  renderable* r = asset_hndl_ptr(io->renderable);
+  renderable* r = asset_hndl_ptr(&io->renderable);
 
   if(r->is_rigged) { error("Static Object is rigged!"); }
   
@@ -666,7 +673,7 @@ static void render_shadows_instance(deferred_renderer* dr, int i, instance_objec
     
     renderable_surface* s = r->surfaces[j];
     
-    material_entry* me = material_get_entry(asset_hndl_ptr(r->material), j);
+    material_entry* me = material_get_entry(asset_hndl_ptr(&r->material), j);
     
     if (material_entry_has_item(me, "alpha_test")) {
       shader_program_set_texture(shader, "diffuse_map", 0, material_entry_item(me, "diffuse_map").as_asset);
@@ -708,7 +715,7 @@ static void render_shadows_animated(deferred_renderer* dr, int i, animated_objec
   
   mat4 world = mat4_world( ao->position, ao->scale, ao->rotation );
   
-  skeleton* skel = asset_hndl_ptr(ao->skeleton);
+  skeleton* skel = asset_hndl_ptr(&ao->skeleton);
 
   if (skel->joint_count > MAX_BONES) { error("animated object skeleton has too many bones (over %i)", MAX_BONES); }
   if (ao->pose == NULL) { return; }
@@ -719,7 +726,7 @@ static void render_shadows_animated(deferred_renderer* dr, int i, animated_objec
     bone_matrices[j] = mat4_mul_mat4(ani, mat4_inverse(base));
   }
   
-  shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_depth_ani));
+  shader_program* shader = material_first_program(asset_hndl_ptr(&dr->mat_depth_ani));
   shader_program_enable(shader);
   shader_program_set_mat4(shader, "world", world);
   shader_program_set_mat4(shader, "view",  dr->shadow_view[i]);
@@ -728,7 +735,7 @@ static void render_shadows_animated(deferred_renderer* dr, int i, animated_objec
   shader_program_set_float(shader, "clip_near", dr->shadow_near[i]);
   shader_program_set_float(shader, "clip_far",  dr->shadow_far[i]);
   
-  renderable* r = asset_hndl_ptr(ao->renderable);
+  renderable* r = asset_hndl_ptr(&ao->renderable);
   
   if(!r->is_rigged) { error("animated object is not rigged"); }
   
@@ -737,7 +744,7 @@ static void render_shadows_animated(deferred_renderer* dr, int i, animated_objec
     
     if (sphere_outside_box(sphere_transform(s->bound, world), dr->shadow_frustum[i])) { continue; }
     
-    material_entry* me = material_get_entry(asset_hndl_ptr(r->material), j);
+    material_entry* me = material_get_entry(asset_hndl_ptr(&r->material), j);
     
     if (material_entry_has_item(me, "alpha_test")) {
       shader_program_set_texture(shader, "diffuse_map", 0, material_entry_item(me, "diffuse_map").as_asset);
@@ -773,15 +780,14 @@ static void render_shadows_animated(deferred_renderer* dr, int i, animated_objec
 
 static void render_shadows_landscape(deferred_renderer* dr, int i, landscape* l) {
 
-  terrain* terr = asset_hndl_ptr(l->heightmap);
+  terrain* terr = asset_hndl_ptr(&l->heightmap);
   vec3 scale = vec3_new(-(1.0 / terr->width) * l->size_x, 0.25, -(1.0 / terr->height) * l->size_y);
   vec3 translation = vec3_new(l->size_x / 2, 0, l->size_y / 2);
   
   // This assumes that X or Z scale of a chunk will never exceed the height.
-  float bound_scale_val = sqrt(pow(max(scale.x, scale.z), 2.0) * 2);
-  vec3 bound_scale = vec3_new(bound_scale_val, bound_scale_val, bound_scale_val);
+  float bound_scale = sqrt(pow(max(scale.x, scale.z), 2.0) * 2);
   
-  shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_depth_ter));
+  shader_program* shader = material_first_program(asset_hndl_ptr(&dr->mat_depth_ter));
   shader_program_enable(shader);
   shader_program_set_mat4(shader, "world", mat4_world( translation, scale, quat_id() ));
   shader_program_set_mat4(shader, "view",  dr->shadow_view[i]);
@@ -792,7 +798,7 @@ static void render_shadows_landscape(deferred_renderer* dr, int i, landscape* l)
   for(int j = 0; j < terr->num_chunks; j++) {
     
     terrain_chunk* tc = terr->chunks[j];
-    sphere bound = sphere_transform(tc->bound, mat4_world(translation, bound_scale, quat_id()));
+    sphere bound = sphere_scale(sphere_translate(tc->bound, translation), bound_scale);
     if (sphere_outside_box(bound, dr->shadow_frustum[i])) { continue; }
     
     float chunkx = (1.0 / (terr->num_rows-1)) *  l->size_x;
@@ -811,7 +817,6 @@ static void render_shadows_landscape(deferred_renderer* dr, int i, landscape* l)
     
     shader_program_enable_attribute(shader, "vPosition", 3, 12, (void*)0);
       
-      SDL_GL_CheckError();
       glDrawElements(GL_TRIANGLES, tc->num_indicies[buff_index], GL_UNSIGNED_INT, (void*)0);
     
     shader_program_disable_attribute(shader, "vPosition");
@@ -865,8 +870,8 @@ static void render_shadows(deferred_renderer* dr) {
       // HACK ALERT
       bool veg_found = false;
       if (dr->render_objects[j].type == RO_TYPE_INSTANCE) {
-        renderable* r = asset_hndl_ptr(dr->render_objects[j].instance_object->renderable);
-        material* m = asset_hndl_ptr(r->material);        
+        renderable* r = asset_hndl_ptr(&dr->render_objects[j].instance_object->renderable);
+        material* m = asset_hndl_ptr(&r->material);        
         
         for (int k = 0; k < m->num_entries; k++) {
           if (material_entry_item(m->entries[k], "material").as_int == 6) {
@@ -908,7 +913,7 @@ static void render_clear(deferred_renderer* dr) {
   glClearDepth(1.0f);
   glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
   
-  shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_clear));
+  shader_program* shader = material_first_program(asset_hndl_ptr(&dr->mat_clear));
   shader_program_enable(shader);
   shader_program_set_vec4(shader, "start", vec4_new(0.5, 0.5, 0.5, 1.0));
   shader_program_set_vec4(shader, "end",   vec4_new(0.0, 0.0, 0.0, 1.0));
@@ -934,7 +939,7 @@ static void render_cmesh(deferred_renderer* dr, cmesh* cm, mat4 world) {
     return;
   }
   
-  shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_static));
+  shader_program* shader = material_first_program(asset_hndl_ptr(&dr->mat_static));
   shader_program_enable(shader);
   shader_program_set_mat4(shader, "world", world);
   shader_program_set_mat4(shader, "view", dr->camera_view);
@@ -998,18 +1003,18 @@ static void render_static(deferred_renderer* dr, static_object* so) {
   frus = frustum_transform(frus, inv_proj);
   frus = frustum_transform(frus, inv_view);
   
-  if (config_bool(asset_hndl_ptr(dr->options), "render_colmeshes")) {
+  if (config_bool(asset_hndl_ptr(&dr->options), "render_colmeshes")) {
     if (!file_isloaded(so->collision_body.path)) {
       file_load(so->collision_body.path);
     }
-    render_cmesh(dr, asset_hndl_ptr(so->collision_body), world);
+    render_cmesh(dr, asset_hndl_ptr(&so->collision_body), world);
   }
   
-  renderable* r = asset_hndl_ptr(so->renderable);
+  renderable* r = asset_hndl_ptr(&so->renderable);
   
   if(r->is_rigged) { error("Static object is rigged!"); }
   
-  shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_static));
+  shader_program* shader = material_first_program(asset_hndl_ptr(&dr->mat_static));
   shader_program_enable(shader);
   shader_program_set_mat4(shader, "world", world);
   shader_program_set_mat4(shader, "view", dr->camera_view);
@@ -1023,9 +1028,9 @@ static void render_static(deferred_renderer* dr, static_object* so) {
     
     if (sphere_outside_box(sphere_transform(s->bound, world), dr->camera_frustum)) { continue; }
     
-    material_entry* me = material_get_entry(asset_hndl_ptr(r->material), i);
+    material_entry* me = material_get_entry(asset_hndl_ptr(&r->material), i);
     
-    if (config_bool(asset_hndl_ptr(dr->options), "render_white")) {
+    if (config_bool(asset_hndl_ptr(&dr->options), "render_white")) {
       shader_program_set_texture(shader, "diffuse_map", 0, dr->tex_grey);
     } else {
       shader_program_set_texture(shader, "diffuse_map", 0, material_entry_item(me, "diffuse_map").as_asset);
@@ -1066,18 +1071,18 @@ static void render_static(deferred_renderer* dr, static_object* so) {
 
 static void render_skin(deferred_renderer* dr, instance_object* io) {
   
-  if (config_bool(asset_hndl_ptr(dr->options), "render_colmeshes")) {
+  if (config_bool(asset_hndl_ptr(&dr->options), "render_colmeshes")) {
     if (!file_isloaded(io->collision_body.path)) {
       file_load(io->collision_body.path);
     }
     //render_cmesh(dr, asset_hndl_ptr(io->collision_body), world);
   }
   
-  renderable* r = asset_hndl_ptr(io->renderable);
+  renderable* r = asset_hndl_ptr(&io->renderable);
   
   if(r->is_rigged) { error("Static object is rigged!"); }
   
-  shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_skin));
+  shader_program* shader = material_first_program(asset_hndl_ptr(&dr->mat_skin));
   shader_program_enable(shader);
   shader_program_set_mat4(shader, "view", dr->camera_view);
   shader_program_set_mat4(shader, "proj", dr->camera_proj);
@@ -1088,9 +1093,9 @@ static void render_skin(deferred_renderer* dr, instance_object* io) {
     
     renderable_surface* s = r->surfaces[i];
     
-    material_entry* me = material_get_entry(asset_hndl_ptr(r->material), i);
+    material_entry* me = material_get_entry(asset_hndl_ptr(&r->material), i);
     
-    if (config_bool(asset_hndl_ptr(dr->options), "render_white")) {
+    if (config_bool(asset_hndl_ptr(&dr->options), "render_white")) {
       shader_program_set_texture(shader, "diffuse_map", 0, dr->tex_grey);
     } else {
       shader_program_set_texture(shader, "diffuse_map", 0, material_entry_item(me, "diffuse_map").as_asset);
@@ -1136,18 +1141,18 @@ static void render_skin(deferred_renderer* dr, instance_object* io) {
 
 static void render_instance(deferred_renderer* dr, instance_object* io) {
   
-  if (config_bool(asset_hndl_ptr(dr->options), "render_colmeshes")) {
+  if (config_bool(asset_hndl_ptr(&dr->options), "render_colmeshes")) {
     if (!file_isloaded(io->collision_body.path)) {
       file_load(io->collision_body.path);
     }
     //render_cmesh(dr, asset_hndl_ptr(io->collision_body), world);
   }
   
-  renderable* r = asset_hndl_ptr(io->renderable);
+  renderable* r = asset_hndl_ptr(&io->renderable);
   
   if(r->is_rigged) { error("Static object is rigged!"); }
   
-  shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_instance));
+  shader_program* shader = material_first_program(asset_hndl_ptr(&dr->mat_instance));
   shader_program_enable(shader);
   shader_program_set_mat4(shader, "view", dr->camera_view);
   shader_program_set_mat4(shader, "proj", dr->camera_proj);
@@ -1158,9 +1163,9 @@ static void render_instance(deferred_renderer* dr, instance_object* io) {
     
     renderable_surface* s = r->surfaces[i];
     
-    material_entry* me = material_get_entry(asset_hndl_ptr(r->material), i);
+    material_entry* me = material_get_entry(asset_hndl_ptr(&r->material), i);
     
-    if (config_bool(asset_hndl_ptr(dr->options), "render_white")) {
+    if (config_bool(asset_hndl_ptr(&dr->options), "render_white")) {
       shader_program_set_texture(shader, "diffuse_map", 0, dr->tex_grey);
     } else {
       shader_program_set_texture(shader, "diffuse_map", 0, material_entry_item(me, "diffuse_map").as_asset);
@@ -1206,18 +1211,18 @@ static void render_instance(deferred_renderer* dr, instance_object* io) {
 
 static void render_vegetation(deferred_renderer* dr, instance_object* io) {
   
-  if (config_bool(asset_hndl_ptr(dr->options), "render_colmeshes")) {
+  if (config_bool(asset_hndl_ptr(&dr->options), "render_colmeshes")) {
     if (!file_isloaded(io->collision_body.path)) {
       file_load(io->collision_body.path);
     }
     //render_cmesh(dr, asset_hndl_ptr(io->collision_body), world);
   }
   
-  renderable* r = asset_hndl_ptr(io->renderable);
+  renderable* r = asset_hndl_ptr(&io->renderable);
   
   if(r->is_rigged) { error("Static object is rigged!"); }
   
-  shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_vegetation));
+  shader_program* shader = material_first_program(asset_hndl_ptr(&dr->mat_vegetation));
   shader_program_enable(shader);
   shader_program_set_mat4(shader, "view", dr->camera_view);
   shader_program_set_mat4(shader, "proj", dr->camera_proj);
@@ -1229,9 +1234,9 @@ static void render_vegetation(deferred_renderer* dr, instance_object* io) {
     
     renderable_surface* s = r->surfaces[i];
     
-    material_entry* me = material_get_entry(asset_hndl_ptr(r->material), i);
+    material_entry* me = material_get_entry(asset_hndl_ptr(&r->material), i);
     
-    if (config_bool(asset_hndl_ptr(dr->options), "render_white")) {
+    if (config_bool(asset_hndl_ptr(&dr->options), "render_white")) {
       shader_program_set_texture(shader, "diffuse_map", 0, dr->tex_grey);
     } else {
       shader_program_set_texture(shader, "diffuse_map", 0, material_entry_item(me, "diffuse_map").as_asset);
@@ -1279,8 +1284,8 @@ static void render_vegetation(deferred_renderer* dr, instance_object* io) {
 
 static void render_animated(deferred_renderer* dr, animated_object* ao) {
     
-  renderable* r = asset_hndl_ptr(ao->renderable);
-  skeleton* skel = asset_hndl_ptr(ao->skeleton);
+  renderable* r = asset_hndl_ptr(&ao->renderable);
+  skeleton* skel = asset_hndl_ptr(&ao->skeleton);
   
   if (!r->is_rigged) { error("Animated object is not rigged!"); }
   if (skel->joint_count > MAX_BONES) { error("animated object skeleton has too many bones (over %i)", MAX_BONES); }
@@ -1294,7 +1299,7 @@ static void render_animated(deferred_renderer* dr, animated_object* ao) {
   
   mat4 world = mat4_world(ao->position, ao->scale, ao->rotation);
   
-  shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_animated));
+  shader_program* shader = material_first_program(asset_hndl_ptr(&dr->mat_animated));
   shader_program_enable(shader);
   shader_program_set_mat4(shader, "world", world);
   shader_program_set_mat4(shader, "view", dr->camera_view);
@@ -1309,9 +1314,9 @@ static void render_animated(deferred_renderer* dr, animated_object* ao) {
     
     if (sphere_outside_box(sphere_transform(s->bound, world), dr->camera_frustum)) { continue; }
     
-    material_entry* me = material_get_entry(asset_hndl_ptr(r->material), i);
+    material_entry* me = material_get_entry(asset_hndl_ptr(&r->material), i);
     
-    if (config_bool(asset_hndl_ptr(dr->options), "render_white")) {
+    if (config_bool(asset_hndl_ptr(&dr->options), "render_white")) {
       shader_program_set_texture(shader, "diffuse_map", 0, dr->tex_grey);
     } else {
       shader_program_set_texture(shader, "diffuse_map", 0, material_entry_item(me, "diffuse_map").as_asset);
@@ -1357,12 +1362,12 @@ void render_landscape(deferred_renderer* dr, landscape* l) {
   
   //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-  terrain* terr = asset_hndl_ptr(l->heightmap);
+  terrain* terr = asset_hndl_ptr(&l->heightmap);
   
   vec3 scale = vec3_new(-(1.0 / terr->width) * l->size_x, l->scale, -(1.0 / terr->height) * l->size_y);
   vec3 translation = vec3_new(l->size_x / 2, 0, l->size_y / 2);
   
-  if (config_bool(asset_hndl_ptr(dr->options), "render_colmeshes")) {
+  if (config_bool(asset_hndl_ptr(&dr->options), "render_colmeshes")) {
   
     for(int i = 0; i < terr->num_chunks; i++) {
           
@@ -1374,10 +1379,9 @@ void render_landscape(deferred_renderer* dr, landscape* l) {
   }
   
   /* This assumes that X or Z scale of a chunk will never exceed the height. */
-  float bound_scale_val = sqrt(pow(max(scale.x, scale.z), 2.0) * 2);
-  vec3 bound_scale = vec3_new(bound_scale_val, bound_scale_val, bound_scale_val);  
+  float bound_scale = sqrt(pow(max(scale.x, scale.z), 2.0) * 2);
   
-  shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_terrain));
+  shader_program* shader = material_first_program(asset_hndl_ptr(&dr->mat_terrain));
   
   shader_program_enable(shader);
   shader_program_set_mat4(shader, "world", landscape_world(l));
@@ -1388,7 +1392,7 @@ void render_landscape(deferred_renderer* dr, landscape* l) {
   shader_program_set_float(shader, "size_x", l->size_x);
   shader_program_set_float(shader, "size_y", l->size_y);
   
-  if (config_bool(asset_hndl_ptr(dr->options), "render_white")) {
+  if (config_bool(asset_hndl_ptr(&dr->options), "render_white")) {
     shader_program_set_texture(shader, "ground0", 0, dr->tex_grey);
     shader_program_set_texture(shader, "ground1", 1, dr->tex_grey);
     shader_program_set_texture(shader, "ground2", 2, dr->tex_grey);
@@ -1409,7 +1413,7 @@ void render_landscape(deferred_renderer* dr, landscape* l) {
   for(int i = 0; i < terr->num_chunks; i++) {
     
     terrain_chunk* tc = terr->chunks[i];
-    sphere bound = sphere_transform(tc->bound, mat4_world(translation, bound_scale, quat_id()));
+    sphere bound = sphere_scale(sphere_translate(tc->bound, translation), bound_scale);
     if (sphere_outside_box(bound, dr->camera_frustum)) { continue; }
     
     float chunkx = (1.0 / (terr->num_rows-1)) *  l->size_x;
@@ -1456,7 +1460,7 @@ void render_light(deferred_renderer* dr, light* l) {
   light_pos = mat4_mul_vec3(camera_view_matrix(dr->camera), light_pos);
   light_pos = mat4_mul_vec3(camera_proj_matrix(dr->camera), light_pos);
   
-  shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_ui));
+  shader_program* shader = material_first_program(asset_hndl_ptr(&dr->mat_ui));
   shader_program_enable(shader);
   shader_program_set_texture(shader, "diffuse", 0, asset_hndl_new_load(P("$CORANGE/ui/lightbulb.dds")));
   shader_program_set_float(shader, "alpha_test", 0.5);
@@ -1499,7 +1503,7 @@ void render_axis(deferred_renderer* dr, mat4 world) {
   z_pos = vec4_div(z_pos, z_pos.w);
   base_pos = vec4_div(base_pos, base_pos.w);
 
-  shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_ui));
+  shader_program* shader = material_first_program(asset_hndl_ptr(&dr->mat_ui));
   shader_program_enable(shader);
   shader_program_set_mat4(shader, "world", mat4_id());
   shader_program_set_mat4(shader, "view", dr->camera_view);
@@ -1577,7 +1581,7 @@ void render_paint_circle(deferred_renderer* dr, mat4 axis, float radius) {
   
   render_axis(dr, axis);
   
-  shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_ui));
+  shader_program* shader = material_first_program(asset_hndl_ptr(&dr->mat_ui));
   shader_program_enable(shader);
   shader_program_set_mat4(shader, "world", mat4_id());
   shader_program_set_mat4(shader, "view", dr->camera_view);
@@ -1674,8 +1678,8 @@ static void render_gbuffer(deferred_renderer* dr) {
   int width = graphics_viewport_width();
   int height = graphics_viewport_height();
   
-  int gwidth  = width  * option_graphics_int(asset_hndl_ptr(dr->options), "msaa", 4, 2, 1);
-  int gheight = height * option_graphics_int(asset_hndl_ptr(dr->options), "msaa", 4, 2, 1);
+  int gwidth  = width  * option_graphics_int(asset_hndl_ptr(&dr->options), "msaa", 4, 2, 1);
+  int gheight = height * option_graphics_int(asset_hndl_ptr(&dr->options), "msaa", 4, 2, 1);
   
   glBindFramebuffer(GL_FRAMEBUFFER, dr->gfbo);
   glDrawBuffers(3, (GLenum[]){ GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 });
@@ -1689,8 +1693,8 @@ static void render_gbuffer(deferred_renderer* dr) {
     // HACK ALERT
     bool veg_found = false;
     if (dr->render_objects[j].type == RO_TYPE_INSTANCE) {
-      renderable* r = asset_hndl_ptr(dr->render_objects[j].instance_object->renderable);
-      material* m = asset_hndl_ptr(r->material);
+      renderable* r = asset_hndl_ptr(&dr->render_objects[j].instance_object->renderable);
+      material* m = asset_hndl_ptr(&r->material);
       
       for (int i = 0; i < m->num_entries; i++) {
         if (material_entry_item(m->entries[i], "material").as_int == 6) {
@@ -1704,8 +1708,8 @@ static void render_gbuffer(deferred_renderer* dr) {
     
     bool skin_found = false;
     if (dr->render_objects[j].type == RO_TYPE_INSTANCE) {
-      renderable* r = asset_hndl_ptr(dr->render_objects[j].instance_object->renderable);
-      material* m = asset_hndl_ptr(r->material);
+      renderable* r = asset_hndl_ptr(&dr->render_objects[j].instance_object->renderable);
+      material* m = asset_hndl_ptr(&r->material);
       
       for (int i = 0; i < m->num_entries; i++) {
         if (material_entry_item(m->entries[i], "material").as_int == 7) {
@@ -1752,15 +1756,15 @@ static void render_ssao(deferred_renderer* dr) {
   int width = graphics_viewport_width();
   int height = graphics_viewport_height();
   
-  int ssaowidth  = width  * option_graphics_int(asset_hndl_ptr(dr->options), "ssao", 1, 0.5, 0.25);
-  int ssaoheight = height * option_graphics_int(asset_hndl_ptr(dr->options), "ssao", 1, 0.5, 0.25);
+  int ssaowidth  = width  * option_graphics_int(asset_hndl_ptr(&dr->options), "ssao", 1, 0.5, 0.25);
+  int ssaoheight = height * option_graphics_int(asset_hndl_ptr(&dr->options), "ssao", 1, 0.5, 0.25);
   
   glBindFramebuffer(GL_FRAMEBUFFER, dr->ssao_fbo);
   glViewport(0, 0, ssaowidth, ssaoheight);
   glClearColor(1, 1, 1, 1);
   glClear( GL_COLOR_BUFFER_BIT );
   
-  shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_ssao));
+  shader_program* shader = material_first_program(asset_hndl_ptr(&dr->mat_ssao));
   shader_program_enable(shader);
   shader_program_set_mat4(shader, "world", mat4_id());
   shader_program_set_mat4(shader, "view", mat4_id());
@@ -1800,8 +1804,8 @@ static void render_skies(deferred_renderer* dr) {
   int width = graphics_viewport_width();
   int height = graphics_viewport_height();
   
-  int hdrwidth  = width  * option_graphics_int(asset_hndl_ptr(dr->options), "msaa", 4, 2, 1);
-  int hdrheight = height * option_graphics_int(asset_hndl_ptr(dr->options), "msaa", 4, 2, 1);
+  int hdrwidth  = width  * option_graphics_int(asset_hndl_ptr(&dr->options), "msaa", 4, 2, 1);
+  int hdrheight = height * option_graphics_int(asset_hndl_ptr(&dr->options), "msaa", 4, 2, 1);
   
   glBindFramebuffer(GL_FRAMEBUFFER, dr->hdr_fbo);
   glViewport(0, 0, hdrwidth, hdrheight);
@@ -1809,15 +1813,15 @@ static void render_skies(deferred_renderer* dr) {
   
   {
   
-    shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_skydome));
+    shader_program* shader = material_first_program(asset_hndl_ptr(&dr->mat_skydome));
     shader_program_enable(shader);
     shader_program_set_mat4(shader, "world", mat4_world(dr->camera->position, vec3_new(200, 200, 200), quat_id()));
     shader_program_set_mat4(shader, "view", dr->camera_view);
     shader_program_set_mat4(shader, "proj", dr->camera_proj);
-    shader_program_set_vec3(shader, "light_direction", sky_sun_direction(dr->time_of_day));
+    shader_program_set_vec3(shader, "light_direction", dr->sky->sun_direction);
     //shader_program_set_vec3(shader, "camera_position", dr->camera->position);
     
-    renderable* skybox_r = asset_hndl_ptr(dr->mesh_skydome);
+    renderable* skybox_r = asset_hndl_ptr(&dr->mesh_skydome);
     renderable_surface* s = skybox_r->surfaces[0];
     
     glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
@@ -1841,16 +1845,16 @@ static void render_skies(deferred_renderer* dr) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE);
   
-    shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_sun));
+    shader_program* shader = material_first_program(asset_hndl_ptr(&dr->mat_sun));
     shader_program_enable(shader);
-    shader_program_set_mat4(shader, "world", mat4_world(dr->camera->position, vec3_one(), mat4_to_quat(sky_mesh_sun_world(dr->time_of_day))));
+    shader_program_set_mat4(shader, "world", mat4_world(dr->camera->position, vec3_one(), mat4_to_quat(dr->sky->world_sun)));
     shader_program_set_mat4(shader, "view", dr->camera_view);
     shader_program_set_mat4(shader, "proj", dr->camera_proj);
     shader_program_set_float(shader, "sun_brightness", 1.5w);
     shader_program_set_vec4(shader, "sun_color", vec4_one());
-    shader_program_set_texture(shader, "sun_texture", 0, sky_tex_sun(dr->time_of_day));
+    shader_program_set_texture(shader, "sun_texture", 0, dr->sky->sun_tex);
     
-    renderable* sun_r = asset_hndl_ptr(sky_mesh_sun(dr->time_of_day));
+    renderable* sun_r = asset_hndl_ptr(&dr->sky->sun_sprite);
     renderable_surface* s = sun_r->surfaces[0];
     
     glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
@@ -1878,22 +1882,22 @@ static void render_skies(deferred_renderer* dr) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   
-    shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_clouds));
+    shader_program* shader = material_first_program(asset_hndl_ptr(&dr->mat_clouds));
     shader_program_enable(shader);
     shader_program_set_mat4(shader, "world", mat4_world(dr->camera->position, vec3_new(10, 10, 10), quat_id()));
     shader_program_set_mat4(shader, "view", dr->camera_view);
     shader_program_set_mat4(shader, "proj", dr->camera_proj);
     shader_program_set_float(shader, "time", dr->time);
-    shader_program_set_float(shader, "wind", vec3_length(sky_wind(dr->time_of_day, dr->seed)));
+    shader_program_set_float(shader, "wind", vec3_length(dr->sky->wind));
     shader_program_set_vec3(shader, "cloud_color", vec3_one());
     shader_program_set_vec3(shader, "cloud_light", vec3_mul(vec3_one(), 2));
     
-    for (int i = 0; i < sky_clouds_num(); i++) {
+    for (int i = 0; i < 14; i++) {
     
-      shader_program_set_texture(shader, "cloud_texture", 0, sky_clouds_tex(i));
-      shader_program_set_float(shader, "opacity", sky_clouds_opacity(i, dr->time_of_day, dr->seed));
+      shader_program_set_texture(shader, "cloud_texture", 0, dr->sky->cloud_tex[i]);
+      shader_program_set_float(shader, "opacity", dr->sky->cloud_opacity[i]);
       
-      renderable* sun_r = asset_hndl_ptr(sky_clouds_mesh(i));
+      renderable* sun_r = asset_hndl_ptr(&dr->sky->cloud_mesh[i]);
       renderable_surface* s = sun_r->surfaces[0];
       
       glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
@@ -1932,8 +1936,8 @@ static void render_sea(deferred_renderer* dr) {
   int width = graphics_viewport_width();
   int height = graphics_viewport_height();
   
-  int hdrwidth  = width  * option_graphics_int(asset_hndl_ptr(dr->options), "msaa", 4, 2, 1);
-  int hdrheight = height * option_graphics_int(asset_hndl_ptr(dr->options), "msaa", 4, 2, 1);
+  int hdrwidth  = width  * option_graphics_int(asset_hndl_ptr(&dr->options), "msaa", 4, 2, 1);
+  int hdrheight = height * option_graphics_int(asset_hndl_ptr(&dr->options), "msaa", 4, 2, 1);
   
   glBindFramebuffer(GL_FRAMEBUFFER, dr->hdr_fbo);
   glViewport(0, 0, hdrwidth, hdrheight);
@@ -1944,7 +1948,7 @@ static void render_sea(deferred_renderer* dr) {
   vec3 position = vec3_new(dr->camera->position.x, 0, dr->camera->position.z);
   vec3 scale = vec3_new(1, 1, 1);
   
-  shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_sea));
+  shader_program* shader = material_first_program(asset_hndl_ptr(&dr->mat_sea));
   shader_program_enable(shader);
   shader_program_set_mat4(shader, "world", mat4_world(position, scale, quat_id()));
   shader_program_set_mat4(shader, "view", dr->camera_view);
@@ -1953,11 +1957,11 @@ static void render_sea(deferred_renderer* dr) {
   shader_program_set_float(shader, "clip_far",  dr->camera_far);
   shader_program_set_float(shader, "time", dr->time);
   
-  shader_program_set_float(shader, "light_power", sky_sun_power(dr->time_of_day));
-  shader_program_set_vec3(shader, "light_direction", sky_sun_direction(dr->time_of_day));
-  shader_program_set_vec3(shader, "light_diffuse", sky_sun_diffuse(dr->time_of_day));
-  shader_program_set_vec3(shader, "light_ambient", sky_sky_ambient(dr->time_of_day));
-  shader_program_set_vec3(shader, "light_specular", sky_sky_specular(dr->time_of_day));
+  shader_program_set_float(shader, "light_power", dr->sky->sun_power);
+  shader_program_set_vec3(shader, "light_direction", dr->sky->sun_direction);
+  shader_program_set_vec3(shader, "light_diffuse", dr->sky->sun_diffuse);
+  shader_program_set_vec3(shader, "light_ambient", dr->sky->sun_ambient);
+  shader_program_set_vec3(shader, "light_specular", dr->sky->sun_specular);
   shader_program_set_vec3(shader, "camera_position", dr->camera->position);
   
   shader_program_set_texture_id(shader, "depth", 0, dr->gdepth_texture);
@@ -1967,7 +1971,7 @@ static void render_sea(deferred_renderer* dr) {
   shader_program_set_texture(shader, "bump3", 4, dr->tex_sea_bump3);
   shader_program_set_texture(shader, "cube_sea", 5, dr->tex_cube_sea);
   
-  renderable* sea_r = asset_hndl_ptr(dr->mesh_sea);
+  renderable* sea_r = asset_hndl_ptr(&dr->mesh_sea);
   renderable_surface* s = sea_r->surfaces[0];
   
   glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
@@ -1997,13 +2001,13 @@ static void render_compose(deferred_renderer* dr) {
   int width = graphics_viewport_width();
   int height = graphics_viewport_height();
   
-  int hdrwidth  = width  * option_graphics_int(asset_hndl_ptr(dr->options), "msaa", 4, 2, 1);
-  int hdrheight = height * option_graphics_int(asset_hndl_ptr(dr->options), "msaa", 4, 2, 1);
+  int hdrwidth  = width  * option_graphics_int(asset_hndl_ptr(&dr->options), "msaa", 4, 2, 1);
+  int hdrheight = height * option_graphics_int(asset_hndl_ptr(&dr->options), "msaa", 4, 2, 1);
   
   glBindFramebuffer(GL_FRAMEBUFFER, dr->hdr_fbo);
   glViewport(0, 0, hdrwidth, hdrheight);
   
-  shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_compose));
+  shader_program* shader = material_first_program(asset_hndl_ptr(&dr->mat_compose));
   shader_program_enable(shader);
   shader_program_set_mat4(shader, "world", mat4_id());
   shader_program_set_mat4(shader, "view", mat4_id());
@@ -2036,39 +2040,41 @@ static void render_compose(deferred_renderer* dr) {
   vec3 light_ambient[DEFERRED_MAX_LIGHTS];
   vec3 light_specular[DEFERRED_MAX_LIGHTS];
   
-  light_power[0]    = sky_sun_power(dr->time_of_day);
-  light_falloff[0]  = 0;
-  light_position[0] = vec3_neg(sky_sun_direction(dr->time_of_day));
-  light_target[0]   = vec3_zero();
-  light_diffuse[0]  = sky_sun_diffuse(dr->time_of_day);
-  light_ambient[0]  = sky_sun_ambient(dr->time_of_day);
-  light_specular[0] = sky_sun_specular(dr->time_of_day);
+  if (dr->sky->is_day) {
+    light_power[0]    = dr->sky->sun_power;
+    light_falloff[0]  = 0;
+    light_position[0] = vec3_neg(dr->sky->sun_direction);
+    light_target[0]   = vec3_zero();
+    light_diffuse[0]  = dr->sky->sun_diffuse;
+    light_ambient[0]  = dr->sky->sun_ambient;
+    light_specular[0] = dr->sky->sun_specular;
+  } else {
+    light_power[0]    = dr->sky->moon_power;
+    light_falloff[0]  = 0;
+    light_position[0] = vec3_neg(dr->sky->moon_direction);
+    light_target[0]   = vec3_zero();
+    light_diffuse[0]  = dr->sky->moon_diffuse;
+    light_ambient[0]  = dr->sky->moon_ambient;
+    light_specular[0] = dr->sky->moon_specular;
+  }
   
-  light_power[1]    = sky_moon_power(dr->time_of_day);
+  light_power[1]    = dr->sky->sky_power;
   light_falloff[1]  = 0;
-  light_position[1] = vec3_neg(sky_moon_direction(dr->time_of_day));
+  light_position[1] = vec3_neg(dr->sky->sky_direction);
   light_target[1]   = vec3_zero();
-  light_diffuse[1]  = sky_moon_diffuse(dr->time_of_day);
-  light_ambient[1]  = sky_moon_ambient(dr->time_of_day);
-  light_specular[1] = sky_moon_specular(dr->time_of_day);
+  light_diffuse[1]  = dr->sky->sky_diffuse;
+  light_ambient[1]  = dr->sky->sky_ambient;
+  light_specular[1] = dr->sky->sky_specular;
   
-  light_power[2]    = sky_sky_power(dr->time_of_day);
+  light_power[2]    = dr->sky->ground_power;
   light_falloff[2]  = 0;
-  light_position[2] = vec3_neg(sky_sky_direction(dr->time_of_day));
+  light_position[2] = vec3_neg(dr->sky->ground_direction);
   light_target[2]   = vec3_zero();
-  light_diffuse[2]  = sky_sky_diffuse(dr->time_of_day);
-  light_ambient[2]  = sky_sky_ambient(dr->time_of_day);
-  light_specular[2] = sky_sky_specular(dr->time_of_day);
+  light_diffuse[2]  = dr->sky->ground_diffuse;
+  light_ambient[2]  = dr->sky->ground_ambient;
+  light_specular[2] = dr->sky->ground_specular;
   
-  light_power[3]    = sky_ground_power(dr->time_of_day);
-  light_falloff[3]  = 0;
-  light_position[3] = vec3_neg(sky_ground_direction(dr->time_of_day));
-  light_target[3]   = vec3_zero();
-  light_diffuse[3]  = sky_ground_diffuse(dr->time_of_day);
-  light_ambient[3]  = sky_ground_ambient(dr->time_of_day);
-  light_specular[3] = sky_ground_specular(dr->time_of_day);
-  
-  const int ln = 4;
+  const int ln = 3;
   for(int i = 0; i < dr->dyn_lights_num; i++) {
     light_power[i+ln]    = dr->dyn_light[i]->power;
     light_falloff[i+ln]  = dr->dyn_light[i]->falloff;
@@ -2080,7 +2086,6 @@ static void render_compose(deferred_renderer* dr) {
   }
   
   shader_program_set_int(shader, "lights_num", dr->dyn_lights_num + ln);
-  shader_program_set_int(shader, "light_shadows", sky_isday(dr->time_of_day) ? 0 : 1);
   shader_program_set_float_array(shader, "light_power", light_power, dr->dyn_lights_num + ln);
   shader_program_set_float_array(shader, "light_falloff", light_falloff, dr->dyn_lights_num + ln);
   shader_program_set_vec3_array(shader, "light_position", light_position, dr->dyn_lights_num + ln);
@@ -2110,32 +2115,32 @@ static void render_particles(deferred_renderer* dr) {
   int width = graphics_viewport_width();
   int height = graphics_viewport_height();
   
-  int hdrwidth  = width  * option_graphics_int(asset_hndl_ptr(dr->options), "msaa", 4, 2, 1);
-  int hdrheight = height * option_graphics_int(asset_hndl_ptr(dr->options), "msaa", 4, 2, 1);
+  int hdrwidth  = width  * option_graphics_int(asset_hndl_ptr(&dr->options), "msaa", 4, 2, 1);
+  int hdrheight = height * option_graphics_int(asset_hndl_ptr(&dr->options), "msaa", 4, 2, 1);
   
   glBindFramebuffer(GL_FRAMEBUFFER, dr->hdr_fbo);
   glViewport(0, 0, hdrwidth, hdrheight);
   
   glEnable(GL_BLEND);
   
-  shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_particles));
+  shader_program* shader = material_first_program(asset_hndl_ptr(&dr->mat_particles));
   shader_program_enable(shader);
   shader_program_set_mat4(shader, "view", dr->camera_view);
   shader_program_set_mat4(shader, "proj", dr->camera_proj);
   shader_program_set_float(shader, "clip_near", dr->camera_near);
   shader_program_set_float(shader, "clip_far",  dr->camera_far);
 
-  shader_program_set_float(shader, "light_power", sky_sun_power(dr->time_of_day));
-  shader_program_set_vec3(shader, "light_direction", sky_sun_direction(dr->time_of_day));
-  shader_program_set_vec3(shader, "light_diffuse", sky_sun_diffuse(dr->time_of_day));
-  shader_program_set_vec3(shader, "light_ambient", sky_sky_ambient(dr->time_of_day));
+  shader_program_set_float(shader, "light_power", dr->sky->sun_power);
+  shader_program_set_vec3(shader, "light_direction", dr->sky->sun_direction);
+  shader_program_set_vec3(shader, "light_diffuse", dr->sky->sun_diffuse);
+  shader_program_set_vec3(shader, "light_ambient", dr->sky->sun_ambient);
   
   for (int i = 0; i < dr->render_objects_num; i++) {
     
     if (dr->render_objects[i].type != RO_TYPE_PARTICLES) { continue; }
     
     particles* p = dr->render_objects[i].particles;
-    effect* e = asset_hndl_ptr(p->effect);
+    effect* e = asset_hndl_ptr(&p->effect);
     
     glBlendFunc(e->blend_src, e->blend_dst);
     
@@ -2187,7 +2192,7 @@ static void render_tonemap(deferred_renderer* dr) {
   glBindFramebuffer(GL_FRAMEBUFFER, dr->ldr_back_fbo);
   glViewport(0, 0, graphics_viewport_width(), graphics_viewport_height());
 
-  shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_tonemap));
+  shader_program* shader = material_first_program(asset_hndl_ptr(&dr->mat_tonemap));
   shader_program_enable(shader);
   shader_program_set_mat4(shader, "world", mat4_id());
   shader_program_set_mat4(shader, "view", mat4_id());
@@ -2239,7 +2244,7 @@ static void render_post0(deferred_renderer* dr) {
   glClearColor(1.0, 0.0, 0.0, 1.0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   
-  shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_post0));
+  shader_program* shader = material_first_program(asset_hndl_ptr(&dr->mat_post0));
   shader_program_enable(shader);
   shader_program_set_mat4(shader, "world", mat4_id());
   shader_program_set_mat4(shader, "view", mat4_id());
@@ -2284,7 +2289,7 @@ static void render_post1(deferred_renderer* dr) {
   glClearColor(1.0, 0.0, 0.0, 1.0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   
-  shader_program* shader = material_first_program(asset_hndl_ptr(dr->mat_post1));
+  shader_program* shader = material_first_program(asset_hndl_ptr(&dr->mat_post1));
   shader_program_enable(shader);
   shader_program_set_mat4(shader, "world", mat4_id());
   shader_program_set_mat4(shader, "view", mat4_id());
@@ -2299,7 +2304,7 @@ static void render_post1(deferred_renderer* dr) {
   shader_program_set_float(shader, "time", dr->time);
   shader_program_set_int(shader, "width", graphics_viewport_width());
   shader_program_set_int(shader, "height", graphics_viewport_height());
-  shader_program_set_int(shader, "fxaa_quality", config_int(asset_hndl_ptr(dr->options), "fxaa"));
+  shader_program_set_int(shader, "fxaa_quality", config_int(asset_hndl_ptr(&dr->options), "fxaa"));
   
   shader_program_enable_attribute(shader, "vPosition",  3, 3, quad_position);
   shader_program_enable_attribute(shader, "vTexcoord",  2, 2, quad_texcoord);

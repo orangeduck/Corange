@@ -27,7 +27,6 @@ uniform sampler2D skin_lookup;
 uniform vec3 camera_position;
 
 uniform int lights_num;
-uniform int light_shadows;
 uniform float light_power[MAX_LIGHTS];
 uniform float light_falloff[MAX_LIGHTS];
 uniform vec3 light_position[MAX_LIGHTS];
@@ -190,17 +189,14 @@ void main() {
     float light_inrim = pow(clamp(n_dot_v, 0, 1), inner_rim_exp);
     float light_outrim = pow(clamp(1-n_dot_v, 0, 1), outer_rim_exp);
    
-    if (i == light_shadows) {
-      light_diff *= shadow;
-      light_spec *= shadow;
-      light_inrim *= shadow;
-      light_outrim *= shadow;
-    }
-    
     if (material == MAT_SKIN) {
-      float skin_shadow = (i == light_shadows) ? shadow : 1.0;
-      light_diff = texture2D( skin_lookup, clamp(vec2(n_dot_l * 0.5 * skin_shadow + 0.5, curvature), 0.1, 0.9)).rgb;
+      light_diff = texture2D( skin_lookup, clamp(vec2(n_dot_l * 0.5 + 0.5, curvature), 0.1, 0.9)).rgb;
     }
+   
+    light_diff *= clamp(shadow + i, 0, 1);
+    light_spec *= clamp(shadow + i, 0, 1);
+    light_inrim *= clamp(shadow + i, 0, 1);
+    light_outrim *= clamp(shadow + i, 0, 1);
     
     ambient    += power * light_ambient[i];
     diffuse    += power * light_diffuse[i]  * light_diff;

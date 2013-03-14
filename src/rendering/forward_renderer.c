@@ -230,7 +230,7 @@ void forward_renderer_set_color_correction(asset_hndl ah) {
 
 static void render_gradient() {
 
-  shader_program* gradient_prog = material_get_entry(asset_hndl_ptr(GRADIENT), 0)->program;
+  shader_program* gradient_prog = material_get_entry(asset_hndl_ptr(&GRADIENT), 0)->program;
 
   GLuint gradient_handle = shader_program_handle(gradient_prog);
   glUseProgram(gradient_handle);
@@ -329,7 +329,7 @@ void forward_renderer_end() {
   
   glBindFramebuffer(GL_FRAMEBUFFER, ldr_fbo);
   
-  shader_program* tonemap_prog = material_get_entry(asset_hndl_ptr(SCREEN_TONEMAP), 0)->program;
+  shader_program* tonemap_prog = material_get_entry(asset_hndl_ptr(&SCREEN_TONEMAP), 0)->program;
   
   GLuint tonemap_handle = shader_program_handle(tonemap_prog);
   glUseProgram(tonemap_handle);
@@ -404,7 +404,7 @@ void forward_renderer_end() {
   
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   
-  shader_program* post_prog = material_get_entry(asset_hndl_ptr(SCREEN_POST), 0)->program;
+  shader_program* post_prog = material_get_entry(asset_hndl_ptr(&SCREEN_POST), 0)->program;
   
   GLuint post_handle = shader_program_handle(post_prog);
   glUseProgram(post_handle);
@@ -424,12 +424,12 @@ void forward_renderer_end() {
   glUniform1i(glGetUniformLocation(post_handle, "diffuse_texture"), 0);
   
   glActiveTexture(GL_TEXTURE0 + 1 );
-  glBindTexture(GL_TEXTURE_2D, texture_handle(asset_hndl_ptr(VIGNETTING)));
+  glBindTexture(GL_TEXTURE_2D, texture_handle(asset_hndl_ptr(&VIGNETTING)));
   glEnable(GL_TEXTURE_2D);
   glUniform1i(glGetUniformLocation(post_handle, "vignetting_texture"), 1);
   
   glActiveTexture(GL_TEXTURE0 + 2 );
-  glBindTexture(GL_TEXTURE_3D, texture_handle(asset_hndl_ptr(COLOR_CORRECTION)));
+  glBindTexture(GL_TEXTURE_3D, texture_handle(asset_hndl_ptr(&COLOR_CORRECTION)));
   glEnable(GL_TEXTURE_3D);
   glUniform1i(glGetUniformLocation(post_handle, "lut"), 2);
   
@@ -588,7 +588,7 @@ static void forward_renderer_use_material_entry(material_entry* me) {
     if (type == mat_item_texture) {
       glUniform1i(loc, tex_counter);
       glActiveTexture(GL_TEXTURE0 + tex_counter);
-      glBindTexture(GL_TEXTURE_2D, texture_handle(asset_hndl_ptr(val.as_asset)));
+      glBindTexture(GL_TEXTURE_2D, texture_handle(asset_hndl_ptr(&val.as_asset)));
       tex_counter++;
     }
     if (type == mat_item_int)   { glUniform1i(loc, val.as_int); }
@@ -705,7 +705,7 @@ void forward_renderer_render_static(static_object* so) {
   mat4 r_world_matrix = mat4_world( so->position, so->scale, so->rotation );
   mat4_to_array(r_world_matrix, world_matrix);
   
-  renderable* r = asset_hndl_ptr(so->renderable);
+  renderable* r = asset_hndl_ptr(&so->renderable);
   
   if(r->is_rigged) {
     error("Static object is rigged!");
@@ -716,8 +716,8 @@ void forward_renderer_render_static(static_object* so) {
     renderable_surface* s = r->surfaces[i];
 
     
-    int mat_id = min(i, ((material*)asset_hndl_ptr(r->material))->num_entries-1);
-    material_entry* me = material_get_entry(asset_hndl_ptr(r->material), mat_id);
+    int mat_id = min(i, ((material*)asset_hndl_ptr(&r->material))->num_entries-1);
+    material_entry* me = material_get_entry(asset_hndl_ptr(&r->material), mat_id);
     
     forward_renderer_use_material_entry(me);
     SDL_GL_CheckError();
@@ -759,7 +759,7 @@ void forward_renderer_render_static_tess(static_object* so) {
   mat4 r_world_matrix = mat4_world( so->position, so->scale, so->rotation );
   mat4_to_array(r_world_matrix, world_matrix);
   
-  renderable* r = asset_hndl_ptr(so->renderable);
+  renderable* r = asset_hndl_ptr(&so->renderable);
   
   if(r->is_rigged) {
     error("Static object is rigged!");
@@ -769,8 +769,8 @@ void forward_renderer_render_static_tess(static_object* so) {
     
     renderable_surface* s = r->surfaces[i];
     
-    int mat_id = min(i, ((material*)asset_hndl_ptr(r->material))->num_entries-1);
-    material_entry* me = material_get_entry(asset_hndl_ptr(r->material), mat_id);
+    int mat_id = min(i, ((material*)asset_hndl_ptr(&r->material))->num_entries-1);
+    material_entry* me = material_get_entry(asset_hndl_ptr(&r->material), mat_id);
     
     forward_renderer_use_material_entry(me);
     
@@ -809,7 +809,7 @@ void forward_renderer_render_instance(instance_object* io) {
     mat4_to_array(r_world_matrix, world_matricies+(i*16));
   }
   
-  renderable* r = asset_hndl_ptr(io->renderable);
+  renderable* r = asset_hndl_ptr(&io->renderable);
   
   if(r->is_rigged) {
     error("Static object is rigged!");
@@ -819,8 +819,8 @@ void forward_renderer_render_instance(instance_object* io) {
     
     renderable_surface* s = r->surfaces[i];
     
-    int mat_id = min(i, ((material*)asset_hndl_ptr(r->material))->num_entries-1);
-    material_entry* me = material_get_entry(asset_hndl_ptr(r->material), mat_id);
+    int mat_id = min(i, ((material*)asset_hndl_ptr(&r->material))->num_entries-1);
+    material_entry* me = material_get_entry(asset_hndl_ptr(&r->material), mat_id);
     
     forward_renderer_use_material_entry(me);
     
@@ -853,7 +853,7 @@ void forward_renderer_render_physics(physics_object* po) {
   mat4 r_world_matrix = mat4_world( po->position, po->scale, po->rotation );
   mat4_to_array(r_world_matrix, world_matrix);
   
-  renderable* r = asset_hndl_ptr(po->renderable);
+  renderable* r = asset_hndl_ptr(&po->renderable);
   
   if(r->is_rigged) {
     error("Physics object is rigged!");
@@ -863,8 +863,8 @@ void forward_renderer_render_physics(physics_object* po) {
     
     renderable_surface* s = r->surfaces[i];
     
-    int mat_id = min(i, ((material*)asset_hndl_ptr(r->material))->num_entries-1);
-    material_entry* me = material_get_entry(asset_hndl_ptr(r->material), mat_id);
+    int mat_id = min(i, ((material*)asset_hndl_ptr(&r->material))->num_entries-1);
+    material_entry* me = material_get_entry(asset_hndl_ptr(&r->material), mat_id);
     
     forward_renderer_use_material_entry(me);
     
@@ -896,7 +896,7 @@ static float bone_matrix_data[4 * 4 * MAX_BONES];
 
 void forward_renderer_render_animated(animated_object* ao) {
 
-  skeleton* skel = asset_hndl_ptr(ao->skeleton);
+  skeleton* skel = asset_hndl_ptr(&ao->skeleton);
 
   if (skel->joint_count > MAX_BONES) {
     error("animated object skeleton has too many bones (over %i)", MAX_BONES);
@@ -916,7 +916,7 @@ void forward_renderer_render_animated(animated_object* ao) {
     mat4_to_array(bone_matrices[i], bone_matrix_data + (i * 4 * 4));
   }
   
-  renderable* r = asset_hndl_ptr(ao->renderable);
+  renderable* r = asset_hndl_ptr(&ao->renderable);
   
   if(!r->is_rigged) {
     error("animated object is not rigged");
@@ -926,8 +926,8 @@ void forward_renderer_render_animated(animated_object* ao) {
     
     renderable_surface* s = r->surfaces[i];
 
-    int mat_id = min(i, ((material*)asset_hndl_ptr(r->material))->num_entries-1);
-    material_entry* me = material_get_entry(asset_hndl_ptr(r->material), mat_id);
+    int mat_id = min(i, ((material*)asset_hndl_ptr(&r->material))->num_entries-1);
+    material_entry* me = material_get_entry(asset_hndl_ptr(&r->material), mat_id);
     
     forward_renderer_use_material_entry(me);
     

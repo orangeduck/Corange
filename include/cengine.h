@@ -94,6 +94,11 @@ char debug_str[2048];
 
 #define SDL_GL_CheckFrameBuffer() { GLenum __glfbstatus = glCheckFramebufferStatus(GL_FRAMEBUFFER); if(__glfbstatus != GL_FRAMEBUFFER_COMPLETE) { error("OpenGL FrameBuffer Error: %s", SDL_GL_FrameBufferErrorString(__glfbstatus)); } }
 
+/* Condtional Hinting */
+
+#define likely(x)   __builtin_expect((x),1)
+#define unlikely(x) __builtin_expect((x),0)
+
 /*
 ** == Timing ==
 */
@@ -565,6 +570,8 @@ sphere sphere_unit();
 sphere sphere_new(vec3 center, float radius);
 sphere sphere_merge(sphere s1, sphere s2);
 sphere sphere_transform(sphere s, mat4 world);
+sphere sphere_translate(sphere s, vec3 x);
+sphere sphere_scale(sphere s, float x);
 sphere sphere_transform_space(sphere s, mat3 space);
 
 sphere sphere_of_box(box bb);

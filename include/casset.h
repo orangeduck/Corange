@@ -30,6 +30,7 @@ typedef void asset;
 typedef struct {
   fpath path;
   asset* ptr;
+  uint32_t timestamp;
 } asset_hndl;
 
 asset_hndl asset_hndl_null();
@@ -37,10 +38,10 @@ asset_hndl asset_hndl_new(fpath path);
 asset_hndl asset_hndl_new_load(fpath path);
 asset_hndl asset_hndl_new_ptr(asset* as);
 
-bool asset_hndl_isnull(asset_hndl ah);
-fpath asset_hndl_path(asset_hndl ah);
-asset* asset_hndl_ptr(asset_hndl ah);
-bool asset_hndl_eq(asset_hndl ah0, asset_hndl ah1);
+bool asset_hndl_isnull(asset_hndl* ah);
+fpath asset_hndl_path(asset_hndl* ah);
+asset* asset_hndl_ptr(asset_hndl* ah);
+bool asset_hndl_eq(asset_hndl* ah0, asset_hndl* ah1);
 
 /* Init and Finish operations */
 void asset_init();

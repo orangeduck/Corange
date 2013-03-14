@@ -40,7 +40,8 @@ void instance_object_update(instance_object* io) {
   
   for (int i = 0; i < io->num_instances; i++) {
     instance_data id = io->instances[i];
-    world_data[i] = mat4_transpose(mat4_world(id.position, id.scale, id.rotation));
+    io->instances[i].world = mat4_world(id.position, id.scale, id.rotation);
+    world_data[i] = mat4_transpose(io->instances[i].world);
   }
   
   glBindBuffer(GL_ARRAY_BUFFER, io->world_buffer);
@@ -57,6 +58,7 @@ void instance_object_add_instance(instance_object* io, vec3 position, vec3 scale
   id.position = position;
   id.scale = scale;
   id.rotation = rotation;
+  id.world = mat4_world(id.position, id.scale, id.rotation);
   
   io->num_instances++;
   io->instances = realloc(io->instances, sizeof(instance_data) * io->num_instances);
@@ -84,9 +86,6 @@ void instance_object_rem_instance(instance_object* io, int i) {
 }
 
 mat4 instance_object_world(instance_object* io, int i) {
-  
-  instance_data id = io->instances[i]; 
-  return mat4_world(id.position, id.scale, id.rotation);
-  
+  return io->instances[i].world;
 }
 

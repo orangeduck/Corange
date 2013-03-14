@@ -130,7 +130,7 @@ void ui_text_draw(ui_text* t) {
   
   const float base_scale = 250;
   
-  font* f = asset_hndl_ptr(t->font);
+  font* f = asset_hndl_ptr(&t->font);
   
   int pos_i = 0;
   int uv_i = 0;
@@ -325,7 +325,7 @@ void ui_text_render(ui_text* t) {
   int height = graphics_viewport_height();
   
   asset_hndl mat = asset_hndl_new_load(P("$CORANGE/shaders/ui.mat"));  
-  shader_program* program_ui = material_get_entry(asset_hndl_ptr(mat), 0)->program;
+  shader_program* program_ui = material_get_entry(asset_hndl_ptr(&mat), 0)->program;
   
   shader_program_enable(program_ui);  
   shader_program_set_mat4(program_ui, "world", mat4_id());
@@ -334,7 +334,7 @@ void ui_text_render(ui_text* t) {
   shader_program_set_float(program_ui, "time", 0);
   shader_program_set_float(program_ui, "glitch", 0);
   
-  font* font = asset_hndl_ptr(t->font);
+  font* font = asset_hndl_ptr(&t->font);
   
   shader_program_set_texture(program_ui, "diffuse", 0, font->texture_map);
   shader_program_set_texture(program_ui, "random",  1, asset_hndl_new_load(P("$CORANGE/resources/random.dds")));

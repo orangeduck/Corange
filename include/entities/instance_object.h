@@ -16,6 +16,7 @@ typedef struct {
   vec3 position;
   vec3 scale;
   quat rotation;
+  mat4 world;
 } instance_data;
 
 typedef struct {

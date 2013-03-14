@@ -56,8 +56,8 @@ void set_language(asset_hndl t) {
 }
 
 char* S(char* id) {
-  if (!asset_hndl_isnull(curr_lang)) {
-    return lang_get(asset_hndl_ptr(curr_lang), id);
+  if (!asset_hndl_isnull(&curr_lang)) {
+    return lang_get(asset_hndl_ptr(&curr_lang), id);
   } else {
     error("Current Language hasn't been set!");
     return NULL;

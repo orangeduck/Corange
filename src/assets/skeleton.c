@@ -23,6 +23,23 @@ frame* frame_copy(frame* f) {
 
 }
 
+frame* frame_interpolate(frame* f0, frame* f1, float amount) {
+
+  frame* fn = frame_copy(f0);
+  frame_interpolate_to(f0, f1, amount, fn);
+  return fn;
+
+}
+
+void frame_interpolate_to(frame* f0, frame* f1, float amount, frame* out) {
+
+  for (int i = 0; i < out->joint_count; i++) {
+    out->joint_positions[i] = vec3_lerp(f0->joint_positions[i], f1->joint_positions[i], amount);
+    out->joint_rotations[i] = quat_slerp(f0->joint_rotations[i], f1->joint_rotations[i], amount);
+  }
+
+}
+
 void frame_delete(frame* f) {
   
   free(f->joint_parents);

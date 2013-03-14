@@ -22,6 +22,8 @@ animation* animation_new();
 void animation_delete(animation* a);
 
 frame* animation_new_frame(animation* a, float frametime, frame* base);
+frame* animation_sample(animation* a, float time);
+void animation_sample_to(animation* a, float time, frame* out);
 
 animation* ani_load_file(char* filename);
 

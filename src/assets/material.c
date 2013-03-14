@@ -77,7 +77,7 @@ static void material_generate_programs(material* m) {
         asset_hndl ah = me->items[j].as_asset;
         
         SDL_GL_CheckError();
-        shader_program_attach_shader(me->program, asset_hndl_ptr(ah));
+        shader_program_attach_shader(me->program, asset_hndl_ptr(&ah));
         attached = true;
         SDL_GL_CheckError();
       }

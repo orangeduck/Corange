@@ -68,7 +68,7 @@ static void projectile_collide(projectile* p, float timestep) {
     static_object* so = objects[i];
     col = collision_merge(col, sphere_collide_mesh(
       bound, velocity,
-      asset_hndl_ptr(so->collision_body),
+      asset_hndl_ptr(&so->collision_body),
       static_object_world(so)));
   }
   
@@ -80,7 +80,7 @@ static void projectile_collide(projectile* p, float timestep) {
     for (int j = 0; j < io->num_instances; j++) {
       col = collision_merge(col, sphere_collide_mesh(
         bound, velocity,
-        asset_hndl_ptr(io->collision_body),
+        asset_hndl_ptr(&io->collision_body),
         instance_object_world(io, j)));
     }
     

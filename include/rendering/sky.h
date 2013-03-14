@@ -11,48 +11,59 @@ static const float TIME_EVENING  = 0.40;
 static const float TIME_SUNSET   = 0.50;
 static const float TIME_MIDNIGHT = 0.75;
 
-bool sky_isday(float t);
-vec3 sky_wind(float t, int seed);
+typedef struct {
+  
+  float time;
+  uint32_t seed;
+  
+  asset_hndl cloud_mesh[14];
+  asset_hndl cloud_tex[14];
+  float cloud_opacity[14];
+  
+  asset_hndl sun_sprite;
+  asset_hndl sun_tex;
+  
+  asset_hndl moon_sprite;
+  asset_hndl moon_tex;
+  
+  asset_hndl stars_sprite;
+  asset_hndl stars_tex;
+  
+  bool is_day;
+  vec3 wind;
+  
+  mat4 world_sun;
+  mat4 world_moon;
+  mat4 world_stars;
+  
+  float moon_power;
+  vec3 moon_direction;
+  vec3 moon_diffuse;
+  vec3 moon_ambient;
+  vec3 moon_specular;
+  
+  float sun_power;
+  vec3 sun_direction;
+  vec3 sun_diffuse;
+  vec3 sun_ambient;
+  vec3 sun_specular;
+  
+  float sky_power;
+  vec3 sky_direction;
+  vec3 sky_diffuse;
+  vec3 sky_ambient;
+  vec3 sky_specular;
+  
+  float ground_power;
+  vec3 ground_direction;
+  vec3 ground_diffuse;
+  vec3 ground_ambient;
+  vec3 ground_specular;
+  
+} sky;
 
-asset_hndl sky_mesh_sun(float t);
-asset_hndl sky_mesh_moon(float t);
-asset_hndl sky_mesh_stars(float t);
-
-asset_hndl sky_tex_sun(float t);
-asset_hndl sky_tex_moon(float t);
-asset_hndl sky_tex_stars(float t);
-
-mat4 sky_mesh_sun_world(float t);
-mat4 sky_mesh_moon_world(float t);
-mat4 sky_mesh_stars_world(float t);
-
-float sky_moon_power(float t);
-vec3 sky_moon_direction(float t);
-vec3 sky_moon_diffuse(float t);
-vec3 sky_moon_ambient(float t);
-vec3 sky_moon_specular(float t);
-
-float sky_sun_power(float t);
-vec3 sky_sun_direction(float t);
-vec3 sky_sun_diffuse(float t);
-vec3 sky_sun_ambient(float t);
-vec3 sky_sun_specular(float t);
-
-float sky_sky_power(float t);
-vec3 sky_sky_direction(float t);
-vec3 sky_sky_diffuse(float t);
-vec3 sky_sky_ambient(float t);
-vec3 sky_sky_specular(float t);
-
-float sky_ground_power(float t);
-vec3 sky_ground_direction(float t);
-vec3 sky_ground_diffuse(float t);
-vec3 sky_ground_ambient(float t);
-vec3 sky_ground_specular(float t);
-
-int sky_clouds_num();
-asset_hndl sky_clouds_mesh(int i);
-asset_hndl sky_clouds_tex(int i);
-float sky_clouds_opacity(int i, float t, int seed);
+sky* sky_new();
+void sky_delete(sky* s);
+void sky_update(sky* s, float t, uint32_t seed);
 
 #endif

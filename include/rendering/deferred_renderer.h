@@ -27,6 +27,8 @@
 #include "entities/projectile.h"
 #include "entities/landscape.h"
 
+#include "rendering/sky.h"
+
 enum {
   DEFERRED_MAX_LIGHTS     = 16,
   DEFERRED_MAX_DYN_LIGHTS = 13,
@@ -93,9 +95,13 @@ typedef struct {
   /* Camera */
   camera* camera;
   
+  /* Lights */
   int dyn_lights_num;
   light* dyn_light[DEFERRED_MAX_DYN_LIGHTS];
 
+  /* Sky */
+  sky* sky;
+  
   /* Materials */
   asset_hndl mat_static;
   asset_hndl mat_skin;
@@ -221,7 +227,7 @@ void deferred_renderer_set_vignetting(deferred_renderer* dr, asset_hndl v);
 void deferred_renderer_set_glitch(deferred_renderer* dr, float glitch);
 void deferred_renderer_set_skydome_enabled(deferred_renderer* dr, bool enabled);
 void deferred_renderer_set_sea_enabled(deferred_renderer* dr, bool enabled);
-void deferred_renderer_set_tod(deferred_renderer* dr, float tod);
+void deferred_renderer_set_tod(deferred_renderer* dr, float tod, int seed);
 
 void deferred_renderer_add(deferred_renderer* dr, render_object ro);
 void deferred_renderer_add_dyn_light(deferred_renderer* dr, light* l);

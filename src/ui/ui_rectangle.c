@@ -92,7 +92,7 @@ void ui_rectangle_render(ui_rectangle* r) {
   int height = graphics_viewport_height();
   
   asset_hndl mat = asset_hndl_new_load(P("$CORANGE/shaders/ui.mat"));  
-  shader_program* program_ui = material_get_entry(asset_hndl_ptr(mat), 0)->program;
+  shader_program* program_ui = material_get_entry(asset_hndl_ptr(&mat), 0)->program;
   
   shader_program_enable(program_ui);  
   shader_program_set_mat4(program_ui, "world", mat4_id());
@@ -102,7 +102,7 @@ void ui_rectangle_render(ui_rectangle* r) {
   glEnable(GL_BLEND);
   glBlendFunc(r->blend_src, r->blend_dst);
   
-  if (!asset_hndl_isnull(r->texture)) {
+  if (!asset_hndl_isnull(&r->texture)) {
     shader_program_set_texture(program_ui, "diffuse", 0, r->texture);
     shader_program_set_texture(program_ui, "random",  1, asset_hndl_new_load(P("$CORANGE/resources/random.dds")));
   }
