@@ -43,7 +43,6 @@ varying vec2 fTexcoord;
 
 float shadow_amount(vec3 position, mat4 light_view, mat4 light_proj, sampler2D light_depth, const float kernel, vec2 seed) {
  
-  const int samples = 8;
   const float bias = 0.001;
   
   const vec3[32] shadow_sample_sphere = vec3[32](
@@ -67,11 +66,20 @@ float shadow_amount(vec3 position, mat4 light_view, mat4 light_proj, sampler2D l
   
   float shade = 1.0;  
   
-  for (int i = 0; i < samples; i++) {
-    vec2 offset = reflect(shadow_sample_sphere[i].xy, seed);
-    float shadow_depth = texture2D( light_depth, pixel_coords + offset * kernel ).r;
-    shade = shade - sign(pixel_depth - shadow_depth - bias) * (float(1) / float(samples));
-  }
+  vec2 offset0 = reflect(shadow_sample_sphere[0].xy, seed);
+  vec2 offset1 = reflect(shadow_sample_sphere[1].xy, seed);
+  vec2 offset2 = reflect(shadow_sample_sphere[2].xy, seed);
+  vec2 offset3 = reflect(shadow_sample_sphere[3].xy, seed);
+  
+  float shadow_depth0 = texture2D( light_depth, pixel_coords + offset0 * kernel ).r;
+  float shadow_depth1 = texture2D( light_depth, pixel_coords + offset1 * kernel ).r;
+  float shadow_depth2 = texture2D( light_depth, pixel_coords + offset2 * kernel ).r;
+  float shadow_depth3 = texture2D( light_depth, pixel_coords + offset3 * kernel ).r;
+  
+  shade = shade - sign(pixel_depth - shadow_depth0 - bias) * (float(1) / float(4));
+  shade = shade - sign(pixel_depth - shadow_depth1 - bias) * (float(1) / float(4));
+  shade = shade - sign(pixel_depth - shadow_depth2 - bias) * (float(1) / float(4));
+  shade = shade - sign(pixel_depth - shadow_depth3 - bias) * (float(1) / float(4));
   
   return shade;
   

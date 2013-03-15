@@ -22,6 +22,7 @@ frame* frame_new();
 frame* frame_copy(frame* f);
 frame* frame_interpolate(frame* f0, frame* f1, float amount);
 void frame_interpolate_to(frame* f0, frame* f1, float amount, frame* out);
+void frame_decendants_to(frame* f0, frame* f1, float amount, int joint, frame* out);
 void frame_delete(frame* f);
 
 mat4 frame_joint_transform(frame* f, int i);
@@ -39,6 +40,7 @@ typedef struct {
 skeleton* skeleton_new();
 void skeleton_delete(skeleton* s);
 void skeleton_joint_add(skeleton* s, char* name, int parent);
+int skeleton_joint_id(skeleton* s, char* name);
 
 skeleton* skl_load_file(char* filename);
 

@@ -364,9 +364,9 @@ deferred_renderer* deferred_renderer_new(asset_hndl options) {
   int shadow_width  = option_graphics_int(asset_hndl_ptr(&dr->options), "shadows", 4096, 2048, 1024);
   int shadow_height = option_graphics_int(asset_hndl_ptr(&dr->options), "shadows", 4096, 2048, 1024);
   
-  dr->shadows_start[0] = 0.00; dr->shadows_end[0] = 0.10;
-  dr->shadows_start[1] = 0.10; dr->shadows_end[1] = 0.25;
-  dr->shadows_start[2] = 0.25; dr->shadows_end[2] = 0.50;
+  dr->shadows_start[0] = 0.000; dr->shadows_end[0] = 0.060;
+  dr->shadows_start[1] = 0.060; dr->shadows_end[1] = 0.070;
+  dr->shadows_start[2] = 0.070; dr->shadows_end[2] = 0.200;
   
   dr->shadows_widths[0] = shadow_width; dr->shadows_heights[0] = shadow_height;
   dr->shadows_widths[1] = shadow_width; dr->shadows_heights[1] = shadow_height;
@@ -735,9 +735,9 @@ static void render_shadows_animated(deferred_renderer* dr, int i, animated_objec
   if (ao->pose == NULL) { return; }
   
   for(int j = 0; j < skel->joint_count; j++) {
-    mat4 base = frame_joint_transform(skel->rest_pose, j);
-    mat4 ani = frame_joint_transform(ao->pose, j);
-    bone_matrices[j] = mat4_mul_mat4(ani, mat4_inverse(base));
+    mat4 base = skel->rest_pose->transforms_inv[j];
+    mat4 ani = ao->pose->transforms[j];
+    bone_matrices[j] = mat4_mul_mat4(ani, base);
   }
   
   shader_program* shader = material_first_program(asset_hndl_ptr(&dr->mat_depth_ani));
@@ -756,7 +756,7 @@ static void render_shadows_animated(deferred_renderer* dr, int i, animated_objec
   for(int j = 0; j < r->num_surfaces; j++) {
     renderable_surface* s = r->surfaces[j];
     
-    if (sphere_outside_box(sphere_transform(s->bound, world), dr->shadow_frustum[i])) { continue; }
+    //if (sphere_outside_box(sphere_transform(s->bound, world), dr->shadow_frustum[i])) { continue; }
     
     material_entry* me = material_get_entry(asset_hndl_ptr(&r->material), j);
     
@@ -792,19 +792,19 @@ static void render_shadows_animated(deferred_renderer* dr, int i, animated_objec
 
 }
 
-static void render_shadows_landscape_blobtree(deferred_renderer* dr, int i, shader* shader, landscape_blobtree* lbt) {
+static void render_shadows_landscape_blobtree(deferred_renderer* dr, int i, shader* shader, landscape_blobtree* lbt, terrain* terr) {
 
   if (sphere_outside_box(lbt->bound, dr->shadow_frustum[i])) { return; }
   
   if (!lbt->is_leaf) {
-    render_shadows_landscape_blobtree(dr, i, shader, lbt->child0);
-    render_shadows_landscape_blobtree(dr, i, shader, lbt->child1);
-    render_shadows_landscape_blobtree(dr, i, shader, lbt->child2);
-    render_shadows_landscape_blobtree(dr, i, shader, lbt->child3);
+    render_shadows_landscape_blobtree(dr, i, shader, lbt->child0, terr);
+    render_shadows_landscape_blobtree(dr, i, shader, lbt->child1, terr);
+    render_shadows_landscape_blobtree(dr, i, shader, lbt->child2, terr);
+    render_shadows_landscape_blobtree(dr, i, shader, lbt->child3, terr);
     return;
   }
   
-  terrain_chunk* tc = lbt->chunk;
+  terrain_chunk* tc = terr->chunks[lbt->chunk_index];
     
   float dist = vec3_dist_sqrd(dr->camera->position, lbt->bound.center) / (100 * NUM_TERRAIN_BUFFERS);
   int buff_index = clamp(dist, 0, NUM_TERRAIN_BUFFERS-1);
@@ -821,7 +821,9 @@ static void render_shadows_landscape_blobtree(deferred_renderer* dr, int i, shad
 }
 
 static void render_shadows_landscape(deferred_renderer* dr, int i, landscape* l) {
-
+  
+  terrain* terr = asset_hndl_ptr(&l->heightmap);
+  
   shader_program* shader = material_first_program(asset_hndl_ptr(&dr->mat_depth_ter));
   shader_program_enable(shader);
   shader_program_set_mat4(shader, "world", landscape_world(l));
@@ -832,7 +834,7 @@ static void render_shadows_landscape(deferred_renderer* dr, int i, landscape* l)
   
   if (unlikely(l->blobtree == NULL)) { error("Blobtree must be generated for landscape"); }
   
-  render_shadows_landscape_blobtree(dr, i, shader, l->blobtree);
+  render_shadows_landscape_blobtree(dr, i, shader, l->blobtree, terr);
   
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
@@ -862,7 +864,7 @@ static void render_shadows(deferred_renderer* dr) {
       &dr->shadow_view[i], &dr->shadow_proj[i],
       &dr->shadow_near[i], &dr->shadow_far[i]);
     
-    dr->shadow_frustum[i] = frustum_box(frustum_new_camera(dr->shadow_view[i], dr->shadow_proj[i]));
+    dr->shadow_frustum[i] = box_invert_depth(box_invert(frustum_box(frustum_new_camera(dr->shadow_view[i], dr->shadow_proj[i]))));
     
     glBindFramebuffer(GL_FRAMEBUFFER, dr->shadows_fbo[i]);  
     glViewport( 0, 0, dr->shadows_widths[i], dr->shadows_heights[i]);
@@ -1295,9 +1297,9 @@ static void render_animated(deferred_renderer* dr, animated_object* ao) {
   if (ao->pose == NULL) { return; }
   
   for(int i = 0; i < skel->joint_count; i++) {
-    mat4 base = frame_joint_transform(skel->rest_pose, i);
-    mat4 ani = frame_joint_transform(ao->pose, i);
-    bone_matrices[i] = mat4_mul_mat4(ani, mat4_inverse(base));
+    mat4 base = skel->rest_pose->transforms_inv[i];
+    mat4 ani = ao->pose->transforms[i];
+    bone_matrices[i] = mat4_mul_mat4(ani, base);
   }
   
   mat4 world = mat4_world(ao->position, ao->scale, ao->rotation);
@@ -1315,7 +1317,7 @@ static void render_animated(deferred_renderer* dr, animated_object* ao) {
     
     renderable_surface* s = r->surfaces[i];
     
-    if (sphere_outside_box(sphere_transform(s->bound, world), dr->camera_frustum)) { continue; }
+    //if (sphere_outside_box(sphere_transform(s->bound, world), dr->camera_frustum)) { continue; }
     
     material_entry* me = material_get_entry(asset_hndl_ptr(&r->material), i);
     
@@ -1364,15 +1366,15 @@ static void render_animated(deferred_renderer* dr, animated_object* ao) {
 void render_ellipsoid(deferred_renderer* dr, ellipsoid e);
 void render_plane(deferred_renderer* dr, plane p);
 
-static void render_landscape_blobtree(deferred_renderer* dr, shader* shader, landscape_blobtree* lbt) {
+static void render_landscape_blobtree(deferred_renderer* dr, shader* shader, landscape_blobtree* lbt, terrain* terr) {
   
   if (sphere_outside_box(lbt->bound, dr->camera_frustum)) { return; }
   
   if (!lbt->is_leaf) {
-    render_landscape_blobtree(dr, shader, lbt->child0);
-    render_landscape_blobtree(dr, shader, lbt->child1);
-    render_landscape_blobtree(dr, shader, lbt->child2);
-    render_landscape_blobtree(dr, shader, lbt->child3);
+    render_landscape_blobtree(dr, shader, lbt->child0, terr);
+    render_landscape_blobtree(dr, shader, lbt->child1, terr);
+    render_landscape_blobtree(dr, shader, lbt->child2, terr);
+    render_landscape_blobtree(dr, shader, lbt->child3, terr);
     return;
   }
   
@@ -1381,7 +1383,7 @@ static void render_landscape_blobtree(deferred_renderer* dr, shader* shader, lan
   float dist = vec3_dist_sqrd(dr->camera->position, lbt->bound.center) / (100 * NUM_TERRAIN_BUFFERS);
   int buff_index = clamp((int)dist, 0, NUM_TERRAIN_BUFFERS-1);
   
-  terrain_chunk* tc = lbt->chunk;
+  terrain_chunk* tc = terr->chunks[lbt->chunk_index];
   
   glBindBuffer(GL_ARRAY_BUFFER, tc->vertex_buffer);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tc->index_buffers[buff_index]);
@@ -1403,9 +1405,10 @@ static void render_landscape_blobtree(deferred_renderer* dr, shader* shader, lan
 static void render_landscape(deferred_renderer* dr, landscape* l) {
   
   //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
+  
+  terrain* terr = asset_hndl_ptr(&l->heightmap);
+  
   if (config_bool(asset_hndl_ptr(&dr->options), "render_colmeshes")) {
-    terrain* terr = asset_hndl_ptr(&l->heightmap);
     for(int i = 0; i < terr->num_chunks; i++) {
       terrain_chunk* tc = terr->chunks[i];
       render_cmesh(dr, tc->colmesh, landscape_world(l));  
@@ -1443,7 +1446,7 @@ static void render_landscape(deferred_renderer* dr, landscape* l) {
   
   if (unlikely(l->blobtree == NULL)) { error("Landscape blobtree must be generated!"); }
   
-  render_landscape_blobtree(dr, shader, l->blobtree);
+  render_landscape_blobtree(dr, shader, l->blobtree, terr);
   
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -1746,7 +1749,7 @@ static void render_gbuffer(deferred_renderer* dr) {
   dr->camera_proj = camera_proj_matrix(dr->camera);
   dr->camera_near = dr->camera->near_clip;
   dr->camera_far  = dr->camera->far_clip;
-  dr->camera_frustum = frustum_box(frustum_new_camera(dr->camera_view, dr->camera_proj));
+  dr->camera_frustum = box_invert_depth(frustum_box(frustum_new_camera(dr->camera_view, dr->camera_proj)));
   
   int width = graphics_viewport_width();
   int height = graphics_viewport_height();
@@ -1765,11 +1768,24 @@ static void render_gbuffer(deferred_renderer* dr) {
   //camera cam;
   //cam.position = vec3_zero();
   //cam.target = vec3_new(sin(dr->time), 1, cos(dr->time));
+  //cam.target = vec3_new(1, 1, 1);
   //cam.fov = dr->camera->fov;
   //cam.near_clip = dr->camera->near_clip;
   //cam.far_clip = dr->camera->far_clip;
   //frustum test_frust = frustum_new_camera(camera_view_matrix(&cam), camera_proj_matrix(&cam));
-  //dr->camera_frustum = frustum_box(test_frust);
+  //dr->camera_frustum = box_invert_depth(frustum_box(test_frust));
+  
+  //camera* oldcam = dr->camera;
+  //dr->camera = &cam;
+  
+  //shadow_mapper_transforms(dr, 0,
+  //  &dr->shadow_view[0], &dr->shadow_proj[0],
+  //  &dr->shadow_near[0], &dr->shadow_far[0]);
+  
+  //frustum test_frust2 = frustum_new_camera(dr->shadow_view[0], dr->shadow_proj[0]);
+  
+  //dr->camera_frustum = box_invert_depth(box_invert(frustum_box(test_frust2)));
+  //dr->camera = oldcam;
   /* END DEBUG */
   
   for ( int j = 0; j < dr->render_objects_num; j++) {
@@ -1833,6 +1849,7 @@ static void render_gbuffer(deferred_renderer* dr) {
 
   /* DEBUG */
   //render_frustum(dr, test_frust);
+  //render_frustum(dr, test_frust2);
   /* END DEBUG */
   
   glDisable(GL_DEPTH_TEST);

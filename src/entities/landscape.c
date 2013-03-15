@@ -31,7 +31,7 @@ landscape_blobtree* landscape_blobtree_new(landscape* l) {
         blobs[x + y * terr->num_rows] = malloc(sizeof(landscape_blobtree));
         blobs[x + y * terr->num_rows]->bound = bbound;
         blobs[x + y * terr->num_rows]->is_leaf = true;
-        blobs[x + y * terr->num_rows]->chunk = tc;
+        blobs[x + y * terr->num_rows]->chunk_index = x + y * terr->num_rows;
         blobs[x + y * terr->num_rows]->child0 = NULL;
         blobs[x + y * terr->num_rows]->child1 = NULL;
         blobs[x + y * terr->num_rows]->child2 = NULL;
@@ -50,7 +50,7 @@ landscape_blobtree* landscape_blobtree_new(landscape* l) {
         blobs[x + y * terr->num_rows] = malloc(sizeof(landscape_blobtree));
         blobs[x + y * terr->num_rows]->bound = sphere_merge_many(bounds, 4);
         blobs[x + y * terr->num_rows]->is_leaf = false;
-        blobs[x + y * terr->num_rows]->chunk = NULL;
+        blobs[x + y * terr->num_rows]->chunk_index = -1;
         blobs[x + y * terr->num_rows]->child0 = child0;
         blobs[x + y * terr->num_rows]->child1 = child1;
         blobs[x + y * terr->num_rows]->child2 = child2;

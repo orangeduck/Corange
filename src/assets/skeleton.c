@@ -32,10 +32,32 @@ frame* frame_interpolate(frame* f0, frame* f1, float amount) {
 }
 
 void frame_interpolate_to(frame* f0, frame* f1, float amount, frame* out) {
-
+  
   for (int i = 0; i < out->joint_count; i++) {
     out->joint_positions[i] = vec3_lerp(f0->joint_positions[i], f1->joint_positions[i], amount);
     out->joint_rotations[i] = quat_slerp(f0->joint_rotations[i], f1->joint_rotations[i], amount);
+  }
+  
+}
+
+static bool frame_decendant_of(frame* f, int decendent, int joint) {
+  
+  if (f->joint_parents[decendent] == joint) { return true;  }
+  if (f->joint_parents[decendent] == -1)    { return false; }
+  return frame_decendant_of(f, f->joint_parents[decendent], joint);
+  
+}
+
+void frame_decendants_to(frame* f0, frame* f1, float amount, int joint, frame* out) {
+
+  for (int i = 0; i < out->joint_count; i++) {
+    if (frame_decendant_of(out, i, joint) || (joint == i)) {
+      out->joint_positions[i] = vec3_lerp(f0->joint_positions[i], f1->joint_positions[i], amount);
+      out->joint_rotations[i] = quat_slerp(f0->joint_rotations[i], f1->joint_rotations[i], amount);
+    } else {
+      out->joint_positions[i] = vec3_lerp(f0->joint_positions[i], f1->joint_positions[i], 0.0);
+      out->joint_rotations[i] = quat_slerp(f0->joint_rotations[i], f1->joint_rotations[i], 0.0);
+    }
   }
 
 }
@@ -145,6 +167,17 @@ void skeleton_joint_add(skeleton* s, char* name, int parent) {
   strcpy(s->joint_names[s->joint_count-1], name);
   
   frame_joint_add(s->rest_pose, parent, vec3_zero(), quat_id());
+  
+}
+
+int skeleton_joint_id(skeleton* s, char* name) {
+  
+  for (int i = 0; i < s->joint_count; i++) {
+    if (strcmp(s->joint_names[i], name) == 0) { return i; }
+  }
+  
+  error("Skeleton has no joint named '%s'", name);
+  return -1;
   
 }
 

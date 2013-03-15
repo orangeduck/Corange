@@ -192,10 +192,16 @@ void particles_update(particles* p, float timestep, camera* cam) {
       axisy.x, axisy.y, axisy.z,
       axisz.x, axisz.y, axisz.z);
     
+    //mat4 world_pos = mat4_new(
+    //  rot_camera.xx, rot_camera.xy, rot_camera.xz, p->positions[i].x,
+    //  rot_camera.yx, rot_camera.yy, rot_camera.yz, p->positions[i].y,
+    //  rot_camera.zx, rot_camera.zy, rot_camera.zz, p->positions[i].z,
+    //  0, 0, 0, 1);
+    
     mat4 world_pos = mat4_new(
-      rot_camera.xx, rot_camera.xy, rot_camera.xz, p->positions[i].x,
-      rot_camera.yx, rot_camera.yy, rot_camera.yz, p->positions[i].y,
-      rot_camera.zx, rot_camera.zy, rot_camera.zz, p->positions[i].z,
+      1, 0, 0, p->positions[i].x,
+      0, 1, 0, p->positions[i].y,
+      0, 0, 1, p->positions[i].z,
       0, 0, 0, 1);
     
     vec3 scale = p->actives[i] ? p->scales[i] : vec3_zero();

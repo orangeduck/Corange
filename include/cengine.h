@@ -353,6 +353,9 @@ quat quat_id();
 quat quat_new(float x, float y, float z, float w);
 quat quat_from_euler(vec3 r);
 quat quat_angle_axis(float angle, vec3 axis);
+quat quat_rotation_x(float angle);
+quat quat_rotation_y(float angle);
+quat quat_rotation_z(float angle);
 
 float quat_at(quat q, int i);
 float quat_real(quat q);
@@ -535,6 +538,10 @@ box box_new(float x_min, float x_max, float y_min, float y_max, float z_min, flo
 box box_sphere(vec3 center, float radius);
 box box_merge(box b1, box b2);
 box box_transform(box b1, mat4 world);
+box box_invert(box b);
+box box_invert_depth(box b);
+box box_invert_width(box b);
+box box_invert_height(box b);
 
 bool point_inside_box(vec3 point, box b);
 bool point_outside_box(vec3 point, box b);

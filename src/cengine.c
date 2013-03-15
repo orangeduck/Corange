@@ -1190,6 +1190,18 @@ quat quat_angle_axis(float angle, vec3 axis) {
     
 }
 
+quat quat_rotation_x(float angle) {
+  return quat_angle_axis(angle, vec3_new(1,0,0));
+}
+
+quat quat_rotation_y(float angle) {
+  return quat_angle_axis(angle, vec3_new(0,1,0));
+}
+
+quat quat_rotation_z(float angle) {
+  return quat_angle_axis(angle, vec3_new(0,0,1));
+}
+
 void quat_to_angle_axis(quat q, vec3* axis, float* angle) {
 
   *angle = 2.0f * acosf( q.w );
@@ -2367,8 +2379,7 @@ plane plane_new(vec3 position, vec3 direction) {
 }
 
 float plane_distance(plane p, vec3 point) {
-  vec3 to_point = vec3_sub(point, p.position);
-  return vec3_dot(to_point, p.direction);
+  return vec3_dot(vec3_sub(point, p.position), p.direction);
 }
 
 plane plane_transform(plane p, mat4 world) {
@@ -2386,18 +2397,15 @@ plane plane_transform_space(plane p, mat3 space) {
 }
 
 bool point_inside_plane(vec3 point, plane p) {
-  vec3 to_point = vec3_sub(point, p.position);
-  return (vec3_dot(to_point, p.direction) < 0);
+  return vec3_dot(vec3_sub(point, p.position), p.direction) < 0;
 }
 
 bool point_outside_plane(vec3 point, plane p) {
-  vec3 to_point = vec3_sub(point, p.position);
-  return (vec3_dot(to_point, p.direction) > 0);
+  return vec3_dot(vec3_sub(point, p.position), p.direction) > 0;
 }
 
 bool point_intersects_plane(vec3 point, plane p) {
-  vec3 to_point = vec3_sub(point, p.position);
-  return (vec3_dot(to_point, p.direction) == 0);
+  return vec3_dot(vec3_sub(point, p.position), p.direction) == 0;
 }
 
 vec3 plane_project(plane p, vec3 v) {
@@ -2430,6 +2438,34 @@ box box_sphere(vec3 center, float radius) {
   
 }
 
+box box_invert(box b) {
+  b.front.direction  = vec3_neg(b.front.direction);
+  b.back.direction   = vec3_neg(b.back.direction);
+  b.left.direction   = vec3_neg(b.left.direction);
+  b.right.direction  = vec3_neg(b.right.direction);
+  b.top.direction    = vec3_neg(b.top.direction);
+  b.bottom.direction = vec3_neg(b.bottom.direction);
+  return b;
+}
+
+box box_invert_depth(box b) {
+  b.front.direction = vec3_neg(b.front.direction);
+  b.back.direction = vec3_neg(b.back.direction);
+  return b;
+}
+
+box box_invert_width(box b) {
+  b.left.direction = vec3_neg(b.left.direction);
+  b.right.direction = vec3_neg(b.right.direction);
+  return b;
+}
+
+box box_invert_height(box b) {
+  b.top.direction = vec3_neg(b.top.direction);
+  b.bottom.direction = vec3_neg(b.bottom.direction);
+  return b;
+}
+
 bool point_inside_box(vec3 point, box b) {
   
   if (!point_inside_plane(point, b.top))    { return false; }
@@ -2444,58 +2480,45 @@ bool point_inside_box(vec3 point, box b) {
 }
 
 bool point_outside_box(vec3 point, box b) {
-
   return !(point_intersects_box(point, b) || point_inside_box(point, b));
-
 }
 
 bool point_intersects_box(vec3 point, box b) {
   
-  if (point_intersects_plane(point, b.top) &&
-      !point_outside_plane(point, b.left) &&
-      !point_outside_plane(point, b.right) &&
-      !point_outside_plane(point, b.front) &&
-      !point_outside_plane(point, b.back)) {
+  bool in_left   = !point_outside_plane(point, b.left);
+  bool in_right  = !point_outside_plane(point, b.right);
+  bool in_front  = !point_outside_plane(point, b.front);
+  bool in_back   = !point_outside_plane(point, b.back);
+  bool in_top    = !point_outside_plane(point, b.top);
+  bool in_bottom = !point_outside_plane(point, b.bottom);
+  
+  if (point_intersects_plane(point, b.top) && 
+    in_left && in_right && in_front && in_back) {
     return true;
   }
   
-  if (point_intersects_plane(point, b.bottom) &&
-      !point_outside_plane(point, b.left) &&
-      !point_outside_plane(point, b.right) &&
-      !point_outside_plane(point, b.front) &&
-      !point_outside_plane(point, b.back)) {
+  if (point_intersects_plane(point, b.bottom) && 
+    in_left && in_right && in_front && in_back) {
     return true;
   }
   
   if (point_intersects_plane(point, b.left) &&
-      !point_outside_plane(point, b.top) &&
-      !point_outside_plane(point, b.bottom) &&
-      !point_outside_plane(point, b.front) &&
-      !point_outside_plane(point, b.back)) {
+      in_top && in_bottom && in_front && in_back) {
     return true;
   }
   
   if (point_intersects_plane(point, b.right) &&
-      !point_outside_plane(point, b.top) &&
-      !point_outside_plane(point, b.bottom) &&
-      !point_outside_plane(point, b.front) &&
-      !point_outside_plane(point, b.back)) {
+      in_top && in_bottom && in_front && in_back) {
     return true;
   }
   
   if (point_intersects_plane(point, b.front) &&
-      !point_outside_plane(point, b.top) &&
-      !point_outside_plane(point, b.bottom) &&
-      !point_outside_plane(point, b.left) &&
-      !point_outside_plane(point, b.right)) {
+      in_top && in_bottom && in_left && in_right) {
     return true;
   }
   
   if (point_intersects_plane(point, b.back) &&
-      !point_outside_plane(point, b.top) &&
-      !point_outside_plane(point, b.bottom) &&
-      !point_outside_plane(point, b.left) &&
-      !point_outside_plane(point, b.right)) {
+      in_top && in_bottom && in_left && in_right) {
     return true;
   }
   
@@ -2644,13 +2667,14 @@ frustum frustum_translate(frustum f, vec3 v) {
 }
 
 box frustum_box(frustum f) {
+  
   box b;
   b.top     = plane_new(f.ntr, vec3_normalize(vec3_cross(vec3_sub(f.ftr, f.ntr), vec3_sub(f.ntl, f.ntr))));
   b.bottom  = plane_new(f.nbr, vec3_normalize(vec3_cross(vec3_sub(f.nbl, f.nbr), vec3_sub(f.fbr, f.nbr))));
   b.left    = plane_new(f.ntl, vec3_normalize(vec3_cross(vec3_sub(f.ftl, f.ntl), vec3_sub(f.nbl, f.ntl))));
   b.right   = plane_new(f.ntr, vec3_normalize(vec3_cross(vec3_sub(f.nbr, f.ntr), vec3_sub(f.ftr, f.ntr))));
-  b.front   = plane_new(f.ftr, vec3_normalize(vec3_cross(vec3_sub(f.fbr, f.ftr), vec3_sub(f.ftl, f.ftr))));
-  b.back    = plane_new(f.ntr, vec3_normalize(vec3_cross(vec3_sub(f.ntl, f.ntr), vec3_sub(f.nbr, f.ntr))));
+  b.front   = plane_new(f.ftr, vec3_normalize(vec3_cross(vec3_sub(f.ftl, f.ftr), vec3_sub(f.fbr, f.ftr))));
+  b.back    = plane_new(f.ntr, vec3_normalize(vec3_cross(vec3_sub(f.nbr, f.ntr), vec3_sub(f.ntl, f.ntr))));
   return b;
 }
 
@@ -2778,51 +2802,40 @@ bool sphere_outside_box(sphere s, box b) {
 
 bool sphere_intersects_box(sphere s, box b) {
   
-  if (sphere_intersects_plane(s, b.front) &&
-      !sphere_outside_plane(s, b.left) &&
-      !sphere_outside_plane(s, b.right) &&
-      !sphere_outside_plane(s, b.bottom) &&
-      !sphere_outside_plane(s, b.top)) {
+  bool in_left   = !sphere_outside_plane(s, b.left);
+  bool in_right  = !sphere_outside_plane(s, b.right);
+  bool in_front  = !sphere_outside_plane(s, b.front);
+  bool in_back   = !sphere_outside_plane(s, b.back);
+  bool in_top    = !sphere_outside_plane(s, b.top);
+  bool in_bottom = !sphere_outside_plane(s, b.bottom);
+  
+  if (sphere_intersects_plane(s, b.top) && 
+    in_left && in_right && in_front && in_back) {
     return true;
   }
-
-  if (sphere_intersects_plane(s, b.back) &&
-      !sphere_outside_plane(s, b.left) &&
-      !sphere_outside_plane(s, b.right) &&
-      !sphere_outside_plane(s, b.bottom) &&
-      !sphere_outside_plane(s, b.top)) {
+  
+  if (sphere_intersects_plane(s, b.bottom) && 
+    in_left && in_right && in_front && in_back) {
     return true;
   }
   
   if (sphere_intersects_plane(s, b.left) &&
-      !sphere_outside_plane(s, b.front) &&
-      !sphere_outside_plane(s, b.back) &&
-      !sphere_outside_plane(s, b.bottom) &&
-      !sphere_outside_plane(s, b.top)) {
+      in_top && in_bottom && in_front && in_back) {
     return true;
   }
   
   if (sphere_intersects_plane(s, b.right) &&
-      !sphere_outside_plane(s, b.front) &&
-      !sphere_outside_plane(s, b.back) &&
-      !sphere_outside_plane(s, b.bottom) &&
-      !sphere_outside_plane(s, b.top)) {
+      in_top && in_bottom && in_front && in_back) {
     return true;
   }
   
-  if (sphere_intersects_plane(s, b.top) &&
-      !sphere_outside_plane(s, b.front) &&
-      !sphere_outside_plane(s, b.back) &&
-      !sphere_outside_plane(s, b.left) &&
-      !sphere_outside_plane(s, b.right)) {
+  if (sphere_intersects_plane(s, b.front) &&
+      in_top && in_bottom && in_left && in_right) {
     return true;
   }
   
-  if (sphere_intersects_plane(s, b.bottom) &&
-      !sphere_outside_plane(s, b.front) &&
-      !sphere_outside_plane(s, b.back) &&
-      !sphere_outside_plane(s, b.left) &&
-      !sphere_outside_plane(s, b.right)) {
+  if (sphere_intersects_plane(s, b.back) &&
+      in_top && in_bottom && in_left && in_right) {
     return true;
   }
   

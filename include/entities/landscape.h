@@ -22,7 +22,7 @@ typedef struct landscape_blobtree {
   sphere bound;
 
   bool is_leaf;
-  terrain_chunk* chunk;
+  int chunk_index;
   struct landscape_blobtree* child0;
   struct landscape_blobtree* child1;
   struct landscape_blobtree* child2;
