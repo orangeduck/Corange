@@ -180,17 +180,10 @@ void particles_update(particles* p, float timestep, camera* cam) {
   
   particles_update_effect(p, timestep);
   
+  mat3 rot_camera = mat3_inverse(mat4_to_mat3(camera_view_matrix(cam)));
+  
   int vi = 0;
   for (int i = 0; i < p->count; i++) {
-    
-    vec3 axisz = vec3_normalize(vec3_sub(p->position, cam->position));
-    vec3 axisx = vec3_cross(axisz, vec3_up());
-    vec3 axisy = vec3_cross(axisz, axisx);
-
-    mat3 rot_camera = mat3_new(
-      axisx.x, axisx.y, axisx.z,
-      axisy.x, axisy.y, axisy.z,
-      axisz.x, axisz.y, axisz.z);
     
     mat4 world_pos = mat4_new(
       rot_camera.xx, rot_camera.xy, rot_camera.xz, p->positions[i].x,

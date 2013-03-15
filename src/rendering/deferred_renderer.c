@@ -1315,7 +1315,7 @@ static void render_animated(deferred_renderer* dr, animated_object* ao) {
     
     renderable_surface* s = r->surfaces[i];
     
-    if (sphere_outside_box(sphere_transform(s->bound, world), dr->camera_frustum)) { continue; }
+    //if (sphere_outside_box(sphere_transform(s->bound, world), dr->camera_frustum)) { continue; }
     
     material_entry* me = material_get_entry(asset_hndl_ptr(&r->material), i);
     
