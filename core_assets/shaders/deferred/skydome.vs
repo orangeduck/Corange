@@ -13,32 +13,32 @@ varying vec3 fDirection;
 varying vec3 fM_color;
 varying vec3 fR_color;
 
-const int nsamples = 3;
-const float fsamples = 3.0;
+#define nsamples 3
+#define fsamples 3.0
 
-const vec3 inv_wavelength = vec3(1.0/ pow(0.620, 4.0), 1.0/ pow(0.495, 4.0), 1.0/ pow(0.475, 4.0));
+#define inv_wavelength vec3(1.0 / pow(0.620, 4.0), 1.0 / pow(0.495, 4.0), 1.0 / pow(0.475, 4.0))
 
-const float outer_radius = 10.25;
-const float inner_radius = 10.00;
+#define outer_radius 10.25
+#define inner_radius 10.00
 
-const vec3 esun = vec3(75.0, 75.0, 75.0);
-const float kr = 0.0025;
-const float km = 0.0010;
+#define esun vec3(75.0, 75.0, 75.0)
+#define kr 0.0025
+#define km 0.0010
 
-const vec3 kresun = kr * esun;
-const vec3 kmesun = km * esun;
+#define kresun (kr * esun)
+#define kmesun (km * esun)
 
-const float kr4pi = kr * 4 * 3.141;
-const float km4pi = km * 4 * 3.141;
+#define kr4pi (kr * 4 * 3.141)
+#define km4pi (km * 4 * 3.141)
 
-const float scale = 1 / (outer_radius - inner_radius);
-const float scale_depth = 0.25;
-const float scale_over_depth = scale / scale_depth;
+#define scale (1 / (outer_radius - inner_radius))
+#define scale_depth 0.25
+#define scale_over_depth (scale / scale_depth)
 
 /* Analytical scale function */
 float scalefunc(float angle) {
   float x = 1-angle;
-	return scale_depth * exp(-0.00287 + x*(0.459 + x*(3.83 + x*(-6.80 + x*5.25))));
+	return scale_depth * exp(-0.00287 + x * (0.459 + x * (3.83 + x * (-6.80 + x * 5.25))));
 }
 
 void main() {
