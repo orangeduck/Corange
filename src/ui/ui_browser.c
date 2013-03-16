@@ -13,7 +13,7 @@ ui_browser* ui_browser_new() {
   b->outer = ui_rectangle_new();
   ui_rectangle_move(b->outer, vec2_new(width - 300, 10));
   ui_rectangle_resize(b->outer, vec2_new(280, height - 20));
-  ui_rectangle_set_texture(b->outer, asset_hndl_new_load(P("$CORANGE/resources/back_wood.dds")), 128, 128, true);
+  ui_rectangle_set_texture(b->outer, asset_hndl_new_load(P("$CORANGE/ui/back_wood.dds")), 128, 128, true);
   ui_rectangle_set_border(b->outer, 1, vec4_black());
   ui_rectangle_set_color(b->outer, vec4_grey());
   ui_rectangle_set_glitch(b->outer, 1.0);

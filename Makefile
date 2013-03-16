@@ -30,6 +30,7 @@ ifeq ($(findstring MINGW,$(PLATFORM)),MINGW)
 	OBJ += corange.res
 endif
 
+
 all: $(DYNAMIC) $(STATIC)
 
 $(DYNAMIC): $(OBJ)

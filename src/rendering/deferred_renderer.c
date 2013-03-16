@@ -181,26 +181,26 @@ deferred_renderer* deferred_renderer_new(asset_hndl options) {
     asset_hndl_new(P("$CORANGE/shaders/deferred/compose_low.mat")));
   
   /* Meshes */
-  dr->mesh_skydome  = asset_hndl_new_load(P("$CORANGE/resources/skydome.obj"));
-  dr->mesh_sphere   = asset_hndl_new_load(P("$CORANGE/resources/sphere.obj"));
-  dr->mesh_sea      = asset_hndl_new_load(P("$CORANGE/resources/sea.obj"));
+  dr->mesh_skydome  = asset_hndl_new_load(P("$CORANGE/sky/skydome.bmf"));
+  dr->mesh_sphere   = asset_hndl_new_load(P("$CORANGE/objects/sphere.bmf"));
+  dr->mesh_sea      = asset_hndl_new_load(P("$CORANGE/water/sea.bmf"));
   
   /* Textures */
-  dr->tex_color_correction  = asset_hndl_new_load(P("$CORANGE/resources/identity.lut"));
-  dr->tex_random            = asset_hndl_new_load(P("$CORANGE/resources/random.dds"));
-  dr->tex_random_perlin     = asset_hndl_new_load(P("$CORANGE/resources/random_perlin.dds"));
-  dr->tex_environment       = asset_hndl_new_load(P("$CORANGE/resources/envmap.dds"));
-  dr->tex_vignetting        = asset_hndl_new_load(P("$CORANGE/resources/vignetting.dds"));
-  dr->tex_sea_bump0         = asset_hndl_new_load(P("$CORANGE/resources/bump0.dds"));
-  dr->tex_sea_bump1         = asset_hndl_new_load(P("$CORANGE/resources/bump1.dds"));
-  dr->tex_sea_bump2         = asset_hndl_new_load(P("$CORANGE/resources/bump2.dds"));
-  dr->tex_sea_bump3         = asset_hndl_new_load(P("$CORANGE/resources/bump3.dds"));
-  dr->tex_sea_env           = asset_hndl_new_load(P("$CORANGE/resources/envmap_sea.dds"));
-  dr->tex_cube_sea          = asset_hndl_new_load(P("$CORANGE/resources/cube_sea.dds"));
-  dr->tex_cube_field        = asset_hndl_new_load(P("$CORANGE/resources/cube_field.dds"));
-  dr->tex_white             = asset_hndl_new_load(P("$CORANGE/resources/white.dds"));
-  dr->tex_grey              = asset_hndl_new_load(P("$CORANGE/resources/grey.dds"));
-  dr->tex_skin_lookup       = asset_hndl_new_load(P("$CORANGE/resources/skin_lookup.dds"));
+  dr->tex_color_correction  = asset_hndl_new_load(P("$CORANGE/luts/identity.lut"));
+  dr->tex_random            = asset_hndl_new_load(P("$CORANGE/textures/random.dds"));
+  dr->tex_random_perlin     = asset_hndl_new_load(P("$CORANGE/textures/random_perlin.dds"));
+  dr->tex_environment       = asset_hndl_new_load(P("$CORANGE/textures/envmap.dds"));
+  dr->tex_vignetting        = asset_hndl_new_load(P("$CORANGE/ui/vignetting.dds"));
+  dr->tex_sea_bump0         = asset_hndl_new_load(P("$CORANGE/water/bump0.dds"));
+  dr->tex_sea_bump1         = asset_hndl_new_load(P("$CORANGE/water/bump1.dds"));
+  dr->tex_sea_bump2         = asset_hndl_new_load(P("$CORANGE/water/bump2.dds"));
+  dr->tex_sea_bump3         = asset_hndl_new_load(P("$CORANGE/water/bump3.dds"));
+  dr->tex_sea_env           = asset_hndl_new_load(P("$CORANGE/water/envmap_sea.dds"));
+  dr->tex_cube_sea          = asset_hndl_new_load(P("$CORANGE/water/cube_sea.dds"));
+  dr->tex_cube_field        = asset_hndl_new_load(P("$CORANGE/textures/cube_field.dds"));
+  dr->tex_white             = asset_hndl_new_load(P("$CORANGE/textures/white.dds"));
+  dr->tex_grey              = asset_hndl_new_load(P("$CORANGE/textures/grey.dds"));
+  dr->tex_skin_lookup       = asset_hndl_new_load(P("$CORANGE/textures/skin_lookup.dds"));
   
   /* Buffers */
   

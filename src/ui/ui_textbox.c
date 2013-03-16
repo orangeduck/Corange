@@ -5,12 +5,12 @@ ui_textbox* ui_textbox_new() {
   ui_textbox* tb = malloc(sizeof(ui_textbox));
 
   tb->inner = ui_rectangle_new();
-  ui_rectangle_set_texture(tb->inner, asset_hndl_new_load(P("$CORANGE/resources/back_wood.dds")), 128, 128, true);
+  ui_rectangle_set_texture(tb->inner, asset_hndl_new_load(P("$CORANGE/ui/back_wood.dds")), 128, 128, true);
   ui_rectangle_set_border(tb->inner, 1, vec4_black());
   ui_rectangle_set_glitch(tb->inner, 1.0);
   
   tb->outer = ui_rectangle_new();
-  ui_rectangle_set_texture(tb->outer, asset_hndl_new_load(P("$CORANGE/resources/back_wood.dds")), 128, 128, true);
+  ui_rectangle_set_texture(tb->outer, asset_hndl_new_load(P("$CORANGE/ui/back_wood.dds")), 128, 128, true);
   ui_rectangle_set_border(tb->outer, 1, vec4_black());
   ui_rectangle_set_color(tb->outer, vec4_grey());
   ui_rectangle_set_glitch(tb->outer, 1.0);

@@ -9,7 +9,7 @@ ui_button* ui_button_new() {
   ui_button* b = malloc(sizeof(ui_button));
   
   b->back = ui_rectangle_new();
-  ui_rectangle_set_texture(b->back, asset_hndl_new_load(P("$CORANGE/resources/back_wood.dds")), 128, 128, true);
+  ui_rectangle_set_texture(b->back, asset_hndl_new_load(P("$CORANGE/ui/back_wood.dds")), 128, 128, true);
   ui_rectangle_set_border(b->back, 1, vec4_black());
   ui_rectangle_set_glitch(b->back, 1.0);
   

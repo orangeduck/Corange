@@ -90,9 +90,17 @@ char debug_str[2048];
 #define alloc_check(PTR) { if((PTR) == NULL) { error("Out of Memory!"); } }
 
 /* OpenGL error checking */
+#ifdef RELEASE
+#define SDL_GL_CheckError()
+#else
 #define SDL_GL_CheckError() { GLenum __glerror = glGetError(); if (__glerror) { error("OpenGL Error: %s", SDL_GL_ErrorString(__glerror)); } }
+#endif
 
+#ifdef RELEASE
+#define SDL_GL_CheckFrameBuffer()
+#else
 #define SDL_GL_CheckFrameBuffer() { GLenum __glfbstatus = glCheckFramebufferStatus(GL_FRAMEBUFFER); if(__glfbstatus != GL_FRAMEBUFFER_COMPLETE) { error("OpenGL FrameBuffer Error: %s", SDL_GL_FrameBufferErrorString(__glfbstatus)); } }
+#endif
 
 /* Condtional Hinting */
 
