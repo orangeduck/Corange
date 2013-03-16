@@ -1,4 +1,6 @@
-#include "corange.h"
+#include <math.h>
+
+#include "sea.h"
 
 static int mouse_x;
 static int mouse_y;
@@ -51,9 +53,9 @@ void sea_update() {
   wave_time += frame_time();
   static_object* corvette = entity_get("corvette");
   corvette->position.y = (sin(wave_time) + 1) / 2 - 1;
-  corvette->rotation = quat_rotation_x(sin(wave_time * 1.123) / 50);
-  corvette->rotation = quat_mul_quat(corvette->rotation, quat_rotation_y(sin(wave_time * 1.254) / 25));
-  corvette->rotation = quat_mul_quat(corvette->rotation, quat_rotation_z(sin(wave_time * 1.355) / 100));
+  //corvette->rotation = quat_rotation_x(sin(wave_time * 1.123) / 50);
+  //corvette->rotation = quat_mul_quat(corvette->rotation, quat_rotation_y(sin(wave_time * 1.254) / 25));
+  //corvette->rotation = quat_mul_quat(corvette->rotation, quat_rotation_z(sin(wave_time * 1.355) / 100));
   
   ui_button* framerate = ui_elem_get("framerate");
   ui_button_set_label(framerate, frame_rate_string());
@@ -82,7 +84,7 @@ void sea_finish() {
 
 int main(int argc, char **argv) {
   
-  corange_init("../../core_assets");
+  corange_init("../../assets_core");
   
   sea_init();
   

@@ -337,7 +337,7 @@ void ui_text_render(ui_text* t) {
   font* font = asset_hndl_ptr(&t->font);
   
   shader_program_set_texture(program_ui, "diffuse", 0, font->texture_map);
-  shader_program_set_texture(program_ui, "random",  1, asset_hndl_new_load(P("$CORANGE/resources/random.dds")));
+  shader_program_set_texture(program_ui, "random",  1, asset_hndl_new_load(P("$CORANGE/textures/random.dds")));
   
   glBindBuffer(GL_ARRAY_BUFFER, t->positions_buffer);
   shader_program_enable_attribute(program_ui, "vPosition", 2, 2, NULL);

@@ -6,7 +6,7 @@ ui_listbox* ui_listbox_new() {
   ui_listbox* lb = malloc(sizeof(ui_listbox));
 
   lb->back = ui_rectangle_new();
-  ui_rectangle_set_texture(lb->back, asset_hndl_new_load(P("$CORANGE/resources/back_wood.dds")), 128, 128, true);
+  ui_rectangle_set_texture(lb->back, asset_hndl_new_load(P("$CORANGE/ui/back_wood.dds")), 128, 128, true);
   ui_rectangle_set_border(lb->back, 1, vec4_black());
   ui_rectangle_set_color(lb->back, vec4_new(0.1, 0.1, 0.1, 1));
   ui_rectangle_set_glitch(lb->back, 1.0);

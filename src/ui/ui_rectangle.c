@@ -104,7 +104,7 @@ void ui_rectangle_render(ui_rectangle* r) {
   
   if (!asset_hndl_isnull(&r->texture)) {
     shader_program_set_texture(program_ui, "diffuse", 0, r->texture);
-    shader_program_set_texture(program_ui, "random",  1, asset_hndl_new_load(P("$CORANGE/resources/random.dds")));
+    shader_program_set_texture(program_ui, "random",  1, asset_hndl_new_load(P("$CORANGE/textures/random.dds")));
   }
   
   shader_program_set_float(program_ui, "time", r->time);

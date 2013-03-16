@@ -8,35 +8,35 @@ sky* sky_new() {
   s->time = 0;
   s->seed = 0;
 
-  s->cloud_mesh[0]  = asset_hndl_new_load(P("$CORANGE/resources/sky/cloud_horizon1.bmf"));
-  s->cloud_mesh[1]  = asset_hndl_new_load(P("$CORANGE/resources/sky/cloud_horizon2.bmf"));
-  s->cloud_mesh[2]  = asset_hndl_new_load(P("$CORANGE/resources/sky/cloud_horizon3.bmf"));
-  s->cloud_mesh[3]  = asset_hndl_new_load(P("$CORANGE/resources/sky/cloud_horizon4.bmf"));
-  s->cloud_mesh[4]  = asset_hndl_new_load(P("$CORANGE/resources/sky/cloud_lower4.bmf"));
-  s->cloud_mesh[5]  = asset_hndl_new_load(P("$CORANGE/resources/sky/cloud_sheet1.bmf"));
-  s->cloud_mesh[6]  = asset_hndl_new_load(P("$CORANGE/resources/sky/cloud_sheet2.bmf"));
-  s->cloud_mesh[7]  = asset_hndl_new_load(P("$CORANGE/resources/sky/cloud_sheet3.bmf"));
-  s->cloud_mesh[8]  = asset_hndl_new_load(P("$CORANGE/resources/sky/cloud_sheet4.bmf"));
-  s->cloud_mesh[9]  = asset_hndl_new_load(P("$CORANGE/resources/sky/cloud_sheet5.bmf"));
-  s->cloud_mesh[10] = asset_hndl_new_load(P("$CORANGE/resources/sky/cloud_upper1.bmf"));
-  s->cloud_mesh[11] = asset_hndl_new_load(P("$CORANGE/resources/sky/cloud_upper2.bmf"));
-  s->cloud_mesh[12] = asset_hndl_new_load(P("$CORANGE/resources/sky/cloud_upper3.bmf"));
-  s->cloud_mesh[13] = asset_hndl_new_load(P("$CORANGE/resources/sky/cloud_upper4.bmf"));
+  s->cloud_mesh[0]  = asset_hndl_new_load(P("$CORANGE/sky/cloud_horizon1.bmf"));
+  s->cloud_mesh[1]  = asset_hndl_new_load(P("$CORANGE/sky/cloud_horizon2.bmf"));
+  s->cloud_mesh[2]  = asset_hndl_new_load(P("$CORANGE/sky/cloud_horizon3.bmf"));
+  s->cloud_mesh[3]  = asset_hndl_new_load(P("$CORANGE/sky/cloud_horizon4.bmf"));
+  s->cloud_mesh[4]  = asset_hndl_new_load(P("$CORANGE/sky/cloud_lower4.bmf"));
+  s->cloud_mesh[5]  = asset_hndl_new_load(P("$CORANGE/sky/cloud_sheet1.bmf"));
+  s->cloud_mesh[6]  = asset_hndl_new_load(P("$CORANGE/sky/cloud_sheet2.bmf"));
+  s->cloud_mesh[7]  = asset_hndl_new_load(P("$CORANGE/sky/cloud_sheet3.bmf"));
+  s->cloud_mesh[8]  = asset_hndl_new_load(P("$CORANGE/sky/cloud_sheet4.bmf"));
+  s->cloud_mesh[9]  = asset_hndl_new_load(P("$CORANGE/sky/cloud_sheet5.bmf"));
+  s->cloud_mesh[10] = asset_hndl_new_load(P("$CORANGE/sky/cloud_upper1.bmf"));
+  s->cloud_mesh[11] = asset_hndl_new_load(P("$CORANGE/sky/cloud_upper2.bmf"));
+  s->cloud_mesh[12] = asset_hndl_new_load(P("$CORANGE/sky/cloud_upper3.bmf"));
+  s->cloud_mesh[13] = asset_hndl_new_load(P("$CORANGE/sky/cloud_upper4.bmf"));
   
-  s->cloud_tex[0]  = asset_hndl_new_load(P("$CORANGE/resources/sky/cloudshorizon01.dds"));
-  s->cloud_tex[1]  = asset_hndl_new_load(P("$CORANGE/resources/sky/cloudshorizon01.dds"));
-  s->cloud_tex[2]  = asset_hndl_new_load(P("$CORANGE/resources/sky/cloudshorizon01.dds"));
-  s->cloud_tex[3]  = asset_hndl_new_load(P("$CORANGE/resources/sky/cloudshorizon01.dds"));
-  s->cloud_tex[4]  = asset_hndl_new_load(P("$CORANGE/resources/sky/cloudslower04.dds"));
-  s->cloud_tex[5]  = asset_hndl_new_load(P("$CORANGE/resources/sky/cloudsheet01.dds"));
-  s->cloud_tex[6]  = asset_hndl_new_load(P("$CORANGE/resources/sky/cloudsheet01.dds"));
-  s->cloud_tex[7]  = asset_hndl_new_load(P("$CORANGE/resources/sky/cloudsheet01.dds"));
-  s->cloud_tex[8]  = asset_hndl_new_load(P("$CORANGE/resources/sky/cloudsheet01.dds"));
-  s->cloud_tex[9]  = asset_hndl_new_load(P("$CORANGE/resources/sky/cloudsheet01.dds"));
-  s->cloud_tex[10] = asset_hndl_new_load(P("$CORANGE/resources/sky/cloudsupper01.dds"));
-  s->cloud_tex[11] = asset_hndl_new_load(P("$CORANGE/resources/sky/cloudsupper01.dds"));
-  s->cloud_tex[12] = asset_hndl_new_load(P("$CORANGE/resources/sky/cloudsupper02.dds"));
-  s->cloud_tex[13] = asset_hndl_new_load(P("$CORANGE/resources/sky/cloudsupper02.dds"));
+  s->cloud_tex[0]  = asset_hndl_new_load(P("$CORANGE/sky/cloudshorizon01.dds"));
+  s->cloud_tex[1]  = asset_hndl_new_load(P("$CORANGE/sky/cloudshorizon01.dds"));
+  s->cloud_tex[2]  = asset_hndl_new_load(P("$CORANGE/sky/cloudshorizon01.dds"));
+  s->cloud_tex[3]  = asset_hndl_new_load(P("$CORANGE/sky/cloudshorizon01.dds"));
+  s->cloud_tex[4]  = asset_hndl_new_load(P("$CORANGE/sky/cloudslower04.dds"));
+  s->cloud_tex[5]  = asset_hndl_new_load(P("$CORANGE/sky/cloudsheet01.dds"));
+  s->cloud_tex[6]  = asset_hndl_new_load(P("$CORANGE/sky/cloudsheet01.dds"));
+  s->cloud_tex[7]  = asset_hndl_new_load(P("$CORANGE/sky/cloudsheet01.dds"));
+  s->cloud_tex[8]  = asset_hndl_new_load(P("$CORANGE/sky/cloudsheet01.dds"));
+  s->cloud_tex[9]  = asset_hndl_new_load(P("$CORANGE/sky/cloudsheet01.dds"));
+  s->cloud_tex[10] = asset_hndl_new_load(P("$CORANGE/sky/cloudsupper01.dds"));
+  s->cloud_tex[11] = asset_hndl_new_load(P("$CORANGE/sky/cloudsupper01.dds"));
+  s->cloud_tex[12] = asset_hndl_new_load(P("$CORANGE/sky/cloudsupper02.dds"));
+  s->cloud_tex[13] = asset_hndl_new_load(P("$CORANGE/sky/cloudsupper02.dds"));
   
   s->cloud_opacity[0]  = 0.5;
   s->cloud_opacity[1]  = 0.5;
@@ -53,11 +53,11 @@ sky* sky_new() {
   s->cloud_opacity[12] = 0.5;
   s->cloud_opacity[13] = 0.5;
   
-  s->sun_sprite = asset_hndl_new_load(P("$CORANGE/resources/sky/sun_sprite.bmf"));
-  s->sun_tex = asset_hndl_new_load(P("$CORANGE/resources/sky/sun_sprite.dds"));
+  s->sun_sprite = asset_hndl_new_load(P("$CORANGE/sky/sun_sprite.bmf"));
+  s->sun_tex = asset_hndl_new_load(P("$CORANGE/sky/sun_sprite.dds"));
   
-  s->moon_sprite = asset_hndl_new_load(P("$CORANGE/resources/sky/moon_sprite.obj"));
-  s->moon_tex = asset_hndl_new_load(P("$CORANGE/resources/sky/moon_sprite.dds"));
+  s->moon_sprite = asset_hndl_new_load(P("$CORANGE/sky/moon_sprite.bmf"));
+  s->moon_tex = asset_hndl_new_load(P("$CORANGE/sky/moon_sprite.dds"));
   
   s->stars_sprite = asset_hndl_null();
   s->stars_tex = asset_hndl_null();
