@@ -1692,7 +1692,7 @@ void mat3_to_array(mat3 m, float* out) {
 void mat3_print(mat3 m) {
   printf("|%4.2f, %4.2f, %4.2f|\n", m.xx, m.xy, m.xz);
   printf("|%4.2f, %4.2f, %4.2f|\n", m.yx, m.yy, m.yz);
-  printf("|%4.2f, %4.2f, %4.2f|\n", m.yx, m.yy, m.zz);
+  printf("|%4.2f, %4.2f, %4.2f|\n", m.zx, m.zy, m.zz);
 }
 
 mat3 mat3_rotation_x(float a) {
@@ -1706,6 +1706,16 @@ mat3 mat3_rotation_x(float a) {
   
   return m;
   
+}
+
+mat3 mat3_scale(vec3 s) {
+  
+  mat3 m = mat3_id();
+  m.xx = s.x;
+  m.yy = s.y;
+  m.zz = s.z;  
+  return m;
+
 }
 
 mat3 mat3_rotation_y(float a) {

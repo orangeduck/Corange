@@ -21,10 +21,11 @@ collision collision_merge(collision c0, collision c1);
 collision sphere_collide_face(sphere s, vec3 v, ctri ct);
 collision sphere_collide_edge(sphere s, vec3 v, vec3 e0, vec3 e1);
 collision sphere_collide_point(sphere s, vec3 v, vec3 p);
+collision sphere_collide_sphere(sphere s, vec3 v, sphere s0);
 collision sphere_collide_ctri(sphere s, vec3 v, ctri ct);
 
 collision sphere_collide_mesh(sphere s, vec3 v, cmesh* m, mat4 mworld);
-//collision ellipsoid_collide_mesh(ellipsoid e, vec3 v, cmesh* m, mat4 mworld);
+collision ellipsoid_collide_mesh(ellipsoid e, vec3 v, cmesh* m, mat4 mworld);
 
 //collision capsule_collide_sphere(capsule c, vec3 v, sphere s, float timestep);
 //collision capsule_collide_mesh(capsule c, vec3 v, cmesh* m, mat4 mworld, float timestep);
