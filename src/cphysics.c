@@ -72,7 +72,7 @@ static bool point_in_triangle(vec3 point, vec3 v0, vec3 v1, vec3 v2) {
   float u = (dot11 * dot02 - dot01 * dot12) * inv_dom;
   float v = (dot00 * dot12 - dot01 * dot02) * inv_dom;
 
-  return (u >= 0.0f) && (v >= 0.0f) && (u + v < 1.0f);
+  return (u >= 0) && (v >= 0) && (u + v < 1);
 }
 
 collision sphere_collide_face(sphere s, vec3 v, ctri ct) {
@@ -177,57 +177,41 @@ collision sphere_collide_ctri(sphere s, vec3 v, ctri ct) {
   
 }
 
-static collision sphere_collide_mesh_space(sphere s, vec3 v, cmesh* cm, mat4 world, mat3 space) {
-  
-  vec3 sv = mat3_mul_vec3(space, v);
+collision sphere_collide_mesh(sphere s, vec3 v, cmesh* cm, mat4 world) {
   
   if ( !cm->is_leaf ) {
     
-    plane div = cm->division;
-    div = plane_transform(div, world);
-    div = plane_transform_space(div, space);
+    plane div = plane_transform(cm->division, world);
   
-         if ( sphere_swept_inside_plane(s, sv, div)  ) { return sphere_collide_mesh_space(s, v, cm->back,  world, space); }
-    else if ( sphere_swept_outside_plane(s, sv, div) ) { return sphere_collide_mesh_space(s, v, cm->front, world, space); }
-    else if ( sphere_swept_intersects_plane(s, sv, div) ) {
+         if ( sphere_swept_inside_plane(s, v, div)  ) { return sphere_collide_mesh(s, v, cm->back,  world); }
+    else if ( sphere_swept_outside_plane(s, v, div) ) { return sphere_collide_mesh(s, v, cm->front, world); }
+    else {
     
-      collision c0 = sphere_collide_mesh_space(s, v, cm->back,  world, space);
-      collision c1 = sphere_collide_mesh_space(s, v, cm->front, world, space);
+      collision c0 = sphere_collide_mesh(s, v, cm->back,  world);
+      collision c1 = sphere_collide_mesh(s, v, cm->front, world);
       return collision_merge(c0, c1);
       
     }
   }
   
-  sphere bound = cm->bound;
-  bound = sphere_transform(bound, world);
-  bound = sphere_transform_space(bound, space);
+  sphere bound = sphere_transform(cm->bound, world);
   
-  if (sphere_swept_outside_sphere(s, sv, bound)) {
+  if (sphere_swept_outside_sphere(s, v, bound)) {
     return collision_none();
   }
   
   collision col = collision_none();
-  mat3 ispace = mat3_inverse(space);
   
   for (int i = 0; i < cm->triangles_num; i++) {
-    ctri ct = cm->triangles[i];
-    ct = ctri_transform(ct, world);
-    ct = ctri_transform_space(ct, space);
-    
-    collision c = sphere_collide_ctri(s, sv, ct);
-    c.point = mat3_mul_vec3(ispace, c.point);
-    
-    col = collision_merge(col, c);
+    ctri ct = ctri_transform(cm->triangles[i], world);
+    col = collision_merge(col, sphere_collide_ctri(s, v, ct));
   }
   
   return col;
   
 }
 
-collision sphere_collide_mesh(sphere s, vec3 v, cmesh* cm, mat4 w) {
-  return sphere_collide_mesh_space(s, v, cm, w, mat3_id());
-}
-
+/*
 collision ellipsoid_collide_mesh(ellipsoid e, vec3 v, cmesh* m, mat4 mworld) {
   
   mworld = mat4_mul_mat4(mat4_translation(vec3_neg(e.center)), mworld);
@@ -239,3 +223,4 @@ collision ellipsoid_collide_mesh(ellipsoid e, vec3 v, cmesh* m, mat4 mworld) {
   return c;
   
 }
+*/
