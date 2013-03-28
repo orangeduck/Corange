@@ -1641,7 +1641,7 @@ void render_ellipsoid(deferred_renderer* dr, ellipsoid e) {
   so.rotation = quat_id();
   so.scale = vec3_new(e.radiuses.x, e.radiuses.y, e.radiuses.z);
   so.renderable = dr->mesh_sphere;
-  so.collision_body = asset_hndl_new(P("$CORANGE/resources/sphere.col"));
+  so.collision_body = asset_hndl_new(P("$CORANGE/objects/sphere.col"));
   
   render_static(dr, &so);
   

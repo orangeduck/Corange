@@ -442,6 +442,7 @@ mat3 mat3_inverse(mat3 m);
 void mat3_to_array(mat3 m, float* out);
 void mat3_print(mat3 m);
 
+mat3 mat3_scale(vec3 s);
 mat3 mat3_rotation_x(float a);
 mat3 mat3_rotation_y(float a);
 mat3 mat3_rotation_z(float a);
