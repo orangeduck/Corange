@@ -722,7 +722,10 @@ static void render_shadows_instance(deferred_renderer* dr, int i, instance_objec
   
 }
 
-#define MAX_BONES 32
+enum {
+  MAX_BONES = 64,
+};
+
 static mat4 bone_matrices[MAX_BONES];
 
 static void render_shadows_animated(deferred_renderer* dr, int i, animated_object* ao) {
