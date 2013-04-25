@@ -5,7 +5,7 @@ attribute vec2 vTexcoord;
 attribute vec3 vBone_indicies;
 attribute vec3 vBone_weights;
 
-uniform mat4 world_bones[32];
+uniform mat4 world_bones[64];
 uniform mat4 world;
 uniform mat4 proj;
 uniform mat4 view;
