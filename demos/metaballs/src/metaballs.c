@@ -28,13 +28,13 @@ void metaballs_init() {
   
   folder_load(P("./kernels/"));
   
-  particles_init();
+  metaball_particles_init();
   
   folder_load(P("./resources/podium/"));
   folder_load(P("./resources/particles/"));
   
   asset_hndl r_podium = asset_hndl_new(P("./resources/podium/podium.obj"));
-  ((renderable*)asset_hndl_ptr(r_podium))->material = asset_hndl_new(P("./resources/podium/podium.mat"));
+  ((renderable*)asset_hndl_ptr(&r_podium))->material = asset_hndl_new(P("./resources/podium/podium.mat"));
   
   static_object* s_podium = entity_new("podium", static_object);
   s_podium->renderable = r_podium;
@@ -49,7 +49,7 @@ void metaballs_init() {
   sun->ambient_color = vec3_new(0.5, 0.5, 0.5);
   sun->diffuse_color = vec3_mul(vec3_one(), 2);
   sun->specular_color = vec3_mul(vec3_one(), 5);
-  light_set_type(sun, light_type_spot);  
+  light_set_type(sun, LIGHT_TYPE_SPOT);  
   
   ui_button* framerate = ui_elem_new("framerate", ui_button);
   ui_button_move(framerate, vec2_new(10,10));
@@ -82,7 +82,6 @@ void metaballs_init() {
 #endif
  
 #ifdef MARCHING_CUBES
-  shadow_mapper_init(sun);  
   
   forward_renderer_init();
   forward_renderer_set_camera(cam);
@@ -109,19 +108,19 @@ void metaballs_update() {
   mouse_x = 0;
   mouse_y = 0;
 
-  particles_update(frame_time());
+  metaball_particles_update(frame_time());
   
   ui_button* framerate = ui_elem_get("framerate");
   ui_button_set_label(framerate, frame_rate_string());
   
 #ifdef MARCHING_CUBES
-  marching_cubes_metaball_data( particle_positions_memory(), particles_count() );
+  marching_cubes_metaball_data( metaball_particle_positions_memory(), metaball_particles_count() );
   marching_cubes_clear();
   marching_cubes_update();
 #endif
 
 #ifdef VOLUME_RENDERER
-  volume_renderer_metaball_data( particle_positions_memory(), particles_count() );
+  volume_renderer_metaball_data( metaball_particle_positions_memory(), metaball_particles_count() );
   volume_renderer_update();
 #endif
   
@@ -141,11 +140,6 @@ void metaballs_render() {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   
 #ifdef MARCHING_CUBES 
-  shadow_mapper_begin();
-    shadow_mapper_render_static(s_podium);
-    marching_cubes_render_shadows(sun);
-  shadow_mapper_end();
-  
   forward_renderer_begin();
     forward_renderer_render_static(s_podium);
     forward_renderer_render_light(sun);
@@ -159,7 +153,7 @@ void metaballs_render() {
   
 #ifndef VOLUME_RENDERER
 #ifndef MARCHING_CUBES
-  particles_render();
+  metaball_particles_render();
 #endif
 #endif
   
@@ -185,7 +179,7 @@ void metaballs_event(SDL_Event event) {
   case SDL_KEYUP:
     
     if (event.key.keysym.sym == SDLK_SPACE) { 
-      particles_reset();
+      metaball_particles_reset();
     }
     
     if (event.key.keysym.sym == SDLK_w) {
@@ -207,14 +201,13 @@ void metaballs_event(SDL_Event event) {
 
 void metaballs_finish() {
   
-  particles_finish();
+  metaball_particles_finish();
   
 #ifdef VOLUME_RENDERER
   volume_renderer_finish();
 #endif
   
 #ifdef MARCHING_CUBES
-  shadow_mapper_finish();
   forward_renderer_finish();
   marching_cubes_finish();
 #endif

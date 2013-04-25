@@ -97,6 +97,7 @@ void ui_listbox_event(ui_listbox* lb, SDL_Event e) {
       ui_text* item = lb->items[i];
       
       if (ui_text_contains_point(item, vec2_new(e.motion.x, e.motion.y)) && lb->onselect) {
+        debug("Selecting Item");
         lb->onselect(item);
         break;
       }

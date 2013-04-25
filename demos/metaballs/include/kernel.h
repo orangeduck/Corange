@@ -1,8 +1,10 @@
 #ifndef kernel_h
 #define kernel_h
 
+#define CL_USE_DEPRECATED_OPENCL_1_1_APIS
 #include "CL/cl.h"
 #include "CL/cl_gl.h"
+
 #include "corange.h"
 
 typedef cl_program kernel_program;

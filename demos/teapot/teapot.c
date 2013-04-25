@@ -32,23 +32,23 @@ void teapot_render() {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glEnable(GL_DEPTH_TEST);
   
-  shader_program* shader = material_first_program(asset_hndl_ptr(teapot_shader));
+  shader_program* shader = material_first_program(asset_hndl_ptr(&teapot_shader));
   shader_program_enable(shader);
   shader_program_set_mat4(shader, "world", mat4_id());
   shader_program_set_mat4(shader, "view", camera_view_matrix(cam));
   shader_program_set_mat4(shader, "proj", camera_proj_matrix(cam));
     
-  shader_program_set_texture(shader, "cube_beach", 0, asset_hndl_new_load(P("$CORANGE/resources/cube_sea.dds")));
+  shader_program_set_texture(shader, "cube_beach", 0, asset_hndl_new_load(P("$CORANGE/water/cube_sea.dds")));
   shader_program_set_vec3(shader, "camera_direction", camera_direction(cam));
   
-  renderable* r = asset_hndl_ptr(teapot_object);
+  renderable* r = asset_hndl_ptr(&teapot_object);
   
   for(int i=0; i < r->num_surfaces; i++) {
     
     renderable_surface* s = r->surfaces[i];
     
-    int mentry_id = min(i, ((material*)asset_hndl_ptr(r->material))->num_entries-1);
-    material_entry* me = material_get_entry(asset_hndl_ptr(r->material), mentry_id);
+    int mentry_id = min(i, ((material*)asset_hndl_ptr(&r->material))->num_entries-1);
+    material_entry* me = material_get_entry(asset_hndl_ptr(&r->material), mentry_id);
     
     glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
     
@@ -91,7 +91,7 @@ void teapot_finish() {
 
 int main(int argc, char **argv) {
   
-  corange_init("../../core_assets");
+  corange_init("../../assets_core");
   
   teapot_init();
   

@@ -1,24 +1,24 @@
-#ifndef particles_h
-#define particles_h
+#ifndef metaball_particles_h
+#define metaball_particles_h
 
 #include "corange.h"
 
 #include "kernel.h"
 
-void particles_init();
-void particles_finish();
+void metaball_particles_init();
+void metaball_particles_finish();
 
-void particles_update(float timestep);
+void metaball_particles_update(float timestep);
 
-int particles_count();
+int metaball_particles_count();
 
-void particles_reset();
+void metaball_particles_reset();
 
-kernel_memory particle_positions_memory();
+kernel_memory metaball_particle_positions_memory();
 
-GLuint particle_positions_buffer();
-GLuint particle_velocities_buffer();
+GLuint metaball_particle_positions_buffer();
+GLuint metaball_particle_velocities_buffer();
 
-void particles_render();
+void metaball_particles_render();
 
 #endif

@@ -1,3 +1,5 @@
+#include "kernel.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -9,8 +11,6 @@
 #ifdef __linux__
   #include  <GL/glx.h>
 #endif
-
-#include "kernel.h"
 
 static cl_int error = 0;
 static cl_platform_id platforms[32];

@@ -667,6 +667,14 @@ vec3 vec3_div(vec3 v, float fac) {
   return v;
 }
 
+vec3 vec3_div_vec3(vec3 v1, vec3 v2) {
+  vec3 v;
+  v.x = v1.x / v2.x;
+  v.y = v1.y / v2.y;
+  v.z = v1.z / v2.z;
+  return v;
+}
+
 vec3 vec3_mul(vec3 v, float fac) {
   v.x = v.x * fac;
   v.y = v.y * fac;
@@ -770,6 +778,10 @@ vec3 vec3_normalize(vec3 v) {
 
 vec3 vec3_reflect(vec3 v1, vec3 v2) {
   return vec3_sub(v1, vec3_mul(v2, 2 * vec3_dot(v1, v2)));
+}
+
+vec3 vec3_project(vec3 v1, vec3 v2) {
+  return vec3_sub(v1, vec3_mul(v2, vec3_dot(v1, v2)));
 }
 
 vec3 vec3_from_string(char* s) {
@@ -2422,6 +2434,10 @@ vec3 plane_project(plane p, vec3 v) {
   return vec3_sub(v, vec3_mul(p.direction, vec3_dot(v, p.direction)));
 }
 
+vec3 plane_closest(plane p, vec3 v) {
+  return vec3_sub(v, vec3_mul(p.direction, plane_distance(p, v)));
+}
+
 box box_new(float x_min, float x_max, float y_min, float y_max, float z_min, float z_max) {
 
   box bb;
@@ -2891,6 +2907,18 @@ bool point_intersects_sphere(sphere s, vec3 point) {
   return vec3_dist(s.center, point) == s.radius;
 }
 
+bool line_inside_sphere(sphere s, vec3 start, vec3 end) {
+  return point_swept_inside_sphere(s, vec3_sub(end, start), start);
+}
+
+bool line_outside_sphere(sphere s, vec3 start, vec3 end) {
+  return point_swept_outside_sphere(s, vec3_sub(end, start), start);
+}
+
+bool line_intersects_sphere(sphere s, vec3 start, vec3 end) {
+  return point_swept_intersects_sphere(s, vec3_sub(end, start), start);
+}
+
 bool sphere_inside_plane(sphere s, plane p) {
   return -plane_distance(p, s.center) > s.radius;
 }
@@ -2966,6 +2994,38 @@ static bool quadratic(float a, float b, float c, float* t0, float* t1) {
 
 }
 
+bool point_swept_inside_sphere(sphere s, vec3 v, vec3 point) {
+  
+  error("Unimplemented");
+  return false;
+  
+}
+
+bool point_swept_outside_sphere(sphere s, vec3 v, vec3 point) {
+
+  float sdist = vec3_dist_sqrd(point, s.center);
+  
+  if (sdist <= s.radius * s.radius) { return false; }
+  
+  vec3  o = vec3_sub(point, s.center);  
+  float A = vec3_dot(v, v);
+  float B = 2 * vec3_dot(v, o);
+  float C = vec3_dot(o, o) - (s.radius * s.radius);
+  
+  float t0, t1, t;
+  if (!quadratic(A, B, C, &t0, &t1)) { return true; }
+  
+  return (!between_or(t0, 0, 1) && !between_or(t1, 0, 1));
+
+}
+
+bool point_swept_intersects_sphere(sphere s, vec3 v, vec3 point) {
+
+  error("Unimplemented");
+  return false;
+
+}
+
 bool sphere_swept_outside_sphere(sphere s1, vec3 v, sphere s2) {
   
   float sdist = vec3_dist_sqrd(s1.center, s2.center);
@@ -2997,6 +3057,36 @@ bool sphere_swept_intersects_sphere(sphere s1, vec3 v, sphere s2) {
   error("Unimplemented");
   return false;
 
+}
+
+bool point_inside_triangle(vec3 p, vec3 v0, vec3 v1, vec3 v2) {
+
+  vec3 d0 = vec3_sub(v2, v0);
+  vec3 d1 = vec3_sub(v1, v0);
+  vec3 d2 = vec3_sub(p, v0);
+
+  float dot00 = vec3_dot(d0, d0);
+  float dot01 = vec3_dot(d0, d1);
+  float dot02 = vec3_dot(d0, d2);
+  float dot11 = vec3_dot(d1, d1);
+  float dot12 = vec3_dot(d1, d2);
+
+  float inv_dom = 1.0f / (dot00 * dot11 - dot01 * dot01);
+  float u = (dot11 * dot02 - dot01 * dot12) * inv_dom;
+  float v = (dot00 * dot12 - dot01 * dot02) * inv_dom;
+
+  return (u >= 0) && (v >= 0) && (u + v < 1);
+
+}
+
+bool sphere_intersects_face(sphere s, vec3 v0, vec3 v1, vec3 v2, vec3 norm) {
+  
+  if (!sphere_intersects_plane(s, plane_new(v0, norm))) { return false; }
+  
+  vec3 c = plane_closest(plane_new(v0, norm), s.center);
+
+  return point_inside_triangle(c, v0, v1, v2);
+  
 }
 
 ellipsoid ellipsoid_new(vec3 center, vec3 radiuses) {

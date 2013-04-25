@@ -112,6 +112,26 @@ render_object render_object_projectile(projectile* p) {
   return ro;
 }
 
+render_object render_object_line(vec3 start, vec3 end, vec3 color, float thickness) {
+  render_object ro;
+  ro.type = RO_TYPE_LINE;
+  ro.line_start = start;
+  ro.line_end = end;
+  ro.line_color = color;
+  ro.line_thickness = thickness;
+  return ro;
+}
+
+render_object render_object_point(vec3 pos, vec3 color, float size) {
+  render_object ro;
+  ro.type = RO_TYPE_POINT;
+  ro.point_pos = pos;
+  ro.point_color = color;
+  ro.point_size = size;
+  return ro;
+}
+
+
 static float quad_position[] = {
   -1, -1, 0, 
    1, -1, 0, 
@@ -1631,6 +1651,65 @@ void render_plane(deferred_renderer* dr, plane p) {
   
 }
 
+void render_line(deferred_renderer* dr, vec3 line_start, vec3 line_end, vec3 line_color, float line_thickness) {
+
+  shader_program* shader = material_first_program(asset_hndl_ptr(&dr->mat_ui));
+  shader_program_enable(shader);
+  shader_program_set_mat4(shader, "world", mat4_id());
+  shader_program_set_mat4(shader, "view", dr->camera_view);
+  shader_program_set_mat4(shader, "proj", dr->camera_proj);
+  shader_program_set_float(shader, "alpha_test", 0.0);
+  shader_program_set_texture(shader, "diffuse", 0, dr->tex_white);
+  
+  vec3 line_positions[] = { line_start, line_end };
+  vec3 line_colors[] = { line_color, line_color };
+  
+  glDisable(GL_DEPTH_TEST);
+  glLineWidth(line_thickness);
+  
+  shader_program_enable_attribute(shader, "vPosition",  3, 3, line_positions);
+  shader_program_enable_attribute(shader, "vColor",     3, 3, line_colors);
+  
+  glDrawArrays(GL_LINES, 0, 2);
+  
+  shader_program_disable_attribute(shader, "vPosition");
+  shader_program_disable_attribute(shader, "vColor");
+  
+  glLineWidth(1.0);  
+  glEnable(GL_DEPTH_TEST);
+
+  shader_program_disable(shader);
+  
+}
+
+void render_point(deferred_renderer* dr, vec3 position, vec3 color, float size) {
+
+  shader_program* shader = material_first_program(asset_hndl_ptr(&dr->mat_ui));
+  shader_program_enable(shader);
+  shader_program_set_mat4(shader, "world", mat4_id());
+  shader_program_set_mat4(shader, "view", dr->camera_view);
+  shader_program_set_mat4(shader, "proj", dr->camera_proj);
+  shader_program_set_float(shader, "alpha_test", 0.0);
+  shader_program_set_texture(shader, "diffuse", 0, dr->tex_white);
+  
+  glDisable(GL_DEPTH_TEST);
+  glPointSize(size);
+  
+  shader_program_enable_attribute(shader, "vPosition",  3, 3, &position);
+  shader_program_enable_attribute(shader, "vColor",     3, 3, &color);
+  
+  glDrawArrays(GL_POINTS, 0, 1);
+  
+  shader_program_disable_attribute(shader, "vPosition");
+  shader_program_disable_attribute(shader, "vColor");
+  
+  glPointSize(1.0);  
+  glEnable(GL_DEPTH_TEST);
+
+  shader_program_disable(shader);
+  
+}
+
 void render_ellipsoid(deferred_renderer* dr, ellipsoid e) {
   
   static_object so;
@@ -1764,30 +1843,6 @@ static void render_gbuffer(deferred_renderer* dr) {
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);
   
-  /* DEBUG */
-  //camera cam;
-  //cam.position = vec3_zero();
-  //cam.target = vec3_new(sin(dr->time), 1, cos(dr->time));
-  //cam.target = vec3_new(1, 1, 1);
-  //cam.fov = dr->camera->fov;
-  //cam.near_clip = dr->camera->near_clip;
-  //cam.far_clip = dr->camera->far_clip;
-  //frustum test_frust = frustum_new_camera(camera_view_matrix(&cam), camera_proj_matrix(&cam));
-  //dr->camera_frustum = box_invert_depth(frustum_box(test_frust));
-  
-  //camera* oldcam = dr->camera;
-  //dr->camera = &cam;
-  
-  //shadow_mapper_transforms(dr, 0,
-  //  &dr->shadow_view[0], &dr->shadow_proj[0],
-  //  &dr->shadow_near[0], &dr->shadow_far[0]);
-  
-  //frustum test_frust2 = frustum_new_camera(dr->shadow_view[0], dr->shadow_proj[0]);
-  
-  //dr->camera_frustum = box_invert_depth(box_invert(frustum_box(test_frust2)));
-  //dr->camera = oldcam;
-  /* END DEBUG */
-  
   for ( int j = 0; j < dr->render_objects_num; j++) {
     
     // HACK ALERT
@@ -1836,21 +1891,33 @@ static void render_gbuffer(deferred_renderer* dr) {
     if (dr->render_objects[j].type == RO_TYPE_PLANE)      { render_plane(dr, dr->render_objects[j].plane); }
     if (dr->render_objects[j].type == RO_TYPE_PROJECTILE) { render_projectile(dr, dr->render_objects[j].projectile); }
     
+    if (dr->render_objects[j].type == RO_TYPE_LINE) {
+      render_line(dr, 
+        dr->render_objects[j].line_start, 
+        dr->render_objects[j].line_end, 
+        dr->render_objects[j].line_color,
+        dr->render_objects[j].line_thickness);
+    }
+    
+    if (dr->render_objects[j].type == RO_TYPE_POINT) {
+      render_point(dr, 
+        dr->render_objects[j].point_pos,
+        dr->render_objects[j].point_color,
+        dr->render_objects[j].point_size);
+    }
+    
     if (dr->render_objects[j].type == RO_TYPE_CMESH) {
       render_cmesh(dr, 
         dr->render_objects[j].colmesh, 
-        dr->render_objects[j].colworld); }
+        dr->render_objects[j].colworld);
+    }
         
     if (dr->render_objects[j].type == RO_TYPE_PAINT) {
       render_paint_circle(dr, 
         dr->render_objects[j].paint_axis, 
-        dr->render_objects[j].paint_radius); }
+        dr->render_objects[j].paint_radius);
+    }
   }
-
-  /* DEBUG */
-  //render_frustum(dr, test_frust);
-  //render_frustum(dr, test_frust2);
-  /* END DEBUG */
   
   glDisable(GL_DEPTH_TEST);
   glDisable(GL_CULL_FACE);

@@ -162,8 +162,8 @@ void ui_textbox_event(ui_textbox* tb, SDL_Event e) {
       }
       
       if (e.key.keysym.sym == SDLK_SPACE) {
-          ui_textbox_addchar(tb, ' ');
-          return;
+        ui_textbox_addchar(tb, ' ');
+        return;
       }
       
       if ( e.key.keysym.unicode >= 0x80 || e.key.keysym.unicode <= 0 ) {

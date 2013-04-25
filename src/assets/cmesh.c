@@ -8,11 +8,11 @@ static sphere ctri_bound(ctri t) {
   center = vec3_div(center, 3);
   
   float radius = 0;
-  radius = max(radius, vec3_dist(t.a, center));
-  radius = max(radius, vec3_dist(t.b, center));
-  radius = max(radius, vec3_dist(t.c, center));
+  radius = max(radius, vec3_dist_sqrd(t.a, center));
+  radius = max(radius, vec3_dist_sqrd(t.b, center));
+  radius = max(radius, vec3_dist_sqrd(t.c, center));
   
-  return sphere_new(center, radius);
+  return sphere_new(center, sqrt(radius));
   
 }
 
@@ -47,18 +47,16 @@ ctri ctri_transform(ctri t, mat4 m) {
   t.a = mat4_mul_vec3(m, t.a);
   t.b = mat4_mul_vec3(m, t.b);
   t.c = mat4_mul_vec3(m, t.c);
-  t.norm = mat3_mul_vec3(mat4_to_mat3(m), t.norm);
-  t.norm = vec3_normalize(t.norm);
+  t.norm  = vec3_normalize(vec3_cross(vec3_sub(t.b, t.a), vec3_sub(t.c, t.a)));
   t.bound = ctri_bound(t);
   return t;
 }
 
-ctri ctri_transform_space(ctri t, mat3 s) {
+ctri ctri_transform_space(ctri t, mat3 s, mat3 is) {
   t.a = mat3_mul_vec3(s, t.a);
   t.b = mat3_mul_vec3(s, t.b);
   t.c = mat3_mul_vec3(s, t.c);
-  t.norm = mat3_mul_vec3(s, t.norm);
-  t.norm = vec3_normalize(t.norm);
+  t.norm  = vec3_normalize(mat3_mul_vec3(is, t.norm));
   t.bound = ctri_bound(t);
   return t;
 }

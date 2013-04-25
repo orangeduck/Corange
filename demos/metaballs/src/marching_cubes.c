@@ -319,18 +319,11 @@ void marching_cubes_render(bool wireframe, camera* c, light* l) {
   GLint lview_matrix_u = glGetUniformLocation(*metaballs, "light_view");
   glUniformMatrix4fv(lview_matrix_u, 1, 0, lview_matrix);
   
-  
   texture* env_map = asset_get_load(P("./resources/metaballs_env.dds"));
   glActiveTexture(GL_TEXTURE0 + 0 );
-  glBindTexture(GL_TEXTURE_2D, *env_map);
+  glBindTexture(GL_TEXTURE_2D, texture_handle(env_map));
   glEnable(GL_TEXTURE_2D);
   glUniform1i(glGetUniformLocation(*metaballs, "env_map"), 0);
-  
-  texture* shadow_map = shadow_mapper_depth_texture();
-  glActiveTexture(GL_TEXTURE0 + 1);
-  glBindTexture(GL_TEXTURE_2D, *shadow_map);
-  glEnable(GL_TEXTURE_2D);
-  glUniform1i(glGetUniformLocation(*metaballs, "shadow_map"), 1);
   
   glBindBuffer(GL_ARRAY_BUFFER, vertex_positions);
   glVertexPointer(4, GL_FLOAT, 0, (void*)0);

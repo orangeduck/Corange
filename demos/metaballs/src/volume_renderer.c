@@ -151,7 +151,7 @@ void volume_renderer_update() {
   int size[3] = {WIDTH, HEIGHT, DEPTH};
   
   mat4 view_matrix = camera_view_matrix(cam);
-  mat4 proj_matrix = camera_proj_matrix(cam, graphics_viewport_ratio());
+  mat4 proj_matrix = camera_proj_matrix(cam);
   
   mat4 inv_view_matrix = mat4_inverse(view_matrix);
   mat4 inv_proj_matrix = mat4_inverse(proj_matrix);
@@ -224,7 +224,7 @@ void volume_renderer_render() {
   int screen_size[2] = {SCREEN_WIDTH, SCREEN_HEIGHT};
   
   mat4 view_matrix = camera_view_matrix(cam);
-  mat4 proj_matrix = camera_proj_matrix(cam, graphics_viewport_ratio());
+  mat4 proj_matrix = camera_proj_matrix(cam);
   
   mat4 inv_view_matrix = mat4_inverse(view_matrix);
   mat4 inv_proj_matrix = mat4_inverse(proj_matrix);
@@ -340,6 +340,7 @@ void volume_renderer_render() {
 
 void volume_renderer_write_textures() {
   
+  /*
   texture* t0 = malloc(sizeof(texture));
   *t0 = stencil_texture;
   
@@ -361,4 +362,5 @@ void volume_renderer_write_textures() {
   free(t1);
   free(t2);
   free(t3);
+  */
 }

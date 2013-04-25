@@ -12,10 +12,11 @@ typedef struct {
   bool collided;
   float time;
   vec3 point;
+  vec3 norm;
 } collision;
 
 collision collision_none();
-collision collision_new(float time, vec3 point);
+collision collision_new(float time, vec3 point, vec3 norm);
 collision collision_merge(collision c0, collision c1);
 
 collision sphere_collide_face(sphere s, vec3 v, ctri ct);
@@ -26,10 +27,5 @@ collision sphere_collide_ctri(sphere s, vec3 v, ctri ct);
 
 collision sphere_collide_mesh(sphere s, vec3 v, cmesh* m, mat4 mworld);
 collision ellipsoid_collide_mesh(ellipsoid e, vec3 v, cmesh* m, mat4 mworld);
-
-//collision capsule_collide_sphere(capsule c, vec3 v, sphere s, float timestep);
-//collision capsule_collide_mesh(capsule c, vec3 v, cmesh* m, mat4 mworld, float timestep);
-//collision capsule_collide_landscape(capsule c, vec3 v, landscape* l, float timestep);
-
 
 #endif

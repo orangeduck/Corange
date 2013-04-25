@@ -257,6 +257,7 @@ vec3 vec3_sub(vec3 v1, vec3 v2);
 vec3 vec3_mul(vec3 v, float fac);
 vec3 vec3_mul_vec3(vec3 v1, vec3 v2);
 vec3 vec3_div(vec3 v, float fac);
+vec3 vec3_div_vec3(vec3 v1, vec3 v2);
 vec3 vec3_pow(vec3 v, float fac);
 vec3 vec3_neg(vec3 v);
 vec3 vec3_abs(vec3 v);
@@ -276,6 +277,7 @@ vec3 vec3_cross(vec3 v1, vec3 v2);
 vec3 vec3_normalize(vec3 v);
 
 vec3 vec3_reflect(vec3 v1, vec3 v2);
+vec3 vec3_project(vec3 v1, vec3 v2);
 
 vec3 vec3_from_string(char* s);
 void vec3_print(vec3 v);
@@ -530,6 +532,7 @@ bool point_swept_inside_plane(vec3 point, vec3 vel, plane p);
 bool point_swept_outside_plane(vec3 point, vec3 vel, plane p);
 bool point_swept_intersects_plane(vec3 point, vec3 vel, plane p);
 
+vec3 plane_closest(plane p, vec3 v);
 vec3 plane_project(plane p, vec3 v);
 
 /* Box */
@@ -613,6 +616,10 @@ bool point_inside_sphere(sphere s, vec3 point);
 bool point_outside_sphere(sphere s, vec3 point);
 bool point_intersects_sphere(sphere s, vec3 point);
 
+bool line_inside_sphere(sphere s, vec3 start, vec3 end);
+bool line_outside_sphere(sphere s, vec3 start, vec3 end);
+bool line_intersects_sphere(sphere s, vec3 start, vec3 end);
+
 bool sphere_inside_plane(sphere s, plane p);
 bool sphere_outside_plane(sphere s, plane p);
 bool sphere_intersects_plane(sphere s, plane p);
@@ -628,6 +635,9 @@ bool sphere_swept_intersects_plane(sphere s, vec3 v, plane p);
 bool sphere_swept_outside_sphere(sphere s1, vec3 v, sphere s2); 
 bool sphere_swept_inside_sphere(sphere s1, vec3 v, sphere s2); 
 bool sphere_swept_intersects_sphere(sphere s1, vec3 v, sphere s2); 
+
+bool point_inside_triangle(vec3 p, vec3 v0, vec3 v1, vec3 v2);
+bool sphere_intersects_face(sphere s, vec3 v0, vec3 v1, vec3 v2, vec3 norm);
 
 /* Ellipsoid */
 

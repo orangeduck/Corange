@@ -1,33 +1,32 @@
+#include "particles.h"
+
+#include "kernel.h"
+
 #include <stdlib.h>
 #include <time.h>
 
-#include "corange.h"
-
-#include "particles.h"
-#include "kernel.h"
-
 static int particle_count = 64;
 
-vec4* particle_positions;
-vec4* particle_velocities;
-float* particle_lifetimes;
-vec4* particle_randoms;
+static vec4* particle_positions;
+static vec4* particle_velocities;
+static float* particle_lifetimes;
+static vec4* particle_randoms;
 
-GLuint positions_buffer;
-GLuint velocities_buffer;
-GLuint lifetimes_buffer;
-GLuint randoms_buffer;
+static GLuint positions_buffer;
+static GLuint velocities_buffer;
+static GLuint lifetimes_buffer;
+static GLuint randoms_buffer;
 
-kernel_memory k_particle_positions;
-kernel_memory k_particle_velocities;
-kernel_memory k_particle_lifetimes;
-kernel_memory k_particle_randoms;
+static kernel_memory k_particle_positions;
+static kernel_memory k_particle_velocities;
+static kernel_memory k_particle_lifetimes;
+static kernel_memory k_particle_randoms;
 
-kernel k_update;
+static kernel k_update;
 
-bool reset = 0;
+static bool reset = 0;
 
-void particles_init() {
+void metaball_particles_init() {
 
   particle_positions = malloc(sizeof(vec4) * particle_count);
   particle_velocities = malloc(sizeof(vec4) * particle_count);
@@ -104,7 +103,7 @@ void particles_init() {
   
 }
 
-void particles_finish() {
+void metaball_particles_finish() {
   
 #ifndef CPU_ONLY
   kernel_memory_delete(k_particle_positions);
@@ -125,7 +124,7 @@ void particles_finish() {
   
 }
 
-void particles_update(float timestep) {
+void metaball_particles_update(float timestep) {
   
   int random = rand();
   
@@ -195,30 +194,30 @@ void particles_update(float timestep) {
   
 }
 
-void particles_reset() {
+void metaball_particles_reset() {
   reset = 1;
 }
 
-int particles_count() {
+int metaball_particles_count() {
   return particle_count;
 }
 
-kernel_memory particle_positions_memory() {
+kernel_memory metaball_particle_positions_memory() {
   return k_particle_positions;
 }
 
-GLuint particle_positions_buffer() {
+GLuint metaball_particle_positions_buffer() {
   return positions_buffer;
 }
 
-GLuint particle_velocities_buffer() {
+GLuint metaball_particle_velocities_buffer() {
   return velocities_buffer;
 }
 
 static float view_matrix[16];
 static float proj_matrix[16];
 
-void particles_render() {
+void metaball_particles_render() {
   
 #ifdef OPEN_GL_CPU
   
@@ -239,7 +238,7 @@ void particles_render() {
   camera* cam = entity_get("camera");
   
   mat4 viewm = camera_view_matrix(cam);
-  mat4 projm = camera_proj_matrix(cam, graphics_viewport_ratio() );
+  mat4 projm = camera_proj_matrix(cam);
   
   mat4_to_array(viewm, view_matrix);
   mat4_to_array(projm, proj_matrix);

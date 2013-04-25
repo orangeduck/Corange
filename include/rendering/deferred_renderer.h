@@ -49,6 +49,8 @@ enum {
   RO_TYPE_PROJECTILE = 11,
   RO_TYPE_FRUSTUM    = 12,
   RO_TYPE_PLANE      = 13,
+  RO_TYPE_LINE       = 14,
+  RO_TYPE_POINT      = 15,
 };
 
 typedef struct {
@@ -62,6 +64,8 @@ typedef struct {
     struct { cmesh* colmesh; mat4 colworld; };
     frustum frustum;
     plane plane;
+    struct { vec3 line_start; vec3 line_end; vec3 line_color; float line_thickness; };
+    struct { vec3 point_pos; vec3 point_color; float point_size; };
     
     /* Objects */
     static_object* static_object;
@@ -92,6 +96,8 @@ render_object render_object_cmesh(cmesh* cm, mat4 world);
 render_object render_object_landscape(landscape* l);
 render_object render_object_projectile(projectile* p);
 render_object render_object_paint(mat4 paint_axis, float paint_radius);
+render_object render_object_line(vec3 start, vec3 end, vec3 color, float thickness);
+render_object render_object_point(vec3 pos, vec3 color, float size);
 
 typedef struct {
 
