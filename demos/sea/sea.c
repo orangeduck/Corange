@@ -22,7 +22,7 @@ void sea_init() {
   folder_load_recursive(P("./assets"));
   
   camera* cam = entity_new("camera", camera);
-  cam->position = vec3_new(5, 5, 5);
+  cam->position = vec3_new(20, 20, 10);
   cam->target =  vec3_new(0, 0, 0);
   
   asset_hndl opt_graphics = asset_hndl_new_load(P("./assets/graphics.cfg"));
@@ -39,7 +39,8 @@ void sea_init() {
   
   static_object* s_corvette = entity_new("corvette", static_object);
   s_corvette->renderable = asset_hndl_new_ptr(r_corvette);
-  s_corvette->scale = vec3_new(2.0, 2.0, 2.0);
+  s_corvette->rotation = quat_angle_axis(1.0, vec3_new(0.1, 1.0, 0.31));
+  s_corvette->scale = vec3_new(2.0, 1.0, 2.0);
   
   ui_button* framerate = ui_elem_new("framerate", ui_button);
   ui_button_move(framerate, vec2_new(10,10));
@@ -47,10 +48,10 @@ void sea_init() {
   ui_button_set_label(framerate, "");
   ui_button_disable(framerate);
   
-  test_ellipsoid = ellipsoid_new(vec3_new(0, 10, 5), vec3_new(1,2,1));
+  test_ellipsoid = ellipsoid_new(vec3_new(0, 20, 0), vec3_new(1,2,1));
   test_velocity = vec3_zero();
   test_cmesh = asset_get(P("./assets/corvette/corvette.col"));
-  test_cmesh_trans = mat4_scale(vec3_new(2, 2, 2));
+  test_cmesh_trans = static_object_world(s_corvette);
   
 }
 
@@ -112,49 +113,11 @@ void sea_update() {
   
   /* Collision Detection and response routine */
   
-  deferred_renderer_add(g_dr, render_object_cmesh(test_cmesh, test_cmesh_trans));
-  deferred_renderer_add(g_dr, render_object_ellipsoid(test_ellipsoid));
-  
-  col = ellipsoid_collide_mesh(test_ellipsoid, test_velocity, test_cmesh, test_cmesh_trans);
-  
-  int count = 0;
-  while (col.collided) {
-    
-    deferred_renderer_add(g_dr, render_object_point(test_ellipsoid.center, vec3_white(), 5));
-    deferred_renderer_add(g_dr, render_object_point(col.point, vec3_red(), 10));
-    
-    if (count++ == 5) {
-      warning("Panic out of collision detection!");
-      test_velocity = vec3_zero();
-      break;
-    }
-    
-    if (vec3_length(test_velocity) < 0.001) {
-      test_velocity = vec3_zero();
-      break;
-    }
-    
-    vec3 fwrd = vec3_mul(test_velocity, col.time);
-    vec3 dest = vec3_add(test_ellipsoid.center, fwrd);
-    
-    deferred_renderer_add(g_dr, render_object_line(col.point, vec3_add(col.point, col.norm), vec3_green(), 3));
-    
-    float len = max(vec3_length(fwrd) - 0.01, 0.0);
-    vec3 move = vec3_add(test_ellipsoid.center, vec3_mul(vec3_normalize(fwrd), len));    
-    vec3 proj = vec3_project(vec3_mul(test_velocity, (1-col.time)), col.norm);
-    
-    deferred_renderer_add(g_dr, render_object_line(test_ellipsoid.center, vec3_add(test_ellipsoid.center, vec3_normalize(proj)), vec3_blue(), 3));
-    
-    test_ellipsoid.center = move;
-    test_velocity = proj;
-    
-    // Re-detect
-    
-    col = ellipsoid_collide_mesh(test_ellipsoid, test_velocity, test_cmesh, test_cmesh_trans);
-  
+  collision collision_test_ellipsoid(void) {
+    return ellipsoid_collide_mesh(test_ellipsoid, test_velocity, test_cmesh, test_cmesh_trans);
   }
   
-  test_ellipsoid.center = vec3_add(test_ellipsoid.center, test_velocity);
+  collision_response_slide(&test_ellipsoid.center, &test_velocity, collision_test_ellipsoid);
   
   /* End */
   
@@ -162,19 +125,63 @@ void sea_update() {
 
 void sea_render() {
   
-  deferred_renderer_add(g_dr, render_object_static(entity_get("corvette")));
-  
-
+  deferred_renderer_add(g_dr, render_object_cmesh(test_cmesh, test_cmesh_trans));
+  deferred_renderer_add(g_dr, render_object_ellipsoid(test_ellipsoid));
+  //deferred_renderer_add(g_dr, render_object_static(entity_get("corvette")));
   deferred_renderer_render(g_dr);
   
 }
 
 static int ball_count = 0;
-void sea_event(SDL_Event event) {
+void sea_event(SDL_Event e) {
 
-  camera* cam = entity_get("camera");
+  camera* c = entity_get("camera");
   
-  camera_control_orbit(cam, event);
+  //camera_control_orbit(c, e);
+  
+  float a1 = 0;
+  float a2 = 0;
+  vec3 axis = vec3_zero();
+  
+  vec3 translation = c->target;
+  vec3 position = vec3_sub(c->position, translation);
+  vec3 target = vec3_sub(c->target, translation);
+  
+  switch(e.type) {
+    
+    case SDL_MOUSEMOTION:
+      if (e.motion.state & SDL_BUTTON(1)) {
+        a1 = e.motion.xrel * -0.005;
+        a2 = e.motion.yrel *  0.005;
+        position = mat3_mul_vec3(mat3_rotation_y(a1), position);
+        axis = vec3_normalize(vec3_cross( vec3_sub(position, target) , vec3_up() ));
+        position = mat3_mul_vec3(mat3_rotation_angle_axis(a2, axis), position );
+      }
+    break;
+    
+    case SDL_MOUSEBUTTONDOWN:
+      if (e.button.button == SDL_BUTTON_WHEELUP) {
+        position = vec3_sub(position, vec3_normalize(position));
+      }
+      if (e.button.button == SDL_BUTTON_WHEELDOWN) {
+        position = vec3_add(position, vec3_normalize(position));
+      }
+    break;
+
+  }
+  
+  position = vec3_add(position, translation);
+  target   = vec3_add(target,   translation);
+  
+  c->target = target;
+  
+  vec3 velocity = vec3_sub(position, c->position);
+  
+  collision collision_camera(void) {
+    return sphere_collide_mesh(sphere_new(c->position, 1), velocity, test_cmesh, test_cmesh_trans);
+  }
+  
+  collision_response_slide(&c->position, &velocity, collision_camera);
   
 }
 

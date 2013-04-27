@@ -2406,14 +2406,14 @@ float plane_distance(plane p, vec3 point) {
 
 plane plane_transform(plane p, mat4 world) {
   p.position  = mat4_mul_vec3(world, p.position);
-  p.direction = mat3_mul_vec3(mat4_to_mat3(world), p.direction);
+  p.direction = mat3_mul_vec3(mat3_transpose(mat3_inverse(mat4_to_mat3(world))), p.direction);
   p.direction = vec3_normalize(p.direction);
   return p;
 }
 
 plane plane_transform_space(plane p, mat3 space) {
   p.position  = mat3_mul_vec3(space, p.position);
-  p.direction = mat3_mul_vec3(space, p.direction);
+  p.direction = mat3_mul_vec3(mat3_transpose(mat3_inverse(space)), p.direction);
   p.direction = vec3_normalize(p.direction);
   return p;
 }

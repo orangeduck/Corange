@@ -28,4 +28,6 @@ collision sphere_collide_ctri(sphere s, vec3 v, ctri ct);
 collision sphere_collide_mesh(sphere s, vec3 v, cmesh* m, mat4 mworld);
 collision ellipsoid_collide_mesh(ellipsoid e, vec3 v, cmesh* m, mat4 mworld);
 
+void collision_response_slide(vec3* position, vec3* velocity, collision (*colfunc)(void) );
+
 #endif

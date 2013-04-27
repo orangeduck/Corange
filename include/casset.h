@@ -33,7 +33,7 @@ typedef struct {
   uint32_t timestamp;
 } asset_hndl;
 
-asset_hndl asset_hndl_null();
+asset_hndl asset_hndl_null(void);
 asset_hndl asset_hndl_new(fpath path);
 asset_hndl asset_hndl_new_load(fpath path);
 asset_hndl asset_hndl_new_ptr(asset* as);
@@ -43,9 +43,11 @@ fpath asset_hndl_path(asset_hndl* ah);
 asset* asset_hndl_ptr(asset_hndl* ah);
 bool asset_hndl_eq(asset_hndl* ah0, asset_hndl* ah1);
 
+void asset_cache_flush(void);
+
 /* Init and Finish operations */
-void asset_init();
-void asset_finish();
+void asset_init(void);
+void asset_finish(void);
 
 /* Map a variable such as '$CORANGE' to a path string */
 void asset_add_path_variable(fpath variable, fpath mapping);
@@ -85,7 +87,7 @@ asset* asset_get_as_type(fpath path, type_id type);
 /* Reload all assets of a given type */
 #define asset_reload_type(type) asset_reload_type_id(typeid(type))
 void asset_reload_type_id(type_id type);
-void asset_reload_all();
+void asset_reload_all(void);
 
 /* Get path or typename of asset at ptr */
 char* asset_ptr_path(asset* a);

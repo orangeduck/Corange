@@ -937,6 +937,9 @@ static void render_shadows(deferred_renderer* dr) {
     
 }
 
+void render_ellipsoid(deferred_renderer* dr, ellipsoid e);
+void render_plane(deferred_renderer* dr, plane p);
+
 static void render_clear(deferred_renderer* dr) {
 
   glBindFramebuffer(GL_FRAMEBUFFER, dr->gfbo);
@@ -1006,6 +1009,8 @@ static void render_cmesh(deferred_renderer* dr, cmesh* cm, mat4 world) {
     normals[i+2] = t.norm;
   }
   
+  glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+  
   shader_program_enable_attribute(shader, "vPosition",  3, 3, positions);
   shader_program_enable_attribute(shader, "vNormal",    3, 3, normals);
   shader_program_enable_attribute(shader, "vTangent",   3, 3, normals);
@@ -1019,6 +1024,8 @@ static void render_cmesh(deferred_renderer* dr, cmesh* cm, mat4 world) {
   shader_program_disable_attribute(shader, "vTangent");
   shader_program_disable_attribute(shader, "vBinormal");
   shader_program_disable_attribute(shader, "vTexcoord");
+  
+  glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
   
   free(positions);
   free(normals);
@@ -1385,9 +1392,6 @@ static void render_animated(deferred_renderer* dr, animated_object* ao) {
   shader_program_disable(shader);
   
 }
-
-void render_ellipsoid(deferred_renderer* dr, ellipsoid e);
-void render_plane(deferred_renderer* dr, plane p);
 
 static void render_landscape_blobtree(deferred_renderer* dr, shader* shader, landscape_blobtree* lbt, terrain* terr) {
   

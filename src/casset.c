@@ -185,9 +185,13 @@ asset* asset_hndl_ptr(asset_hndl* ah) {
   
 }
 
-void asset_init(char* game_name) {
-  asset_dict = dict_new(1024);
+void asset_cache_flush(void) {
   asset_timestamp = SDL_GetTicks();
+}
+
+void asset_init(void) {
+  asset_dict = dict_new(1024);
+  asset_cache_flush();
 }
 
 void asset_handler_delete(asset_handler* h) {
@@ -372,13 +376,13 @@ void folder_load_recursive(fpath folder) {
 void file_reload(fpath filename) {
   file_unload(filename);
   file_load(filename);
-  asset_timestamp = SDL_GetTicks();
+  asset_cache_flush();
 }
 
 void folder_reload(fpath folder) {
   folder_unload(folder);
   folder_load(folder);
-  asset_timestamp = SDL_GetTicks();
+  asset_cache_flush();
 }
 
 void file_unload(fpath filename) {
@@ -498,7 +502,7 @@ void asset_reload_type_id(type_id type) {
   
   list_delete_with(asset_names, free);
   
-  asset_timestamp = SDL_GetTicks();
+  asset_cache_flush();
 }
 
 void asset_reload_all() {
@@ -533,7 +537,7 @@ void asset_reload_all() {
   
   list_delete_with(asset_names, free);
   
-  asset_timestamp = SDL_GetTicks();
+  asset_cache_flush();
 }
 
 char* asset_ptr_path(asset* a) {

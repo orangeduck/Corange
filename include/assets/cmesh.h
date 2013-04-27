@@ -17,7 +17,7 @@ typedef struct {
 
 ctri ctri_new(vec3 a, vec3 b, vec3 c, vec3 norm);
 ctri ctri_transform(ctri t, mat4 m);
-ctri ctri_transform_space(ctri t, mat3 s, mat3 is);
+ctri ctri_transform_space(ctri t, mat3 s);
 bool ctri_inside_plane(ctri t, plane p);
 bool ctri_outside_plane(ctri t, plane p);
 bool ctri_intersects_plane(ctri t, plane p);
