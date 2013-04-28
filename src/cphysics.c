@@ -173,13 +173,13 @@ collision sphere_collide_sphere(sphere s, vec3 v, sphere s0) {
 
 collision sphere_collide_ctri(sphere s, vec3 v, ctri ct) {
   
-  //if (!sphere_swept_intersects_plane(s, v, plane_new(ct.a, ct.norm))) {
-  //  return collision_none();
-  //}
+  if (!sphere_swept_intersects_plane(s, v, plane_new(ct.a, ct.norm))) {
+    return collision_none();
+  }
   
   collision col = sphere_collide_face(s, v, ct);
   
-  //if (col.collided) { return col; }
+  if (col.collided) { return col; }
   
   col = collision_merge(col, sphere_collide_edge(s, v, ct.a, ct.b));
   col = collision_merge(col, sphere_collide_edge(s, v, ct.b, ct.c));
@@ -217,6 +217,8 @@ static collision sphere_collide_mesh_space(sphere s, vec3 v, cmesh* cm, mat4 wor
     ctri ct = cm->triangles[i];
     ct = ctri_transform(ct, world);
     ct = ctri_transform_space(ct, space);
+    
+    if (sphere_swept_outside_sphere(s, v, ct.bound)) continue;
     col = collision_merge(col, sphere_collide_ctri(s, v, ct));
   }
   

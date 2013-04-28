@@ -46,5 +46,6 @@ cmesh* col_load_file(char* filename);
 void cmesh_delete(cmesh* cm);
 
 sphere cmesh_bound(cmesh* cm);
+void cmesh_subdivide(cmesh* cm, int iterations);
 
 #endif

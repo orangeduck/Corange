@@ -201,7 +201,7 @@ sphere cmesh_bound(cmesh* cm) {
   
 }
 
-static void cmesh_subdivide(cmesh* cm, int iterations) {
+void cmesh_subdivide(cmesh* cm, int iterations) {
   
   if (!cm->is_leaf) {
     error("Attempt to subdivide non-leaf bsp tree!");

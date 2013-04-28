@@ -2,6 +2,8 @@
 
 #include "cnet.h"
 
+#include "assets/cmesh.h"
+
 void terrain_chunk_delete(terrain_chunk* tc) {
   
   if (net_is_client()) {
@@ -253,7 +255,8 @@ static void terrain_new_chunk(terrain* ter, int i) {
   }
   
   tc->colmesh->bound = cmesh_bound(tc->colmesh);
-  
+  cmesh_subdivide(tc->colmesh, 5);
+
   ter->chunks[i] = tc;
 
 }
