@@ -168,9 +168,7 @@ void ui_rectangle_render(ui_rectangle* r) {
   shader_program_disable_attribute(program_ui, "vPosition");
   shader_program_disable_attribute(program_ui, "vTexcoord");
   shader_program_disable_attribute(program_ui, "vColor");
-  
-  SDL_GL_CheckError();
-  
+    
   if (r->border_size > 0) {
     
     glLineWidth(r->border_size);

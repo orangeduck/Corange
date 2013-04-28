@@ -282,8 +282,6 @@ static sphere renderable_surface_bounding_sphere(float* verts, int num_verts, in
 
 renderable* bmf_load_file(char* filename) {
 
-  SDL_GL_CheckError();
-
   renderable* r = malloc(sizeof(renderable));
   
   SDL_RWops* file = SDL_RWFromFile(filename, "rb");
@@ -341,7 +339,6 @@ renderable* bmf_load_file(char* filename) {
     glGenBuffers(1, &s->vertex_vbo);
     glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(float) * s->num_verticies * stride, vert_data, GL_STATIC_DRAW);
-    SDL_GL_CheckError();
     free(vert_data);
     
     uint32_t num_indicies;
@@ -353,7 +350,6 @@ renderable* bmf_load_file(char* filename) {
     glGenBuffers(1, &s->triangle_vbo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * num_indicies, index_data, GL_STATIC_DRAW);
-    SDL_GL_CheckError();
     free(index_data);
     
     r->surfaces[i] = s;
@@ -361,8 +357,6 @@ renderable* bmf_load_file(char* filename) {
   
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
-  SDL_GL_CheckError();
-
   
   SDL_RWclose(file);
   
@@ -425,9 +419,7 @@ void bmf_save_file(renderable* r, char* filename) {
 }
 
 renderable* obj_load_file(char* filename) {
-  
-  SDL_GL_CheckError();
-  
+    
   model* obj_model = malloc(sizeof(model));
   obj_model->num_meshes = 0;
   obj_model->meshes = malloc(sizeof(mesh*) * 0);

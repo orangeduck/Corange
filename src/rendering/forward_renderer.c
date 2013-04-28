@@ -825,10 +825,6 @@ void forward_renderer_render_instance(instance_object* io) {
     forward_renderer_use_material_entry(me);
     
     shader_program* prog = me->program;
-    GLint recieve_shadows = glGetUniformLocation(shader_program_handle(prog), "recieve_shadows");
-    if (recieve_shadows != -1) {
-      glUniform1i(recieve_shadows, io->recieve_shadows);
-    }
     
     glBindBuffer(GL_ARRAY_BUFFER, s->vertex_vbo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->triangle_vbo);

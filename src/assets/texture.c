@@ -167,7 +167,6 @@ void texture_generate_mipmaps(texture* t) {
 
   glBindTexture(t->type, texture_handle(t));
   glGenerateMipmap(t->type);
-  SDL_GL_CheckError();
   
 }
 
@@ -177,7 +176,6 @@ void texture_set_filtering_nearest(texture* t) {
   glTexParameteri(t->type, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(t->type, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameteri(t->type, GL_TEXTURE_MAX_ANISOTROPY_EXT, 0);
-  SDL_GL_CheckError();
   
 }
 
@@ -187,7 +185,6 @@ void texture_set_filtering_linear(texture* t) {
   glTexParameteri(t->type, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(t->type, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(t->type, GL_TEXTURE_MAX_ANISOTROPY_EXT, 0);
-  SDL_GL_CheckError();
   
 }
 
@@ -200,7 +197,6 @@ void texture_set_filtering_anisotropic(texture* t) {
   glTexParameteri(t->type, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
   glTexParameteri(t->type, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(t->type, GL_TEXTURE_MAX_ANISOTROPY_EXT, max);
-  SDL_GL_CheckError();
 
 }
 
@@ -243,7 +239,6 @@ texture* lut_load_file( char* filename ) {
   glTexParameteri(t->type, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
   glTexParameteri(t->type, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
   glTexParameteri(t->type, GL_TEXTURE_WRAP_R, GL_MIRRORED_REPEAT);
-  SDL_GL_CheckError();
   
   free(contents);
   
@@ -494,9 +489,7 @@ texture* dds_load_file( char* filename ) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, mip_map_num-1);
     texture_set_filtering_anisotropic(t);
   }
- 
-  SDL_GL_CheckError();
-  
+   
   for (int i = 0; i < (t->type == GL_TEXTURE_CUBE_MAP ? 6 : 1); i++) {
   
     GLenum target = t->type;
@@ -504,9 +497,7 @@ texture* dds_load_file( char* filename ) {
     if (t->type == GL_TEXTURE_CUBE_MAP) {
       target = GL_TEXTURE_CUBE_MAP_POSITIVE_X + i;
     }
-    
-    SDL_GL_CheckError();
-    
+        
     int x = hdr.dwWidth;
     int y = hdr.dwHeight;
     int mip_map_num = (hdr.dwFlags & DDSD_MIPMAPCOUNT) ? hdr.dwMipMapCount : 1;
@@ -520,7 +511,6 @@ texture* dds_load_file( char* filename ) {
       
         SDL_RWread(f, data, 1, size);
         glCompressedTexImage2D(target, ix, li->internal_format, x, y, 0, size, data);
-        SDL_GL_CheckError();
         
         x = (x+1)>>1;
         y = (y+1)>>1;
@@ -548,7 +538,6 @@ texture* dds_load_file( char* filename ) {
         
         glPixelStorei(GL_UNPACK_ROW_LENGTH, y);
         glTexImage2D(target, ix, li->internal_format, x, y, 0, li->external_format, li->type, unpacked);
-        SDL_GL_CheckError();
         
         x = (x+1)>>1;
         y = (y+1)>>1;
@@ -571,7 +560,6 @@ texture* dds_load_file( char* filename ) {
         SDL_RWread(f, data, 1, size);
         glPixelStorei(GL_UNPACK_ROW_LENGTH, y);
         glTexImage2D(target, ix, li->internal_format, x, y, 0, li->external_format, li->type, data);
-        SDL_GL_CheckError();
         
         x = (x+1)>>1;
         y = (y+1)>>1;
@@ -583,9 +571,7 @@ texture* dds_load_file( char* filename ) {
       if (li->swap) { glPixelStorei(GL_UNPACK_SWAP_BYTES, GL_FALSE); }
       
     }
-  
-    SDL_GL_CheckError();
-  
+    
   }
   
   SDL_RWclose(f);
@@ -639,11 +625,9 @@ texture* acv_load_file( char* filename ) {
   glTexParameteri(t->type, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
   glTexParameteri(t->type, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
   glTexParameteri(t->type, GL_TEXTURE_WRAP_R, GL_MIRRORED_REPEAT);
-  SDL_GL_CheckError();
   
   free(lut_data);
   
   return t;
   
 }
-    

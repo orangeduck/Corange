@@ -63,6 +63,10 @@ collision sphere_collide_face(sphere s, vec3 v, ctri ct) {
   
   //if (unlikely(sphere_intersects_face(s, ct.a, ct.b, ct.c, ct.norm))) { error("Collision Sphere Inside Mesh Face!"); }
   
+  if (vec3_dot(ct.norm, v) > 0) {
+    ct.norm = vec3_neg(ct.norm);
+  }
+  
   float angle = vec3_dot(ct.norm, v);
   float dist  = vec3_dot(ct.norm, vec3_sub(s.center, ct.a)); 
   

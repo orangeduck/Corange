@@ -3,8 +3,6 @@
 
 static shader* load_shader_file(char* filename, GLenum type) {
 
-  SDL_GL_CheckError();
-
   shader* new_shader = malloc(sizeof(shader));
   
   SDL_RWops* file = SDL_RWFromFile(filename, "r");
@@ -34,9 +32,7 @@ static shader* load_shader_file(char* filename, GLenum type) {
   if (compile_error == GL_FALSE) {
     error("Compiler Error on Shader %s.", filename);
   }
-  
-  SDL_GL_CheckError();
-  
+    
   return new_shader;
 }
 
@@ -69,9 +65,7 @@ shader_program* shader_program_new() {
 }
 
 GLuint shader_program_handle(shader_program* p) {
-  
-  SDL_GL_CheckError();
-  
+    
   if (p == NULL) {
     error("Cannot get handle for NULL shader program");
   }
@@ -82,8 +76,6 @@ GLuint shader_program_handle(shader_program* p) {
 }
 
 GLuint shader_handle(shader* s) {
-
-  SDL_GL_CheckError();
 
   if (s == NULL) {
     error("Cannot get handle for NULL shader");
@@ -97,8 +89,6 @@ GLuint shader_handle(shader* s) {
 
 void shader_program_attach_shader(shader_program* program, shader* shader) {
   
-  SDL_GL_CheckError();
-
   if (shader_program_has_shader(program, shader)) {
     error("Shader already attached!");
   }
@@ -106,14 +96,10 @@ void shader_program_attach_shader(shader_program* program, shader* shader) {
   glAttachShader(shader_program_handle(program), shader_handle(shader));
   
   shader_program_print_log(program);
-  
-  SDL_GL_CheckError();
-  
+    
 }
 
 void shader_program_link(shader_program* program) {
-
-  SDL_GL_CheckError();
 
   GLint count = -1;
   glGetIntegerv(GL_MAX_GEOMETRY_OUTPUT_VERTICES, &count);
@@ -128,14 +114,10 @@ void shader_program_link(shader_program* program) {
   if (!is_linked) {
     error("Error linking shader program!");
   }
-  
-  SDL_GL_CheckError();
-  
+    
 }
 
 bool shader_program_has_shader(shader_program* p, shader* s) {
-
-  SDL_GL_CheckError();
 
   GLuint shaders[128];
   int num_shaders = 0;
@@ -145,15 +127,11 @@ bool shader_program_has_shader(shader_program* p, shader* s) {
     if (shaders[i] == shader_handle(s)) return true;
   }
   
-  SDL_GL_CheckError();
-
   return false;
 }
 
 void shader_program_print_info(shader_program* p) {
   
-  SDL_GL_CheckError();
-
   GLuint shaders[128];
   int num_shaders = 0;
   glGetAttachedShaders(shader_program_handle(p), 128, &num_shaders, shaders);
@@ -162,14 +140,10 @@ void shader_program_print_info(shader_program* p) {
   for(int i = 0; i < num_shaders; i++) {
     debug("| Shader %i: %i", i, shaders[i]);
   }
-
-  SDL_GL_CheckError();
   
 }
 
 void shader_program_print_log(shader_program* program) {
-
-  SDL_GL_CheckError();
 
   char log[2048];
   int i;
@@ -179,14 +153,10 @@ void shader_program_print_log(shader_program* program) {
   if (strcmp(log, "") != 0) {
     debug("%s", log);
   }
-
-  SDL_GL_CheckError();
   
 }
 
 void shader_print_log(shader* shader) {
-
-  SDL_GL_CheckError();
 
   char log[2048];
   int i;
@@ -196,26 +166,20 @@ void shader_print_log(shader* shader) {
   if (strcmp(log, "") != 0) {
     debug("%s", log);
   }
-
-  SDL_GL_CheckError();
   
 }
 
 void shader_program_delete(shader_program* program) {
   glDeleteProgram(shader_program_handle(program));
-  SDL_GL_CheckError();
   free(program);
 }
 
 void shader_delete(shader* shader) {
   glDeleteShader(shader_handle(shader));
-  SDL_GL_CheckError();
   free(shader);
 }
 
 GLint shader_program_get_attribute(shader_program* p, char* name) {
-
-  SDL_GL_CheckError();
 
   GLint attr = glGetAttribLocation(shader_program_handle(p), name);
   if (attr == -1) {
@@ -224,19 +188,15 @@ GLint shader_program_get_attribute(shader_program* p, char* name) {
   } else {
     return attr;
   }
-
-  SDL_GL_CheckError();
   
 }
 
 void shader_program_enable(shader_program* p) {
   glUseProgram(shader_program_handle(p));
-  SDL_GL_CheckError();
 }
 
 void shader_program_disable(shader_program* p) {
   glUseProgram(0);
-  SDL_GL_CheckError();
 }
 
 void shader_program_set_int(shader_program* p, char* name, int val) {
@@ -245,7 +205,6 @@ void shader_program_set_int(shader_program* p, char* name, int val) {
     warning("Shader has no uniform called '%s'", name);
   } else {
     glUniform1i(location, val);
-    SDL_GL_CheckError();
   }
 }
 
@@ -255,7 +214,6 @@ void shader_program_set_float(shader_program* p, char* name, float val) {
     warning("Shader has no uniform called '%s'", name);
   } else {
     glUniform1f(location, val);
-    SDL_GL_CheckError();
   }
 }
 
@@ -265,7 +223,6 @@ void shader_program_set_vec2(shader_program* p, char* name, vec2 val) {
     warning("Shader has no uniform called '%s'", name);
   } else {
     glUniform2f(location, val.x, val.y);
-    SDL_GL_CheckError();
   }
 }
 
@@ -275,7 +232,6 @@ void shader_program_set_vec3(shader_program* p, char* name, vec3 val) {
     warning("Shader has no uniform called '%s'", name);
   } else {
     glUniform3f(location, val.x, val.y, val.z);
-    SDL_GL_CheckError();
   }
 }
 
@@ -285,7 +241,6 @@ void shader_program_set_vec4(shader_program* p, char* name, vec4 val) {
     warning("Shader has no uniform called '%s'", name);
   } else {
     glUniform4f(location, val.x, val.y, val.z, val.w);
-    SDL_GL_CheckError();
   }
 }
 
@@ -295,7 +250,6 @@ void shader_program_set_mat4(shader_program* p, char* name, mat4 val) {
     warning("Shader has no uniform called '%s'", name);
   } else {
     glUniformMatrix4fv(location, 1, GL_TRUE, (float*)&val);
-    SDL_GL_CheckError();
   }
 }
 
@@ -308,7 +262,6 @@ void shader_program_set_texture(shader_program* p, char* name, int index, asset_
     glActiveTexture(GL_TEXTURE0 + index);
     glBindTexture(texture_type(asset_hndl_ptr(&t)), texture_handle(asset_hndl_ptr(&t)));
     glUniform1i(location, index);
-    SDL_GL_CheckError();
   }
   
 }
@@ -322,7 +275,6 @@ void shader_program_set_texture_id(shader_program* p, char* name, int index, GLi
     glActiveTexture(GL_TEXTURE0 + index);
     glBindTexture(GL_TEXTURE_2D, t);
     glUniform1i(location, index);
-    SDL_GL_CheckError();
   }
 
 }
@@ -333,7 +285,6 @@ void shader_program_set_float_array(shader_program* p, char* name, float* vals, 
     warning("Shader has no uniform called '%s'", name);
   } else {
     glUniform1fv(location, count, vals);
-    SDL_GL_CheckError();
   }
 }
 
@@ -343,7 +294,6 @@ void shader_program_set_vec2_array(shader_program* p, char* name, vec2* vals, in
     warning("Shader has no uniform called '%s'", name);
   } else {
     glUniform2fv(location, count, (float*)vals);
-    SDL_GL_CheckError();
   }
 }
 
@@ -353,7 +303,6 @@ void shader_program_set_vec3_array(shader_program* p, char* name, vec3* vals, in
     warning("Shader has no uniform called '%s'", name);
   } else {
     glUniform3fv(location, count, (float*)vals);
-    SDL_GL_CheckError();
   }
 }
 
@@ -363,7 +312,6 @@ void shader_program_set_vec4_array(shader_program* p, char* name, vec4* vals, in
     warning("Shader has no uniform called '%s'", name);
   } else {
     glUniform4fv(location, count, (float*)vals);
-    SDL_GL_CheckError();
   }
 }
 
@@ -373,7 +321,6 @@ void shader_program_set_mat4_array(shader_program* p, char* name, mat4* vals, in
     warning("Shader has no uniform called '%s'", name);
   } else {
     glUniformMatrix4fv(location, count, GL_TRUE, (float*)vals);
-    SDL_GL_CheckError();
   }
 }
 
@@ -384,7 +331,6 @@ void shader_program_enable_attribute(shader_program* p, char* name, int count, i
   } else {
     glEnableVertexAttribArray(attr);  
     glVertexAttribPointer(attr, count, GL_FLOAT, GL_FALSE, sizeof(float) * stride, ptr);
-    SDL_GL_CheckError();
   }
 }
 
@@ -395,9 +341,7 @@ void shader_program_enable_attribute_instance(shader_program* p, char* name, int
   } else {
     glEnableVertexAttribArray(attr);  
     glVertexAttribPointer(attr, count, GL_FLOAT, GL_FALSE, sizeof(float) * stride, ptr);
-    SDL_GL_CheckError();
     glVertexAttribDivisor(attr, 1);
-    SDL_GL_CheckError();
   }
 }
 
@@ -410,17 +354,14 @@ void shader_program_enable_attribute_instance_matrix(shader_program* p, char* na
     glEnableVertexAttribArray(attr+1);  
     glEnableVertexAttribArray(attr+2);  
     glEnableVertexAttribArray(attr+3);
-    SDL_GL_CheckError();
     glVertexAttribPointer(attr+0, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 4 * 4, ptr);
     glVertexAttribPointer(attr+1, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 4 * 4, ptr + sizeof(float) * 4);
     glVertexAttribPointer(attr+2, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 4 * 4, ptr + sizeof(float) * 8);
     glVertexAttribPointer(attr+3, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 4 * 4, ptr + sizeof(float) * 12);
-    SDL_GL_CheckError();
     glVertexAttribDivisor(attr+0, 1);
     glVertexAttribDivisor(attr+1, 1);
     glVertexAttribDivisor(attr+2, 1);
     glVertexAttribDivisor(attr+3, 1);
-    SDL_GL_CheckError();
   }
 }
 
@@ -431,7 +372,6 @@ void shader_program_disable_attribute(shader_program* p, char* name) {
     warning("Shader has no attribute called '%s'", name);
   } else {
     glDisableVertexAttribArray(attr);  
-    SDL_GL_CheckError();
   }
 }
 
@@ -448,7 +388,6 @@ void shader_program_disable_attribute_matrix(shader_program* p, char* name) {
     glDisableVertexAttribArray(attr+1);  
     glDisableVertexAttribArray(attr+2);  
     glDisableVertexAttribArray(attr+3);
-    SDL_GL_CheckError();
   }
 }
 

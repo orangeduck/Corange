@@ -26,10 +26,7 @@ typedef struct {
   
   GLuint world_buffer;
   
-  bool active;
-  bool recieve_shadows;
-  bool cast_shadows;
-  
+  sphere bound;
   asset_hndl renderable;
   asset_hndl collision_body;
 

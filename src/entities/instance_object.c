@@ -2,6 +2,8 @@
 
 #include "cnet.h"
 
+#include "assets/renderable.h"
+
 instance_object* instance_object_new() {
   instance_object* io = malloc(sizeof(instance_object));
   
@@ -11,11 +13,8 @@ instance_object* instance_object_new() {
   if (net_is_client()) {
     glGenBuffers(1, &io->world_buffer);
   }
-
-  io->active = true;
-  io->recieve_shadows = true;
-  io->cast_shadows = true;
   
+  io->bound = sphere_unit();
   io->renderable = asset_hndl_null();
   io->collision_body = asset_hndl_null();
   
@@ -49,6 +48,17 @@ void instance_object_update(instance_object* io) {
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   
   free(world_data);
+  
+  renderable* r = asset_hndl_ptr(&io->renderable);
+  sphere rbound = sphere_unit();
+  for (int i = 0; i < r->num_surfaces; i++) {
+    rbound = sphere_merge(rbound, r->surfaces[i]->bound);
+  }
+  
+  io->bound = sphere_unit();
+  for (int i = 0; i < io->num_instances; i++) {
+    io->bound = sphere_merge(io->bound, sphere_transform(rbound, io->instances[i].world));
+  }
   
 }
 
