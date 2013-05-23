@@ -4,6 +4,7 @@ uniform sampler2D depth_texture;
 uniform sampler2D normals_texture;
 uniform sampler2D positions_texture;
 uniform sampler2D random_texture;
+
 uniform float seed;
 uniform float clip_near;
 uniform float clip_far;

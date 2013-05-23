@@ -69,6 +69,7 @@ int net_http_get(char* out, int max, char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
   vsnprintf(url_buffer, 500, fmt, args);
+  va_end(args);
   
   int parts = sscanf(url_buffer, "http://%[^/]%s", host_buffer, path_buffer);
   
@@ -76,8 +77,6 @@ int net_http_get(char* out, int max, char* fmt, ...) {
     warning("Couldn't resolve parts of URL '%s'", url_buffer);
     return HTTP_ERR_URL;
   }
-  
-  debug("Host: %s Path: %s", host_buffer, path_buffer);
   
   IPaddress ip;
   if ( SDLNet_ResolveHost(&ip, host_buffer, 80) == -1) {
@@ -93,11 +92,14 @@ int net_http_get(char* out, int max, char* fmt, ...) {
   }
   
   char sockout[1024];
-  sprintf(sockout, "GET %256s HTTP/1.1\r\nHost: %256s\r\n\r\n", path_buffer, host_buffer);
+  sprintf(sockout,
+    "GET %s HTTP/1.1\r\n"
+    "Host: %s\r\n"
+    "\r\n", path_buffer, host_buffer);
   
-  int result = SDLNet_TCP_Send(sock, sockout, strlen(sockout)+1);
+  int result = SDLNet_TCP_Send(sock, sockout, strlen(sockout));
   
-  if (result < strlen(sockout)+1) {
+  if (result < strlen(sockout)) {
     warning("Error sending http request: %s", SDLNet_GetError());
     return HTTP_ERR_DATA;
   }
@@ -121,4 +123,88 @@ int net_http_get(char* out, int max, char* fmt, ...) {
   
   return HTTP_ERR_NONE;
   
+}
+
+int net_http_upload(const char* filename, char* fmt, ...) {
+
+  va_list args;
+  va_start(args, fmt);
+  vsnprintf(url_buffer, 500, fmt, args);
+  va_end(args);
+  
+  int parts = sscanf(url_buffer, "http://%[^/]%s", host_buffer, path_buffer);
+  
+  if (parts != 2) {
+    warning("Couldn't resolve parts of URL '%s'", url_buffer);
+    return HTTP_ERR_URL;
+  }
+  
+  IPaddress ip;
+  if ( SDLNet_ResolveHost(&ip, host_buffer, 80) == -1) {
+    warning("Couldn't Resolve Host: %s", SDLNet_GetError());
+    return HTTP_ERR_HOST;
+  }
+
+  TCPsocket sock = SDLNet_TCP_Open(&ip);
+  
+  if (!sock) {
+    warning("Couldn't open socket: %s", SDLNet_GetError());
+    return HTTP_ERR_SOCKET;
+  }
+  
+  SDL_RWops* file = SDL_RWFromFile(filename, "r");
+  
+  if (file == NULL) {
+    warning("Couldn't Open File '%s' to upload", filename);
+    return HTTP_ERR_NOFILE;
+  }
+  
+  size_t size = SDL_RWseek(file,0,SEEK_END);
+  char* contents = malloc(size+1);
+  contents[size] = '\0';
+  
+  SDL_RWseek(file, 0, SEEK_SET);
+  SDL_RWread(file, contents, size, 1);
+  SDL_RWclose(file);
+  
+  char sockbody[size + 1024];
+  char sockheaders[1024];
+  
+  sprintf(sockbody,
+    "--CorangeUploadBoundary\r\n"
+    "content-disposition: form-data; name=\"corangeupload\"; filename=\"%s\"\r\n"
+    "Content-Type: text/plain\r\n"
+    "\r\n"
+    "%s\r\n"
+    "--CorangeUploadBoundary--\r\n"
+    "\r\n", filename, contents);
+  
+  sprintf(sockheaders, 
+    "POST %s HTTP/1.1\r\n"
+    "Host: %s\r\n"
+    "Content-Length: %i\r\n"
+    "Content-Type: multipart/form-data; boundary=CorangeUploadBoundary\r\n"
+    "\r\n" , path_buffer, host_buffer, (int)strlen(sockbody));
+  
+  int result = 0;
+  
+  result = SDLNet_TCP_Send(sock, sockheaders, strlen(sockheaders));
+  if (result < strlen(sockheaders)) {
+    warning("Error sending http request: %s", SDLNet_GetError());
+    return HTTP_ERR_DATA;
+  }
+
+  result = SDLNet_TCP_Send(sock, sockbody, strlen(sockbody));
+  if (result < strlen(sockbody)) {
+    warning("Error sending http request: %s", SDLNet_GetError());
+    return HTTP_ERR_DATA;
+  }
+  
+  char line[1024];  
+  while (SDLNet_TCP_RecvLine(sock, line, 1023)) {
+    //debug("Recived: %s", line);
+  }
+  
+  return HTTP_ERR_NONE;
+
 }

@@ -17,12 +17,18 @@ uniform sampler2D positions_texture;
 uniform sampler2D normals_texture;
 uniform sampler2D random_texture;
 uniform sampler2D depth_texture;
+
 uniform sampler2D shadows_texture0;
 uniform sampler2D shadows_texture1;
 uniform sampler2D shadows_texture2;
 uniform sampler2D ssao_texture;
 uniform samplerCube env_texture;
 uniform sampler2D skin_lookup;
+
+uniform mat4 inv_view;
+uniform mat4 inv_proj;
+uniform float clip_near;
+uniform float clip_far;
 
 uniform vec3 camera_position;
 
@@ -104,24 +110,31 @@ vec3 from_gamma(vec3 color) {
     pow(color.b, 1.0 / 2.2));
 }
 
+float perspective_depth(float depth, float near, float far) {
+  return (((2.0 * near) / depth) - far - near) / (near - far);
+}
+
 void main() {
 
-	vec4 position = texture2D( positions_texture, fTexcoord );
-  float material = position.a;
-  
-  if (material == MAT_DISCARD) { discard; }
-  
+  float depth = texture2D(depth_texture, fTexcoord).r;
+	vec3 position_clip = vec3(fTexcoord.xy, perspective_depth(depth, clip_near, clip_far)) * 2.0 - 1.0;
+  vec4 position = inv_view * inv_proj * vec4(position_clip, 1);
+  position = position / position.w;
+
 	vec4 diffuse_a = texture2D(diffuse_texture, fTexcoord );
 	vec3 diffuse_amount = diffuse_a.rgb;
   float spec_amount = diffuse_a.a;
   
-  if (material == MAT_FLAT) { gl_FragColor.rgb = diffuse_amount; return; }
+  vec4 normals = texture2D(normals_texture, fTexcoord);
   
-  float depth   = texture2D(depth_texture, fTexcoord).r;
-  vec4 normal_a = texture2D(normals_texture, fTexcoord);
-	vec3 normal = normalize(normal_a.rgb);
-  float glossiness = normal_a.a;
+  vec3  normal = normalize(normals.rgb);
+  float glossiness = mod(normals.a, 1.0) * 1000;
+  int material = int(normals.a);
+  
   float curvature = glossiness;
+  
+  if (material == MAT_DISCARD) { discard; }
+  if (material == MAT_FLAT) { gl_FragColor.rgb = diffuse_amount; return; }
   
   const float noise_tile = 1.0;
   vec3 random = 
@@ -138,7 +151,7 @@ void main() {
   vec3 eye_dir = normalize(camera_position - position.xyz);
   float n_dot_c = dot(normal, eye_dir);
   
-  vec3 ssao = texture2DLod(ssao_texture, fTexcoord, 1.0).rgb;
+  vec3 ssao = texture2D(ssao_texture, fTexcoord).rgb;
   vec3 env = textureCube(env_texture, reflect(-eye_dir, normal)).rgb;
   
   vec4 materialsv = vec4(material, material, material, material);
@@ -191,8 +204,8 @@ void main() {
     float v_dot_h = dot(eye_dir, light_half);
     
     vec3  light_diff = max(vec3(n_dot_l, n_dot_l, n_dot_l), 0.0);
-    float light_spec = max(pow(n_dot_h, glossiness), 0.0);
-    float light_refl = max(pow((1.0-n_dot_c), reflect_glossiness), 0.0);
+    float light_spec = ((glossiness+2) / (2 * 3.141)) * max(pow(n_dot_h, glossiness), 0.0);
+    float light_refl = ((reflect_glossiness+2) / (2 * 3.141)) * max(pow((1.0-n_dot_c), reflect_glossiness), 0.0);
     
     float light_inrim = pow(clamp(n_dot_v, 0, 1), inner_rim_exp);
     float light_outrim = pow(clamp(1-n_dot_v, 0, 1), outer_rim_exp);

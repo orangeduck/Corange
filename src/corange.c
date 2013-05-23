@@ -35,13 +35,6 @@ static void corange_debug(const char* str) {
 
 void corange_init(const char* core_assets_path) {
   
-  /* Stop stdout redirect on windows */
-  #ifdef _WIN32
-    FILE* ctt = fopen("CON", "w" );
-    FILE* fout = freopen( "CON", "w", stdout );
-    FILE* ferr = freopen( "CON", "w", stderr );
-  #endif
-  
   /* Attach signal handlers */
   signal(SIGABRT, corange_signal);
   signal(SIGFPE, corange_signal);
@@ -77,7 +70,8 @@ void corange_init(const char* core_assets_path) {
   
   /* Asset Manager */
   debug("Creating Asset Manager...");
-  
+  debug("Core Assets At '%s' ...", core_assets_path);
+
   asset_init();
   asset_add_path_variable(P("$CORANGE"), P(core_assets_path));
   
@@ -160,5 +154,5 @@ void corange_finish() {
   
   SDL_Quit();
 
-  fclose(logout);
+  if (logout) { fclose(logout); }
 }

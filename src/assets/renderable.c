@@ -29,7 +29,7 @@ renderable* renderable_new() {
   r->num_surfaces = 0;
   r->surfaces = NULL;
   r->is_rigged = false;
-    
+  
   return r;
 
 }
@@ -121,7 +121,7 @@ renderable_surface* renderable_surface_new(mesh* m) {
 
   glGenBuffers(1, &s->vertex_vbo);
   glGenBuffers(1, &s->triangle_vbo);
-  
+
   s->num_verticies = m->num_verts;
   s->num_triangles = m->num_triangles;
   s->bound = mesh_bounding_sphere(m);
@@ -185,7 +185,7 @@ renderable_surface* renderable_surface_new_rigged(mesh* m, vertex_weight* weight
 
   glGenBuffers(1, &s->vertex_vbo);
   glGenBuffers(1, &s->triangle_vbo);
-  
+
   s->num_verticies = m->num_verts;
   s->num_triangles = m->num_triangles;
   
@@ -252,8 +252,8 @@ renderable_surface* renderable_surface_new_rigged(mesh* m, vertex_weight* weight
 
 void renderable_surface_delete(renderable_surface* s) {
 
-  glDeleteBuffers(1 , &s->vertex_vbo);
-  glDeleteBuffers(1 , &s->triangle_vbo);
+  glDeleteBuffers(1, &s->vertex_vbo);
+  glDeleteBuffers(1, &s->triangle_vbo);
   
   free(s);
   

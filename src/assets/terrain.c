@@ -7,7 +7,7 @@
 void terrain_chunk_delete(terrain_chunk* tc) {
   
   if (net_is_client()) {
-    glDeleteBuffers(3, tc->index_buffers);
+    glDeleteBuffers(NUM_TERRAIN_BUFFERS, tc->index_buffers);
     glDeleteBuffers(1, &tc->vertex_buffer);
   }
   
@@ -161,7 +161,7 @@ static void terrain_new_chunk(terrain* ter, int i) {
     
     tc->num_indicies[j] = (x_max / off) * (y_max / off) * 6 + (x_max / off) * 12 + (y_max / off) * 12;
     
-    int* index_buffer = malloc(sizeof(int) * tc->num_indicies[j]);
+    uint32_t* index_buffer = malloc(sizeof(uint32_t) * tc->num_indicies[j]);
     index = 0;
     
     for(int x = 0; x < x_max; x+=off)
@@ -221,7 +221,7 @@ static void terrain_new_chunk(terrain* ter, int i) {
     
     if (net_is_client()) {
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tc->index_buffers[j]);
-      glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * tc->num_indicies[j], index_buffer, GL_DYNAMIC_DRAW);
+      glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * tc->num_indicies[j], index_buffer, GL_DYNAMIC_DRAW);
     }
     
     free(index_buffer);

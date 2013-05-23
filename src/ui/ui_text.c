@@ -56,7 +56,7 @@ ui_text* ui_text_new_string(char* string) {
 void ui_text_delete(ui_text* t) {
   
   free(t->string);
-
+  
   glDeleteBuffers(1, &t->positions_buffer);
   glDeleteBuffers(1, &t->texcoords_buffer);
   glDeleteBuffers(1, &t->colors_buffer);

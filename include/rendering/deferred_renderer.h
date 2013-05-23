@@ -165,11 +165,9 @@ typedef struct {
   GLuint gfbo;
   GLuint gdepth_buffer;
   GLuint gdiffuse_buffer;
-  GLuint gpositions_buffer;
   GLuint gnormals_buffer;
 
   GLuint gdiffuse_texture;
-  GLuint gpositions_texture;
   GLuint gnormals_texture;
   GLuint gdepth_texture;
 
@@ -218,6 +216,8 @@ typedef struct {
   
   mat4  camera_view;
   mat4  camera_proj;
+  mat4  camera_inv_view;
+  mat4  camera_inv_proj;
   float camera_near;
   float camera_far;
   box   camera_frustum;

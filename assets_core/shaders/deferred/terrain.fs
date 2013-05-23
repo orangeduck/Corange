@@ -45,9 +45,9 @@ void main( void ) {
   const float bumpiness = 0.75;
   
 	vec2 uvs = vec2(fPosition.x, fPosition.z) / 7;
-	vec2 world_uvs;
-  world_uvs.x = 1 - (fPosition.x / size_x + 0.5);
-	world_uvs.y =     (fPosition.z / size_y + 0.5);
+	vec2 world_uvs = vec2(
+    1 - (fPosition.x / size_x + 0.5),
+        (fPosition.z / size_y + 0.5));
 
   vec4 attrib = normalize(texture2D(attribmap, world_uvs));
 
@@ -70,11 +70,8 @@ void main( void ) {
 	gl_FragData[0].rgb = from_gamma(diffuse.rgb);
 	gl_FragData[0].a = 0.1;
 	
-	gl_FragData[1].rgb = fPosition.xyz;
-	gl_FragData[1].a = 2.0;
-	
-	gl_FragData[2] = normal;
-	gl_FragData[2].a = 10.0;
+	gl_FragData[1].rgb = normal.rgb;
+	gl_FragData[1].a = 2.0 + (10.0 / 1000.0);
   
   gl_FragDepth = linear_depth(gl_FragCoord.z, near, far);
 }

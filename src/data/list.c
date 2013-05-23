@@ -42,7 +42,7 @@ void* list_pop_back(list* l) {
 void* list_pop_at(list* l, int index) {
   assert( l->num_items > 0 );
   
-  void* item = l->items[ index ];
+  void* item = l->items[index];
   
   memmove(&l->items[index], 
           &l->items[index+1], 

@@ -17,7 +17,7 @@
 #include "assets/cmesh.h"
 
 #define NUM_TERRAIN_SUBDIVISIONS 0
-#define NUM_TERRAIN_BUFFERS 4
+#define NUM_TERRAIN_BUFFERS 7
 
 struct terrain_chunk {
   

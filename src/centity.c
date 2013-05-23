@@ -13,24 +13,20 @@ typedef struct {
 static entity_handler entity_handlers[MAX_ENTITY_HANDLERS];
 static int num_entity_handlers = 0;
 
-static list* entity_names;
-static dict* entities;
-static dict* entity_types;
+static list* entity_names = NULL;
+static dict* entities = NULL;
+static dict* entity_types = NULL;
 
 void entity_init() {
-  
   entities = dict_new(512);
   entity_types = dict_new(512);
-  
   entity_names = list_new(512);
 }
 
 void entity_finish() {
-    
-  for (int i = 0; i < entity_names->num_items; i++) {
-    char* name = list_get(entity_names, i);
-    int* type_id = dict_get(entity_types, name);
-    entity_delete(name);
+  
+  while (entity_names->num_items > 0) {
+    entity_delete(list_get(entity_names, 0));
   }
   
   list_delete_with(entity_names, free);
@@ -65,7 +61,8 @@ entity* entity_new_type_id(char* fmt, int type_id, ...) {
   va_list args;
   va_start(args, type_id);
   vsnprintf(entity_name_buff, 511, fmt, args);
-
+  va_end(args);
+  
   if ( dict_contains(entities, entity_name_buff) ) {
     error("Entity Manager already contains entity called %s!", entity_name_buff);
   }
@@ -78,6 +75,7 @@ entity* entity_new_type_id(char* fmt, int type_id, ...) {
     entity_handler eh = entity_handlers[i];
     if (eh.type_id == type_id) {
       e = eh.new_func();
+      break;
     }
   }
   
@@ -105,6 +103,7 @@ bool entity_exists(char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
   vsnprintf(entity_name_buff, 511, fmt, args);
+  va_end(args);
   
   return dict_contains(entities, entity_name_buff);
   
@@ -117,6 +116,7 @@ entity* entity_get(char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
   vsnprintf(entity_name_buff, 511, fmt, args);
+  va_end(args);
   
   if ( !entity_exists(entity_name_buff) ) {
     error("Entity %s does not exist!", entity_name_buff);
@@ -133,6 +133,7 @@ entity* entity_get_as_type_id(char* fmt, int type_id, ...) {
   va_list args;
   va_start(args, type_id);
   vsnprintf(entity_name_buff, 511, fmt, args);
+  va_end(args);
   
   if ( !entity_exists(entity_name_buff) ) {
     error("Entity %s does not exist!", entity_name_buff);
@@ -154,6 +155,7 @@ void entity_delete(char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
   vsnprintf(entity_name_buff, 511, fmt, args);
+  va_end(args);
   
   int* type_ptr = dict_get(entity_types, entity_name_buff);
   int type_id = *type_ptr;
@@ -170,7 +172,8 @@ void entity_delete(char* fmt, ...) {
   
   for(int i = 0; i < entity_names->num_items; i++) {
     if ( strcmp(list_get(entity_names, i), entity_name_buff) == 0 ) {
-      list_pop_at(entity_names, i);
+      char* name = list_pop_at(entity_names, i);
+      free(name);
       break;
     }
   }

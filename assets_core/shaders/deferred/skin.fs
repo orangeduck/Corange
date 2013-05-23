@@ -56,13 +56,11 @@ void main( void ) {
   
 	vec2 uvs = vec2(fTexcoord.x, -fTexcoord.y);
 
-  vec4 diffuse = texture2D(diffuse_map, uvs);
-	float spec = texture2D(spec_map,uvs).r * specular_level;
-	vec4 normal = texture2D(bump_map, uvs);
+  vec4 diffuse   = texture2D(diffuse_map, uvs);
+	float spec     = texture2D(spec_map,uvs).r * specular_level;
+	vec4 normal    = texture2D(bump_map, uvs);
 	vec3 curvature = texture2D(curvature_map, uvs).rgb;
   
-  if (diffuse.a < alpha_test) { discard; }
-	
 	normal.rgb = swap_red_green_inv(normal.rgb);
   normal = mix(normal, vec4( 0.5, 0.5, 1.0, 1.0 ), bumpiness);
 	normal = (normal * 2.0 - vec4(1.0,1.0,1.0,0.0)) * fTBN;
@@ -70,11 +68,8 @@ void main( void ) {
 	gl_FragData[0].rgb = from_gamma(diffuse.rgb) * fColor;
 	gl_FragData[0].a = spec;
 	
-	gl_FragData[1].rgb = fPosition;
-	gl_FragData[1].a = float(material);
-	
-	gl_FragData[2] = normal;
-	gl_FragData[2].a = dot(curvature, vec3(0.3, 0.3, 0.3));
+	gl_FragData[1].rgb = normal.rgb;
+	gl_FragData[1].a = float(material) + dot(curvature, vec3(0.3, 0.3, 0.3)) / 1000;
   
   gl_FragDepth = linear_depth(gl_FragCoord.z, near, far);
   

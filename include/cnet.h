@@ -16,8 +16,10 @@ enum {
   HTTP_ERR_HOST   = 2,
   HTTP_ERR_SOCKET = 3,
   HTTP_ERR_DATA   = 4,
+  HTTP_ERR_NOFILE = 5,
 };
 
 int net_http_get(char* out, int max, char* fmt, ...);
+int net_http_upload(const char* filename, char* fmt, ...);
 
 #endif

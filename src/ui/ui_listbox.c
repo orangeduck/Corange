@@ -14,6 +14,7 @@ ui_listbox* ui_listbox_new() {
   lb->scroll = 0;
   lb->num_items = 0;
   lb->items = NULL;
+  lb->active = true;
   
   lb->onselect = NULL;
 
@@ -95,6 +96,7 @@ void ui_listbox_event(ui_listbox* lb, SDL_Event e) {
     for (int i = 0; i < lb->num_items; i++) {
       
       ui_text* item = lb->items[i];
+      ui_text_draw(item);
       
       if (ui_text_contains_point(item, vec2_new(e.motion.x, e.motion.y)) && lb->onselect) {
         debug("Selecting Item");

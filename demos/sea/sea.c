@@ -125,9 +125,9 @@ void sea_update() {
 
 void sea_render() {
   
-  deferred_renderer_add(g_dr, render_object_cmesh(test_cmesh, test_cmesh_trans));
+  //deferred_renderer_add(g_dr, render_object_cmesh(test_cmesh, test_cmesh_trans));
   deferred_renderer_add(g_dr, render_object_ellipsoid(test_ellipsoid));
-  //deferred_renderer_add(g_dr, render_object_static(entity_get("corvette")));
+  deferred_renderer_add(g_dr, render_object_static(entity_get("corvette")));
   deferred_renderer_render(g_dr);
   
 }
@@ -191,6 +191,12 @@ void sea_finish() {
 
 int main(int argc, char **argv) {
   
+  #ifdef _WIN32
+    FILE* ctt = fopen("CON", "w" );
+    FILE* fout = freopen( "CON", "w", stdout );
+    FILE* ferr = freopen( "CON", "w", stderr );
+  #endif
+  
   corange_init("../../assets_core");
   
   sea_init();
@@ -233,7 +239,6 @@ int main(int argc, char **argv) {
   }
   
   sea_finish();
-  
   corange_finish();
   
   return 0;

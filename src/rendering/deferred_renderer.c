@@ -238,15 +238,10 @@ deferred_renderer* deferred_renderer_new(asset_hndl options) {
   glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, gwidth, gheight);
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, dr->gdiffuse_buffer);   
   
-  glGenRenderbuffers(1, &dr->gpositions_buffer);
-  glBindRenderbuffer(GL_RENDERBUFFER, dr->gpositions_buffer);
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA32F, gwidth, gheight);
-  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_RENDERBUFFER, dr->gpositions_buffer);  
-  
   glGenRenderbuffers(1, &dr->gnormals_buffer);  
   glBindRenderbuffer(GL_RENDERBUFFER, dr->gnormals_buffer);
   glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA16F, gwidth, gheight);
-  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_RENDERBUFFER, dr->gnormals_buffer);  
+  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_RENDERBUFFER, dr->gnormals_buffer);  
   
   glGenRenderbuffers(1, &dr->gdepth_buffer);
   glBindRenderbuffer(GL_RENDERBUFFER, dr->gdepth_buffer);
@@ -262,15 +257,6 @@ deferred_renderer* deferred_renderer_new(asset_hndl options) {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, dr->gdiffuse_texture, 0);
   
-  glGenTextures(1, &dr->gpositions_texture);
-  glBindTexture(GL_TEXTURE_2D, dr->gpositions_texture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, gwidth, gheight, 0, GL_RGBA, GL_FLOAT, NULL);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, dr->gpositions_texture, 0);
-  
   glGenTextures(1, &dr->gnormals_texture);
   glBindTexture(GL_TEXTURE_2D, dr->gnormals_texture);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, gwidth, gheight, 0, GL_RGBA, GL_FLOAT, NULL);
@@ -278,7 +264,7 @@ deferred_renderer* deferred_renderer_new(asset_hndl options) {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, dr->gnormals_texture, 0);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, dr->gnormals_texture, 0);
   
   glGenTextures(1, &dr->gdepth_texture);
   glBindTexture(GL_TEXTURE_2D, dr->gdepth_texture);
@@ -305,7 +291,7 @@ deferred_renderer* deferred_renderer_new(asset_hndl options) {
   glGenTextures(1, &dr->ssao_texture);
   glBindTexture(GL_TEXTURE_2D, dr->ssao_texture);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, ssaowidth, ssaoheight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -427,6 +413,9 @@ deferred_renderer* deferred_renderer_new(asset_hndl options) {
   
   glTexEnvf(GL_TEXTURE_FILTER_CONTROL, GL_TEXTURE_LOD_BIAS, config_float(asset_hndl_ptr(&dr->options), "lod_bias"));
   
+  SDL_GL_CheckError();
+  SDL_GL_CheckFrameBuffer();
+  
   return dr;
   
 }
@@ -436,12 +425,10 @@ void deferred_renderer_delete(deferred_renderer* dr) {
   glDeleteFramebuffers(1, &dr->gfbo);
   
   glDeleteRenderbuffers(1, &dr->gdiffuse_buffer);
-  glDeleteRenderbuffers(1, &dr->gpositions_buffer);
   glDeleteRenderbuffers(1, &dr->gnormals_buffer);
   glDeleteRenderbuffers(1, &dr->gdepth_buffer);
   
   glDeleteTextures(1, &dr->gdiffuse_texture);
-  glDeleteTextures(1, &dr->gpositions_texture);
   glDeleteTextures(1, &dr->gnormals_texture);
   glDeleteTextures(1, &dr->gdepth_texture);
   
@@ -527,12 +514,9 @@ static int round_to(float x, int multiple) {
 
 static void shadow_mapper_transforms(deferred_renderer* dr, int i, mat4* view, mat4* proj, float* nearclip, float* farclip) {
   
-  mat4 inv_view = mat4_inverse(camera_view_matrix(dr->camera));
-  mat4 inv_proj = mat4_inverse(camera_proj_matrix(dr->camera));
-  
   frustum f = frustum_new_clipbox();
-  f = frustum_transform(f, inv_proj);
-  f = frustum_transform(f, inv_view);
+  f = frustum_transform(f, dr->camera_inv_proj);
+  f = frustum_transform(f, dr->camera_inv_view);
   f = frustum_slice(f, dr->shadows_start[i], dr->shadows_end[i]);
   
   vec3 center = frustum_center(f);
@@ -872,6 +856,9 @@ void render_shadows_projectile(deferred_renderer* dr, int i, projectile* p) {
 
 static void render_shadows(deferred_renderer* dr) {
   
+  dr->camera_inv_view = mat4_inverse(camera_view_matrix(dr->camera));
+  dr->camera_inv_proj = mat4_inverse(camera_proj_matrix(dr->camera));
+  
   if (config_int(asset_hndl_ptr(&dr->options), "shadows") == 0) return;
   
   for (int i = 0; i < 3; i++) {
@@ -936,7 +923,7 @@ void render_plane(deferred_renderer* dr, plane p);
 static void render_clear(deferred_renderer* dr) {
 
   glBindFramebuffer(GL_FRAMEBUFFER, dr->gfbo);
-  glDrawBuffers(3, (GLenum[]){ GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 });
+  glDrawBuffers(2, (GLenum[]){ GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 });
   glViewport( 0, 0, graphics_viewport_width(), graphics_viewport_height());
   glClearColor(0.2, 0.2, 0.2, 1.0f);
   glClearDepth(1.0f);
@@ -1244,7 +1231,9 @@ static void render_instance(deferred_renderer* dr, instance_object* io) {
 }
 
 static void render_vegetation(deferred_renderer* dr, instance_object* io) {
- 
+  
+  if (config_int(asset_hndl_ptr(&dr->options), "vegetation") == 0) return;  
+  
   if (sphere_outside_box(io->bound, dr->camera_frustum)) { return; }  
   
   if (config_bool(asset_hndl_ptr(&dr->options), "render_colmeshes")) {
@@ -1408,8 +1397,10 @@ static void render_landscape_blobtree(deferred_renderer* dr, shader* shader, lan
   
   //render_ellipsoid(dr, ellipsoid_of_sphere(lbt->bound));
   
+  int quality = config_int(asset_hndl_ptr(&dr->options), "terrain");
+  
   float dist = vec3_dist_sqrd(dr->camera->position, lbt->bound.center) / (100 * NUM_TERRAIN_BUFFERS);
-  int buff_index = clamp((int)dist, 0, NUM_TERRAIN_BUFFERS-1);
+  int buff_index = clamp((int)dist, (3-quality), NUM_TERRAIN_BUFFERS-1);
   
   terrain_chunk* tc = terr->chunks[lbt->chunk_index];
   
@@ -1826,6 +1817,8 @@ static int render_object_sort(const void* ro0, const void* ro1) {
 
 static void render_gbuffer(deferred_renderer* dr) {
   
+  SDL_GL_CheckError();
+  
   /*
   compare_cam = dr->camera;
   qsort(dr->render_objects, 
@@ -1847,7 +1840,7 @@ static void render_gbuffer(deferred_renderer* dr) {
   int gheight = height * option_graphics_int(asset_hndl_ptr(&dr->options), "msaa", 4, 2, 1);
   
   glBindFramebuffer(GL_FRAMEBUFFER, dr->gfbo);
-  glDrawBuffers(3, (GLenum[]){ GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 });
+  glDrawBuffers(2, (GLenum[]){ GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 });
   glViewport( 0, 0, gwidth, gheight);
   
   glEnable(GL_DEPTH_TEST);
@@ -1937,6 +1930,8 @@ static void render_gbuffer(deferred_renderer* dr) {
   glDisable(GL_CULL_FACE);
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   
+  SDL_GL_CheckError();
+  
 }
 
 static void render_ssao(deferred_renderer* dr) {
@@ -1963,7 +1958,6 @@ static void render_ssao(deferred_renderer* dr) {
   shader_program_set_texture(shader, "random_texture", 0, dr->tex_random);
   shader_program_set_texture_id(shader, "depth_texture", 1, dr->gdepth_texture);
   shader_program_set_texture_id(shader, "normals_texture", 2, dr->gnormals_texture);  
-  shader_program_set_texture_id(shader, "positions_texture", 3, dr->gpositions_texture);
 
   shader_program_set_int(shader, "width", graphics_viewport_width());
   shader_program_set_int(shader, "height", graphics_viewport_height());
@@ -1981,10 +1975,6 @@ static void render_ssao(deferred_renderer* dr) {
   
   glViewport(0, 0, graphics_viewport_width(), graphics_viewport_height());
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
-  
-  glActiveTexture(GL_TEXTURE0 + 0 );
-  glBindTexture(GL_TEXTURE_2D, dr->ssao_texture);
-  glGenerateMipmap(GL_TEXTURE_2D);
 }
 
 static void render_skies(deferred_renderer* dr) {
@@ -2202,9 +2192,13 @@ static void render_compose_low(deferred_renderer* dr) {
   shader_program_set_mat4(shader, "world", mat4_id());
   shader_program_set_mat4(shader, "view", mat4_id());
   shader_program_set_mat4(shader, "proj", mat4_orthographic(-1, 1, -1, 1, -1, 1));
-
+  shader_program_set_mat4(shader, "inv_view", dr->camera_inv_view);
+  shader_program_set_mat4(shader, "inv_proj", dr->camera_inv_proj);
+  shader_program_set_float(shader, "clip_near", dr->camera_near);
+  shader_program_set_float(shader, "clip_far", dr->camera_far);
+  
   shader_program_set_texture_id(shader, "diffuse_texture", 2, dr->gdiffuse_texture);
-  shader_program_set_texture_id(shader, "positions_texture", 3, dr->gpositions_texture);
+  shader_program_set_texture_id(shader, "depth_texture", 3, dr->gdepth_texture);
   shader_program_set_texture_id(shader, "normals_texture", 4, dr->gnormals_texture);
   
   shader_program_set_vec3(shader, "camera_position", dr->camera->position);
@@ -2246,18 +2240,21 @@ static void render_compose_high(deferred_renderer* dr) {
   shader_program_set_mat4(shader, "world", mat4_id());
   shader_program_set_mat4(shader, "view", mat4_id());
   shader_program_set_mat4(shader, "proj", mat4_orthographic(-1, 1, -1, 1, -1, 1));
-
+  shader_program_set_mat4(shader, "inv_view", dr->camera_inv_view);
+  shader_program_set_mat4(shader, "inv_proj", dr->camera_inv_proj);
+  shader_program_set_float(shader, "clip_near", dr->camera_near);
+  shader_program_set_float(shader, "clip_far", dr->camera_far);
+  
   shader_program_set_texture(shader, "env_texture", 0, dr->tex_cube_field);  
   shader_program_set_texture(shader, "random_texture", 1, dr->tex_random);
   shader_program_set_texture_id(shader, "diffuse_texture", 2, dr->gdiffuse_texture);
-  shader_program_set_texture_id(shader, "positions_texture", 3, dr->gpositions_texture);
+  shader_program_set_texture_id(shader, "depth_texture", 3, dr->gdepth_texture);
   shader_program_set_texture_id(shader, "normals_texture", 4, dr->gnormals_texture);
   shader_program_set_texture_id(shader, "ssao_texture", 5, dr->ssao_texture);
-  shader_program_set_texture_id(shader, "depth_texture", 6, dr->gdepth_texture);
-  shader_program_set_texture_id(shader, "shadows_texture0", 7, dr->shadows_texture[0]);
-  shader_program_set_texture_id(shader, "shadows_texture1", 8, dr->shadows_texture[1]);
-  shader_program_set_texture_id(shader, "shadows_texture2", 9, dr->shadows_texture[2]);
-  shader_program_set_texture(shader, "skin_lookup", 10, dr->tex_skin_lookup);
+  shader_program_set_texture_id(shader, "shadows_texture0", 6, dr->shadows_texture[0]);
+  shader_program_set_texture_id(shader, "shadows_texture1", 7, dr->shadows_texture[1]);
+  shader_program_set_texture_id(shader, "shadows_texture2", 8, dr->shadows_texture[2]);
+  shader_program_set_texture(shader, "skin_lookup", 9, dr->tex_skin_lookup);
   
   shader_program_set_vec3(shader, "camera_position", dr->camera->position);
   //shader_program_set_float_array(shader, "light_clip_near", dr->shadow_near, 3);
@@ -2351,6 +2348,8 @@ static void render_compose(deferred_renderer* dr) {
     render_compose_high(dr);
   }
 
+  SDL_GL_CheckError();
+
 }
 
 static void render_particles(deferred_renderer* dr) {
@@ -2430,6 +2429,8 @@ static void render_particles(deferred_renderer* dr) {
   
   //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
   
+  SDL_GL_CheckError();
+  
 }
 
 static void render_tonemap(deferred_renderer* dr) {
@@ -2482,6 +2483,8 @@ static void render_tonemap(deferred_renderer* dr) {
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   glViewport(0, 0, graphics_viewport_width(), graphics_viewport_height());
   
+  SDL_GL_CheckError();
+  
 }
 
 static void render_post0(deferred_renderer* dr) {
@@ -2522,9 +2525,8 @@ static void render_post0(deferred_renderer* dr) {
   shader_program_disable(shader);
 
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
-  
-  glBindTexture(GL_TEXTURE_2D, dr->ldr_front_texture);
-  glGenerateMipmap(GL_TEXTURE_2D);
+
+  SDL_GL_CheckError();
   
 }
 
@@ -2562,9 +2564,8 @@ static void render_post1(deferred_renderer* dr) {
   shader_program_disable_attribute(shader, "vTexcoord");
   shader_program_disable(shader);
   
-  glActiveTexture(GL_TEXTURE0 + 0 );
-  glBindTexture(GL_TEXTURE_2D, dr->ldr_back_texture);
-  glGenerateMipmap(GL_TEXTURE_2D);
+  SDL_GL_CheckError();
+  SDL_GL_CheckFrameBuffer();
   
 }
 

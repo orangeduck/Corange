@@ -32,13 +32,10 @@ void ui_init() {
 
 void ui_finish() {
 
-  for(int i = 0; i < ui_elem_names->num_items; i++) {
-    char* name = list_get(ui_elem_names, i);
-    int* type_id = dict_get(ui_elem_types, name);
-    debug("Deleting UI Element %s (%s)", name, type_id_name(*type_id));
-    ui_elem_delete(name);
+  while(ui_elem_names->num_items > 0) {
+    ui_elem_delete(list_get(ui_elem_names, 0));
   }
-    
+  
   dict_delete(ui_elems);
   
   dict_map(ui_elem_types, free);
@@ -254,7 +251,8 @@ void ui_elem_delete(char* name) {
   
   for(int i = 0; i < ui_elem_names->num_items; i++) {
     if (strcmp((char*)list_get(ui_elem_names, i), name) == 0) {
-      list_pop_at(ui_elem_names, i);
+      char* name = list_pop_at(ui_elem_names, i);
+      free(name);
       break;
     }
   }

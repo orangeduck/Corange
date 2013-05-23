@@ -91,7 +91,7 @@ void teapot_finish() {
 
 int main(int argc, char **argv) {
   
-  corange_init("../../assets_core");
+  corange_init("./assets_core");
   
   teapot_init();
   
