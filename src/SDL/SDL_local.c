@@ -594,14 +594,14 @@ GLBROKENEXTENSIONFN glBrokenExtension = NULL;
 #define SDL_GL_LoadExtension(type, name) \
 name = (type)SDL_GL_GetProcAddress(#name); \
 if (name == NULL) { \
-  fprintf(stderr, "Failed to load function '%s', looking for function '%s'...", #name, #name"EXT"); \
+  fprintf(stderr, "Failed to load function '%s', looking for function '%s'...\n", #name, #name"EXT"); \
   name = (type)SDL_GL_GetProcAddress(#name"EXT"); \
 } \
 if (name == NULL) { \
-  fprintf(stderr, "Failed to load function '%s', looking for function '%s'...", #name"EXT", #name"ARB"); \
+  fprintf(stderr, "Failed to load function '%s', looking for function '%s'...\n", #name"EXT", #name"ARB"); \
   name = (type)SDL_GL_GetProcAddress(#name"ARB"); \
 } \
-if (name == NULL) { fprintf(stderr, "Completely failed to load OpenGL extension function '%s'. Use of this function will crash Corange", #name); }
+if (name == NULL) { fprintf(stderr, "Completely failed to load OpenGL extension function '%s'. Use of this function will crash\n", #name); }
   
 void SDL_GL_LoadExtensions() {
 

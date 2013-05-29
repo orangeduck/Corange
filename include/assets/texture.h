@@ -20,6 +20,7 @@ typedef struct {
 } texture;
 
 texture* texture_new();
+texture* texture_new_handle(GLuint h);
 void texture_delete(texture* t);
 
 GLuint texture_handle(texture* t);

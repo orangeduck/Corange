@@ -274,7 +274,7 @@ deferred_renderer* deferred_renderer_new(asset_hndl options) {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, dr->gdepth_texture, 0);
-    
+  
   /* SSAO Buffer */
   
   int ssaowidth  = width  / option_graphics_int(asset_hndl_ptr(&dr->options), "ssao", 1, 2, 4);
@@ -296,7 +296,7 @@ deferred_renderer* deferred_renderer_new(asset_hndl options) {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, dr->ssao_texture, 0);
-    
+  
   /* HDR Buffer */
   
   int hdrwidth  = width  * option_graphics_int(asset_hndl_ptr(&dr->options), "msaa", 4, 2, 1);
@@ -318,7 +318,7 @@ deferred_renderer* deferred_renderer_new(asset_hndl options) {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, dr->hdr_texture, 0);
-    
+  
   /* LDR front buffer */
   
   glGenFramebuffers(1, &dr->ldr_front_fbo);
@@ -332,7 +332,7 @@ deferred_renderer* deferred_renderer_new(asset_hndl options) {
   glGenTextures(1, &dr->ldr_front_texture);
   glBindTexture(GL_TEXTURE_2D, dr->ldr_front_texture);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -351,7 +351,7 @@ deferred_renderer* deferred_renderer_new(asset_hndl options) {
   glGenTextures(1, &dr->ldr_back_texture);
   glBindTexture(GL_TEXTURE_2D, dr->ldr_back_texture);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -960,8 +960,8 @@ static void render_cmesh(deferred_renderer* dr, cmesh* cm, mat4 world) {
   shader_program_set_mat4(shader, "world", world);
   shader_program_set_mat4(shader, "view", dr->camera_view);
   shader_program_set_mat4(shader, "proj", dr->camera_proj);
-  shader_program_set_float(shader, "near", dr->camera_near);
-  shader_program_set_float(shader, "far",  dr->camera_far);
+  shader_program_set_float(shader, "clip_near", dr->camera_near);
+  shader_program_set_float(shader, "clip_far",  dr->camera_far);
   
   material_entry* me = material_get_entry(asset_get_load(P("$CORANGE/shaders/basic.mat")), 0);
   
@@ -1034,8 +1034,8 @@ static void render_static(deferred_renderer* dr, static_object* so) {
   shader_program_set_mat4(shader, "world", world);
   shader_program_set_mat4(shader, "view", dr->camera_view);
   shader_program_set_mat4(shader, "proj", dr->camera_proj);
-  shader_program_set_float(shader, "near", dr->camera_near);
-  shader_program_set_float(shader, "far",  dr->camera_far);
+  shader_program_set_float(shader, "clip_near", dr->camera_near);
+  shader_program_set_float(shader, "clip_far",  dr->camera_far);
   
   for(int i=0; i < r->num_surfaces; i++) {
     
@@ -1103,8 +1103,8 @@ static void render_skin(deferred_renderer* dr, instance_object* io) {
   shader_program_enable(shader);
   shader_program_set_mat4(shader, "view", dr->camera_view);
   shader_program_set_mat4(shader, "proj", dr->camera_proj);
-  shader_program_set_float(shader, "near", dr->camera_near);
-  shader_program_set_float(shader, "far",  dr->camera_far);
+  shader_program_set_float(shader, "clip_near", dr->camera_near);
+  shader_program_set_float(shader, "clip_far",  dr->camera_far);
   
   for(int i=0; i < r->num_surfaces; i++) {
     
@@ -1177,8 +1177,8 @@ static void render_instance(deferred_renderer* dr, instance_object* io) {
   shader_program_enable(shader);
   shader_program_set_mat4(shader, "view", dr->camera_view);
   shader_program_set_mat4(shader, "proj", dr->camera_proj);
-  shader_program_set_float(shader, "near", dr->camera_near);
-  shader_program_set_float(shader, "far",  dr->camera_far);
+  shader_program_set_float(shader, "clip_near", dr->camera_near);
+  shader_program_set_float(shader, "clip_far",  dr->camera_far);
   
   for(int i=0; i < r->num_surfaces; i++) {
     
@@ -1251,8 +1251,8 @@ static void render_vegetation(deferred_renderer* dr, instance_object* io) {
   shader_program_enable(shader);
   shader_program_set_mat4(shader, "view", dr->camera_view);
   shader_program_set_mat4(shader, "proj", dr->camera_proj);
-  shader_program_set_float(shader, "near", dr->camera_near);
-  shader_program_set_float(shader, "far",  dr->camera_far);
+  shader_program_set_float(shader, "clip_near", dr->camera_near);
+  shader_program_set_float(shader, "clip_far",  dr->camera_far);
   shader_program_set_float(shader, "time", dr->time);
   
   for(int i=0; i < r->num_surfaces; i++) {
@@ -1329,8 +1329,8 @@ static void render_animated(deferred_renderer* dr, animated_object* ao) {
   shader_program_set_mat4(shader, "world", world);
   shader_program_set_mat4(shader, "view", dr->camera_view);
   shader_program_set_mat4(shader, "proj", dr->camera_proj);
-  shader_program_set_float(shader, "near", dr->camera_near);
-  shader_program_set_float(shader, "far",  dr->camera_far);
+  shader_program_set_float(shader, "clip_near", dr->camera_near);
+  shader_program_set_float(shader, "clip_far",  dr->camera_far);
   shader_program_set_mat4_array(shader, "world_bones", bone_matrices, skel->joint_count);
   
   for(int i=0; i < r->num_surfaces; i++) {
@@ -1440,8 +1440,8 @@ static void render_landscape(deferred_renderer* dr, landscape* l) {
   shader_program_set_mat4(shader, "world", landscape_world(l));
   shader_program_set_mat4(shader, "view", dr->camera_view);
   shader_program_set_mat4(shader, "proj", dr->camera_proj);
-  shader_program_set_float(shader, "near", dr->camera_near);
-  shader_program_set_float(shader, "far",  dr->camera_far);
+  shader_program_set_float(shader, "clip_near", dr->camera_near);
+  shader_program_set_float(shader, "clip_far",  dr->camera_far);
   shader_program_set_float(shader, "size_x", l->size_x);
   shader_program_set_float(shader, "size_y", l->size_y);
   

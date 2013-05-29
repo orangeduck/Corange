@@ -10,8 +10,8 @@ uniform float specular_level;
 uniform float alpha_test;
 uniform int material;
 
-uniform float near;
-uniform float far;
+uniform float clip_near;
+uniform float clip_far;
 
 varying vec2 fTexcoord;
 varying vec3 fColor;
@@ -32,14 +32,6 @@ vec3 from_gamma(vec3 color) {
   ret.g = pow(color.g, 1.0/2.2);
   ret.b = pow(color.b, 1.0/2.2);
 	return ret;
-}
-
-float to_gamma(float color) {
-	return pow(color, 2.2);
-}
-
-float from_gamma(float color) {
-	return pow(color, 1.0/2.2);
 }
 
 vec3 swap_red_green_inv(vec3 color) {
@@ -73,6 +65,6 @@ void main( void ) {
 	gl_FragData[1].rgb = normal.rgb;
 	gl_FragData[1].a = float(material) + glossiness / 1000;
   
-  gl_FragDepth = linear_depth(gl_FragCoord.z, near, far);
+  gl_FragDepth = linear_depth(gl_FragCoord.z, clip_near, clip_far);
   
 }

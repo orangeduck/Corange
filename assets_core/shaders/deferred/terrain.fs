@@ -15,8 +15,8 @@ uniform sampler2D ground3_nm;
 uniform float size_x;
 uniform float size_y;
 
-uniform float near;
-uniform float far;
+uniform float clip_near;
+uniform float clip_far;
 
 varying vec3 fPosition;
 varying mat4 fTBN;
@@ -73,5 +73,5 @@ void main( void ) {
 	gl_FragData[1].rgb = normal.rgb;
 	gl_FragData[1].a = 2.0 + (10.0 / 1000.0);
   
-  gl_FragDepth = linear_depth(gl_FragCoord.z, near, far);
+  gl_FragDepth = linear_depth(gl_FragCoord.z, clip_near, clip_far);
 }

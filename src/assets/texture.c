@@ -112,10 +112,10 @@ image* texture_get_image(texture* t) {
     
     for(int x = 0; x < width; x++)
     for(int y = 0; y < height; y++) {
-      data[(y*4*width) + (x*4) + 0] = clamp(pos_data[(y*4*width) + (x*4) + 0] * 255, 0, 255);
-      data[(y*4*width) + (x*4) + 1] = clamp(pos_data[(y*4*width) + (x*4) + 1] * 255, 0, 255);
-      data[(y*4*width) + (x*4) + 2] = clamp(pos_data[(y*4*width) + (x*4) + 2] * 255, 0, 255);
-      data[(y*4*width) + (x*4) + 3] = clamp(pos_data[(y*4*width) + (x*4) + 3] * 255, 0, 255);
+      data[(y*4*width) + (x*4) + 0] = clamp(pos_data[(y*4*width) + (x*4) + 0] * 127 + 127, 0, 255);
+      data[(y*4*width) + (x*4) + 1] = clamp(pos_data[(y*4*width) + (x*4) + 1] * 127 + 127, 0, 255);
+      data[(y*4*width) + (x*4) + 2] = clamp(pos_data[(y*4*width) + (x*4) + 2] * 127 + 127, 0, 255);
+      data[(y*4*width) + (x*4) + 3] = clamp(pos_data[(y*4*width) + (x*4) + 3] * 127 + 127, 0, 255);
     }
     
     free(pos_data);
@@ -127,10 +127,10 @@ image* texture_get_image(texture* t) {
     
     for(int x = 0; x < width; x++)
     for(int y = 0; y < height; y++) {
-      data[(y*4*width) + (x*4) + 0] = clamp(norm_data[(y*4*width) + (x*4) + 0] * 255, 0, 255);
-      data[(y*4*width) + (x*4) + 1] = clamp(norm_data[(y*4*width) + (x*4) + 1] * 255, 0, 255);
-      data[(y*4*width) + (x*4) + 2] = clamp(norm_data[(y*4*width) + (x*4) + 2] * 255, 0, 255);
-      data[(y*4*width) + (x*4) + 3] = clamp(norm_data[(y*4*width) + (x*4) + 3] * 255, 0, 255);
+      data[(y*4*width) + (x*4) + 0] = clamp(norm_data[(y*4*width) + (x*4) + 0] * 127 + 127, 0, 255);
+      data[(y*4*width) + (x*4) + 1] = clamp(norm_data[(y*4*width) + (x*4) + 1] * 127 + 127, 0, 255);
+      data[(y*4*width) + (x*4) + 2] = clamp(norm_data[(y*4*width) + (x*4) + 2] * 127 + 127, 0, 255);
+      data[(y*4*width) + (x*4) + 3] = clamp(norm_data[(y*4*width) + (x*4) + 3] * 127 + 127, 0, 255);
     }
     
     free(norm_data);
@@ -152,6 +152,25 @@ image* texture_get_image(texture* t) {
     }
     
     free(depth_data);
+  
+  } else if (format == GL_DEPTH_COMPONENT24) {
+    
+    unsigned int* depth_data = malloc(sizeof(unsigned int) * width * height);
+    glGetTexImage(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, depth_data);
+    
+    for(int x = 0; x < width; x++)
+    for(int y = 0; y < height; y++) {
+      
+      unsigned int depth = depth_data[(y*width) + x];
+      
+      data[(y*4*width) + (x*4) + 0] = depth;
+      data[(y*4*width) + (x*4) + 1] = depth;
+      data[(y*4*width) + (x*4) + 2] = depth;
+      data[(y*4*width) + (x*4) + 3] = depth;
+    }
+    
+    free(depth_data);
+    
   } else {
     error("Can't save that particular texture format %i to file.", format);
   }

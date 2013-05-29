@@ -35,11 +35,10 @@ vec3 pow3(vec3 col, float exponent) {
 
 void main() {
   
-  const float bloom_size = 4.0;
   const float bloom_amount = 5.0;
   const float bloom_color = 3.0;
   
-  vec4 bloom_s = texture2DLod(ldr_texture, fTexcoord, bloom_size);
+  vec4 bloom_s = texture2D(ldr_texture, fTexcoord);
   vec3 bloom = bloom_amount * bloom_s.a * pow3(bloom_s.rgb, bloom_color);
   
   //const float focal_depth = 0.0015;
