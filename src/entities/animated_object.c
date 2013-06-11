@@ -28,9 +28,12 @@ void animated_object_load_skeleton(animated_object* ao, asset_hndl ah) {
   if(ao->pose != NULL) { frame_delete(ao->pose); }
   ao->skeleton = ah;
   ao->pose = frame_copy(((skeleton*)asset_hndl_ptr(&ao->skeleton))->rest_pose);
+  frame_gen_transforms(ao->pose);
 }
 
 void animated_object_update(animated_object* ao, float timestep) {
+  
+  ao->animation_time += timestep;
   
   animation* a = asset_hndl_ptr(&ao->animation);
   if (a == NULL) { return; }
@@ -41,5 +44,6 @@ void animated_object_update(animated_object* ao, float timestep) {
   }
   
   ao->pose = animation_sample(a, ao->animation_time);
+  frame_gen_transforms(ao->pose);
   
 }

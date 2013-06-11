@@ -928,21 +928,25 @@ static void render_clear(deferred_renderer* dr) {
   glClearColor(0.2, 0.2, 0.2, 1.0f);
   glClearDepth(1.0f);
   glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-  
-  shader_program* shader = material_first_program(asset_hndl_ptr(&dr->mat_clear));
-  shader_program_enable(shader);
-  shader_program_set_vec4(shader, "start", vec4_new(0.5, 0.5, 0.5, 1.0));
-  shader_program_set_vec4(shader, "end",   vec4_new(0.0, 0.0, 0.0, 1.0));
-  shader_program_set_mat4(shader, "world", mat4_id());
-  shader_program_set_mat4(shader, "view",  mat4_id());
-  shader_program_set_mat4(shader, "proj",  mat4_orthographic(-1, 1, -1, 1, -1, 1));
-  shader_program_enable_attribute(shader, "vPosition", 3, 3, quad_position);
-    
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-  
-  shader_program_disable_attribute(shader, "vPosition");
-  shader_program_disable(shader);
 
+  if (!dr->skydome_enabled) {
+  
+    shader_program* shader = material_first_program(asset_hndl_ptr(&dr->mat_clear));
+    shader_program_enable(shader);
+    shader_program_set_vec4(shader, "start", vec4_new(0.75, 0.75, 0.75, 1.0));
+    shader_program_set_vec4(shader, "end",   vec4_new(0.00, 0.00, 0.00, 1.0));
+    shader_program_set_mat4(shader, "world", mat4_id());
+    shader_program_set_mat4(shader, "view",  mat4_id());
+    shader_program_set_mat4(shader, "proj",  mat4_orthographic(-1, 1, -1, 1, -1, 1));
+    shader_program_enable_attribute(shader, "vPosition", 3, 3, quad_position);
+      
+      glDrawArrays(GL_TRIANGLES, 0, 6);
+    
+    shader_program_disable_attribute(shader, "vPosition");
+    shader_program_disable(shader);
+
+  }
+  
   glBindFramebuffer(GL_FRAMEBUFFER, 0);  
   
 }

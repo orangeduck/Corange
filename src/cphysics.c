@@ -218,7 +218,8 @@ static collision sphere_collide_mesh_space(sphere s, vec3 v, cmesh* cm, mat4 wor
     ct = ctri_transform(ct, world);
     ct = ctri_transform_space(ct, space);
     
-    if (sphere_swept_outside_sphere(s, v, ct.bound)) continue;
+    /* This does not work for some reason */
+    //if (sphere_swept_outside_sphere(s, v, ct.bound)) continue;
     col = collision_merge(col, sphere_collide_ctri(s, v, ct));
   }
   
