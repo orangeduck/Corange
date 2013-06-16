@@ -40,6 +40,11 @@ void frame_interpolate_to(frame* f0, frame* f1, float amount, frame* out) {
   
 }
 
+void frame_copy_to(frame* f, frame* out) {
+  memcpy(out->joint_positions, f->joint_positions, sizeof(vec3) * f->joint_count);
+  memcpy(out->joint_rotations, f->joint_rotations, sizeof(quat) * f->joint_count);
+}
+
 static bool frame_decendant_of(frame* f, int decendent, int joint) {
   
   if (f->joint_parents[decendent] == joint) { return true;  }

@@ -1731,7 +1731,7 @@ void render_projectile(deferred_renderer* dr, projectile* p) {
   static_object so;
   so.position = p->position;
   so.rotation = p->rotation;
-  so.scale = vec3_new(1, 1, 1);
+  so.scale = vec3_new(10, 10, 10);
   so.renderable = p->mesh;
   so.collision_body = asset_hndl_null();
   

@@ -3732,3 +3732,25 @@ float triangle_difference_v(vertex v1, vertex v2, vertex v3) {
   
   return max - min;
 }
+
+
+float tween_approach(float curr, float target, float timestep, float steepness) {
+  return lerp(curr, target, saturate(steepness * timestep));
+}
+
+
+float tween_linear(float curr, float target, float timestep, float max) {
+  return curr + clamp(target - curr, -saturate(max * timestep), saturate(max * timestep));
+}
+
+vec3 vec3_tween_approach(vec3 curr, vec3 target, float timestep, float steepness) {
+  return vec3_lerp(curr, target, saturate(steepness * timestep));
+}
+
+vec3 vec3_tween_linear(vec3 curr, vec3 target, float timestep, float max) {
+  float dist = vec3_dist(curr, target);
+  vec3  dirr = vec3_normalize(vec3_sub(target, curr));
+  return vec3_add(curr, vec3_mul(dirr, saturate(min(dist, max * timestep))));
+  
+}
+

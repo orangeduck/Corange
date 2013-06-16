@@ -944,7 +944,7 @@ renderable* smd_load_file(char* filename) {
           &l1_id, &l1_amount, &l2_id, &l2_amount, &l3_id, &l3_amount) > 9) {
         
         if (num_links > 3) {
-          warning("Loading file '%s'. More than 3 bones rigged to vertex. Ignoring other bones", filename);
+          //warning("Loading file '%s'. More than 3 bones rigged to vertex. Ignoring other bones", filename);
           num_links = 3;
         }
         

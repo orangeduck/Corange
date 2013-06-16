@@ -17,13 +17,13 @@ static list* entity_names = NULL;
 static dict* entities = NULL;
 static dict* entity_types = NULL;
 
-void entity_init() {
+void entity_init(void) {
   entities = dict_new(512);
   entity_types = dict_new(512);
   entity_names = list_new(512);
 }
 
-void entity_finish() {
+void entity_finish(void) {
   
   while (entity_names->num_items > 0) {
     entity_delete(list_get(entity_names, 0));
@@ -56,7 +56,7 @@ void entity_handler_cast(int type_id, void* entity_new_func() , void entity_del_
 
 entity* entity_new_type_id(char* fmt, int type_id, ...) {
 
-  static char entity_name_buff[512];
+  char entity_name_buff[512];
   
   va_list args;
   va_start(args, type_id);
@@ -98,7 +98,7 @@ entity* entity_new_type_id(char* fmt, int type_id, ...) {
 
 bool entity_exists(char* fmt, ...) {
 
-  static char entity_name_buff[512];
+  char entity_name_buff[512];
 
   va_list args;
   va_start(args, fmt);
@@ -111,14 +111,14 @@ bool entity_exists(char* fmt, ...) {
 
 entity* entity_get(char* fmt, ...) {
   
-  static char entity_name_buff[512];
+  char entity_name_buff[512];
   
   va_list args;
   va_start(args, fmt);
   vsnprintf(entity_name_buff, 511, fmt, args);
   va_end(args);
   
-  if ( !entity_exists(entity_name_buff) ) {
+  if ( !dict_contains(entities, entity_name_buff) ) {
     error("Entity %s does not exist!", entity_name_buff);
   }
 
@@ -128,7 +128,7 @@ entity* entity_get(char* fmt, ...) {
 
 entity* entity_get_as_type_id(char* fmt, int type_id, ...) {
   
-  static char entity_name_buff[512];
+  char entity_name_buff[512];
   
   va_list args;
   va_start(args, type_id);
@@ -150,7 +150,7 @@ entity* entity_get_as_type_id(char* fmt, int type_id, ...) {
 
 void entity_delete(char* fmt, ...) {
   
-  static char entity_name_buff[512];
+  char entity_name_buff[512];
   
   va_list args;
   va_start(args, fmt);
@@ -234,11 +234,10 @@ char* entity_typename(entity* e) {
 
 void entities_new_type_id(const char* name_format, int count, int type_id) {
   
-  const unsigned int max_length = 1024;
-  char entity_name[max_length];
+  char entity_name[512];
   
-  if(strlen(name_format) - 2 + ((count+1)/10) > max_length) {
-    error("Name pattern and count are potentially longer than %i characters. Wont fit in buffer.", max_length);
+  if(strlen(name_format) - 2 + ((count+1)/10) > 512) {
+    error("Name pattern and count are potentially longer than %i characters. Wont fit in buffer.", 512);
   }
   
   if(!strstr(name_format, "%i")) {

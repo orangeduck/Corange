@@ -5,7 +5,7 @@ animation* animation_new() {
   animation* a = malloc(sizeof(animation));
   
   a->frame_count = 0;
-  a->frame_times = NULL;
+  a->frame_time = 1.0/30.0;
   a->frames = NULL;
   
   return a;
@@ -17,26 +17,32 @@ void animation_delete(animation* a) {
     frame_delete(a->frames[i]);
   }
   
-  free(a->frame_times);
   free(a->frames);
   free(a);
 }
 
-frame* animation_new_frame(animation* a, float frametime, frame* base) {
+frame* animation_add_frame(animation* a, frame* base) {
   
   frame* f = frame_copy(base);
   
   a->frame_count++;
-  a->frame_times = realloc(a->frame_times, sizeof(float) * a->frame_count);
   a->frames = realloc(a->frames, sizeof(frame*) * a->frame_count);
-  a->frame_times[a->frame_count-1] = frametime;
   a->frames[a->frame_count-1] = f;
   
   return f;
   
 }
 
+float animation_duration(animation* a) {
+  return a->frame_count * a->frame_time;
+}
+
 frame* animation_sample(animation* a, float time) {
+  
+  if (a->frame_count == 0) {
+    error("Animation has no frames!");
+    return NULL;
+  }
   
   frame* f = frame_copy(a->frames[0]);
   animation_sample_to(a, time, f);
@@ -45,28 +51,22 @@ frame* animation_sample(animation* a, float time) {
 }
 
 void animation_sample_to(animation* a, float time, frame* out) {
-
-  time = fmod(time, a->frame_times[a->frame_count-1]);
   
-  frame* frame0 = a->frames[0];
-  frame* frame1 = a->frames[a->frame_count-1];
-  
-  float frame0_time = 0;
-  float frame1_time = FLT_MAX;
-  
-  for(int i = 0; i < a->frame_count; i++) {
-    if ((time > a->frame_times[i]) && (frame0_time < a->frame_times[i])) {
-      frame0 = a->frames[i];
-      frame0_time = a->frame_times[i];
-    }
-    
-    if ((time < a->frame_times[i]) && (frame1_time > a->frame_times[i])) {
-      frame1 = a->frames[i];
-      frame1_time = a->frame_times[i];
-    }
+  if (a->frame_count == 0) {
+    error("Animation has no frames!");
+    return;
   }
   
-  float amount = (time - frame0_time) / (frame1_time - frame0_time);
+  if (a->frame_count == 1) {
+    frame_copy_to(a->frames[0], out);
+    return;
+  }
+  
+  time = fmod(time, a->frame_time * (a->frame_count-1));
+  
+  frame* frame0 = a->frames[(int)(time / a->frame_time) + 0];
+  frame* frame1 = a->frames[(int)(time / a->frame_time) + 1];
+  float amount  = fmod(time / a->frame_time, 1.0);
   
   frame_interpolate_to(frame0, frame1, amount, out);
 
@@ -129,8 +129,7 @@ animation* ani_load_file(char* filename) {
     
       float time;
       if (sscanf(line, "time %f", &time) == 1) {
-        const int fps = 24;
-        f = animation_new_frame(a, time / fps, base->rest_pose);
+        f = animation_add_frame(a, base->rest_pose);
       }
     
       int id;

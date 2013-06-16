@@ -15,13 +15,13 @@
 
 typedef void entity;
 
-void entity_init();
-void entity_finish();
+void entity_init(void);
+void entity_finish(void);
 
 #define entity_handler(type, new, del) entity_handler_cast(typeid(type), (void*(*)())new , (void(*)(void*))del)
 void entity_handler_cast(int type_id, void* entity_new() , void entity_del(void* entity));
 
-/* Create, add, get and destroy entities */
+/* Create, get and destroy entities */
 #define entity_new(fmt, type, ...) (type*)entity_new_type_id(fmt, typeid(type), ##__VA_ARGS__)
 #define entity_get_as(fmt, type, ...) ((type*)entity_get_as_type_id(fmt, typeid(type)), ##__VA_ARGS__)
 

@@ -16,13 +16,13 @@
 
 typedef void ui_elem;
 
-void ui_init();
-void ui_finish();
+void ui_init(void);
+void ui_finish(void);
 
 /* Pass Event, Update, and Render whole UI */
 void ui_event(SDL_Event e);
-void ui_update();
-void ui_render();
+void ui_update(void);
+void ui_render(void);
 
 /* Register new UI type */
 #define ui_handler(type, new, delete, event, update, render) \
@@ -41,21 +41,17 @@ void ui_handler_cast(int type_id,
   void (*ui_elem_render_func)(ui_elem*));
 
 /* Create, add and get UI elements */
-#define ui_elem_new(name, type) (type*)ui_elem_new_type_id(name, typeid(type))
-#define ui_elem_add(name, type, ui_elem) ui_elem_add_type_id(name, typeid(type), ui_elem);
-#define ui_elem_get_as(name, type) ((type*)ui_elem_get_as_type_id(name, typeid(type)));
+#define ui_elem_new(fmt, type, ...) (type*)ui_elem_new_type_id(fmt, typeid(type), ##__VA_ARGS__)
+#define ui_elem_get_as(fmt, type, ...) ((type*)ui_elem_get_as_type_id(fmt, typeid(type), ##__VA_ARGS__));
 
-bool ui_elem_exists(char* name);
-ui_elem* ui_elem_new_type_id(char* name, int type_id);
-void ui_elem_add_type_id(char* name, int type, ui_elem* ui_elem);
-ui_elem* ui_elem_get(char* name);
-ui_elem* ui_elem_get_as_type_id(char* name, int type_id);
-
-/* Event, Update, Render, and Delete individual elements */
-void ui_elem_event(char* name, SDL_Event e);
-void ui_elem_update(char* name);
-void ui_elem_render(char* name);
-void ui_elem_delete(char* name);
+bool ui_elem_exists(char* fmt, ...);
+ui_elem* ui_elem_get(char* fmt, ...);
+ui_elem* ui_elem_get_as_type_id(char* fmt, int type_id, ...);
+ui_elem* ui_elem_new_type_id(char* fmt, int type_id, ...);
+void ui_elem_delete(char* fmt, ...);
+void ui_elem_event(char* fmt, SDL_Event e, ...);
+void ui_elem_update(char* fmt, ...);
+void ui_elem_render(char* fmt, ...);
 
 /* Get UI element name or type name */
 char* ui_elem_name(ui_elem* e);

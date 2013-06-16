@@ -204,7 +204,7 @@ void main() {
     float v_dot_h = dot(eye_dir, light_half);
     
     vec3  light_diff = max(vec3(n_dot_l, n_dot_l, n_dot_l), 0.0);
-    float light_spec = ((glossiness+2) / (2 * 3.141)) * max(pow(n_dot_h, glossiness), 0.0);
+    float light_spec = ((glossiness+2) / (8 * 3.141)) * max(pow(n_dot_h, glossiness), 0.0);
     float light_refl = ((reflect_glossiness+2) / (2 * 3.141)) * max(pow((1.0-n_dot_c), reflect_glossiness), 0.0);
     
     float light_inrim = pow(clamp(n_dot_v, 0, 1), inner_rim_exp);

@@ -506,8 +506,6 @@ mat4 mat4_world(vec3 position, vec3 scale, quat rotation);
 mat4 mat4_lerp(mat4 m1, mat4 mat2, float amount);
 mat4 mat4_smoothstep(mat4 m1, mat4 mat2, float amount);
 
-vec4 mat4_to_quaternion(mat4 m);
-
 /*
 ** == Geometry ==
 */
@@ -743,5 +741,14 @@ float triangle_difference_u(vertex v1, vertex v2, vertex v3);
 float triangle_difference_v(vertex v1, vertex v2, vertex v3);
 
 vertex triangle_random_position_interpolation(vertex v1, vertex v2, vertex v3);
+
+/* Tweeners */
+
+float tween_approach(float curr, float target, float timestep, float steepness);
+float tween_linear(float curr, float target, float timestep, float max);
+
+vec3 vec3_tween_approach(vec3 curr, vec3 target, float timestep, float steepness);
+vec3 vec3_tween_linear(vec3 curr, vec3 target, float timestep, float max);
+
 
 #endif

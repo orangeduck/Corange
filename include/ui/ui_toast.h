@@ -20,7 +20,7 @@ typedef struct {
   
 } ui_toast;
 
-void ui_toast_popup(char* message);
+void ui_toast_popup(char* fmt, ...);
 
 ui_toast* ui_toast_new();
 void ui_toast_delete(ui_toast* t);

@@ -54,13 +54,18 @@ static int toast_index(ui_toast* t) {
 }
 
 static unsigned int popup_counter = 0;
-static char popup_name[256];
 
-void ui_toast_popup(char* message) {
+static char popup_contents[1024];
+
+void ui_toast_popup(char* fmt, ...) {
   
-  sprintf(popup_name, "toast_%u", popup_counter++);
-  ui_toast* t = ui_elem_new(popup_name, ui_toast);
-  ui_toast_set_label(t, message);
+  va_list va;
+  va_start(va, fmt);
+  vsnprintf(popup_contents, 1023, fmt, va);
+  va_end(va);
+
+  ui_toast* t = ui_elem_new("toast_%i", ui_toast, popup_counter++);
+  ui_toast_set_label(t, popup_contents);
   
 }
 
