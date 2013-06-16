@@ -518,8 +518,8 @@ typedef struct {
 } plane;
 
 plane plane_new(vec3 position, vec3 direction);
-plane plane_transform(plane p, mat4 world);
-plane plane_transform_space(plane p, mat3 space);
+plane plane_transform(plane p, mat4 world, mat3 world_normal);
+plane plane_transform_space(plane p, mat3 space, mat3 space_normal);
 float plane_distance(plane p, vec3 point);
 
 bool point_inside_plane(vec3 point, plane p);
@@ -547,7 +547,7 @@ typedef struct {
 box box_new(float x_min, float x_max, float y_min, float y_max, float z_min, float z_max);
 box box_sphere(vec3 center, float radius);
 box box_merge(box b1, box b2);
-box box_transform(box b1, mat4 world);
+box box_transform(box b1, mat4 world, mat3 world_normal);
 box box_invert(box b);
 box box_invert_depth(box b);
 box box_invert_width(box b);

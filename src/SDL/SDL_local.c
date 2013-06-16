@@ -555,6 +555,7 @@ GLDISABLEVERTEXATTRIBARRAYFN glDisableVertexAttribArray = NULL;
 GLUNIFORM2FFN glUniform2f = NULL;
 GLUNIFORM3FFN glUniform3f = NULL;
 GLUNIFORM4FFN glUniform4f = NULL;
+GLUNIFORMMATRIX3FVFN glUniformMatrix3fv = NULL;
 GLUNIFORMMATRIX4FVFN glUniformMatrix4fv = NULL;
 GLUNIFORM1FVFN glUniform1fv = NULL;
 GLUNIFORM2FVFN glUniform2fv = NULL;
@@ -636,6 +637,7 @@ void SDL_GL_LoadExtensions() {
   SDL_GL_LoadExtension(GLUNIFORM2FVFN, glUniform2fv);
   SDL_GL_LoadExtension(GLUNIFORM3FVFN, glUniform3fv);
   SDL_GL_LoadExtension(GLUNIFORM3FVFN, glUniform4fv);
+  SDL_GL_LoadExtension(GLUNIFORMMATRIX3FVFN, glUniformMatrix3fv);
   SDL_GL_LoadExtension(GLUNIFORMMATRIX4FVFN, glUniformMatrix4fv);
   
   /* Attributes */

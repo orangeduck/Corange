@@ -40,6 +40,7 @@ void instance_object_update(instance_object* io) {
   for (int i = 0; i < io->num_instances; i++) {
     instance_data id = io->instances[i];
     io->instances[i].world = mat4_world(id.position, id.scale, id.rotation);
+    io->instances[i].world_normal = mat3_transpose(mat3_inverse(mat4_to_mat3(io->instances[i].world)));
     world_data[i] = mat4_transpose(io->instances[i].world);
   }
   
@@ -69,6 +70,7 @@ void instance_object_add_instance(instance_object* io, vec3 position, vec3 scale
   id.scale = scale;
   id.rotation = rotation;
   id.world = mat4_world(id.position, id.scale, id.rotation);
+  id.world_normal = mat3_transpose(mat3_inverse(mat4_to_mat3(id.world)));
   
   io->num_instances++;
   io->instances = realloc(io->instances, sizeof(instance_data) * io->num_instances);
@@ -99,3 +101,6 @@ mat4 instance_object_world(instance_object* io, int i) {
   return io->instances[i].world;
 }
 
+mat3 instance_object_world_normal(instance_object* io, int i) {
+  return io->instances[i].world_normal;
+}

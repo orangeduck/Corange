@@ -24,3 +24,7 @@ void static_object_delete(static_object* s) {
 mat4 static_object_world(static_object* s) {
   return mat4_world(s->position, s->scale, s->rotation);
 }
+
+mat3 static_object_world_normal(static_object* s) {
+  return mat3_transpose(mat3_inverse(mat4_to_mat3(static_object_world(s))));
+}

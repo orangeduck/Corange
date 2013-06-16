@@ -244,6 +244,15 @@ void shader_program_set_vec4(shader_program* p, char* name, vec4 val) {
   }
 }
 
+void shader_program_set_mat3(shader_program* p, char* name, mat3 val) {
+  GLint location = glGetUniformLocation(shader_program_handle(p), name);
+  if ( location == -1) {
+    warning("Shader has no uniform called '%s'", name);
+  } else {
+    glUniformMatrix3fv(location, 1, GL_TRUE, (float*)&val);
+  }
+}
+
 void shader_program_set_mat4(shader_program* p, char* name, mat4 val) {
   GLint location = glGetUniformLocation(shader_program_handle(p), name);
   if ( location == -1) {

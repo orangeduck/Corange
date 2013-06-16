@@ -17,6 +17,7 @@ typedef struct {
   vec3 scale;
   quat rotation;
   mat4 world;
+  mat3 world_normal;
 } instance_data;
 
 typedef struct {
@@ -39,5 +40,6 @@ void instance_object_update(instance_object* io);
 void instance_object_add_instance(instance_object* io, vec3 position, vec3 scale, quat rotation);
 void instance_object_rem_instance(instance_object* io, int i);
 mat4 instance_object_world(instance_object* io, int i);
+mat3 instance_object_world_normal(instance_object* io, int i);
 
 #endif

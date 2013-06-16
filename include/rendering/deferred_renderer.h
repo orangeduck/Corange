@@ -24,7 +24,6 @@
 #include "entities/instance_object.h"
 #include "entities/animated_object.h"
 #include "entities/particles.h"
-#include "entities/projectile.h"
 #include "entities/landscape.h"
 
 #include "rendering/sky.h"
@@ -46,11 +45,10 @@ enum {
   RO_TYPE_SPHERE     = 8,
   RO_TYPE_ELLIPSOID  = 9,
   RO_TYPE_CMESH      = 10,
-  RO_TYPE_PROJECTILE = 11,
-  RO_TYPE_FRUSTUM    = 12,
-  RO_TYPE_PLANE      = 13,
-  RO_TYPE_LINE       = 14,
-  RO_TYPE_POINT      = 15,
+  RO_TYPE_FRUSTUM    = 11,
+  RO_TYPE_PLANE      = 12,
+  RO_TYPE_LINE       = 13,
+  RO_TYPE_POINT      = 14,
 };
 
 typedef struct {
@@ -73,7 +71,6 @@ typedef struct {
     animated_object* animated_object;
     landscape* landscape;
     particles* particles;
-    projectile* projectile;
     
     /* UI */
     light* light;
@@ -94,7 +91,6 @@ render_object render_object_frustum(frustum f);
 render_object render_object_plane(plane p);
 render_object render_object_cmesh(cmesh* cm, mat4 world);
 render_object render_object_landscape(landscape* l);
-render_object render_object_projectile(projectile* p);
 render_object render_object_paint(mat4 paint_axis, float paint_radius);
 render_object render_object_line(vec3 start, vec3 end, vec3 color, float thickness);
 render_object render_object_point(vec3 pos, vec3 color, float size);

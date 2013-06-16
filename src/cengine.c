@@ -2404,16 +2404,16 @@ float plane_distance(plane p, vec3 point) {
   return vec3_dot(vec3_sub(point, p.position), p.direction);
 }
 
-plane plane_transform(plane p, mat4 world) {
+plane plane_transform(plane p, mat4 world, mat3 world_normal) {
   p.position  = mat4_mul_vec3(world, p.position);
-  p.direction = mat3_mul_vec3(mat3_transpose(mat3_inverse(mat4_to_mat3(world))), p.direction);
+  p.direction = mat3_mul_vec3(world_normal, p.direction);
   p.direction = vec3_normalize(p.direction);
   return p;
 }
 
-plane plane_transform_space(plane p, mat3 space) {
+plane plane_transform_space(plane p, mat3 space, mat3 space_normal) {
   p.position  = mat3_mul_vec3(space, p.position);
-  p.direction = mat3_mul_vec3(mat3_transpose(mat3_inverse(space)), p.direction);
+  p.direction = mat3_mul_vec3(space_normal, p.direction);
   p.direction = vec3_normalize(p.direction);
   return p;
 }
@@ -2578,14 +2578,14 @@ box box_merge(box b1, box b2) {
   return box_new(x_min, x_max, y_min, y_max, z_min, z_max);
 }
 
-box box_transform(box bb, mat4 world_matrix) {
+box box_transform(box bb, mat4 world, mat3 world_normal) {
   
-  bb.top = plane_transform(bb.top, world_matrix);
-  bb.bottom = plane_transform(bb.bottom, world_matrix);
-  bb.left = plane_transform(bb.left, world_matrix);
-  bb.right = plane_transform(bb.right, world_matrix);
-  bb.front = plane_transform(bb.front, world_matrix);
-  bb.back = plane_transform(bb.back, world_matrix);
+  bb.top    = plane_transform(bb.top,    world, world_normal);
+  bb.bottom = plane_transform(bb.bottom, world, world_normal);
+  bb.left   = plane_transform(bb.left,   world, world_normal);
+  bb.right  = plane_transform(bb.right,  world, world_normal);
+  bb.front  = plane_transform(bb.front,  world, world_normal);
+  bb.back   = plane_transform(bb.back,   world, world_normal);
   
   return bb;
   
@@ -3740,7 +3740,7 @@ float tween_approach(float curr, float target, float timestep, float steepness) 
 
 
 float tween_linear(float curr, float target, float timestep, float max) {
-  return curr + clamp(target - curr, -saturate(max * timestep), saturate(max * timestep));
+  return curr + clamp(target - curr, -max * timestep, max * timestep);
 }
 
 vec3 vec3_tween_approach(vec3 curr, vec3 target, float timestep, float steepness) {
@@ -3750,7 +3750,7 @@ vec3 vec3_tween_approach(vec3 curr, vec3 target, float timestep, float steepness
 vec3 vec3_tween_linear(vec3 curr, vec3 target, float timestep, float max) {
   float dist = vec3_dist(curr, target);
   vec3  dirr = vec3_normalize(vec3_sub(target, curr));
-  return vec3_add(curr, vec3_mul(dirr, saturate(min(dist, max * timestep))));
+  return vec3_add(curr, vec3_mul(dirr, min(dist, max * timestep)));
   
 }
 

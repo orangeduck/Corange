@@ -141,6 +141,13 @@ mat4  landscape_world(landscape* l) {
   
 }
 
+mat3 landscape_world_normal(landscape* l) {
+  
+  mat3 world = mat4_to_mat3(landscape_world(l));
+  return mat3_transpose(mat3_inverse(world));
+  
+}
+
 float landscape_height(landscape* l, vec2 pos) {
   
   terrain* t = asset_hndl_ptr(&l->heightmap);

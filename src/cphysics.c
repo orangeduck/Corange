@@ -192,20 +192,20 @@ collision sphere_collide_ctri(sphere s, vec3 v, ctri ct) {
   
 }
 
-static collision sphere_collide_mesh_space(sphere s, vec3 v, cmesh* cm, mat4 world, mat3 space) {
+static collision sphere_collide_mesh_space(sphere s, vec3 v, cmesh* cm, mat4 world, mat3 world_normal, mat3 space, mat3 space_normal) {
   
   if ( !cm->is_leaf ) {
   
     plane div = cm->division;
-    div = plane_transform(div, world);
-    div = plane_transform_space(div, space);
+    div = plane_transform(div, world, world_normal);
+    div = plane_transform_space(div, space, space_normal);
   
-         if ( sphere_swept_inside_plane(s, v, div)  ) { return sphere_collide_mesh_space(s, v, cm->back,  world, space); }
-    else if ( sphere_swept_outside_plane(s, v, div) ) { return sphere_collide_mesh_space(s, v, cm->front, world, space); }
+         if ( sphere_swept_inside_plane(s, v, div)  ) { return sphere_collide_mesh_space(s, v, cm->back,  world, world_normal, space, space_normal); }
+    else if ( sphere_swept_outside_plane(s, v, div) ) { return sphere_collide_mesh_space(s, v, cm->front, world, world_normal, space, space_normal); }
     else {
     
-      collision c0 = sphere_collide_mesh_space(s, v, cm->back,  world, space);
-      collision c1 = sphere_collide_mesh_space(s, v, cm->front, world, space);
+      collision c0 = sphere_collide_mesh_space(s, v, cm->back,  world, world_normal, space, space_normal);
+      collision c1 = sphere_collide_mesh_space(s, v, cm->front, world, world_normal, space, space_normal);
       return collision_merge(c0, c1);
       
     }
@@ -215,8 +215,8 @@ static collision sphere_collide_mesh_space(sphere s, vec3 v, cmesh* cm, mat4 wor
   
   for (int i = 0; i < cm->triangles_num; i++) {
     ctri ct = cm->triangles[i];
-    ct = ctri_transform(ct, world);
-    ct = ctri_transform_space(ct, space);
+    ct = ctri_transform(ct, world, world_normal);
+    ct = ctri_transform_space(ct, space, space_normal);
     
     /* This does not work for some reason */
     //if (sphere_swept_outside_sphere(s, v, ct.bound)) continue;
@@ -227,11 +227,11 @@ static collision sphere_collide_mesh_space(sphere s, vec3 v, cmesh* cm, mat4 wor
 
 }
 
-collision sphere_collide_mesh(sphere s, vec3 v, cmesh* m, mat4 world) {
-  return sphere_collide_mesh_space(s, v, m, world, mat3_id());
+collision sphere_collide_mesh(sphere s, vec3 v, cmesh* m, mat4 world, mat3 world_normal) {
+  return sphere_collide_mesh_space(s, v, m, world, world_normal, mat3_id(), mat3_id());
 }
 
-collision ellipsoid_collide_mesh(ellipsoid e, vec3 v, cmesh* m, mat4 world) {
+collision ellipsoid_collide_mesh(ellipsoid e, vec3 v, cmesh* m, mat4 world, mat3 world_normal) {
   
   world.xw -= e.center.x;
   world.yw -= e.center.y;
@@ -242,7 +242,7 @@ collision ellipsoid_collide_mesh(ellipsoid e, vec3 v, cmesh* m, mat4 world) {
   
   v = mat3_mul_vec3(space, v);
   
-  collision c = sphere_collide_mesh_space(sphere_unit(), v, m, world, space);
+  collision c = sphere_collide_mesh_space(sphere_unit(), v, m, world, world_normal, space, mat3_transpose(space_inv));
   
   c.point = mat3_mul_vec3(space_inv, c.point);
   c.point = vec3_add(c.point, e.center);
@@ -253,9 +253,9 @@ collision ellipsoid_collide_mesh(ellipsoid e, vec3 v, cmesh* m, mat4 world) {
   
 }
 
-void collision_response_slide(vec3* position, vec3* velocity, collision (*colfunc)(void) ) {
+void collision_response_slide(void* x, vec3* position, vec3* velocity, collision (*colfunc)(void* x, vec3* pos, vec3* vel) ) {
   
-  collision col = colfunc();
+  collision col = colfunc(x, position, velocity);
   
   int count = 0;
   while (col.collided) {
@@ -279,8 +279,8 @@ void collision_response_slide(vec3* position, vec3* velocity, collision (*colfun
     
     *position = move;
     *velocity = proj;
-        
-    col = colfunc();
+    
+    col = colfunc(x, position, velocity);
   
   }
   

@@ -30,5 +30,6 @@ static_object* static_object_new();
 void static_object_delete(static_object* s);
 
 mat4 static_object_world(static_object* s);
+mat3 static_object_world_normal(static_object* s);
 
 #endif

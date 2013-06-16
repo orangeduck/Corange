@@ -257,7 +257,7 @@ static void terrain_new_chunk(terrain* ter, int i) {
   tc->colmesh->bound = cmesh_bound(tc->colmesh);
   
   /* For some reason this is not working correctly */
-  //cmesh_subdivide(tc->colmesh, 5);
+  cmesh_subdivide(tc->colmesh, 5);
 
   ter->chunks[i] = tc;
 

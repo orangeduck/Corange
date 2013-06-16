@@ -12,7 +12,8 @@ static deferred_renderer* g_dr;
 static ellipsoid test_ellipsoid;
 static vec3 test_velocity;
 static cmesh* test_cmesh;
-static mat4 test_cmesh_trans;
+static mat4 test_cmesh_world;
+static mat3 test_cmesh_world_normal;
 
 void sea_init() {
   
@@ -51,7 +52,8 @@ void sea_init() {
   test_ellipsoid = ellipsoid_new(vec3_new(0, 20, 0), vec3_new(1,2,1));
   test_velocity = vec3_zero();
   test_cmesh = asset_get(P("./assets/corvette/corvette.col"));
-  test_cmesh_trans = static_object_world(s_corvette);
+  test_cmesh_world = static_object_world(s_corvette);
+  test_cmesh_world_normal = static_object_world_normal(s_corvette);
   
 }
 
@@ -106,18 +108,18 @@ void sea_update() {
   vec3 gravity_update  = vec3_add(test_velocity, vec3_mul(vec3_gravity(), frame_time()));
   vec3 movement_update = vec3_lerp(test_velocity, vec3_mul(movement, top_speed), saturate(5 * frame_time()));
   
-  collision col = ellipsoid_collide_mesh(test_ellipsoid, vec3_new(0, -1, 0), test_cmesh, test_cmesh_trans);
+  collision col = ellipsoid_collide_mesh(test_ellipsoid, vec3_new(0, -1, 0), test_cmesh, test_cmesh_world, test_cmesh_world_normal);
   float closeness = col.collided ? clamp((1 - col.time), 0.01, 0.99) : 0.01;
   
   test_velocity = vec3_lerp(gravity_update, movement_update, closeness);
   
   /* Collision Detection and response routine */
   
-  collision collision_test_ellipsoid(void) {
-    return ellipsoid_collide_mesh(test_ellipsoid, test_velocity, test_cmesh, test_cmesh_trans);
+  collision collision_test_ellipsoid(void* x, vec3* position, vec3* velocity) {
+    return ellipsoid_collide_mesh(test_ellipsoid, *velocity, test_cmesh, test_cmesh_world, test_cmesh_world_normal);
   }
   
-  collision_response_slide(&test_ellipsoid.center, &test_velocity, collision_test_ellipsoid);
+  collision_response_slide(NULL, &test_ellipsoid.center, &test_velocity, collision_test_ellipsoid);
   
   /* End */
   
@@ -177,11 +179,11 @@ void sea_event(SDL_Event e) {
   
   vec3 velocity = vec3_sub(position, c->position);
   
-  collision collision_camera(void) {
-    return sphere_collide_mesh(sphere_new(c->position, 1), velocity, test_cmesh, test_cmesh_trans);
+  collision collision_camera(void* x, vec3* position, vec3* velocity) {
+    return sphere_collide_mesh(sphere_new(*position, 0.25), *velocity, test_cmesh, test_cmesh_world, test_cmesh_world_normal);
   }
   
-  collision_response_slide(&c->position, &velocity, collision_camera);
+  collision_response_slide(NULL, &c->position, &velocity, collision_camera);
   
 }
 

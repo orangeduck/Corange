@@ -105,13 +105,6 @@ render_object render_object_plane(plane p) {
   return ro;
 }
 
-render_object render_object_projectile(projectile* p) {
-  render_object ro;
-  ro.type = RO_TYPE_PROJECTILE;
-  ro.projectile = p;
-  return ro;
-}
-
 render_object render_object_line(vec3 start, vec3 end, vec3 color, float thickness) {
   render_object ro;
   ro.type = RO_TYPE_LINE;
@@ -841,19 +834,6 @@ static void render_shadows_landscape(deferred_renderer* dr, int i, landscape* l)
 
 }
 
-void render_shadows_projectile(deferred_renderer* dr, int i, projectile* p) {
-
-  static_object so;
-  so.position = p->position;
-  so.rotation = p->rotation;
-  so.scale = vec3_new(1, 1, 1);
-  so.renderable = p->mesh;
-  so.collision_body = asset_hndl_null();
-  
-  render_shadows_static(dr, i, &so);
-
-}
-
 static void render_shadows(deferred_renderer* dr) {
   
   dr->camera_inv_view = mat4_inverse(camera_view_matrix(dr->camera));
@@ -902,7 +882,6 @@ static void render_shadows(deferred_renderer* dr) {
       if (dr->render_objects[j].type == RO_TYPE_INSTANCE) { render_shadows_instance(dr, i, dr->render_objects[j].instance_object); }
       if (dr->render_objects[j].type == RO_TYPE_ANIMATED) { render_shadows_animated(dr, i, dr->render_objects[j].animated_object); }
       if (dr->render_objects[j].type == RO_TYPE_LANDSCAPE) { render_shadows_landscape(dr, i, dr->render_objects[j].landscape); }
-      if (dr->render_objects[j].type == RO_TYPE_PROJECTILE) { render_shadows_projectile(dr, i, dr->render_objects[j].projectile); }
       
     }
     
@@ -951,6 +930,25 @@ static void render_clear(deferred_renderer* dr) {
   
 }
 
+static uint32_t cmesh_counter = 0;
+
+static fpath cmesh_pallet[14] = {
+  {"$CORANGE/textures/solid/black.dds"},
+  {"$CORANGE/textures/solid/blue.dds"},
+  {"$CORANGE/textures/solid/burnt_orange.dds"},
+  {"$CORANGE/textures/solid/green.dds"},
+  {"$CORANGE/textures/solid/light_blue.dds"},
+  {"$CORANGE/textures/solid/lime.dds"},
+  {"$CORANGE/textures/solid/orange.dds"},
+  {"$CORANGE/textures/solid/pink.dds"},
+  {"$CORANGE/textures/solid/purple.dds"},
+  {"$CORANGE/textures/solid/red.dds"},
+  {"$CORANGE/textures/solid/turquoise.dds"},
+  {"$CORANGE/textures/solid/white.dds"},
+  {"$CORANGE/textures/solid/yellow.dds"},
+  {"$CORANGE/textures/solid/grey.dds"},
+};
+
 static void render_cmesh(deferred_renderer* dr, cmesh* cm, mat4 world) {
   
   if (!cm->is_leaf) {
@@ -969,7 +967,9 @@ static void render_cmesh(deferred_renderer* dr, cmesh* cm, mat4 world) {
   
   material_entry* me = material_get_entry(asset_get_load(P("$CORANGE/shaders/basic.mat")), 0);
   
-  shader_program_set_texture(shader, "diffuse_map", 0, material_entry_item(me, "diffuse_map").as_asset);
+  cmesh_counter = (cmesh_counter + 1) % 14;
+  
+  shader_program_set_texture(shader, "diffuse_map", 0, asset_hndl_new_load(cmesh_pallet[cmesh_counter]));
   shader_program_set_texture(shader, "bump_map", 1, material_entry_item(me, "bump_map").as_asset);
   shader_program_set_texture(shader, "spec_map", 2, material_entry_item(me, "spec_map").as_asset);
   shader_program_set_float(shader, "glossiness", material_entry_item(me, "glossiness").as_float);
@@ -1026,6 +1026,7 @@ static void render_static(deferred_renderer* dr, static_object* so) {
     if (!file_isloaded(so->collision_body.path)) {
       file_load(so->collision_body.path);
     }
+    cmesh_counter = 0;
     render_cmesh(dr, asset_hndl_ptr(&so->collision_body), world);
   }
   
@@ -1169,6 +1170,7 @@ static void render_instance(deferred_renderer* dr, instance_object* io) {
       file_load(io->collision_body.path);
     }
     for (int i = 0; i < io->num_instances; i++) {
+      cmesh_counter = 0;
       render_cmesh(dr, asset_hndl_ptr(&io->collision_body), io->instances[i].world);
     }
   }
@@ -1434,6 +1436,7 @@ static void render_landscape(deferred_renderer* dr, landscape* l) {
   if (config_bool(asset_hndl_ptr(&dr->options), "render_colmeshes")) {
     for(int i = 0; i < terr->num_chunks; i++) {
       terrain_chunk* tc = terr->chunks[i];
+      cmesh_counter = 0;
       render_cmesh(dr, tc->colmesh, landscape_world(l));  
     }
   }
@@ -1442,6 +1445,7 @@ static void render_landscape(deferred_renderer* dr, landscape* l) {
   
   shader_program_enable(shader);
   shader_program_set_mat4(shader, "world", landscape_world(l));
+  shader_program_set_mat3(shader, "world_normal", landscape_world_normal(l));
   shader_program_set_mat4(shader, "view", dr->camera_view);
   shader_program_set_mat4(shader, "proj", dr->camera_proj);
   shader_program_set_float(shader, "clip_near", dr->camera_near);
@@ -1726,19 +1730,6 @@ void render_ellipsoid(deferred_renderer* dr, ellipsoid e) {
   
 }
 
-void render_projectile(deferred_renderer* dr, projectile* p) {
-
-  static_object so;
-  so.position = p->position;
-  so.rotation = p->rotation;
-  so.scale = vec3_new(10, 10, 10);
-  so.renderable = p->mesh;
-  so.collision_body = asset_hndl_null();
-  
-  render_static(dr, &so);
-
-}
-
 void render_paint_circle(deferred_renderer* dr, mat4 axis, float radius) {
   
   render_axis(dr, axis);
@@ -1799,7 +1790,6 @@ static float render_object_cost(const render_object* ro) {
     case RO_TYPE_ANIMATED:   return vec3_dist_sqrd(compare_cam->position, ro->animated_object->position);
     case RO_TYPE_PARTICLES:  return vec3_dist_sqrd(compare_cam->position, ro->particles->position);
     case RO_TYPE_LANDSCAPE:  return vec3_dist_sqrd(compare_cam->position, vec3_zero());
-    case RO_TYPE_PROJECTILE: return vec3_dist_sqrd(compare_cam->position, ro->projectile->position);
     default: return FLT_MAX;
   }
 }
@@ -1896,7 +1886,6 @@ static void render_gbuffer(deferred_renderer* dr) {
     if (dr->render_objects[j].type == RO_TYPE_ELLIPSOID)  { render_ellipsoid(dr, dr->render_objects[j].ellipsoid); continue; }
     if (dr->render_objects[j].type == RO_TYPE_FRUSTUM)    { render_frustum(dr, dr->render_objects[j].frustum); continue; }
     if (dr->render_objects[j].type == RO_TYPE_PLANE)      { render_plane(dr, dr->render_objects[j].plane); continue; }
-    if (dr->render_objects[j].type == RO_TYPE_PROJECTILE) { render_projectile(dr, dr->render_objects[j].projectile); continue; }
     
     if (dr->render_objects[j].type == RO_TYPE_LINE) {
       render_line(dr, 
@@ -1916,6 +1905,7 @@ static void render_gbuffer(deferred_renderer* dr) {
     }
     
     if (dr->render_objects[j].type == RO_TYPE_CMESH) {
+      cmesh_counter = 0;
       render_cmesh(dr, 
         dr->render_objects[j].colmesh, 
         dr->render_objects[j].colworld);

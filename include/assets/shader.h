@@ -45,6 +45,7 @@ void shader_program_set_float(shader_program* p, char* name, float val);
 void shader_program_set_vec2(shader_program* p, char* name, vec2 val);
 void shader_program_set_vec3(shader_program* p, char* name, vec3 val);
 void shader_program_set_vec4(shader_program* p, char* name, vec4 val);
+void shader_program_set_mat3(shader_program* p, char* name, mat3 val);
 void shader_program_set_mat4(shader_program* p, char* name, mat4 val);
 void shader_program_set_float_array(shader_program* p, char* name, float* vals, int count);
 void shader_program_set_vec2_array(shader_program* p, char* name, vec2* vals, int count);

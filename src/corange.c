@@ -121,7 +121,6 @@ void corange_init(const char* core_assets_path) {
   entity_handler(light, light_new, light_delete);
   entity_handler(landscape, landscape_new, landscape_delete);
   entity_handler(particles, particles_new, particles_delete);
-  entity_handler(projectile, projectile_new, projectile_delete);
   
   /* UI Manager */
   debug("Creating UI Manager...");

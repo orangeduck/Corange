@@ -6,6 +6,7 @@ attribute vec3 vTangent;
 attribute vec3 vBinormal;
 
 uniform mat4 world;
+uniform mat3 world_normal;
 uniform mat4 view;
 uniform mat4 proj;
 
@@ -15,9 +16,9 @@ varying mat4 fTBN;
 void main( void ) {
   
   vec4 w_position = world * vec4(vPosition, 1);
-  vec3 w_tangent  = mat3(world) * vTangent;
-  vec3 w_binormal = mat3(world) * vBinormal;
-  vec3 w_normal   = mat3(world) * vNormal;
+  vec3 w_tangent  = world_normal * vTangent;
+  vec3 w_binormal = world_normal * vBinormal;
+  vec3 w_normal   = world_normal * vNormal;
   
   fTBN = mat4(
     w_tangent.x, w_binormal.x, w_normal.x, 0.0,

@@ -43,20 +43,20 @@ bool ctri_intersects_plane(ctri t, plane p) {
   return (!ctri_inside_plane(t, p) && !ctri_outside_plane(t, p));
 }
 
-ctri ctri_transform(ctri t, mat4 m) {
+ctri ctri_transform(ctri t, mat4 m, mat3 mn) {
   t.a = mat4_mul_vec3(m, t.a);
   t.b = mat4_mul_vec3(m, t.b);
   t.c = mat4_mul_vec3(m, t.c);
-  t.norm  = vec3_normalize(vec3_cross(vec3_sub(t.c, t.a), vec3_sub(t.b, t.a)));
+  t.norm  = vec3_normalize(mat3_mul_vec3(mn, t.norm));
   t.bound = ctri_bound(t);
   return t;
 }
 
-ctri ctri_transform_space(ctri t, mat3 s) {
+ctri ctri_transform_space(ctri t, mat3 s, mat3 sn) {
   t.a = mat3_mul_vec3(s, t.a);
   t.b = mat3_mul_vec3(s, t.b);
   t.c = mat3_mul_vec3(s, t.c);
-  t.norm  = vec3_normalize(vec3_cross(vec3_sub(t.c, t.a), vec3_sub(t.b, t.a)));
+  t.norm  = vec3_normalize(mat3_mul_vec3(sn, t.norm));
   t.bound = ctri_bound(t);
   return t;
 }

@@ -62,6 +62,7 @@ void landscape_blobtree_delete(landscape_blobtree* lbt);
 void landscape_blobtree_generate(landscape* l);
 
 mat4  landscape_world(landscape* l);
+mat3  landscape_world_normal(landscape* l);
 float landscape_height(landscape* l, vec2 pos);
 vec3  landscape_normal(landscape* l, vec2 pos);
 mat3  landscape_axis(landscape* l, vec2 pos);
