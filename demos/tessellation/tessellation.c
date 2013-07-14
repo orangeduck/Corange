@@ -1,8 +1,4 @@
-#include <time.h>
-
 #include "corange.h"
-
-#include "tessellation.h"
 
 static float tess_level_inner = 3;
 static float tess_level_outer = 3;
@@ -55,7 +51,7 @@ void tessellation_init() {
     return;
   }
   
-  folder_load(P("./shaders/"));
+  folder_load(P("./"));
   
   camera* cam = entity_new("cam", camera);
   cam->position = vec3_new(2,2,2);
@@ -101,45 +97,32 @@ void tessellation_render() {
   light* sun = entity_get("sun");
   camera* cam = entity_get("cam");
   
-  material* tess_mat = asset_get(P("./shaders/tessellation.mat"));
+  material* tess_mat = asset_get(P("./tessellation.mat"));
+  shader_program* tess_shader = material_first_program(tess_mat);
   
-  GLuint sp_handle = shader_program_handle(material_get_entry(tess_mat, 0)->program);
-  
-  glUseProgram(sp_handle);
-  
-  glUniform1f(glGetUniformLocation(sp_handle, "tess_level_inner"), tess_level_inner);
-  glUniform1f(glGetUniformLocation(sp_handle, "tess_level_outer"), tess_level_outer);
-  
-  glUniform3f(glGetUniformLocation(sp_handle, "light_position"), sun->position.x, sun->position.y, sun->position.z);
-  
-  mat4 viewm = camera_view_matrix(cam);
-  mat4 projm = camera_proj_matrix(cam, graphics_viewport_ratio() );
-  
-  float viewm_f[16]; mat4_to_array(viewm, viewm_f);
-  float projm_f[16]; mat4_to_array(projm, projm_f);
-  
-  glUniformMatrix4fv(glGetUniformLocation(sp_handle, "view"), 1, 0, viewm_f);
-  glUniformMatrix4fv(glGetUniformLocation(sp_handle, "proj"), 1, 0, projm_f);
+  shader_program_enable(tess_shader);
+  shader_program_set_float(tess_shader, "tess_level_inner", tess_level_inner);
+  shader_program_set_float(tess_shader, "tess_level_outer", tess_level_outer);
+  shader_program_set_mat4(tess_shader, "view", camera_view_matrix(cam));
+  shader_program_set_mat4(tess_shader, "proj", camera_proj_matrix(cam));
   
   glEnable(GL_DEPTH_TEST);
-  
-  glEnableVertexAttribArray(glGetAttribLocation(sp_handle, "Position"));
-    
+     
     glBindBuffer(GL_ARRAY_BUFFER, positions_buffer);
-    glVertexAttribPointer(glGetAttribLocation(sp_handle, "Position"), 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
+    shader_program_enable_attribute(tess_shader, "Position", 3, 3, 0);
     
     glPatchParameteri(GL_PATCH_VERTICES, 3);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer);
     glDrawElements(GL_PATCHES, index_count, GL_UNSIGNED_INT, 0);
   
-  glDisableVertexAttribArray(glGetAttribLocation(sp_handle, "Position"));
+    shader_program_disable_attribute(tess_shader, "Position");
   
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
   
   glDisable(GL_DEPTH_TEST);
   
-  glUseProgram(0);
+  shader_program_disable(tess_shader);
   
   SDL_GL_CheckError();
 }
@@ -147,7 +130,14 @@ void tessellation_render() {
 
 int main(int argc, char **argv) {
   
-  corange_init("../../core_assets");
+  #ifdef _WIN32
+    FILE* ctt = fopen("CON", "w" );
+    FILE* fout = freopen( "CON", "w", stdout );
+    FILE* ferr = freopen( "CON", "w", stderr );
+  #endif
+  
+  
+  corange_init("../../assets_core");
   
   tessellation_init();
   

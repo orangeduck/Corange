@@ -1,2 +1,0 @@
-shader vert = ./shaders/noise.vs
-shader frag = ./shaders/noise.fs

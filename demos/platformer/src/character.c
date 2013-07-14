@@ -54,7 +54,7 @@ void character_render(character* c, vec2 camera_position) {
   } else {
     character_tex = asset_get(P("./tiles/character.dds"));
   }
-  glBindTexture(GL_TEXTURE_2D, *character_tex);
+  glBindTexture(GL_TEXTURE_2D, texture_handle(character_tex));
   
   /* Swaps the direction of the uvs when facing the opposite direction */
   if (c->facing_left) {

@@ -37,6 +37,10 @@ mat4 camera_view_proj_matrix(camera* c) {
   return mat4_mul_mat4(view, proj);
 }
 
+void camera_normalize_target(camera* c) {
+  c->target = vec3_add(c->position, vec3_normalize(vec3_sub(c->target, c->position)));
+}
+
 void camera_control_orbit(camera* c, SDL_Event e) {
   
   float a1 = 0;

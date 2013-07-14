@@ -33,8 +33,9 @@ void instance_object_delete(instance_object* io) {
 
 void instance_object_update(instance_object* io) {
   
-  if (!net_is_client()) { return; }
+  if (net_is_server()) { return; }
 
+  /* TODO: Make struct member */
   mat4* world_data = malloc(sizeof(mat4) * io->num_instances);
   
   for (int i = 0; i < io->num_instances; i++) {
@@ -50,15 +51,20 @@ void instance_object_update(instance_object* io) {
   
   free(world_data);
   
-  renderable* r = asset_hndl_ptr(&io->renderable);
-  sphere rbound = sphere_unit();
-  for (int i = 0; i < r->num_surfaces; i++) {
-    rbound = sphere_merge(rbound, r->surfaces[i]->bound);
-  }
-  
   io->bound = sphere_unit();
-  for (int i = 0; i < io->num_instances; i++) {
-    io->bound = sphere_merge(io->bound, sphere_transform(rbound, io->instances[i].world));
+  
+  if (!asset_hndl_isnull(&io->renderable)) {
+  
+    renderable* r = asset_hndl_ptr(&io->renderable);
+    sphere rbound = sphere_unit();
+    for (int i = 0; i < r->num_surfaces; i++) {
+      rbound = sphere_merge(rbound, r->surfaces[i]->bound);
+    }
+    
+    for (int i = 0; i < io->num_instances; i++) {
+      io->bound = sphere_merge(io->bound, sphere_transform(rbound, io->instances[i].world));
+    }
+    
   }
   
 }

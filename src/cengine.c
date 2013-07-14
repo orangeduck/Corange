@@ -2438,6 +2438,39 @@ vec3 plane_closest(plane p, vec3 v) {
   return vec3_sub(v, vec3_mul(p.direction, plane_distance(p, v)));
 }
 
+bool point_swept_inside_plane(vec3 point, vec3 v, plane p) {
+
+  float angle = vec3_dot(p.direction, v);
+  float dist  = vec3_dot(p.direction, vec3_sub(point, p.position)); 
+  
+  if ( -dist <= 0.0 ) { return false; }
+  
+  return !between_or(-dist / angle, 0, 1);
+
+}
+
+bool point_swept_outside_plane(vec3 point, vec3 v, plane p) {
+
+  float angle = vec3_dot(p.direction, v);
+  float dist  = vec3_dot(p.direction, vec3_sub(point, p.position)); 
+  
+  if ( dist <= 0.0 ) { return false; }
+  
+  return !between_or(-dist / angle, 0, 1);
+
+}
+
+bool point_swept_intersects_plane(vec3 point, vec3 v, plane p) {
+
+  float angle = vec3_dot(p.direction, v);
+  float dist  = vec3_dot(p.direction, vec3_sub(point, p.position)); 
+  
+  if ( dist == 0.0 ) { return true; }
+  
+  return between_or(-dist / angle, 0, 1);
+
+}
+
 box box_new(float x_min, float x_max, float y_min, float y_max, float z_min, float z_max) {
 
   box bb;
@@ -2728,6 +2761,10 @@ bool sphere_outside_sphere(sphere s1, sphere s2) {
 
 sphere sphere_unit() {
   return sphere_new(vec3_zero(), 1);
+}
+
+sphere sphere_point() {
+  return sphere_new(vec3_zero(), 0);
 }
 
 sphere sphere_new(vec3 center, float radius) {

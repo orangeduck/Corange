@@ -50,6 +50,12 @@ frame* animation_sample(animation* a, float time) {
   
 }
 
+frame* animation_frame(animation* a, int i) {
+  i = i < 0 ? 0 : i;
+  i = i > (a->frame_count-1) ? (a->frame_count-1) : i;
+  return a->frames[i];
+}
+
 void animation_sample_to(animation* a, float time, frame* out) {
   
   if (a->frame_count == 0) {
@@ -64,8 +70,8 @@ void animation_sample_to(animation* a, float time, frame* out) {
   
   time = fmod(time, a->frame_time * (a->frame_count-1));
   
-  frame* frame0 = a->frames[(int)(time / a->frame_time) + 0];
-  frame* frame1 = a->frames[(int)(time / a->frame_time) + 1];
+  frame* frame0 = animation_frame(a, (time / a->frame_time) + 0);
+  frame* frame1 = animation_frame(a, (time / a->frame_time) + 1);
   float amount  = fmod(time / a->frame_time, 1.0);
   
   frame_interpolate_to(frame0, frame1, amount, out);

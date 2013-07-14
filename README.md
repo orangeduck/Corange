@@ -12,7 +12,7 @@ Running
 	
 Corange is a library, but to take a quick look at some of the things it does you can [Look at some of the Demos](http://www.youtube.com/watch?v=482GxqTWXtA).
 	
-	
+
 Compiling
 ---------
 	
@@ -49,11 +49,11 @@ I'm a graphics programmer by trade so apologies that most of the demos are graph
 * __sea__ Renders a sea-like surface, a ship, and some collision detection.
 * __scotland__ Demonstrates terrain system.
 * __tessellation__ Demo showing tessellation shaders in OpenGL 4.
-		
+
 	
 FAQ
 ---
-		
+
 * __How is that pronounced?__
 
 	Rhymes with Purple.
@@ -74,9 +74,9 @@ FAQ
 	
 * __Can I contact you about something?__
 
-	Yes - contact@theorangeduck.com
-			
-			
+	Yes - `contact@theorangeduck.com`
+
+  
 Using / Contributing
 --------------------
 	

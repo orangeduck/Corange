@@ -10,13 +10,16 @@
 #include "platformer.h"
 
 /* Some game state variables */
-static level* current_level;
-static vec2 camera_position;
-static int level_score;
-static float level_time;
+static level* current_level = NULL;
+static vec2 camera_position = {0, 0};
+static int level_score = 0;
+static float level_time = 0;
 
 /* We store all the coin positions here */
-#define COIN_COUNT 45
+enum {
+  COIN_COUNT = 45,
+};
+
 static vec2 coin_positions[COIN_COUNT] = {
   {16, 23}, {33, 28}, {41, 22}, {20, 19}, {18, 28},
   {36, 20}, {20, 30}, {31, 18}, {45, 23}, {49, 26},
@@ -59,50 +62,6 @@ static void reset_game() {
   
   victory->active = false;
   new_game->active = false;
-}
-
-/* This is an event we attach to the audio button */
-static void disable_audio(ui_button* b, SDL_Event event) {
-  
-  if (event.type == SDL_MOUSEBUTTONDOWN) {
-    
-    if (ui_button_contains_position(b, vec2_new(event.motion.x, event.motion.y))) {
-      b->pressed = true;
-    }
-  
-  } else if (event.type == SDL_MOUSEBUTTONUP) {
-    
-    if (b->pressed) {
-      b->pressed = false;
-      
-      if (audio_enabled()) {
-        audio_disable();
-        ui_button_set_label(b, "Enable Audio");
-      } else {
-        audio_enable();
-        ui_button_set_label(b, "Disable Audio");
-      }
-      
-    }
-  }
-}
-
-/* This is an event we attach to the new game button */
-static void new_game(ui_button* b, SDL_Event event) {
-  
-  if (event.type == SDL_MOUSEBUTTONDOWN) {
-    
-    if (ui_button_contains_position(b, vec2_new(event.motion.x, event.motion.y))) {
-      b->pressed = true;
-    }
-  
-  } else if (event.type == SDL_MOUSEBUTTONUP) {
-    
-    if (b->pressed) {
-      b->pressed = false;
-      reset_game();
-    }
-  }
 }
 
 void platformer_init() {
@@ -150,8 +109,18 @@ void platformer_init() {
   ui_button_resize(audio, vec2_new(120, 25));
   ui_button_set_label(audio, "Disable Audio");
   
-  ui_elem_add_event("audio", disable_audio);
+  void on_audio(ui_button* b) { 
+    //if (audio_enabled()) {
+    //    audio_disable();
+    //    ui_button_set_label(b, "Enable Audio");
+    //} else {
+    //    audio_enable();
+    //    ui_button_set_label(b, "Disable Audio");
+    //} 
+  }
   
+  ui_button_set_onclick(audio, on_audio);
+    
   ui_button* victory = ui_elem_new("victory", ui_button);
   ui_button_move(victory, vec2_new(365, 200));
   ui_button_resize(victory, vec2_new(70, 25));
@@ -163,10 +132,14 @@ void platformer_init() {
   ui_button_resize(new_game_but, vec2_new(70, 25));
   ui_button_set_label(new_game_but, "New Game");
   
-  ui_elem_add_event("new_game", new_game);
+  void on_newgame(ui_button* b) {
+    reset_game();
+  }
+  
+  ui_button_set_onclick(new_game_but, on_newgame);
   
   /* Set volume to something more reasonable */
-  audio_set_volume(0.1);
+  //audio_set_volume(0.1);
   
   /* Reset all the game variables */
   reset_game();
@@ -308,7 +281,7 @@ static void collision_detection_coins() {
       entity_delete(coin_name);
       
       /* Play a nice twinkle sound */
-      audio_play_sound(asset_get_as(P("./sounds/coin.wav"), sound));
+      //audio_play_sound(asset_get_as(P("./sounds/coin.wav"), sound));
       
       /* Add some score! */
       level_score += 10;
@@ -404,8 +377,14 @@ void platformer_finish() {
 
 int main(int argc, char **argv) {
   
-  /* Init Corange, pointing to the core_assets folder */
-  corange_init("../../core_assets");
+  #ifdef _WIN32
+    FILE* ctt = fopen("CON", "w" );
+    FILE* fout = freopen( "CON", "w", stdout );
+    FILE* ferr = freopen( "CON", "w", stderr );
+  #endif
+  
+  /* Init Corange, pointing to the assets_core folder */
+  corange_init("../../assets_core");
   
   platformer_init();
   

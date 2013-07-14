@@ -104,10 +104,10 @@ static void noise_render() {
   glPushMatrix();
 	glLoadIdentity();
   
-  material* noise_mat = asset_get(P("./shaders/noise.mat"));
+  material* noise_mat = asset_get(P("./noise.mat"));
   
   GLuint handle = shader_program_handle(material_get_entry(noise_mat, 0)->program);
-  GLuint random_tex = texture_handle(asset_get(P("$CORANGE/resources/random.dds")));
+  GLuint random_tex = texture_handle(asset_get(P("$CORANGE/textures/random.dds")));
   
   glUseProgram(handle);
   
@@ -170,13 +170,19 @@ static void save_noise_to_file(ui_button* b) {
 
 int main(int argc, char **argv) {
   
-  corange_init("../../core_assets");
+  #ifdef _WIN32
+    FILE* ctt = fopen("CON", "w" );
+    FILE* fout = freopen( "CON", "w", stdout );
+    FILE* ferr = freopen( "CON", "w", stderr );
+  #endif
+  
+  corange_init("../../assets_core");
   
   graphics_viewport_set_dimensions(1280, 720);
   graphics_viewport_set_title("Noise");
   
-  folder_load(P("./shaders/"));
-  file_load(P("$CORANGE/resources/random.dds"));
+  folder_load(P("./"));
+  file_load(P("$CORANGE/textures/random.dds"));
   
   glClearColor(1.0, 0.0, 0.0, 1.0);
   

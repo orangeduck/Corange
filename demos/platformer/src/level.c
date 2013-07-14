@@ -230,8 +230,8 @@ void level_render_background(level* l) {
   
   glEnable(GL_TEXTURE_2D);
   
-  texture* background = asset_hndl_ptr(asset_hndl_new_load(P("./backgrounds/bluesky.dds")));
-  glBindTexture(GL_TEXTURE_2D, *background);
+  texture* background = asset_get_load(P("./backgrounds/bluesky.dds"));
+  glBindTexture(GL_TEXTURE_2D, texture_handle(background));
   
   glBegin(GL_QUADS);
     

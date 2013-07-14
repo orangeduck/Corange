@@ -11,6 +11,7 @@ static deferred_renderer* g_dr;
 
 static ellipsoid test_ellipsoid;
 static vec3 test_velocity;
+static vec3 test_point;
 static cmesh* test_cmesh;
 static mat4 test_cmesh_world;
 static mat3 test_cmesh_world_normal;
@@ -54,6 +55,8 @@ void sea_init() {
   test_cmesh = asset_get(P("./assets/corvette/corvette.col"));
   test_cmesh_world = static_object_world(s_corvette);
   test_cmesh_world_normal = static_object_world_normal(s_corvette);
+  
+  test_point = vec3_new(5, 5, 5);
   
 }
 
@@ -116,7 +119,9 @@ void sea_update() {
   /* Collision Detection and response routine */
   
   collision collision_test_ellipsoid(void* x, vec3* position, vec3* velocity) {
-    return ellipsoid_collide_mesh(test_ellipsoid, *velocity, test_cmesh, test_cmesh_world, test_cmesh_world_normal);
+    collision mcol = ellipsoid_collide_mesh(test_ellipsoid, *velocity, test_cmesh, test_cmesh_world, test_cmesh_world_normal);
+    collision pcol = ellipsoid_collide_point(test_ellipsoid, *velocity, test_point);
+    return collision_merge(mcol, pcol);
   }
   
   collision_response_slide(NULL, &test_ellipsoid.center, &test_velocity, collision_test_ellipsoid);
@@ -129,6 +134,7 @@ void sea_render() {
   
   //deferred_renderer_add(g_dr, render_object_cmesh(test_cmesh, test_cmesh_trans));
   deferred_renderer_add(g_dr, render_object_ellipsoid(test_ellipsoid));
+  deferred_renderer_add(g_dr, render_object_point(test_point, vec3_red(), 10.0));
   deferred_renderer_add(g_dr, render_object_static(entity_get("corvette")));
   deferred_renderer_render(g_dr);
   

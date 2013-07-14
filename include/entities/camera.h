@@ -27,6 +27,7 @@ mat4 camera_view_matrix(camera* c);
 mat4 camera_proj_matrix(camera* c);
 mat4 camera_view_proj_matrix(camera* c);
 
+void camera_normalize_target(camera* c);
 void camera_control_orbit(camera* c, SDL_Event e);
 void camera_control_freecam(camera* c, float timestep);
 void camera_control_joyorbit(camera* c, float timestep);

@@ -526,9 +526,9 @@ bool point_inside_plane(vec3 point, plane p);
 bool point_outside_plane(vec3 point, plane p);
 bool point_intersects_plane(vec3 point, plane p);
 
-bool point_swept_inside_plane(vec3 point, vec3 vel, plane p);
-bool point_swept_outside_plane(vec3 point, vec3 vel, plane p);
-bool point_swept_intersects_plane(vec3 point, vec3 vel, plane p);
+bool point_swept_inside_plane(vec3 point, vec3 v, plane p);
+bool point_swept_outside_plane(vec3 point, vec3 v, plane p);
+bool point_swept_intersects_plane(vec3 point, vec3 v, plane p);
 
 vec3 plane_closest(plane p, vec3 v);
 vec3 plane_project(plane p, vec3 v);
@@ -587,6 +587,7 @@ typedef struct {
 } sphere;
 
 sphere sphere_unit();
+sphere sphere_point();
 sphere sphere_new(vec3 center, float radius);
 sphere sphere_merge(sphere s1, sphere s2);
 sphere sphere_merge_many(sphere* s, int count);

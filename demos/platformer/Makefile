@@ -2,7 +2,6 @@ DEMO=platformer
 CC=gcc
 
 INCS= -I ./include -I ../../include
-LIBS= -L ./lib
 
 CFLAGS= $(INCS) -std=gnu99 -Wall -Werror -Wno-unused -O3 -g
 C_FILES= $(wildcard src/*.c)
@@ -12,26 +11,20 @@ PLATFORM = $(shell uname)
 
 ifeq ($(findstring Linux,$(PLATFORM)),Linux)
 	OUT=$(DEMO)
-	LFLAGS= $(LIBS) -lcorange -lGL -lSDLmain -lSDL
-	CORANGE= ./lib/libcorange.a
-	CORANGE_LIB= ../../libcorange.a
+	LFLAGS= -lcorange -lGL -lSDLmain -lSDL
 endif
 
 ifeq ($(findstring Darwin,$(PLATFORM)),Darwin)
 	OUT=$(DEMO)
-	LFLAGS= $(LIBS) -lcorange -lGL -lSDLmain -lSDL
-	CORANGE= ./lib/libcorange.a
-	CORANGE_LIB= ../../libcorange.a
+	LFLAGS= -lcorange -lGL -lSDLmain -lSDL
 endif
 
 ifeq ($(findstring MINGW,$(PLATFORM)),MINGW)
 	OUT=$(DEMO).exe
-	LFLAGS= $(LIBS) -L../../lib ../../corange.res -lcorange -lmingw32 -lSDLmain -lSDL -lopengl32
-	CORANGE= ./lib/corange.lib
-	CORANGE_LIB= ../../corange.lib
+	LFLAGS= ../../corange.res -lcorange -lmingw32 -lSDLmain -lSDL -lSDL_Mixer -lSDL_Net -lopengl32
 endif
 
-$(OUT): $(OBJ_FILES) $(CORANGE)
+$(OUT): $(OBJ_FILES)
 	$(CC) -g $(OBJ_FILES) $(LFLAGS) -o $@
 
 obj/%.o: src/%.c | obj
@@ -40,12 +33,9 @@ obj/%.o: src/%.c | obj
 obj:
 	mkdir obj
 	
-$(CORANGE): $(CORANGE_LIB) | lib
-	cp $(CORANGE_LIB) $(CORANGE)
-	
 lib:
 	mkdir lib
 	
 clean:
-	rm $(OUT) $(CORANGE) $(OBJ_FILES)
+	rm $(OUT) $(OBJ_FILES)
 
