@@ -9,6 +9,7 @@
 
 #ifdef __unix__
   #include <execinfo.h>
+#define MAX_PATH 512
 #endif
 
 #ifdef _WIN32
@@ -84,12 +85,12 @@ void SDL_PathFileLocation(char* dst, const char* path) {
  
 static char curr_dir[MAX_PATH];
 char* SDL_GetWorkingDir() {
-  getcwd(curr_dir, sizeof(curr_dir));
+  char *discard = getcwd(curr_dir, sizeof(curr_dir));
   return curr_dir;
 }
 
 void SDL_SetWorkingDir(char* dir) {
-  chdir(dir);
+  int discard = chdir(dir);
 }
 
 void SDL_RWsize(SDL_RWops* file, int* size) {
@@ -161,7 +162,7 @@ void SDL_WM_DeleteResourceIcon() {
 
 #else
 
-void SDL_WM_UseResourceIcon() {}
+int SDL_WM_UseResourceIcon() { return 0;}
 void SDL_WM_DeleteResourceIcon() {}
 
 #endif
@@ -221,8 +222,8 @@ int SDL_WM_DeleteTempContext() {
 
 #else
 
-int SDL_WM_CreateTempContext() {}
-int SDL_WM_DeleteTempContext() {}
+int SDL_WM_CreateTempContext() {return 0;}
+int SDL_WM_DeleteTempContext() {return 0;}
 
 #endif
 
@@ -391,7 +392,7 @@ static int gl_thread_create(void* unused) {
   int err = glXMakeCurrent(gl_thread_display, gl_thread_drawable, gl_thread_context);
   if (err == 0) {
     // Could not make context current
-    return -1
+    return -1;
   }
   
   int status = gl_thread_func(gl_thread_data);
