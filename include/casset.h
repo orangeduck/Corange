@@ -21,7 +21,10 @@
 #ifndef casset_h
 #define casset_h
 
-#include "cengine.h"
+#define MAX_PATH_VARIABLES 512
+#define MAX_ASSET_HANDLERS 512
+
+#include "./cengine.h"
 
 typedef void asset;
 
