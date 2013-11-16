@@ -9,7 +9,9 @@ attribute vec3 vBinormal;
 attribute vec3 vBone_indicies;
 attribute vec3 vBone_weights;
 
-uniform mat4 world_bones[64];
+uniform vec4 quat_reals[64];
+uniform vec4 quat_duals[64];
+
 uniform mat4 world;
 uniform mat4 view;
 uniform mat4 proj;
@@ -19,47 +21,35 @@ varying vec3 fColor;
 varying vec2 fTexcoord;
 varying mat4 fTBN;
 
+vec3 quat_dual_mul_pos(vec4 real, vec4 dual, vec3 v) {
+  return v + 2 * cross(real.xyz, cross(real.xyz, v) + real.w*v) +
+             2 * (real.w * dual.xyz - dual.w * real.xyz + cross(real.xyz, dual.xyz));
+}
+ 
+vec3 quat_dual_mul_rot(vec4 real, vec4 dual, vec3 v) {
+  return v + 2 * cross(real.xyz, cross(real.xyz, v) + real.w*v);
+}
+
 void main() {
   
   fTexcoord = vTexcoord;
   fColor = vec3(1, 1, 1);
   
-  mat4 blend_matrix = mat4(0);
-  mat4 blend_bonex = world_bones[int(vBone_indicies.x)];
-  mat4 blend_boney = world_bones[int(vBone_indicies.y)];
-  mat4 blend_bonez = world_bones[int(vBone_indicies.z)];
+  vec4 real = quat_reals[int(vBone_indicies.x)] * vBone_weights.x +
+              quat_reals[int(vBone_indicies.y)] * vBone_weights.y +
+              quat_reals[int(vBone_indicies.z)] * vBone_weights.z;
   
-  blend_matrix[0] = blend_bonex[0] * vBone_weights.x + blend_boney[0] * vBone_weights.y + blend_bonez[0] * vBone_weights.z;
-  blend_matrix[1] = blend_bonex[1] * vBone_weights.x + blend_boney[1] * vBone_weights.y + blend_bonez[1] * vBone_weights.z;
-  blend_matrix[2] = blend_bonex[2] * vBone_weights.x + blend_boney[2] * vBone_weights.y + blend_bonez[2] * vBone_weights.z;
-  blend_matrix[3] = blend_bonex[3] * vBone_weights.x + blend_boney[3] * vBone_weights.y + blend_bonez[3] * vBone_weights.z;
+  vec4 dual = quat_duals[int(vBone_indicies.x)] * vBone_weights.x +
+              quat_duals[int(vBone_indicies.y)] * vBone_weights.y +
+              quat_duals[int(vBone_indicies.z)] * vBone_weights.z;
   
-  vec4 blendpos = blend_matrix * vec4(vPosition, 1);
-  vec3 blendnorm = mat3(blend_matrix) * vNormal;
-  vec3 blendtang = mat3(blend_matrix) * vTangent;
-  vec3 blendbinorm = mat3(blend_matrix) * vBinormal;
+  real = real / length(real);
+  dual = dual / length(real);
   
-  /*
-  vec4 blendpos = vec4(0.0,0.0,0.0,0.0);
-  for (int i = 0; i < 3; i++) {
-    blendpos += vec4((world_bones[int(vBone_indicies[i])] * vec4(vPosition, 1)).xyz, 1.0) * vBone_weights[i];
-  }
-  
-  vec3 blendnorm = vec3(0.0,0.0,0.0);
-  for (int i = 0; i < 3; i++) {
-    blendnorm += (mat3(world_bones[int(vBone_indicies[i])]) * vNormal) * vBone_weights[i];
-  }
-  
-  vec3 blendtang = vec3(0.0,0.0,0.0);
-  for (int i = 0; i < 3; i++) {
-    blendtang += (mat3(world_bones[int(vBone_indicies[i])]) * vTangent) * vBone_weights[i];
-  }
-  
-  vec3 blendbinorm = vec3(0.0,0.0,0.0);
-  for (int i = 0; i < 3; i++) {
-    blendbinorm += (mat3(world_bones[int(vBone_indicies[i])]) * vBinormal) * vBone_weights[i];
-  }
-  */
+  vec3 blendpos    = quat_dual_mul_pos(real, dual, vPosition);
+  vec3 blendnorm   = quat_dual_mul_rot(real, dual, vNormal);
+  vec3 blendtang   = quat_dual_mul_rot(real, dual, vTangent);
+  vec3 blendbinorm = quat_dual_mul_rot(real, dual, vBinormal);
   
   blendnorm   = mat3(world) * blendnorm;
   blendtang   = mat3(world) * blendtang;
@@ -71,7 +61,7 @@ void main() {
     blendtang.z, blendbinorm.z, blendnorm.z, 0.0,
     0.0, 0.0, 0.0, 1.0 );
     
-  vec4 world_pos = world * blendpos;
+  vec4 world_pos = world * vec4(blendpos, 1.0);
   
   fPosition = world_pos.xyz / world_pos.w;
   gl_Position = proj * view * world_pos;

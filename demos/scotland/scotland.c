@@ -1,6 +1,7 @@
 
 #include "corange.h"
 
+static deferred_renderer* g_dr;
 static static_object** blocks;
 
 static int WIDTH = 1024;
@@ -8,6 +9,7 @@ static int HEIGHT = 1024;
 static int BLOCK_SIZE = 32;
 static int X_NUM = 32; /* (1024 / 32) */
 static int Y_NUM = 32; /* (1024 / 32) */
+
 
 void vegetation_init() {
   
@@ -192,7 +194,7 @@ void vegetation_add_type(terrain* t, renderable* r, float density) {
     }
     
     //renderable_add_model(block->renderable, block_part);
-    //renderable_set_material(block->renderable, asset_get("./resources/vegetation/grass.mat"));
+    //renderable_set_material(block->renderable, asset_get("./assets/vegetation/grass.mat"));
     model_delete(block_part);
   }
   
@@ -205,80 +207,38 @@ static int mouse_y;
 static int mouse_down;
 static int mouse_right_down;
 
-static bool wireframe = false;
-static bool freecam = true;
+static bool toggle_wireframe = false;
+static bool toggle_freecam = true;
 
-static void toggle_wireframe(ui_button* b, SDL_Event event) {
-  
-  if (event.type == SDL_MOUSEBUTTONDOWN) {
-    
-    if (ui_button_contains_position(b, vec2_new(event.motion.x, event.motion.y))) {
-      b->pressed = true;
-    }
-  
-  } else if (event.type == SDL_MOUSEBUTTONUP) {
-    
-    if (b->pressed) {
-      b->pressed = false;
-      
-      wireframe = !wireframe;
-    }
-  }
-}
+static bool loading_assets = false;
 
-static void toggle_freecam(ui_button* b, SDL_Event event) {
+static int load_assets(void* unused) {
   
-  if (event.type == SDL_MOUSEBUTTONDOWN) {
-    
-    if (ui_button_contains_position(b, vec2_new(event.motion.x, event.motion.y))) {
-      b->pressed = true;
-    }
-  
-  } else if (event.type == SDL_MOUSEBUTTONUP) {
-    
-    if (b->pressed) {
-      b->pressed = false;
-      
-      freecam = !freecam;
-      
-      camera* cam = entity_get("camera");
-      landscape* world = entity_get("world");
-      
-      vec3 cam_dir = vec3_normalize(vec3_sub(cam->target, cam->position));
-      float height = terrain_height(asset_hndl_ptr(world->terrain), vec2_new(cam->position.x, cam->position.z));
-      cam->position.y = height + 1;
-      cam->target = vec3_add(cam->position, cam_dir);
-    }
-  }
-}
-
-static bool loading_resources = false;
-
-static int load_resources(void* unused) {
-  
-  folder_load(P("./resources/terrain/"));
-  folder_load(P("./resources/vegetation/"));
-  
-  static_object* skydome = entity_new("skydome", static_object);
-  skydome->renderable = asset_hndl_new_load(P("./resources/terrain/skydome.obj"));
-  ((renderable*)asset_hndl_ptr(skydome->renderable))->material = asset_hndl_new_load(P("$CORANGE/shaders/skydome.mat"));
-  skydome->position = vec3_new(512, 0, 512);
-  skydome->scale = vec3_new(1024, 1024, 1024);
+  folder_load(P("./assets/terrain/"));
+  folder_load(P("./assets/vegetation/"));
   
   landscape* world = entity_new("world", landscape);
-  world->terrain = asset_hndl_new_load(P("./resources/terrain/heightmap.raw"));
-  world->normalmap = asset_hndl_new_load(P("./resources/terrain/normalsmap.dds"));
-  world->colormap = asset_hndl_new_load(P("./resources/terrain/colormap.dds"));
-  world->attributemap = asset_hndl_new_load(P("./resources/terrain/attributemap.dds"));
+  world->scale = 0.5;
+  world->size_x = 512;
+  world->size_y = 512;
+  world->heightmap = asset_hndl_new_load(P("./assets/terrain/heightmap.raw"));
+  world->attribmap = asset_hndl_new_load(P("./assets/terrain/attributemap.dds"));
 
-  landscape_set_textures(world, asset_hndl_new_load(P("./resources/terrain/surface.dds")), 
-                                asset_hndl_new_load(P("./resources/terrain/surface_bump.dds")), 
-                                asset_hndl_new_load(P("./resources/terrain/surface_far.dds")), 
-                                asset_hndl_new_load(P("./resources/terrain/surface_far_bump.dds")));
+  world->ground0 = asset_hndl_new_load(P("./assets/terrain/ground1.dds"));
+  world->ground3 = asset_hndl_new_load(P("./assets/terrain/ground2.dds"));
+  world->ground2 = asset_hndl_new_load(P("./assets/terrain/ground_earth.dds"));
+  world->ground1 = asset_hndl_new_load(P("./assets/terrain/ground_path.dds"));
+  
+  world->ground0_nm = asset_hndl_new_load(P("./assets/terrain/ground1_nm.dds"));
+  world->ground3_nm = asset_hndl_new_load(P("./assets/terrain/ground2_nm.dds"));
+  world->ground2_nm = asset_hndl_new_load(P("./assets/terrain/ground_earth_nm.dds"));
+  world->ground1_nm = asset_hndl_new_load(P("./assets/terrain/ground_path_nm.dds"));
+
+  landscape_blobtree_generate(world);
   
   vegetation_init();
-  //vegetation_add_type(asset_get("./resources/terrain/heightmap.raw"), 
-  //                    asset_get("./resources/vegetation/grass.obj"), 
+  //vegetation_add_type(asset_get("./assets/terrain/heightmap.raw"), 
+  //                    asset_get("./assets/vegetation/grass.obj"), 
   //                    4.0);
   
   ui_button* loading = ui_elem_get("loading");
@@ -286,13 +246,14 @@ static int load_resources(void* unused) {
   ui_button* framerate = ui_elem_get("framerate");
   ui_button* wireframe = ui_elem_get("wireframe");
   ui_button* freecam = ui_elem_get("freecam");
+  
   loading->active = false;
   load_spinner->active = false;
   framerate->active = true;
   wireframe->active = true;
   freecam->active = true;
   
-  loading_resources = false;
+  loading_assets = false;
   return 1;
 }
 
@@ -317,42 +278,54 @@ void scotland_init() {
   ui_button_resize(framerate, vec2_new(30,25));
   ui_button_set_label(framerate, "FRAMERATE");
   ui_button_disable(framerate);
-  framerate->active = false;
+  ui_button_set_active(framerate, false);
   
   ui_button* wireframe = ui_elem_new("wireframe", ui_button);
   ui_button_move(wireframe, vec2_new(50,10));
   ui_button_resize(wireframe, vec2_new(80,25));
   ui_button_set_label(wireframe, "wireframe");
-  wireframe->active = false;
-  
-  ui_elem_add_event("wireframe", toggle_wireframe);
+  ui_button_set_active(wireframe, false);
+
+  void on_wireframe(ui_button* b, void* unused) { toggle_wireframe = !toggle_wireframe; }
+  ui_button_set_onclick(wireframe, on_wireframe);
   
   ui_button* freecam = ui_elem_new("freecam", ui_button);
   ui_button_move(freecam, vec2_new(140,10));
   ui_button_resize(freecam, vec2_new(65,25));
   ui_button_set_label(freecam, "freecam");
-  freecam->active = false;
+  ui_button_set_active(freecam, false);
   
-  ui_elem_add_event("freecam", toggle_freecam);
+  void on_freecam(ui_button* b, void* unused) {
+    toggle_freecam = !toggle_freecam;
+    
+    camera* cam = entity_get("camera");
+    landscape* world = entity_get("world");
+    
+    vec3 cam_dir = vec3_normalize(vec3_sub(cam->target, cam->position));
+    //float height = terrain_height(asset_hndl_ptr(world->terrain), vec2_new(cam->position.x, cam->position.z));
+    //cam->position.y = height + 1;
+    //cam->target = vec3_add(cam->position, cam_dir);
+  }
   
-  loading_resources = true;
-  SDL_Thread* load_thread = SDL_GL_CreateThread(load_resources, NULL);
+  ui_button_set_onclick(freecam, on_freecam);
+  
+  loading_assets = true;
+  SDL_Thread* load_thread = SDL_GL_CreateThread(load_assets, NULL);
   
   /* New Camera and light */
   
   camera* cam = entity_new("camera", camera);
-  cam->position = vec3_new(512.0, 200.0, 512.0);
-  cam->target =  vec3_new(0.0, 0.0, 0.0);
-  
-  light* sun = entity_new("sun", light);
-  light_set_type(sun, light_type_sun);
-  sun->position = vec3_new(0, 512, 0);
-  sun->target = vec3_new(512, 0, 512);
+  cam->position = vec3_new(0.0, 100.0, 0.0);
+  cam->target =  vec3_new(50.0, 0.0,50.0);
   
   /* Renderer Setup */
   
-  deferred_renderer_init();
-  deferred_renderer_set_camera(cam);
+  asset_hndl opt_graphics = asset_hndl_new_load(P("./assets/graphics.cfg"));
+  
+  g_dr = deferred_renderer_new(opt_graphics);
+  deferred_renderer_set_camera(g_dr, cam);
+  deferred_renderer_set_tod(g_dr, 0.15, 0);
+  deferred_renderer_set_sea_enabled(g_dr, false);
   
 }
 
@@ -364,7 +337,6 @@ static bool d_held = false;
 void scotland_event(SDL_Event event) {
   
   camera* cam = entity_get("camera");
-  light* sun = entity_get("sun");
 
   switch(event.type){
   case SDL_KEYDOWN:
@@ -395,27 +367,16 @@ void scotland_event(SDL_Event event) {
     
 }
 
-static float sun_orbit = -1.5;
-
 void scotland_update() {
   
   camera* cam = entity_get("camera");
-  light* sun = entity_get("sun");
-  static_object* skydome = entity_get("skydome");
   landscape* world = entity_get("world");
-  
-  sun_orbit += frame_time() * 0.01;
-  
-  sun->position.x = 512 + sin(sun_orbit) * 512;
-  sun->position.y = cos(sun_orbit) * 512;
-  sun->position.z = 512;
-  sun->target = vec3_new(512, 0, 512);
   
   if (w_held || s_held) {
     
     vec3 cam_dir = vec3_normalize(vec3_sub(cam->target, cam->position));
     float speed = 0.5;
-    if (!freecam) speed = 0.05;
+    if (!toggle_freecam) speed = 0.05;
     if (w_held) {
       cam->position = vec3_add(cam->position, vec3_mul(cam_dir, speed));
     }
@@ -423,9 +384,9 @@ void scotland_update() {
       cam->position = vec3_sub(cam->position, vec3_mul(cam_dir, speed));
     }
     
-    if (!freecam) {
-      float height = terrain_height(asset_hndl_ptr(world->terrain), vec2_new(cam->position.x, cam->position.z));
-      cam->position.y = height + 1;
+    if (!toggle_freecam) {
+      //float height = terrain_height(asset_hndl_ptr(world->terrain), vec2_new(cam->position.x, cam->position.z));
+      //cam->position.y = height + 1;
     }
     
     cam->target = vec3_add(cam->position, cam_dir);
@@ -456,29 +417,20 @@ void scotland_update() {
 
 void scotland_render() {
   
-  light* sun = entity_get("sun");
   camera* cam = entity_get("camera");
   landscape* world = entity_get("world");
-  static_object* skydome = entity_get("skydome");
   
   //texture_write_to_file(shadow_mapper_depth_texture(), "shadow_depth.tga");
   
-  forward_renderer_begin();
-
-  if (!wireframe) {
-    forward_renderer_render_static(skydome);
-  }
-  
-  if (wireframe) {
+  if (toggle_wireframe) {
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   }  
-  forward_renderer_render_landscape(world);
-  if (wireframe) {
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-  }
   
-  if (!wireframe) {
-    vegetation_render();
+  deferred_renderer_add(g_dr, render_object_landscape(world));
+  deferred_renderer_render(g_dr);
+  
+  if (toggle_wireframe) {
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
   }
   
 }
@@ -486,16 +438,23 @@ void scotland_render() {
 void scotland_finish() {
 
   vegetation_finish();
-  
+  deferred_renderer_delete(g_dr);
+
 }
 
 int main(int argc, char **argv) {
   
-  corange_init("../../core_assets");
+  #ifdef _WIN32
+    FILE* ctt = fopen("CON", "w" );
+    FILE* fout = freopen( "CON", "w", stdout );
+    FILE* ferr = freopen( "CON", "w", stderr );
+  #endif
+  
+  corange_init("../../assets_core");
   
   scotland_init();
   
-  int running = 1;
+  bool running = true;
   SDL_Event event;
   
   while(running) {
@@ -506,14 +465,14 @@ int main(int argc, char **argv) {
       switch(event.type){
       case SDL_KEYDOWN:
       case SDL_KEYUP:
-        if (event.key.keysym.sym == SDLK_ESCAPE) { running = 0; }
+        if (event.key.keysym.sym == SDLK_ESCAPE) { running = false; }
         if (event.key.keysym.sym == SDLK_PRINT) { graphics_viewport_screenshot(); }
         break;
       case SDL_QUIT:
-        running = 0;
+        running = false;
         break;
       }
-      if (loading_resources) {
+      if (loading_assets) {
         ui_event(event);
       } else {
         scotland_event(event);
@@ -522,7 +481,7 @@ int main(int argc, char **argv) {
       
     }
     
-    if (loading_resources) {
+    if (loading_assets) {
       ui_update();
     } else {
       scotland_update();
@@ -530,7 +489,7 @@ int main(int argc, char **argv) {
     }
     
     
-    if (loading_resources) {
+    if (loading_assets) {
       glClearColor(0.0, 0.0, 0.0, 0.0);
       glClear(GL_COLOR_BUFFER_BIT);
       ui_render();

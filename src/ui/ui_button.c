@@ -20,9 +20,10 @@ ui_button* ui_button_new() {
   ui_text_draw(b->label);
   
   b->onclick = NULL;
+  b->onclick_data = NULL;
   
   b->up_color = vec4_new(0.1, 0.1, 0.1, 1);
-  b->down_color = vec4_grey();
+  b->down_color = vec4_white();
 
   b->active = true;
   b->enabled = true;
@@ -53,7 +54,7 @@ void ui_button_event(ui_button* b, SDL_Event e) {
     if (b->pressed) {
       b->pressed = false;
       if (b->onclick) {
-        b->onclick(b);
+        b->onclick(b, b->onclick_data);
       }
     }
   }
@@ -85,12 +86,28 @@ void ui_button_set_label(ui_button* b, char* label) {
   ui_text_draw_string(b->label, label);
 }
 
-void ui_button_set_onclick(ui_button* b, void(*onclick)(ui_button*)) {
+void ui_button_set_onclick(ui_button* b, void(*onclick)(ui_button*, void*)) {
   b->onclick = onclick;
+}
+
+void ui_button_set_onclick_data(ui_button* b, void* data) {
+  b->onclick_data = data;
 }
 
 void ui_button_set_active(ui_button* b, bool active) {
   b->active = active;
+}
+
+void ui_button_set_enabled(ui_button* b, bool enabled) {
+  b->enabled = enabled;
+}
+
+vec2 ui_button_position(ui_button* b) {
+  return ui_rectangle_position(b->back);
+}
+
+vec2 ui_button_size(ui_button* b) {
+  return ui_rectangle_size(b->back);
 }
 
 void ui_button_render(ui_button* b) {

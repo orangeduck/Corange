@@ -396,6 +396,18 @@ quat quat_constrain_y(quat q);
 float quat_distance(quat q0, quat q1);
 quat quat_interpolate(quat* qs, float* ws, int count);
 
+typedef struct {
+  quat real;
+  quat dual;
+} quat_dual;
+
+quat_dual quat_dual_id();
+quat_dual quat_dual_new(quat real, quat dual);
+quat_dual quat_dual_transform(quat q, vec3 t);
+quat_dual quat_dual_mul(quat_dual q0, quat_dual q1);
+vec3 quat_dual_mul_vec3(quat_dual q, vec3 v);
+vec3 quat_dual_mul_vec3_rot(quat_dual q, vec3 v);
+
 /*
 ** == Matrix Maths ==
 */
@@ -480,6 +492,7 @@ mat4 mat4_inverse(mat4 m);
 mat4 mat3_to_mat4(mat3 m);
 mat3 mat4_to_mat3(mat4 m);
 quat mat4_to_quat(mat4 m);
+quat_dual mat4_to_quat_dual(mat4 m);
 
 void mat4_to_array(mat4 m, float* out);
 void mat4_to_array_trans(mat4 m, float* out);
@@ -496,6 +509,7 @@ mat4 mat4_rotation_axis_angle(vec3 axis, float angle);
 
 mat4 mat4_rotation_euler(float x, float y, float z);
 mat4 mat4_rotation_quat(quat q);
+mat4 mat4_rotation_quat_dual(quat_dual q);
 
 mat4 mat4_view_look_at(vec3 position, vec3 target, vec3 up);
 mat4 mat4_perspective(float fov, float near_clip, float far_clip, float ratio);

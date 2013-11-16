@@ -102,10 +102,13 @@ void ui_rectangle_render(ui_rectangle* r) {
   glEnable(GL_BLEND);
   glBlendFunc(r->blend_src, r->blend_dst);
   
-  if (!asset_hndl_isnull(&r->texture)) {
+  if (asset_hndl_isnull(&r->texture)) {
+    shader_program_set_texture(program_ui, "diffuse", 0, asset_hndl_new_load(P("$CORANGE/textures/white.dds")));
+  } else {
     shader_program_set_texture(program_ui, "diffuse", 0, r->texture);
-    shader_program_set_texture(program_ui, "random",  1, asset_hndl_new_load(P("$CORANGE/textures/random.dds")));
   }
+  
+  shader_program_set_texture(program_ui, "random",  1, asset_hndl_new_load(P("$CORANGE/textures/random.dds")));
   
   shader_program_set_float(program_ui, "time", r->time);
   shader_program_set_float(program_ui, "glitch", r->glitch);
@@ -223,3 +226,13 @@ bool ui_rectangle_contains_point(ui_rectangle* rect, vec2 pos) {
     return false;
   }
 }
+
+vec2 ui_rectangle_position(ui_rectangle* r) {
+  return r->top_left;
+}
+
+
+vec2 ui_rectangle_size(ui_rectangle* r) {
+  return vec2_sub(r->bottom_right, r->top_left);
+}
+

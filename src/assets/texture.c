@@ -25,10 +25,8 @@ GLenum texture_type(texture* t) {
 }
 
 void texture_set_image(texture* t, image* i) {
-  
   glBindTexture(GL_TEXTURE_2D, texture_handle(t));
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, i->width, i->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, i->data );
-  
 }
 
 texture* tga_load_file( char* filename ) {

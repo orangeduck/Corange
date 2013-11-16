@@ -3,6 +3,6 @@ texture bump_map = ./assets/podium/podium_nm.dds
 texture spec_map = ./assets/podium/podium_s.dds
 
 float glossiness = 50
-float bumpiness = 1.0
+float bumpiness = 1.5
 float specular_level = 5
 int material = 3

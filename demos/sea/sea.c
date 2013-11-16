@@ -42,7 +42,7 @@ void sea_init() {
   static_object* s_corvette = entity_new("corvette", static_object);
   s_corvette->renderable = asset_hndl_new_ptr(r_corvette);
   s_corvette->rotation = quat_angle_axis(1.0, vec3_new(0.1, 1.0, 0.31));
-  s_corvette->scale = vec3_new(2.0, 1.0, 2.0);
+  s_corvette->scale = vec3_new(2.0, 2.0, 2.0);
   
   ui_button* framerate = ui_elem_new("framerate", ui_button);
   ui_button_move(framerate, vec2_new(10,10));
@@ -134,7 +134,6 @@ void sea_render() {
   
   //deferred_renderer_add(g_dr, render_object_cmesh(test_cmesh, test_cmesh_trans));
   deferred_renderer_add(g_dr, render_object_ellipsoid(test_ellipsoid));
-  deferred_renderer_add(g_dr, render_object_point(test_point, vec3_red(), 10.0));
   deferred_renderer_add(g_dr, render_object_static(entity_get("corvette")));
   deferred_renderer_render(g_dr);
   

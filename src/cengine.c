@@ -1455,6 +1455,66 @@ quat quat_interpolate(quat* qs, float* ws, int count) {
   
 }
 
+quat_dual quat_dual_new(quat real, quat dual) {
+  quat_dual qd;
+  qd.real = real;
+  qd.dual = dual;
+  return qd;
+}
+
+quat_dual quat_dual_id() {
+  return quat_dual_new(quat_id(), vec4_zero());
+}
+
+quat_dual quat_dual_transform(quat q, vec3 t) {
+  quat_dual qd;
+  qd.real = q;
+  qd.dual = quat_new(
+     0.5 * ( t.x * q.w + t.y * q.z - t.z * q.y),
+     0.5 * (-t.x * q.z + t.y * q.w + t.z * q.x),
+     0.5 * ( t.x * q.y - t.y * q.x + t.z * q.w),
+    -0.5 * ( t.x * q.x + t.y * q.y + t.z * q.z)
+  );
+  return qd;
+}
+
+quat_dual quat_dual_mul(quat_dual q0, quat_dual q1) {
+  return quat_dual_new(
+    quat_mul_quat(q0.real, q1.real), 
+    vec4_add(
+      quat_mul_quat(q0.real, q1.dual), 
+      quat_mul_quat(q0.dual, q1.real)));
+}
+
+quat_dual quat_dual_normalize(quat_dual q) {
+  float l = quat_length(q.real);
+  quat real = vec4_mul(q.real, 1.0 / l);
+  quat dual = vec4_mul(q.dual, 1.0 / l);
+  return quat_dual_new(real, vec4_sub(dual, vec4_mul(real, quat_dot(real, dual))));
+}
+
+vec3 quat_dual_mul_vec3(quat_dual q, vec3 v) {
+  
+  vec3 rvc = vec3_cross(quat_imaginaries(q.real), v);
+  vec3 real = vec3_cross(quat_imaginaries(q.real), vec3_add(rvc, vec3_mul(v, q.real.w)));
+
+  vec3 rdc = vec3_cross(quat_imaginaries(q.real), quat_imaginaries(q.dual));  
+  vec3 rimg = vec3_mul(quat_imaginaries(q.real), q.dual.w);
+  vec3 dimg = vec3_mul(quat_imaginaries(q.dual), q.real.w);
+  
+  vec3 dual = vec3_sub(rimg, vec3_add(dimg, rdc));
+  
+  return vec3_add(v, vec3_add(vec3_mul(real, 2), vec3_mul(dual, 2)));
+}
+
+vec3 quat_dual_mul_vec3_rot(quat_dual q, vec3 v) {
+  
+  vec3 rvc = vec3_cross(quat_imaginaries(q.real), v);
+  vec3 real = vec3_cross(quat_imaginaries(q.real), vec3_add(rvc, vec3_mul(v, q.real.w)));
+  
+  return vec3_add(v, vec3_mul(real, 2.0));
+}
+
 /* Matrix Functions */
 
 mat2 mat2_id() {
@@ -2027,6 +2087,12 @@ quat mat4_to_quat(mat4 m) {
 
 }
 
+quat_dual mat4_to_quat_dual(mat4 m) {
+  quat rotation = mat4_to_quat(m);
+  vec3 translation = mat4_mul_vec3(m, vec3_zero());
+  return quat_dual_transform(rotation, translation);
+}
+
 float mat4_det(mat4 m) {
   
   float cofact_xx =  mat3_det(mat3_new(m.yy, m.yz, m.yw, m.zy, m.zz, m.zw, m.wy, m.wz, m.ww));
@@ -2320,6 +2386,29 @@ mat4 mat4_rotation_quat(vec4 q) {
     xz - wy, yz + wx, 1.0f - ( xx + yy ), 0.0f,
     0.0f,	0.0f, 0.0f,	1.0f);
     
+}
+
+mat4 mat4_rotation_quat_dual(quat_dual q) {
+  
+  float rx = q.real.x, ry = q.real.y, rz = q.real.z, rw = q.real.w;
+  float tx = q.dual.x, ty = q.dual.y, tz = q.dual.z, tw = q.dual.w;
+
+  mat4 m = mat4_id();
+  m.xx = rw*rw + rx*rx - ry*ry - rz*rz;              
+  m.xy = 2.f*(rx*ry - rw*rz);                        
+  m.xz = 2*(rx*rz + rw*ry);
+  m.yx = 2*(rx*ry + rw*rz);                                  
+  m.yy = rw*rw - rx*rx + ry*ry - rz*rz;      
+  m.yz = 2*(ry*rz - rw*rx);
+  m.zx = 2*(rx*rz - rw*ry);                                  
+  m.zy = 2*(ry*rz + rw*rx);                          
+  m.zz = rw*rw - rx*rx - ry*ry + rz*rz;
+
+  m.xw = -2*tw*rx + 2*rw*tx - 2*ty*rz + 2*ry*tz;
+  m.yw = -2*tw*ry + 2*tx*rz - 2*rx*tz + 2*rw*ty;
+  m.zw = -2*tw*rz + 2*rx*ty + 2*rw*tz - 2*tx*ry;
+
+  return m;
 }
 
 mat4 mat4_world(vec3 position, vec3 scale, quat rotation) {

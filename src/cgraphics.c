@@ -35,6 +35,8 @@ static void graphics_viewport_start() {
     error("Could not create SDL window: %s", errorstring);
   }
 
+  window_width = screen->w;
+  window_height = screen->h;
   glViewport(0, 0, window_width, window_height);
 
   SDL_GL_LoadExtensions();

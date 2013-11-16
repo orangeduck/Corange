@@ -89,7 +89,7 @@ void platformer_init() {
   ui_button* framerate = ui_elem_new("framerate", ui_button);
   ui_button_move(framerate, vec2_new(10,10));
   ui_button_resize(framerate, vec2_new(30,25));
-  ui_button_set_label(framerate, "");
+  ui_button_set_label(framerate, " ");
   ui_button_disable(framerate);
   
   ui_button* score = ui_elem_new("score", ui_button);
@@ -104,23 +104,6 @@ void platformer_init() {
   ui_button_set_label(time, "Time 000000");
   ui_button_disable(time);
   
-  ui_button* audio = ui_elem_new("audio", ui_button);
-  ui_button_move(audio, vec2_new(300, 10));
-  ui_button_resize(audio, vec2_new(120, 25));
-  ui_button_set_label(audio, "Disable Audio");
-  
-  void on_audio(ui_button* b) { 
-    //if (audio_enabled()) {
-    //    audio_disable();
-    //    ui_button_set_label(b, "Enable Audio");
-    //} else {
-    //    audio_enable();
-    //    ui_button_set_label(b, "Disable Audio");
-    //} 
-  }
-  
-  ui_button_set_onclick(audio, on_audio);
-    
   ui_button* victory = ui_elem_new("victory", ui_button);
   ui_button_move(victory, vec2_new(365, 200));
   ui_button_resize(victory, vec2_new(70, 25));
@@ -132,14 +115,12 @@ void platformer_init() {
   ui_button_resize(new_game_but, vec2_new(70, 25));
   ui_button_set_label(new_game_but, "New Game");
   
-  void on_newgame(ui_button* b) {
+  
+  void on_newgame(ui_button* b, void* unused) {
     reset_game();
   }
   
   ui_button_set_onclick(new_game_but, on_newgame);
-  
-  /* Set volume to something more reasonable */
-  //audio_set_volume(0.1);
   
   /* Reset all the game variables */
   reset_game();
@@ -281,7 +262,7 @@ static void collision_detection_coins() {
       entity_delete(coin_name);
       
       /* Play a nice twinkle sound */
-      //audio_play_sound(asset_get_as(P("./sounds/coin.wav"), sound));
+      audio_sound_play(asset_get_as(P("./sounds/coin.wav"), sound), 0);
       
       /* Add some score! */
       level_score += 10;
@@ -292,6 +273,7 @@ static void collision_detection_coins() {
       ui_text_draw(score->label);
     }
   }
+  
   
   ui_button* victory = ui_elem_get("victory");
   
@@ -343,7 +325,7 @@ void platformer_update() {
     level_time += frame_time();
     ui_button* time = ui_elem_get("time");
     sprintf(time->label->string, "Time %06i", (int)level_time);
-    ui_text_draw(time->label);
+      ui_text_draw(time->label);
   }
   
 }
@@ -370,9 +352,7 @@ void platformer_render() {
 }
 
 void platformer_finish() {
-  
   /* Entity and asset managers will automatically delete any remaining objects. */
-  
 }
 
 int main(int argc, char **argv) {
@@ -385,7 +365,8 @@ int main(int argc, char **argv) {
   
   /* Init Corange, pointing to the assets_core folder */
   corange_init("../../assets_core");
-  
+  graphics_viewport_set_dimensions(800, 600);
+
   platformer_init();
   
   /* Set the game running, create SDL_Event struct to monitor events */

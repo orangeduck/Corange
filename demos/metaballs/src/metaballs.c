@@ -1,4 +1,3 @@
-#define VOLUME_RENDERER
 
 #include "particles.h"
 #include "volume_renderer.h"
@@ -30,11 +29,11 @@ void metaballs_init() {
   
   metaball_particles_init();
   
-  folder_load(P("./resources/podium/"));
-  folder_load(P("./resources/particles/"));
+  folder_load(P("./assets/podium/"));
+  folder_load(P("./assets/particles/"));
   
-  asset_hndl r_podium = asset_hndl_new(P("./resources/podium/podium.obj"));
-  ((renderable*)asset_hndl_ptr(&r_podium))->material = asset_hndl_new(P("./resources/podium/podium.mat"));
+  asset_hndl r_podium = asset_hndl_new(P("./assets/podium/podium.obj"));
+  ((renderable*)asset_hndl_ptr(&r_podium))->material = asset_hndl_new(P("./assets/podium/podium.mat"));
   
   static_object* s_podium = entity_new("podium", static_object);
   s_podium->renderable = r_podium;
@@ -82,13 +81,6 @@ void metaballs_init() {
 #endif
  
 #ifdef MARCHING_CUBES
-  
-  forward_renderer_init();
-  forward_renderer_set_camera(cam);
-  forward_renderer_set_shadow_light(sun);
-  forward_renderer_set_shadow_texture( shadow_mapper_depth_texture() );
-  forward_renderer_add_light(sun);
-
   marching_cubes_init();
 #endif
   
@@ -140,11 +132,7 @@ void metaballs_render() {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   
 #ifdef MARCHING_CUBES 
-  forward_renderer_begin();
-    forward_renderer_render_static(s_podium);
-    forward_renderer_render_light(sun);
-    marching_cubes_render(wireframe, cam, sun);
-  forward_renderer_end();
+  marching_cubes_render(wireframe, cam, sun);
 #endif
   
 #ifdef VOLUME_RENDERER
@@ -208,7 +196,6 @@ void metaballs_finish() {
 #endif
   
 #ifdef MARCHING_CUBES
-  forward_renderer_finish();
   marching_cubes_finish();
 #endif
   
@@ -217,7 +204,13 @@ void metaballs_finish() {
 
 int main(int argc, char **argv) {
   
-  corange_init("../../core_assets");
+  #ifdef _WIN32
+    FILE* ctt = fopen("CON", "w" );
+    FILE* fout = freopen( "CON", "w", stdout );
+    FILE* ferr = freopen( "CON", "w", stderr );
+  #endif
+  
+  corange_init("../../assets_core");
   
   metaballs_init();
   

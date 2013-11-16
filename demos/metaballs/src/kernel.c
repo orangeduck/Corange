@@ -13,7 +13,7 @@
 #endif
 
 static cl_int error = 0;
-static cl_platform_id platforms[32];
+static cl_platform_id platforms[10];
 static cl_uint num_platforms = 0;
 
 static cl_context context;
@@ -57,8 +57,8 @@ void kernels_init_with_cpu() {
 }
 
 void kernels_init_with_opengl() {
-
-  error = clGetPlatformIDs(32, platforms, &num_platforms);
+  
+  error = clGetPlatformIDs(8, platforms, &num_platforms);
   kernels_check_error("clGetPlatformID");
 
   kernels_info();
@@ -210,10 +210,7 @@ kernel_program* cl_load_file(char* filename) {
   source[size] = '\0';
   SDL_RWread(file, source, size, 1);
   
-  const char* source_const = source;
-  int src_len = strlen(source);
-  
-  cl_program program = clCreateProgramWithSource(context, 1, &source_const, (const size_t*)&src_len, &error);
+  cl_program program = clCreateProgramWithSource(context, 1, (const char**)&source, (const size_t*)&size, &error);
   kernels_check_error("clCreateProgramWithSource");
 
   error = clBuildProgram(program, 1, &device, NULL, NULL, NULL);

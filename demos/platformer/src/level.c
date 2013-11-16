@@ -279,6 +279,7 @@ void level_render_tiles(level* l, vec2 camera_position) {
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   
   /* Start from 1, 0 is no tiles! */
+  
   for(int i = 1; i < l->num_tile_sets; i++) {
     
     texture* tile_tex = tile_get_texture(i);
@@ -286,24 +287,25 @@ void level_render_tiles(level* l, vec2 camera_position) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
     glBindBuffer(GL_ARRAY_BUFFER, l->tile_sets[i].positions_buffer);
     glVertexPointer(3, GL_FLOAT, 0, (void*)0);
-    glEnableClientState(GL_VERTEX_ARRAY);
     
     glBindBuffer(GL_ARRAY_BUFFER, l->tile_sets[i].texcoords_buffer);
     glTexCoordPointer(2, GL_FLOAT, 0, (void*)0);
-    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
     
     glDrawArrays(GL_QUADS, 0, l->tile_sets[i].num_tiles * 4);
     
-    glDisableClientState(GL_VERTEX_ARRAY);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
     glDisableClientState(GL_TEXTURE_COORD_ARRAY);  
+    glDisableClientState(GL_VERTEX_ARRAY);
     
   }
   
-  glDisable(GL_TEXTURE_2D);
-  
   glDisable(GL_BLEND);
+  glDisable(GL_TEXTURE_2D);  
   
   glMatrixMode(GL_PROJECTION);
   glPopMatrix();

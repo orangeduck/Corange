@@ -51,4 +51,7 @@ vec2 ui_rectangle_center(ui_rectangle* r);
 bool ui_rectangle_contains_point(ui_rectangle* r, vec2 pos);
 void ui_rectangle_blend(ui_rectangle* r, GLenum blend_src, GLenum blend_dst);
 
+vec2 ui_rectangle_position(ui_rectangle* r);
+vec2 ui_rectangle_size(ui_rectangle* r);
+
 #endif
