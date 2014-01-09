@@ -1,6 +1,10 @@
 project(engine)
 
+find_package(SDL REQUIRED)
+find_package(OpenGL REQUIRED)
+
 include_directories(include)
+include_directories(${SDL_INCLUDE_DIR} ${OPENGL_INCLUDE_DIR})
 
 set(SOURCES
   src/data/int_list.c
@@ -46,3 +50,4 @@ set(SOURCES
 )
 
 add_library(${PROJECT_NAME} ${SOURCES})
+target_link_libraries(${PROJECT_NAME} ${SDL_LIBRARY} ${OPENGL_LIBRARIES})
