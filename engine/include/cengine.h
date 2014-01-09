@@ -13,6 +13,10 @@
 #ifndef cengine_h
 #define cengine_h
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 /* Standard includes */
 #include <stdlib.h>
 #include <stdio.h>
@@ -20,9 +24,9 @@
 #include <string.h>
 #include <dirent.h>
 #include <assert.h>
-#include <math.h>
 #include <time.h>
 #include <signal.h>
+#include <math.h>
 
 /* SDL includes */
 #include "SDL/SDL.h"

@@ -1,0 +1,1 @@
+/usr/bin/cc      CMakeFiles/renderers.dir/src/renderers.o  -o renderers -rdynamic 
