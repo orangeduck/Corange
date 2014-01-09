@@ -1,7 +1,0 @@
-tessellation
-tessellation.exe
-lib/*.*
-*~
-*.o
-stdout.txt
-stderr.txt
