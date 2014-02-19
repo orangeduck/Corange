@@ -33,7 +33,9 @@
 #include <SDL/SDL_net.h>
 #include "SDL/SDL_local.h"
 
-
+#ifndef MAX_PATH
+#define MAX_PATH 512
+#endif
 /*
 ** == File System Path ==
 */

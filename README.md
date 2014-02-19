@@ -78,6 +78,8 @@ Using / Contributing
 --------------------
 	
 This is still mainly a personal project and so there are going to be lots of bugs, unfinished features and messy bits of code. The engine is heavily WIP and subject to sweeping changes. It isn't really viable to use without also being part of the project development and in communication with me. Rather than a full game engine like Unity, Corange is more of a framework and gives you access to features at about the same level as XNA.
+
+I have a big backlog of Work in Progress changes I need to push up to the repository once they get to a reasonable point so if you are interested in those please contact me.
 		
 Saying that, it is a great excuse to practise your C and I very much welcome help. If the project appeals to you here are a couple of quick things that might help get you started.
 		

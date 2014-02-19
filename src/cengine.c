@@ -2,7 +2,8 @@
 
 fpath P(const char* path) {
   fpath p;
-  strncpy(p.ptr, path, PATH_MAX-1);
+  //strncpy(p.ptr, path, PATH_MAX-1);
+  strncpy(p.ptr, path, MAX_PATH-1);
   return p;
 }
 

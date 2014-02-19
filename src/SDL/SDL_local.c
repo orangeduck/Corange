@@ -14,6 +14,7 @@
 
 #ifdef __unix__
   #include <execinfo.h>
+#define MAX_PATH 512
 #endif
 
 #ifdef _WIN32
@@ -129,7 +130,7 @@ bool SDL_PathIsDirectory(char* path) {
 static char curr_dir[MAX_PATH];
 
 char* SDL_GetWorkingDir() {
-  char* curr = getcwd(curr_dir, sizeof(curr_dir));
+  char* discard = getcwd(curr_dir, sizeof(curr_dir));
   return curr_dir;
 }
 
@@ -207,7 +208,7 @@ void SDL_WM_DeleteResourceIcon() {
 
 #else
 
-bool SDL_WM_UseResourceIcon() { return false; }
+int SDL_WM_UseResourceIcon() { return 0;}
 void SDL_WM_DeleteResourceIcon() {}
 
 #endif
@@ -222,7 +223,7 @@ int SDL_WM_CreateTempContext() {
   SDL_SysWMinfo info;
   SDL_VERSION(&info.version);
   if (SDL_GetWMInfo(&info) == -1) {
-    // Could not get SDL version info.
+    /* Could not get SDL version info. */
     return 1;
   }
   
@@ -230,12 +231,12 @@ int SDL_WM_CreateTempContext() {
 
   temp_context = wglCreateContext(temp_device);
   if (temp_context == NULL) {
-    // Could not create OpenGL context
+    /* Could not create OpenGL context */
     return 2;
   }
 
   if (!wglShareLists(info.hglrc, temp_context)) {
-    // Could not share lists with temp context.
+    /* Could not share lists with temp context. */
     return 3;
   }
   
@@ -248,17 +249,17 @@ int SDL_WM_DeleteTempContext() {
   SDL_SysWMinfo info;
   SDL_VERSION(&info.version);
   if (SDL_GetWMInfo(&info) == -1) {
-    // Could not get SDL version info
+    /* Could not get SDL version info */
     return 1;
   }
 
   if (!wglShareLists(temp_context, info.hglrc)) {
-    // Could share lists with OpenGL context
+    /* Could share lists with OpenGL context */
     return 2;
   }
 
   if (!wglDeleteContext(temp_context)) {
-    // Could delete OpenGL context
+    /* Could delete OpenGL context */
     return 3;
   }
   
@@ -368,7 +369,7 @@ static int gl_thread_create(void* unused) {
   
   BOOL err = wglMakeCurrent(gl_thread_device, gl_thread_context);
   if (err == 0) {
-    // Could not make context current
+    /* Could not make context current */
     return -1;
   }
   
@@ -376,7 +377,7 @@ static int gl_thread_create(void* unused) {
   
   HGLRC context = wglGetCurrentContext();
   if (context == NULL) {
-    // Could not get current context
+    /* Could not get current context */
     return -2;
   }
   
@@ -384,7 +385,7 @@ static int gl_thread_create(void* unused) {
   
   err = wglDeleteContext(context);
   if (err == 0) {
-    // Could not delete context
+    /* Could not delete context */
     return -3;
   }
   
@@ -396,7 +397,7 @@ SDL_Thread* SDL_GL_CreateThread(int (*fn)(void *), void *data) {
   SDL_SysWMinfo info;
   SDL_VERSION(&info.version);
   if (SDL_GetWMInfo(&info) == -1) {
-    // Could not get SDL version info.
+    /* Could not get SDL version info. */
     return NULL;
   }
   
@@ -404,14 +405,14 @@ SDL_Thread* SDL_GL_CreateThread(int (*fn)(void *), void *data) {
 
   gl_thread_context = wglCreateContext(gl_thread_device);
   if (gl_thread_context == NULL) {
-    // Could not create new OpenGL context
+    /* Could not create new OpenGL context */
     return NULL;
   }
   
   BOOL err = wglShareLists(info.hglrc, gl_thread_context);
   if (err == 0) {
     int code = GetLastError();
-    //Could not get OpenGL share lists: %i
+    /* Could not get OpenGL share lists */
     return NULL;
   }
   
@@ -436,7 +437,7 @@ static int gl_thread_create(void* unused) {
   
   int err = glXMakeCurrent(gl_thread_display, gl_thread_drawable, gl_thread_context);
   if (err == 0) {
-    // Could not make context current
+    /* Could not make context current */
     return -1;
   }
   
@@ -444,19 +445,19 @@ static int gl_thread_create(void* unused) {
   
   Display* display = glXGetCurrentDisplay();
   if (display == NULL) {
-    // Could not get current display
+    /* Could not get current display */
     return -2;
   }
   
   GLXContext context = glXGetCurrentContext();
   if (context == NULL) {
-    // Could not get current context
+    /* Could not get current context */
     return -3;
   }
   
   err = glXMakeCurrent(display, None, NULL);
   if (err == 0) {
-    // Could not make context current
+    /* Could not make context current */
     return -4;
   }
   
@@ -471,26 +472,26 @@ SDL_Thread* SDL_GL_CreateThread(int (*fn)(void *), void *data) {
   
   GLXContext context = glXGetCurrentContext();
   if (context == NULL) {
-    // Could not get current context
+    /* Could not get current context */
     return NULL;
   }
   
   Display* display = glXGetCurrentDisplay();
   if (display == NULL) {
-    // Could not get current display
+    /* Could not get current display */
     return NULL;
   }
   
   GLXDrawable drawable = glXGetCurrentDrawable();
   if (drawable == None) {
-    // Could not get current drawable
+    /* Could not get current drawable */
     return NULL;
   }
   
   XVisualInfo* info = malloc(sizeof(XVisualInfo));
   info = glXChooseVisual(display, 0, attribs);
   if (info == NULL) {
-    // Could not create thread with required visuals.
+    /* Could not create thread with required visuals. */
     return NULL;
   }
   
