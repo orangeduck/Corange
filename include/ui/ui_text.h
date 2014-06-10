@@ -16,14 +16,14 @@
 #include "casset.h"
 
 enum {
-  text_align_left   = 0,
-  text_align_right  = 1,
-  text_align_center = 2,
+  TEXT_ALIGN_LEFT   = 0,
+  TEXT_ALIGN_RIGHT  = 1,
+  TEXT_ALIGN_CENTER = 2,
 };
 
 enum {
-  text_align_top    = 0,
-  text_align_bottom = 1,
+  TEXT_ALIGN_TOP    = 0,
+  TEXT_ALIGN_BOTTOM = 1,
 };
 
 typedef struct {

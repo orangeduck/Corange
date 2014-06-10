@@ -45,6 +45,10 @@ void ui_finish(void) {
   
 }
 
+void ui_set_style(ui_style* s) {
+  ui_style_current = s;
+}
+
 void ui_event(SDL_Event e) {
   
   for (int i = 0; i < ui_elem_names->num_items; i++) {

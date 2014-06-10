@@ -1,4 +1,5 @@
 #include "ui/ui_text.h"
+#include "ui/ui_style.h"
 
 #include "cgraphics.h"
 
@@ -23,14 +24,14 @@ ui_text* ui_text_new() {
   t->top_left = vec2_zero();
   t->bottom_right = vec2_zero();
   
-  t->font = asset_hndl_new_load(P("$CORANGE/fonts/console_font.fnt"));
+  t->font = asset_hndl_new_load(ui_style_current->text_font);
   
   t->position = vec2_new(0.0,0.0);
-  t->scale = vec2_new(1.0,1.0);
-  t->color = vec4_black();
+  t->scale = ui_style_current->text_scale;
+  t->color = ui_style_current->text_color;
   
-  t->halign = text_align_left;
-  t->valign = text_align_top;
+  t->halign = TEXT_ALIGN_LEFT;
+  t->valign = TEXT_ALIGN_TOP;
   t->line_spacing = 0.0;
   t->char_spacing = 0.0;
   t->rotation = 0.0;
@@ -159,7 +160,7 @@ void ui_text_draw(ui_text* t) {
          (t->line_length != 0.0) &&
          (x - t->position.x > t->line_length)) ) {
       
-      if (t->halign == text_align_center) {
+      if (t->halign == TEXT_ALIGN_CENTER) {
         float total_length = x - t->position.x - t->char_spacing;
         float offset_x = total_length / 2;
         
@@ -216,20 +217,17 @@ void ui_text_draw(ui_text* t) {
   t->num_positions = pos_i;
   t->num_texcoords = uv_i;
   
-  float total_length = x - t->position.x;
-  float total_height = y - t->position.y + newline_height;
-  
   float offset_x = 0;
   float offset_y = 0;
   
-  if (t->halign == text_align_right) {
-    offset_x = total_length;
+  if (t->halign == TEXT_ALIGN_RIGHT) {
+    offset_x = x - t->position.x;
   }
   
-  if (t->valign == text_align_bottom) {
-    offset_y = total_height;
-  } else if (t->valign == text_align_center) {
-    offset_y = total_height / 2;
+  if (t->valign == TEXT_ALIGN_BOTTOM) {
+    offset_y = (y - t->position.y);
+  } else if (t->valign == TEXT_ALIGN_CENTER) {
+    offset_y = (y - t->position.y) / 2;
   }
     
   if ((offset_x != 0) || (offset_y != 0)) {

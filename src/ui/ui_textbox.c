@@ -1,29 +1,42 @@
-
 #include "ui/ui_textbox.h"
+#include "ui/ui_style.h"
 
 ui_textbox* ui_textbox_new() {
   ui_textbox* tb = malloc(sizeof(ui_textbox));
 
   tb->inner = ui_rectangle_new();
-  ui_rectangle_set_texture(tb->inner, asset_hndl_new_load(P("$CORANGE/ui/back_wood.dds")), 128, 128, true);
-  ui_rectangle_set_border(tb->inner, 1, vec4_black());
-  ui_rectangle_set_glitch(tb->inner, 1.0);
+  ui_rectangle_set_texture(tb->inner, 
+    asset_hndl_new_load(ui_style_current->box_back_image), 
+    ui_style_current->box_back_width,
+    ui_style_current->box_back_height,
+    ui_style_current->box_back_tile);
+  ui_rectangle_set_border(tb->inner,
+    ui_style_current->box_back_border_size,
+    ui_style_current->box_back_border_color);
+  ui_rectangle_set_glitch(tb->inner, ui_style_current->box_glitch);
+  ui_rectangle_set_color(tb->inner, ui_style_current->box_inset_color);
   
   tb->outer = ui_rectangle_new();
-  ui_rectangle_set_texture(tb->outer, asset_hndl_new_load(P("$CORANGE/ui/back_wood.dds")), 128, 128, true);
-  ui_rectangle_set_border(tb->outer, 1, vec4_black());
-  ui_rectangle_set_color(tb->outer, vec4_grey());
-  ui_rectangle_set_glitch(tb->outer, 1.0);
+  ui_rectangle_set_texture(tb->outer, 
+    asset_hndl_new_load(ui_style_current->box_back_image), 
+    ui_style_current->box_back_width,
+    ui_style_current->box_back_height,
+    ui_style_current->box_back_tile);
+  ui_rectangle_set_border(tb->outer,
+    ui_style_current->box_back_border_size,
+    ui_style_current->box_back_border_color);
+  ui_rectangle_set_glitch(tb->outer, ui_style_current->box_glitch);
+  ui_rectangle_set_color(tb->outer, ui_style_current->box_up_color);
   
   tb->contents = ui_text_new();
-  ui_text_set_color(tb->contents, vec4_light_grey());
-  ui_text_align(tb->contents, text_align_center, text_align_center);
+  ui_text_set_color(tb->contents, ui_style_current->box_text_color);
+  ui_text_align(tb->contents, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER);
   ui_text_move(tb->contents, ui_rectangle_center(tb->inner));
   ui_text_draw_string(tb->contents, "");
   
   tb->label = ui_text_new();
-  ui_text_set_color(tb->label, vec4_dark_grey());
-  ui_text_align(tb->label, text_align_center, text_align_center);
+  ui_text_set_color(tb->label, ui_style_current->box_label_color);
+  ui_text_align(tb->label, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER);
   ui_text_move(tb->label, ui_rectangle_center(tb->inner));
   ui_text_draw_string(tb->label, "");
   
@@ -118,12 +131,12 @@ void ui_textbox_set_alignment(ui_textbox* tb, int halign, int valign) {
   
   float x = 0, y = 0;
   
-  if (halign == text_align_left) { x = tb->inner->top_left.x; }
-  if (halign == text_align_right) { x = tb->inner->bottom_right.x; }
-  if (halign == text_align_center) { x = ui_rectangle_center(tb->inner).x; }
-  if (valign == text_align_top) { y = tb->inner->top_left.y; }
-  if (valign == text_align_bottom) { y = tb->inner->bottom_right.y; }
-  if (valign == text_align_center) { y = ui_rectangle_center(tb->inner).y; }
+  if (halign == TEXT_ALIGN_LEFT)   { x = tb->inner->top_left.x; }
+  if (halign == TEXT_ALIGN_RIGHT)  { x = tb->inner->bottom_right.x; }
+  if (halign == TEXT_ALIGN_CENTER) { x = ui_rectangle_center(tb->inner).x; }
+  if (valign == TEXT_ALIGN_TOP)    { y = tb->inner->top_left.y; }
+  if (valign == TEXT_ALIGN_BOTTOM) { y = tb->inner->bottom_right.y; }
+  if (valign == TEXT_ALIGN_CENTER) { y = ui_rectangle_center(tb->inner).y; }
   
   ui_text_move(tb->contents, vec2_new(x, y));
   ui_text_move(tb->label, vec2_new(x, y));
@@ -172,7 +185,10 @@ void ui_textbox_event(ui_textbox* tb, SDL_Event e) {
       
       char keypress = (char)e.key.keysym.unicode;
 
-      const char* valid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!\"$%^&*()-=_+[{}]:;@'~#<,>.?/\\| \0";     
+      const char* valid = "abcdefghijklmnopqrstuvwxyz"
+                          "ABCDEFGHIJKLMNOPQRSTUVWXY"
+                          "Z1234567890!\"$%^&*()-=_+"
+                          "[{}]:;@'~#<,>.?/\\| \0";     
       
       for (int i = 0; i < strlen(valid)-1; i++) {
         if (valid[i] == keypress) {
@@ -208,9 +224,9 @@ void ui_textbox_update(ui_textbox* tb) {
 void ui_textbox_render(ui_textbox* tb) {
   
   if (tb->selected || !tb->enabled) {
-    ui_rectangle_set_color(tb->inner, vec4_dark_grey());
+    ui_rectangle_set_color(tb->inner, ui_style_current->box_down_color);
   } else {
-    ui_rectangle_set_color(tb->inner, vec4_new(0.1, 0.1, 0.1, 1));
+    ui_rectangle_set_color(tb->inner, ui_style_current->box_inset_color);
   }
   
   ui_rectangle_render(tb->outer);
@@ -228,7 +244,7 @@ void ui_textbox_render(ui_textbox* tb) {
       
       ui_text* hidden = ui_text_new();
       ui_text_set_color(hidden, tb->contents->color);
-      ui_text_align(hidden, text_align_center, text_align_center);
+      ui_text_align(hidden, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER);
       ui_text_move(hidden, tb->contents->position);
       ui_text_set_font(hidden, tb->contents->font);
       ui_text_draw_string(hidden, buffer);

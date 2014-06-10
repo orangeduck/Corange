@@ -1,5 +1,5 @@
 #include "ui/ui_button.h"
-
+#include "ui/ui_style.h"
 #include "ui/ui_rectangle.h"
 
 #include "cgraphics.h"
@@ -9,21 +9,27 @@ ui_button* ui_button_new() {
   ui_button* b = malloc(sizeof(ui_button));
   
   b->back = ui_rectangle_new();
-  ui_rectangle_set_texture(b->back, asset_hndl_new_load(P("$CORANGE/ui/back_wood.dds")), 128, 128, true);
-  ui_rectangle_set_border(b->back, 1, vec4_black());
-  ui_rectangle_set_glitch(b->back, 1.0);
+  ui_rectangle_set_texture(b->back, 
+    asset_hndl_new_load(ui_style_current->box_back_image), 
+    ui_style_current->box_back_width,
+    ui_style_current->box_back_height,
+    ui_style_current->box_back_tile);
+  ui_rectangle_set_border(b->back,
+    ui_style_current->box_back_border_size,
+    ui_style_current->box_back_border_color);
+  ui_rectangle_set_glitch(b->back, ui_style_current->box_glitch);
   
   b->label = ui_text_new_string("Button1");
   ui_text_move(b->label, ui_rectangle_center(b->back));
-  ui_text_set_color(b->label, vec4_light_grey());
-  ui_text_align(b->label, text_align_center, text_align_center);
+  ui_text_set_color(b->label, ui_style_current->box_text_color);
+  ui_text_align(b->label, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER);
   ui_text_draw(b->label);
   
   b->onclick = NULL;
   b->onclick_data = NULL;
   
-  b->up_color = vec4_new(0.1, 0.1, 0.1, 1);
-  b->down_color = vec4_white();
+  b->up_color = ui_style_current->box_up_color;
+  b->down_color = ui_style_current->box_down_color;
 
   b->active = true;
   b->enabled = true;

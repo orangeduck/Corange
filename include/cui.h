@@ -12,12 +12,15 @@
 #ifndef cui_h
 #define cui_h
 
+#include "ui/ui_style.h"
+
 #include "cengine.h"
 
 typedef void ui_elem;
 
 void ui_init(void);
 void ui_finish(void);
+void ui_set_style(ui_style* s);
 
 /* Pass Event, Update, and Render whole UI */
 void ui_event(SDL_Event e);

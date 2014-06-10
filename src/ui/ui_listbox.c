@@ -1,15 +1,21 @@
-
 #include "ui/ui_listbox.h"
+#include "ui/ui_style.h"
 
 ui_listbox* ui_listbox_new() {
 
   ui_listbox* lb = malloc(sizeof(ui_listbox));
 
   lb->back = ui_rectangle_new();
-  ui_rectangle_set_texture(lb->back, asset_hndl_new_load(P("$CORANGE/ui/back_wood.dds")), 128, 128, true);
-  ui_rectangle_set_border(lb->back, 1, vec4_black());
-  ui_rectangle_set_color(lb->back, vec4_new(0.1, 0.1, 0.1, 1));
-  ui_rectangle_set_glitch(lb->back, 1.0);
+  ui_rectangle_set_texture(lb->back, 
+    asset_hndl_new_load(ui_style_current->box_back_image), 
+    ui_style_current->box_back_width,
+    ui_style_current->box_back_height,
+    ui_style_current->box_back_tile);
+  ui_rectangle_set_border(lb->back,
+    ui_style_current->box_back_border_size,
+    ui_style_current->box_back_border_color);
+  ui_rectangle_set_glitch(lb->back, ui_style_current->box_glitch);
+  ui_rectangle_set_color(lb->back, ui_style_current->box_inset_color);
   
   lb->scroll = 0;
   lb->num_items = 0;

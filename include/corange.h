@@ -70,6 +70,7 @@ void corange_finish();
 
 #include "cui.h"
 
+#include "ui/ui_style.h"
 #include "ui/ui_text.h"
 #include "ui/ui_rectangle.h"
 #include "ui/ui_spinner.h"

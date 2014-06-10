@@ -73,6 +73,7 @@ void main() {
   
   float radius_depth = radius/depth;
   float occlusion = 0.0;
+  
   for(int i = 0; i < samples; i++) {
   
     vec3 ray = radius_depth * reflect(ao_sample_sphere[i], random);
@@ -88,6 +89,5 @@ void main() {
   float total = 1.0 - clamp(ao + base, 0.0, 1.0);
   
   gl_FragColor = vec4(total, total, total, 1);
-  //gl_FragColor = vec4(random, 1);
 	  
 } 

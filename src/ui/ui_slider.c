@@ -1,5 +1,5 @@
-
 #include "ui/ui_slider.h"
+#include "ui/ui_style.h"
 
 ui_slider* ui_slider_new(void) {
   ui_slider* s = malloc(sizeof(ui_slider));
@@ -10,16 +10,28 @@ ui_slider* ui_slider_new(void) {
   
   s->slot = ui_rectangle_new();
   ui_rectangle_resize(s->slot, vec2_new(300, 4));
+  ui_rectangle_set_texture(s->slot, 
+    asset_hndl_new_load(ui_style_current->box_back_image), 
+    ui_style_current->box_back_width,
+    ui_style_current->box_back_height,
+    ui_style_current->box_back_tile);
+  ui_rectangle_set_border(s->slot,
+    ui_style_current->box_back_border_size,
+    ui_style_current->box_back_border_color);
+    ui_rectangle_set_glitch(s->slot, ui_style_current->box_glitch);
   ui_rectangle_set_color(s->slot, vec4_black());
-  ui_rectangle_set_texture(s->slot, asset_hndl_new_load(P("$CORANGE/ui/back_wood.dds")), 128, 128, true);
-  ui_rectangle_set_border(s->slot, 1, vec4_black());
-  ui_rectangle_set_glitch(s->slot, 1.0);
   
   s->bar = ui_rectangle_new();
   ui_rectangle_resize(s->bar, vec2_new(8, 30));
-  ui_rectangle_set_texture(s->bar, asset_hndl_new_load(P("$CORANGE/ui/back_wood.dds")), 128, 128, true);
-  ui_rectangle_set_border(s->bar, 1, vec4_black());
-  ui_rectangle_set_glitch(s->bar, 1.0);
+  ui_rectangle_set_texture(s->bar, 
+    asset_hndl_new_load(ui_style_current->box_back_image), 
+    ui_style_current->box_back_width,
+    ui_style_current->box_back_height,
+    ui_style_current->box_back_tile);
+  ui_rectangle_set_border(s->bar,
+    ui_style_current->box_back_border_size,
+    ui_style_current->box_back_border_color);
+  ui_rectangle_set_glitch(s->bar, ui_style_current->box_glitch);
   
   return s;
 }
