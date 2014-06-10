@@ -404,7 +404,7 @@ deferred_renderer* deferred_renderer_new(asset_hndl options) {
   dr->render_objects_num = 0;
   dr->render_objects = NULL;
   
-  glTexEnvf(GL_TEXTURE_FILTER_CONTROL, GL_TEXTURE_LOD_BIAS, config_float(asset_hndl_ptr(&dr->options), "lod_bias"));
+  glTexEnvf(GL_TEXTURE_FILTER_CONTROL, GL_TEXTURE_LOD_BIAS, option_graphics_float(asset_hndl_ptr(&dr->options), "lod_bias", -1.0, 0.0, 1.0));
   
   SDL_GL_CheckError();
   SDL_GL_CheckFrameBuffer();
@@ -715,6 +715,8 @@ enum {
 };
 
 static mat4 bone_matrices[MAX_BONES];
+static vec4 quat_reals[MAX_BONES];
+static vec4 quat_duals[MAX_BONES];
 
 static void render_shadows_animated(deferred_renderer* dr, int i, animated_object* ao) {
   
@@ -729,6 +731,8 @@ static void render_shadows_animated(deferred_renderer* dr, int i, animated_objec
     mat4 base = skel->rest_pose->transforms_inv[j];
     mat4 ani = ao->pose->transforms[j];
     bone_matrices[j] = mat4_mul_mat4(ani, base);
+    quat_reals[j] = mat4_to_quat_dual(bone_matrices[j]).real;
+    quat_duals[j] = mat4_to_quat_dual(bone_matrices[j]).dual;
   }
   
   shader_program* shader = material_first_program(asset_hndl_ptr(&dr->mat_depth_ani));
@@ -736,7 +740,8 @@ static void render_shadows_animated(deferred_renderer* dr, int i, animated_objec
   shader_program_set_mat4(shader, "world", world);
   shader_program_set_mat4(shader, "view",  dr->shadow_view[i]);
   shader_program_set_mat4(shader, "proj",  dr->shadow_proj[i]);
-  shader_program_set_mat4_array(shader, "world_bones", bone_matrices, skel->joint_count);
+  shader_program_set_vec4_array(shader, "quat_reals", quat_reals, skel->joint_count);
+  shader_program_set_vec4_array(shader, "quat_duals", quat_duals, skel->joint_count);
   shader_program_set_float(shader, "clip_near", dr->shadow_near[i]);
   shader_program_set_float(shader, "clip_far",  dr->shadow_far[i]);
   
@@ -797,7 +802,7 @@ static void render_shadows_landscape_blobtree(deferred_renderer* dr, int i, shad
   
   terrain_chunk* tc = terr->chunks[lbt->chunk_index];
     
-  float dist = vec3_dist_sqrd(dr->camera->position, lbt->bound.center) / (100 * NUM_TERRAIN_BUFFERS);
+  float dist = vec3_dist(dr->camera->position, lbt->bound.center) / (100 * NUM_TERRAIN_BUFFERS);
   int buff_index = clamp(dist, 0, NUM_TERRAIN_BUFFERS-1);
   
   glBindBuffer(GL_ARRAY_BUFFER, tc->vertex_buffer);
@@ -1322,10 +1327,12 @@ static void render_animated(deferred_renderer* dr, animated_object* ao) {
   if (skel->joint_count > MAX_BONES) { error("animated object skeleton has too many bones (over %i)", MAX_BONES); }
   if (ao->pose == NULL) { return; }
   
-  for(int i = 0; i < skel->joint_count; i++) {
-    mat4 base = skel->rest_pose->transforms_inv[i];
-    mat4 ani = ao->pose->transforms[i];
-    bone_matrices[i] = mat4_mul_mat4(ani, base);
+  for(int j = 0; j < skel->joint_count; j++) {
+    mat4 base = skel->rest_pose->transforms_inv[j];
+    mat4 ani = ao->pose->transforms[j];
+    bone_matrices[j] = mat4_mul_mat4(ani, base);
+    quat_reals[j] = mat4_to_quat_dual(bone_matrices[j]).real;
+    quat_duals[j] = mat4_to_quat_dual(bone_matrices[j]).dual;
   }
   
   mat4 world = mat4_world(ao->position, ao->scale, ao->rotation);
@@ -1337,7 +1344,8 @@ static void render_animated(deferred_renderer* dr, animated_object* ao) {
   shader_program_set_mat4(shader, "proj", dr->camera_proj);
   shader_program_set_float(shader, "clip_near", dr->camera_near);
   shader_program_set_float(shader, "clip_far",  dr->camera_far);
-  shader_program_set_mat4_array(shader, "world_bones", bone_matrices, skel->joint_count);
+  shader_program_set_vec4_array(shader, "quat_reals", quat_reals, skel->joint_count);
+  shader_program_set_vec4_array(shader, "quat_duals", quat_duals, skel->joint_count);
   
   for(int i=0; i < r->num_surfaces; i++) {
     
@@ -1405,7 +1413,7 @@ static void render_landscape_blobtree(deferred_renderer* dr, shader* shader, lan
   
   int quality = config_int(asset_hndl_ptr(&dr->options), "terrain");
   
-  float dist = vec3_dist_sqrd(dr->camera->position, lbt->bound.center) / (100 * NUM_TERRAIN_BUFFERS);
+  float dist = vec3_dist(dr->camera->position, lbt->bound.center) / (100 * NUM_TERRAIN_BUFFERS);
   int buff_index = clamp((int)dist, (3-quality), NUM_TERRAIN_BUFFERS-1);
   
   terrain_chunk* tc = terr->chunks[lbt->chunk_index];

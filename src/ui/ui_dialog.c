@@ -19,14 +19,14 @@ ui_dialog* ui_dialog_new() {
   
   d->title = ui_text_new();
   ui_text_move(d->title, vec2_new(width/2, height/2 - 50));
-  ui_text_align(d->title, text_align_center, text_align_center);
+  ui_text_align(d->title, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER);
   ui_text_set_scale(d->title, vec2_new(1.25, 1.25));
   ui_text_set_color(d->title, vec4_light_grey());
   ui_text_draw_string(d->title, "Title");
   
   d->contents = ui_text_new();
   ui_text_move(d->contents, vec2_new(width/2, height/2 - 00));
-  ui_text_align(d->contents, text_align_center, text_align_center);
+  ui_text_align(d->contents, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER);
   ui_text_set_color(d->contents, vec4_light_grey());
   ui_text_draw_string(d->contents, "Contents");
   
@@ -92,12 +92,12 @@ void ui_dialog_set_contents(ui_dialog* d, char* contents) {
   ui_text_draw_string(d->contents, contents);
 }
 
-void ui_dialog_set_button_left(ui_dialog* d, char* left, void (*onleft)(ui_button*)) {
+void ui_dialog_set_button_left(ui_dialog* d, char* left, void (*onleft)(ui_button*, void*)) {
   ui_button_set_label(d->left, left);
   ui_button_set_onclick(d->left, onleft);
 }
 
-void ui_dialog_set_button_right(ui_dialog* d, char* right, void (*onright)(ui_button*)) {
+void ui_dialog_set_button_right(ui_dialog* d, char* right, void (*onright)(ui_button*, void*)) {
   ui_button_set_label(d->right, right);
   ui_button_set_onclick(d->right, onright);
 }

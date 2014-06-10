@@ -147,10 +147,7 @@ static int save_noise_to_file_thread(void* unused) {
   image_delete(noise);
   
   ui_spinner* save_spinner = ui_elem_get("save_spinner");
-  ui_rectangle* spinner_box = ui_elem_get("spinner_box");
-  save_spinner->color = vec4_new(1,1,1,0);
-  spinner_box->color = vec4_new(0,0,0,0);
-  spinner_box->border_color = vec4_new(1,1,1,0);
+  save_spinner->color.w = 0;
   
   currently_saving = false;
   
@@ -158,10 +155,10 @@ static int save_noise_to_file_thread(void* unused) {
 }
 
 static SDL_Thread* save_thread = NULL;
-static void save_noise_to_file(ui_button* b) {
+static void save_noise_to_file(ui_button* b, void* unused) {
   
   ui_spinner* save_spinner = ui_elem_get("save_spinner");
-  save_spinner->color = vec4_new(1,1,1,1);
+  save_spinner->color.w = 1;
   
   save_thread = SDL_CreateThread(save_noise_to_file_thread, NULL);
   
@@ -189,21 +186,19 @@ int main(int argc, char **argv) {
   ui_button* info_button = ui_elem_new("info_button", ui_button);
   ui_button_move(info_button, vec2_new(10, 10));
   ui_button_resize(info_button, vec2_new(460,25));
-  ui_button_set_label(info_button, "Procedural texture from perlin noise and feedback functions.");
+  ui_button_set_label(info_button, "Procedural texture from perlin noise and feedback functions");
   
   ui_button* save_button = ui_elem_new("save_button", ui_button);
   ui_button_move(save_button, vec2_new(480, 10));
   ui_button_resize(save_button, vec2_new(380,25));
-  ui_button_set_label(save_button, "Click Here to save tileable perlin noise to file.");
+  ui_button_set_label(save_button, "Click Here to save tileable perlin noise to file");
   ui_button_set_onclick(save_button, save_noise_to_file);
   
-  ui_rectangle* spinner_box = ui_elem_new("spinner_box", ui_rectangle);
-  spinner_box->color = vec4_black();
-  spinner_box->border_color = vec4_white();
-  spinner_box->border_size = 1;
-  spinner_box->top_left = vec2_new(870, 7);
-  spinner_box->bottom_right = vec2_new(902, 39);
-  
+  ui_button* spinner_box = ui_elem_new("spinner_box", ui_button);
+  ui_button_resize(spinner_box, vec2_new(32, 32));
+  ui_button_move(spinner_box, vec2_new(870, 7));
+  ui_button_set_label(spinner_box, "");
+
   ui_spinner* save_spinner = ui_elem_new("save_spinner", ui_spinner);
   save_spinner->color = vec4_new(1,1,1,0);
   save_spinner->top_left = vec2_new(874, 11);

@@ -6,6 +6,11 @@
 static dict* asset_dict;
 static uint32_t asset_timestamp = 0;
 
+enum {
+  MAX_ASSET_HANDLERS = 512,
+  MAX_PATH_VARIABLES = 512
+};
+
 typedef struct {
   type_id type;
   char* extension;
@@ -13,7 +18,6 @@ typedef struct {
   void (*del_func)();
 } asset_handler;
 
-#define MAX_ASSET_HANDLERS 512
 static asset_handler asset_handlers[MAX_ASSET_HANDLERS];
 static int num_asset_handlers = 0;
 
@@ -22,7 +26,6 @@ typedef struct {
   fpath mapping;
 } path_variable;
 
-#define MAX_PATH_VARIABLES 512
 static path_variable path_variables[MAX_PATH_VARIABLES];
 static int num_path_variables = 0;
 

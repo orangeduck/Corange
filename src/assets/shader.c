@@ -196,6 +196,7 @@ void shader_program_enable(shader_program* p) {
 }
 
 void shader_program_disable(shader_program* p) {
+  glActiveTexture(GL_TEXTURE0);
   glUseProgram(0);
 }
 

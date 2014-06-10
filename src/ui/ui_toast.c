@@ -77,7 +77,7 @@ ui_toast* ui_toast_new() {
   ui_text_move(t->label, vec2_new(0,0));
   ui_text_set_color(t->label, vec4_light_grey());
   ui_text_set_scale(t->label, vec2_new(1.25, 1.25));
-  ui_text_align(t->label, text_align_left, text_align_left);
+  ui_text_align(t->label, TEXT_ALIGN_LEFT, TEXT_ALIGN_LEFT);
   ui_text_draw_string(t->label, "Toast!");
   
   t->opacity = 1.0;

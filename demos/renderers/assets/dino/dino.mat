@@ -2,7 +2,7 @@ submaterial shell
 texture diffuse_map = ./assets/dino/shell.dds
 texture bump_map = ./assets/dino/shell_nm.dds
 texture spec_map = ./assets/dino/shell_s.dds
-float glossiness = 40.0
+float glossiness = 70.0
 float bumpiness = 1.5
 float specular_level = 1.5
 int material = 3
@@ -20,7 +20,7 @@ submaterial gun
 texture diffuse_map = ./assets/dino/gun.dds
 texture bump_map = ./assets/dino/gun_nm.dds
 texture spec_map = ./assets/dino/gun_s.dds
-float glossiness = 40.0
+float glossiness = 70.0
 float bumpiness = 1.5
 float specular_level = 1.5
 int material = 3
@@ -29,7 +29,7 @@ submaterial gunbox
 texture diffuse_map = ./assets/dino/gunbox.dds
 texture bump_map = ./assets/dino/gunbox_nm.dds
 texture spec_map = ./assets/dino/gunbox_s.dds
-float glossiness = 40.0
+float glossiness = 70.0
 float bumpiness = 1.5
 float specular_level = 1.5
 int material = 3
@@ -38,7 +38,7 @@ submaterial ammo_box
 texture diffuse_map = ./assets/dino/ammo_box.dds
 texture bump_map = ./assets/dino/ammo_box_nm.dds
 texture spec_map = ./assets/dino/ammo_box_s.dds
-float glossiness = 40.0
+float glossiness = 70.0
 float bumpiness = 1.75
 float specular_level = 1.5
 float alpha_test = 0.5
@@ -48,7 +48,7 @@ submaterial main_platform
 texture diffuse_map = ./assets/dino/main_platform.dds
 texture bump_map = ./assets/dino/main_platform_nm.dds
 texture spec_map = ./assets/dino/main_platform_s.dds
-float glossiness = 40.0
+float glossiness = 70.0
 float bumpiness = 1.5
 float specular_level = 1.5
 int material = 3
@@ -57,7 +57,7 @@ submaterial flag
 texture diffuse_map = ./assets/dino/flag.dds
 texture bump_map = ./assets/dino/flag_nm.dds
 texture spec_map = ./assets/dino/flag_s.dds
-float glossiness = 40.0
+float glossiness = 70.0
 float bumpiness = 2.0
 float specular_level = 2.0
 float alpha_test = 0.5
@@ -67,7 +67,7 @@ submaterial gunturret
 texture diffuse_map = ./assets/dino/gunturret.dds
 texture bump_map = ./assets/dino/gunturret_nm.dds
 texture spec_map = ./assets/dino/gunturret_s.dds
-float glossiness = 40.0
+float glossiness = 70.0
 float bumpiness = 1.5
 float specular_level = 1.5
 int material = 3
@@ -76,7 +76,7 @@ submaterial neck_ring
 texture diffuse_map = ./assets/dino/neck_ring.dds
 texture bump_map = ./assets/dino/neck_ring_nm.dds
 texture spec_map = ./assets/dino/neck_ring_s.dds
-float glossiness = 40.0
+float glossiness = 70.0
 float bumpiness = 1.5
 float specular_level = 1.5
 int material = 3
@@ -85,7 +85,7 @@ submaterial body
 texture diffuse_map = ./assets/dino/body.dds
 texture bump_map = ./assets/dino/body_nm.dds
 texture spec_map = ./assets/dino/body_s.dds
-float glossiness = 5.0
+float glossiness = 20.0
 float bumpiness = 2.0
-float specular_level = 0.2
+float specular_level = 1.0
 int material = 2

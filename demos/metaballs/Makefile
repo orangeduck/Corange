@@ -21,7 +21,7 @@ endif
 
 ifeq ($(findstring MINGW,$(PLATFORM)),MINGW)
 	OUT=$(DEMO).exe
-	LFLAGS= $(LIBS) ../../corange.res -lcorange -lmingw32 -lSDLmain -lSDL -lSDL_Mixer -lSDL_Net -lopengl32 -lOpenCL
+	LFLAGS= $(LIBS) ../../corange.res -lcorange -lmingw32 -lSDLmain -lSDL -lSDL_Mixer -lSDL_Net -lopengl32 -lOpenCL64
 endif
 
 $(OUT): $(OBJ_FILES) $(CORANGE)

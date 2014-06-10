@@ -1,4 +1,5 @@
 #include "ui/ui_spinner.h"
+#include "ui/ui_style.h"
 
 #include "cgraphics.h"
 
@@ -10,8 +11,8 @@ ui_spinner* ui_spinner_new() {
   s->top_left = vec2_zero();
   s->bottom_right = vec2_new(32, 32);
   s->color = vec4_black();
-  s->texture = asset_hndl_new_load(P("$CORANGE/ui/spinner.dds"));
-  s->speed = 5;
+  s->texture = asset_hndl_new_load(ui_style_current->spinner_image);
+  s->speed = ui_style_current->spinner_speed;
   s->rotation = 0;
   s->active = true;
   return s;

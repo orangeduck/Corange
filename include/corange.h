@@ -70,6 +70,7 @@ void corange_finish();
 
 #include "cui.h"
 
+#include "ui/ui_style.h"
 #include "ui/ui_text.h"
 #include "ui/ui_rectangle.h"
 #include "ui/ui_spinner.h"
@@ -79,10 +80,11 @@ void corange_finish();
 #include "ui/ui_toast.h"
 #include "ui/ui_dialog.h"
 #include "ui/ui_listbox.h"
+#include "ui/ui_option.h"
+#include "ui/ui_slider.h"
 
 /* Rendering */
 
-#include "rendering/forward_renderer.h"
 #include "rendering/deferred_renderer.h"
 
 /* Data Structures */

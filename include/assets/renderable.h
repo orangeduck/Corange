@@ -43,6 +43,7 @@ void renderable_delete(renderable* r);
 
 void renderable_add_mesh(renderable* r, mesh* m);
 void renderable_add_model(renderable* r, model* m);
+void renderable_set_material(renderable* r, asset_hndl mat);
 
 model* renderable_to_model(renderable* r);
 

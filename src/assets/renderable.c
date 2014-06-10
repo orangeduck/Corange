@@ -44,6 +44,10 @@ void renderable_delete(renderable* r) {
 
 }
 
+void renderable_set_material(renderable* r, asset_hndl mat) {
+  r->material = mat;
+}
+
 model* renderable_to_model(renderable* r) {
 
   if (r->is_rigged) {
