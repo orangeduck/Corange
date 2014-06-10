@@ -2,7 +2,13 @@
 
 fpath P(const char* path) {
   fpath p;
-  strncpy(p.ptr, path, PATH_MAX-1);
+  
+  if (unlikely(strlen(path) >= PATH_MAX)) {
+    error("Path too long '%s'", path);
+  } else {  
+    strcpy(p.ptr, path);
+  }
+  
   return p;
 }
 
@@ -405,6 +411,12 @@ vec2 vec2_div(vec2 v, float fac) {
   v.x = v.x / fac;
   v.y = v.y / fac;
   return v;
+}
+
+vec2 vec2_div_vec2(vec2 v1, vec2 v2) {
+  v1.x = v1.x / v2.x;
+  v1.y = v1.y / v2.y;
+  return v1;
 }
 
 vec2 vec2_mul(vec2 v, float fac) {
@@ -990,6 +1002,14 @@ vec4 vec4_fmod(vec4 v, float val) {
   return v;  
 }
 
+vec4 vec4_sqrt(vec4 v) {
+  v.x = sqrt(v.x);
+  v.y = sqrt(v.y);
+  v.z = sqrt(v.z);
+  v.w = sqrt(v.w);
+  return v;  
+}
+
 void vec4_print(vec4 v) {
   printf("vec4(%4.2f, %4.2f, %4.2f, %4.2f)", v.x, v.y, v.z,  v.w);
 }
@@ -1054,6 +1074,22 @@ vec4 vec4_from_string(char* s) {
   v.w = d4;
   
   return v;
+}
+
+vec4 vec4_max(vec4 v1, vec4 v2) {
+  v1.x = max(v1.x, v2.x);
+  v1.y = max(v1.y, v2.y);
+  v1.z = max(v1.z, v2.z);
+  v1.w = max(v1.w, v2.w);
+  return v1;
+}
+
+vec4 vec4_min(vec4 v1, vec4 v2) {
+  v1.x = min(v1.x, v2.x);
+  v1.y = min(v1.y, v2.y);
+  v1.z = min(v1.z, v2.z);
+  v1.w = min(v1.w, v2.w);
+  return v1;
 }
 
 bool vec4_equ(vec4 v1, vec4 v2) {

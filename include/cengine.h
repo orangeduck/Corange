@@ -194,6 +194,7 @@ vec2 vec2_sub(vec2 v1, vec2 v2);
 vec2 vec2_mul(vec2 v, float fac);
 vec2 vec2_mul_vec2(vec2 v1, vec2 v2);
 vec2 vec2_div(vec2 v, float fac);
+vec2 vec2_div_vec2(vec2 v1, vec2 v2);
 vec2 vec2_pow(vec2 v, float exp);
 vec2 vec2_neg(vec2 v);
 vec2 vec2_abs(vec2 v);
@@ -323,8 +324,11 @@ vec4 vec4_neg(vec4 v);
 vec4 vec4_abs(vec4 v);
 vec4 vec4_floor(vec4 v);
 vec4 vec4_fmod(vec4 v, float val);
+vec4 vec4_sqrt(vec4 v);
 
-bool vec4_equ(vec4 v1, vec4 vec2);
+vec4 vec4_max(vec4 v1, vec4 v2);
+vec4 vec4_min(vec4 v1, vec4 v2);
+bool vec4_equ(vec4 v1, vec4 v2);
 
 float vec4_dot(vec4 v1, vec4 v2);
 float vec4_length_sqrd(vec4 v);

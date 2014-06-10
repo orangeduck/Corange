@@ -42,7 +42,7 @@ float linear_depth(float depth, float near, float far){
 
 void main( void ) {
   
-  const float bumpiness = 0.75;
+  float bumpiness = 0.75;
   
 	vec2 uvs = vec2(fPosition.x, fPosition.z) / 7;
 	vec2 world_uvs = vec2(

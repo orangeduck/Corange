@@ -268,7 +268,7 @@ void landscape_paint_color(landscape* l, vec2 pos, float radius, int type, float
     
     float dist = saturate(1 - vec2_dist(pos, vec2_new(x, y)) / radius) * opacity;
     
-    vec4 pix = image_get_pixel(l->attribimage, x, y);
+    vec4 pix = image_get(l->attribimage, x, y);
     
     if (type == 0) { pix.x += dist; }
     if (type == 1) { pix.y += dist; }
@@ -277,7 +277,7 @@ void landscape_paint_color(landscape* l, vec2 pos, float radius, int type, float
     
     pix = vec4_normalize(pix);
     
-    image_set_pixel(l->attribimage, x, y, pix);
+    image_set(l->attribimage, x, y, pix);
   }
   
   texture_set_image(asset_hndl_ptr(&l->attribmap), l->attribimage);

@@ -37,7 +37,7 @@ void main() {
   float depth_pix = linear_depth(screenpos.z, clip_near, clip_far);
   float depth_cur = texture2D(depth, screenpos.xy).r;
   
-  const float thickness = 300;
+  float thickness = 300;
   float transparency = clamp( thickness * (depth_cur - depth_pix), 0, 1);
   
   if (transparency == 0) { discard; }
@@ -64,9 +64,9 @@ void main() {
   
   float fresnel = 0.0204 + 0.9796 * (n_dot_c * n_dot_c * n_dot_c * n_dot_c * n_dot_c);
   
-	const vec3 albedo_sky  = 0.1 * vec3(1.0, 5.0, 7.00);
-	const vec3 albedo_down = 0.1 * vec3(1.0, 4.0, 06.0);
-	const vec3 albedo_up   = 0.1 * vec3(1.0, 5.0, 7.00);
+	vec3 albedo_sky  = 0.1 * vec3(1.0, 5.0, 7.00);
+	vec3 albedo_down = 0.1 * vec3(1.0, 4.0, 06.0);
+	vec3 albedo_up   = 0.1 * vec3(1.0, 5.0, 7.00);
 	vec3 albedo = (0.25 * fresnel * albedo_sky) + mix( albedo_down, albedo_up, n_dot_c);
   
   //float albedo_foam = clamp(pow(fHeight.y - 0.5, 10.0), 0, 1);

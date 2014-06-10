@@ -35,14 +35,14 @@ vec3 pow3(vec3 col, float exponent) {
 
 void main() {
   
-  const float bloom_amount = 5.0;
-  const float bloom_color = 3.0;
+  float bloom_amount = 5.0;
+  float bloom_color = 3.0;
   
   vec4 bloom_s = texture2D(ldr_texture, fTexcoord);
   vec3 bloom = bloom_amount * bloom_s.a * pow3(bloom_s.rgb, bloom_color);
   
-  //const float focal_depth = 0.0015;
-  const float focal_depth = 0.0;
+  //float focal_depth = 0.0015;
+  float focal_depth = 0.0;
   
 	//gl_FragColor.rgb = bloom + bokeh_dof(width, height, ldr_texture, depth_texture, random_texture, gl_TexCoord[0].xy, focal_depth);
 	gl_FragColor.rgb = to_gamma(bloom + texture2D(ldr_texture, fTexcoord).rgb);

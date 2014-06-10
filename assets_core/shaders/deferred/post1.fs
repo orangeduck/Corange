@@ -46,9 +46,9 @@ vec3 color_correction(vec3 color, sampler3D lut, int lut_size) {
 
 vec3 fxaa(sampler2D screen, vec2 texcoord, int width, int height) {
   
-  const float span_max = 4.0;
-  const float reduce_amount = 1.0 / 4.0;
-  const float reduce_min = (1.0 / 64.0);
+  float span_max = 4.0;
+  float reduce_amount = 1.0 / 4.0;
+  float reduce_min = (1.0 / 64.0);
   
   vec2 pixel = 1.0 / vec2(width, height);
 

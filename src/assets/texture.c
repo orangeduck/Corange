@@ -81,99 +81,75 @@ image* texture_get_image(texture* t) {
   }
   
   unsigned char* data = malloc(width * height * 4);
+  float* data_flt;
+  unsigned int* data_int;
   
-  if (format == GL_RGBA) {
+  switch (format) {
+    
+    case GL_RGBA:
+    case GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
+      glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    break;
   
-    glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    case GL_ALPHA16:
     
-  } else if (format == GL_ALPHA16) {
+      data_flt = malloc(sizeof(float) * width * height);
+      glGetTexImage(GL_TEXTURE_2D, 0, GL_ALPHA, GL_FLOAT, data_flt);
+        
+      for(int x = 0; x < width; x++)
+      for(int y = 0; y < height; y++) {
+        data[(y*4*width) + (x*4) + 0] = pow(data_flt[(y*width) + x], 256.0) * 255;
+        data[(y*4*width) + (x*4) + 1] = pow(data_flt[(y*width) + x], 256.0) * 255;
+        data[(y*4*width) + (x*4) + 2] = pow(data_flt[(y*width) + x], 256.0) * 255;
+        data[(y*4*width) + (x*4) + 3] = pow(data_flt[(y*width) + x], 256.0) * 255;
+      }
+        
+      free(data_flt);
     
-    float* depth_data = malloc(sizeof(float) * width * height);
-    glGetTexImage(GL_TEXTURE_2D, 0, GL_ALPHA, GL_FLOAT, depth_data);
+    break;
+    
+    case GL_RGBA32F:
+    case GL_RGBA16F:
+    
+      data_flt = malloc(4 * sizeof(float) * width * height);
+      glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, data_flt);
       
-    for(int x = 0; x < width; x++)
-    for(int y = 0; y < height; y++) {
+      for(int x = 0; x < width; x++)
+      for(int y = 0; y < height; y++) {
+        data[(y*4*width) + (x*4) + 0] = clamp(data_flt[(y*4*width) + (x*4) + 0] * 127 + 127, 0, 255);
+        data[(y*4*width) + (x*4) + 1] = clamp(data_flt[(y*4*width) + (x*4) + 1] * 127 + 127, 0, 255);
+        data[(y*4*width) + (x*4) + 2] = clamp(data_flt[(y*4*width) + (x*4) + 2] * 127 + 127, 0, 255);
+        data[(y*4*width) + (x*4) + 3] = clamp(data_flt[(y*4*width) + (x*4) + 3] * 127 + 127, 0, 255);
+      }
       
-      float depth = depth_data[(y*width) + x];
-      depth = pow(depth, 256.0);
+      free(data_flt);
+    
+    break;
+    
+    case GL_DEPTH_COMPONENT:
+    case GL_DEPTH_COMPONENT24:
+    
+      data_int = malloc(sizeof(unsigned int) * width * height);
+      glGetTexImage(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, data_int);
       
-      data[(y*4*width) + (x*4) + 0] = depth * 255;
-      data[(y*4*width) + (x*4) + 1] = depth * 255;
-      data[(y*4*width) + (x*4) + 2] = depth * 255;
-      data[(y*4*width) + (x*4) + 3] = depth * 255;
-    }
+      for(int x = 0; x < width; x++)
+      for(int y = 0; y < height; y++) {
+        data[(y*4*width) + (x*4) + 0] = data_int[(y*width) + x];
+        data[(y*4*width) + (x*4) + 1] = data_int[(y*width) + x];
+        data[(y*4*width) + (x*4) + 2] = data_int[(y*width) + x];
+        data[(y*4*width) + (x*4) + 3] = data_int[(y*width) + x];
+      }
       
-    free(depth_data);
+      free(data_int);
     
-  } else if (format == GL_RGBA32F) {
+    break;
     
-    float* pos_data = malloc(4 * sizeof(float) * width * height);
-    glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, pos_data);
-    
-    for(int x = 0; x < width; x++)
-    for(int y = 0; y < height; y++) {
-      data[(y*4*width) + (x*4) + 0] = clamp(pos_data[(y*4*width) + (x*4) + 0] * 127 + 127, 0, 255);
-      data[(y*4*width) + (x*4) + 1] = clamp(pos_data[(y*4*width) + (x*4) + 1] * 127 + 127, 0, 255);
-      data[(y*4*width) + (x*4) + 2] = clamp(pos_data[(y*4*width) + (x*4) + 2] * 127 + 127, 0, 255);
-      data[(y*4*width) + (x*4) + 3] = clamp(pos_data[(y*4*width) + (x*4) + 3] * 127 + 127, 0, 255);
-    }
-    
-    free(pos_data);
-  
-  } else if (format == GL_RGBA16F) {
-    
-    float* norm_data = malloc(4 * sizeof(float) * width * height);
-    glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, norm_data);
-    
-    for(int x = 0; x < width; x++)
-    for(int y = 0; y < height; y++) {
-      data[(y*4*width) + (x*4) + 0] = clamp(norm_data[(y*4*width) + (x*4) + 0] * 127 + 127, 0, 255);
-      data[(y*4*width) + (x*4) + 1] = clamp(norm_data[(y*4*width) + (x*4) + 1] * 127 + 127, 0, 255);
-      data[(y*4*width) + (x*4) + 2] = clamp(norm_data[(y*4*width) + (x*4) + 2] * 127 + 127, 0, 255);
-      data[(y*4*width) + (x*4) + 3] = clamp(norm_data[(y*4*width) + (x*4) + 3] * 127 + 127, 0, 255);
-    }
-    
-    free(norm_data);
-    
-  } else if (format == GL_DEPTH_COMPONENT) {
-    
-    unsigned int* depth_data = malloc(sizeof(unsigned int) * width * height);
-    glGetTexImage(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, depth_data);
-    
-    for(int x = 0; x < width; x++)
-    for(int y = 0; y < height; y++) {
+    default:
+      error("Can't convert that particular texture format %i to an image.", format);
       
-      unsigned int depth = depth_data[(y*width) + x];
-      
-      data[(y*4*width) + (x*4) + 0] = depth;
-      data[(y*4*width) + (x*4) + 1] = depth;
-      data[(y*4*width) + (x*4) + 2] = depth;
-      data[(y*4*width) + (x*4) + 3] = depth;
-    }
-    
-    free(depth_data);
-  
-  } else if (format == GL_DEPTH_COMPONENT24) {
-    
-    unsigned int* depth_data = malloc(sizeof(unsigned int) * width * height);
-    glGetTexImage(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, depth_data);
-    
-    for(int x = 0; x < width; x++)
-    for(int y = 0; y < height; y++) {
-      
-      unsigned int depth = depth_data[(y*width) + x];
-      
-      data[(y*4*width) + (x*4) + 0] = depth;
-      data[(y*4*width) + (x*4) + 1] = depth;
-      data[(y*4*width) + (x*4) + 2] = depth;
-      data[(y*4*width) + (x*4) + 3] = depth;
-    }
-    
-    free(depth_data);
-    
-  } else {
-    error("Can't save that particular texture format %i to file.", format);
   }
+  
+  SDL_GL_CheckError();
   
   image* i = image_new(width, height, data);
   

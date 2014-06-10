@@ -47,22 +47,22 @@ uniform mat4 light_proj[3];
 
 varying vec2 fTexcoord;
 
-float shadow_amount(vec3 position, mat4 light_view, mat4 light_proj, sampler2D light_depth, const float kernel, vec2 seed) {
- 
-  const float bias = 0.001;
-  
-  const vec3[32] shadow_sample_sphere = vec3[32](
-    vec3(-0.00,  0.02, -0.03), vec3( 0.35, -0.04,  0.31), vec3( 0.66, -0.32,  0.53), 
-    vec3(-0.04, -0.04,  0.01), vec3( 0.24, -0.22,  0.89), vec3(-0.09,  0.10, -0.54), 
-    vec3( 0.24,  0.04,  0.01), vec3( 0.37,  0.88,  0.05), vec3( 0.02,  0.11, -0.19), 
-    vec3(-0.04,  0.83, -0.01), vec3( 0.33,  0.11, -0.44), vec3( 0.21, -0.17,  0.28), 
-    vec3( 0.48, -0.30,  0.34), vec3( 0.39, -0.72,  0.43), vec3( 0.19,  0.20,  0.03), 
-    vec3( 0.35, -0.04, -0.01), vec3(-0.00, -0.02, -0.25), vec3(-0.07,  0.12, -0.04), 
-    vec3( 0.00,  0.01, -0.40), vec3(-0.27,  0.41, -0.44), vec3( 0.13,  0.26, -0.14), 
-    vec3( 0.15,  0.19, -0.26), vec3(-0.32,  0.29,  0.56), vec3(-0.00, -0.00,  0.13), 
-    vec3(-0.36, -0.18,  0.07), vec3( 0.70,  0.21,  0.39), vec3(-0.36,  0.17,  0.91), 
-    vec3(-0.11, -0.12,  0.26), vec3(-0.59, -0.67,  0.14), vec3(-0.24, -0.75,  0.27), 
-    vec3( 0.18,  0.04, -0.58), vec3(-0.16,  0.11, -0.26));
+#define SHADOW_BIAS 0.001
+#define SHADOW_SAMPLE_SPHERE vec3[32]( \
+    vec3(-0.00,  0.02, -0.03), vec3( 0.35, -0.04,  0.31), vec3( 0.66, -0.32,  0.53), \
+    vec3(-0.04, -0.04,  0.01), vec3( 0.24, -0.22,  0.89), vec3(-0.09,  0.10, -0.54), \
+    vec3( 0.24,  0.04,  0.01), vec3( 0.37,  0.88,  0.05), vec3( 0.02,  0.11, -0.19), \
+    vec3(-0.04,  0.83, -0.01), vec3( 0.33,  0.11, -0.44), vec3( 0.21, -0.17,  0.28), \
+    vec3( 0.48, -0.30,  0.34), vec3( 0.39, -0.72,  0.43), vec3( 0.19,  0.20,  0.03), \
+    vec3( 0.35, -0.04, -0.01), vec3(-0.00, -0.02, -0.25), vec3(-0.07,  0.12, -0.04), \
+    vec3( 0.00,  0.01, -0.40), vec3(-0.27,  0.41, -0.44), vec3( 0.13,  0.26, -0.14), \
+    vec3( 0.15,  0.19, -0.26), vec3(-0.32,  0.29,  0.56), vec3(-0.00, -0.00,  0.13), \
+    vec3(-0.36, -0.18,  0.07), vec3( 0.70,  0.21,  0.39), vec3(-0.36,  0.17,  0.91), \
+    vec3(-0.11, -0.12,  0.26), vec3(-0.59, -0.67,  0.14), vec3(-0.24, -0.75,  0.27), \
+    vec3( 0.18,  0.04, -0.58), vec3(-0.16,  0.11, -0.26))
+
+
+float shadow_amount(vec3 position, mat4 light_view, mat4 light_proj, sampler2D light_depth, float kernel, vec2 seed) {
  
   vec4 light_pos = light_proj * light_view * vec4(position, 1.0);
   light_pos = light_pos / light_pos.w;
@@ -72,20 +72,20 @@ float shadow_amount(vec3 position, mat4 light_view, mat4 light_proj, sampler2D l
   
   float shade = 1.0;  
   
-  vec2 offset0 = reflect(shadow_sample_sphere[0].xy, seed);
-  vec2 offset1 = reflect(shadow_sample_sphere[1].xy, seed);
-  vec2 offset2 = reflect(shadow_sample_sphere[2].xy, seed);
-  vec2 offset3 = reflect(shadow_sample_sphere[3].xy, seed);
+  vec2 offset0 = reflect(SHADOW_SAMPLE_SPHERE[0].xy, seed);
+  vec2 offset1 = reflect(SHADOW_SAMPLE_SPHERE[1].xy, seed);
+  vec2 offset2 = reflect(SHADOW_SAMPLE_SPHERE[2].xy, seed);
+  vec2 offset3 = reflect(SHADOW_SAMPLE_SPHERE[3].xy, seed);
   
   float shadow_depth0 = texture2D( light_depth, pixel_coords + offset0 * kernel ).r;
   float shadow_depth1 = texture2D( light_depth, pixel_coords + offset1 * kernel ).r;
   float shadow_depth2 = texture2D( light_depth, pixel_coords + offset2 * kernel ).r;
   float shadow_depth3 = texture2D( light_depth, pixel_coords + offset3 * kernel ).r;
   
-  shade = shade - sign(pixel_depth - shadow_depth0 - bias) * (float(1) / float(4));
-  shade = shade - sign(pixel_depth - shadow_depth1 - bias) * (float(1) / float(4));
-  shade = shade - sign(pixel_depth - shadow_depth2 - bias) * (float(1) / float(4));
-  shade = shade - sign(pixel_depth - shadow_depth3 - bias) * (float(1) / float(4));
+  shade = shade - sign(pixel_depth - shadow_depth0 - SHADOW_BIAS) * (float(1) / float(4));
+  shade = shade - sign(pixel_depth - shadow_depth1 - SHADOW_BIAS) * (float(1) / float(4));
+  shade = shade - sign(pixel_depth - shadow_depth2 - SHADOW_BIAS) * (float(1) / float(4));
+  shade = shade - sign(pixel_depth - shadow_depth3 - SHADOW_BIAS) * (float(1) / float(4));
   
   return shade;
   
@@ -136,7 +136,7 @@ void main() {
   if (material == MAT_DISCARD) { discard; }
   if (material == MAT_FLAT) { gl_FragColor.rgb = diffuse_amount; return; }
   
-  const float noise_tile = 1.0;
+  float noise_tile = 1.0;
   vec3 random = 
     abs(normal.x) * texture2D(random_texture, position.yz * noise_tile).rgb +
     abs(normal.y) * texture2D(random_texture, position.xz * noise_tile).rgb +
