@@ -18,8 +18,8 @@ static mat3 test_cmesh_world_normal;
 
 void sea_init() {
   
-  graphics_viewport_set_dimensions(1280, 720);
   graphics_viewport_set_title("Sea");
+  graphics_viewport_set_size(1280, 720);
   
   folder_load_recursive(P("./assets"));
   
@@ -76,7 +76,7 @@ void sea_update() {
   ui_button* framerate = ui_elem_get("framerate");
   ui_button_set_label(framerate, frame_rate_string());
   
-  Uint8* keystate = SDL_GetKeyState(NULL);
+  const Uint8* keystate = SDL_GetKeyboardState(NULL);
   
   vec3 right  = vec3_normalize(vec3_cross(camera_direction(cam), vec3_up()));
   vec3 left = vec3_neg(right);
@@ -84,16 +84,16 @@ void sea_update() {
   vec3 back  = vec3_neg(front);
   vec3 movement = vec3_zero();
   
-  if (keystate[SDLK_w]) {
+  if (keystate[SDL_SCANCODE_W]) {
     movement = vec3_add(movement, front);
   }
-  if (keystate[SDLK_a]) {
+  if (keystate[SDL_SCANCODE_A]) {
     movement = vec3_add(movement, left);
   }
-  if (keystate[SDLK_s]) {
+  if (keystate[SDL_SCANCODE_S]) {
     movement = vec3_add(movement, back);
   }
-  if (keystate[SDLK_d]) {
+  if (keystate[SDL_SCANCODE_D]) {
     movement = vec3_add(movement, right);
   }
   
@@ -166,13 +166,8 @@ void sea_event(SDL_Event e) {
       }
     break;
     
-    case SDL_MOUSEBUTTONDOWN:
-      if (e.button.button == SDL_BUTTON_WHEELUP) {
-        position = vec3_sub(position, vec3_normalize(position));
-      }
-      if (e.button.button == SDL_BUTTON_WHEELDOWN) {
-        position = vec3_add(position, vec3_normalize(position));
-      }
+    case SDL_MOUSEWHEEL:
+      position = vec3_add(position, vec3_mul(vec3_normalize(position), -e.wheel.y));
     break;
 
   }
@@ -220,7 +215,7 @@ int main(int argc, char **argv) {
       case SDL_KEYDOWN:
       case SDL_KEYUP:
         if (e.key.keysym.sym == SDLK_ESCAPE) { running = 0; }
-        if (e.key.keysym.sym == SDLK_PRINT) { graphics_viewport_screenshot(); }
+        if (e.key.keysym.sym == SDLK_PRINTSCREEN) { graphics_viewport_screenshot(); }
         if (e.key.keysym.sym == SDLK_r &&
             e.key.keysym.mod == KMOD_LCTRL) {
             asset_reload_all();
@@ -240,7 +235,7 @@ int main(int argc, char **argv) {
     sea_render();
     ui_render();
     
-    SDL_GL_SwapBuffers();
+    graphics_swap();
     
     frame_end();
   }

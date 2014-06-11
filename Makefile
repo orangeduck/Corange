@@ -5,7 +5,7 @@ SRC = $(wildcard src/*.c) $(wildcard src/*/*.c)
 OBJ = $(addprefix obj/,$(notdir $(SRC:.c=.o)))
 
 CFLAGS = -I ./include -std=gnu99 -Wall -Werror -Wno-unused -O3 -g
-LFLAGS = -lSDLmain -lSDL -lSDL_mixer -lSDL_net -shared -g
+LFLAGS = -lSDL2main -lSDL2 -lSDL2_mixer -lSDL2_net -shared -g
 
 PLATFORM = $(shell uname)
 
@@ -26,7 +26,7 @@ endif
 ifeq ($(findstring MINGW,$(PLATFORM)),MINGW)
 	DYNAMIC = corange.dll
 	STATIC = libcorange.a
-	LFLAGS = -lmingw32 -lopengl32 -lSDLmain -lSDL -lSDL_mixer -lSDL_net -shared -g
+	LFLAGS = -lmingw32 -lopengl32 -lSDL2main -lSDL2 -lSDL2_mixer -lSDL2_net -shared -g
 	OBJ += corange.res
 endif
 

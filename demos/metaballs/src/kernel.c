@@ -202,9 +202,9 @@ void kernels_check_error(const char* name) {
 
 kernel_program* cl_load_file(char* filename) {
   
-  int size;
   SDL_RWops* file = SDL_RWFromFile(filename, "r");
-  SDL_RWsize(file, &size);
+  long size = SDL_RWseek(file,0,SEEK_END);
+  SDL_RWseek(file, 0, SEEK_SET);
   
   char* source = malloc(size+1);
   source[size] = '\0';

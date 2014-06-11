@@ -44,18 +44,9 @@ float difference_occlusion(float difference, float clip_near, float clip_far) {
 #define SAMPLES 6
 #define TILE 10.0
 
-#define SAMPLE_SPHERE vec3[32]( \
+#define SAMPLE_SPHERE vec3[6]( \
     vec3(-0.00,  0.02, -0.03), vec3( 0.35, -0.04,  0.31), vec3( 0.66, -0.32,  0.53), \
-    vec3(-0.04, -0.04,  0.01), vec3( 0.24, -0.22,  0.89), vec3(-0.09,  0.10, -0.54), \
-    vec3( 0.24,  0.04,  0.01), vec3( 0.37,  0.88,  0.05), vec3( 0.02,  0.11, -0.19), \
-    vec3(-0.04,  0.83, -0.01), vec3( 0.33,  0.11, -0.44), vec3( 0.21, -0.17,  0.28), \
-    vec3( 0.48, -0.30,  0.34), vec3( 0.39, -0.72,  0.43), vec3( 0.19, -0.20,  0.03), \
-    vec3( 0.35, -0.04, -0.01), vec3(-0.00, -0.02, -0.25), vec3(-0.07,  0.12, -0.04), \
-    vec3( 0.00,  0.01, -0.40), vec3(-0.27,  0.41, -0.44), vec3( 0.13,  0.26, -0.14), \
-    vec3( 0.15,  0.19, -0.26), vec3(-0.32,  0.29,  0.56), vec3(-0.00, -0.00,  0.13), \
-    vec3(-0.36, -0.18,  0.07), vec3( 0.70,  0.21,  0.39), vec3(-0.36,  0.17,  0.91), \
-    vec3(-0.11, -0.12,  0.26), vec3(-0.59, -0.67,  0.14), vec3(-0.24, -0.75,  0.27), \
-    vec3( 0.18,  0.04, -0.58), vec3(-0.16, -0.11, -0.26))
+    vec3(-0.04, -0.04,  0.01), vec3( 0.24, -0.22,  0.89), vec3(-0.09,  0.10, -0.54))
 
 void main() {
   
@@ -83,6 +74,7 @@ void main() {
     float difference = depth - occ_depth;
     
     occlusion += difference_occlusion(difference, clip_near, clip_far);
+    
   }
   
   float ao = STRENGTH * occlusion * (1.0 / float(SAMPLES));

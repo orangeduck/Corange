@@ -32,17 +32,6 @@ void SDL_PathParentDirectory(char* dst, const char* path);
 char* SDL_GetWorkingDir();
 int SDL_SetWorkingDir(char* dir);
 
-void SDL_RWsize(SDL_RWops* file, int* size);
-int SDL_RWreadline(SDL_RWops* file, char* buffer, int buffersize);
-
-bool SDL_WM_UseResourceIcon();
-void SDL_WM_DeleteResourceIcon();
-
-int SDL_WM_CreateTempContext();
-int SDL_WM_DeleteTempContext();
-
-SDL_Thread* SDL_GL_CreateThread(int (*fn)(void *), void *data);
-
 const char* SDL_GL_FrameBufferErrorString(GLenum error);
 const char* SDL_GL_ErrorString(GLenum error);
 
@@ -201,6 +190,10 @@ extern GLBROKENEXTENSIONFN glBrokenExtension;
 #define GL_GEOMETRY_SHADER 0x8DD9
 #define GL_COMPILE_STATUS 0x8B81
 #define GL_LINK_STATUS 0x8B82
+
+#undef GL_GEOMETRY_VERTICES_OUT
+#undef GL_GEOMETRY_INPUT_TYPE
+#undef GL_GEOMETRY_OUTPUT_TYPE
 #define GL_GEOMETRY_VERTICES_OUT 0x8DDA
 #define GL_GEOMETRY_INPUT_TYPE 0x8DDB
 #define GL_GEOMETRY_OUTPUT_TYPE 0x8DDC
@@ -257,7 +250,6 @@ extern GLBROKENEXTENSIONFN glBrokenExtension;
 
 #define GL_UNSIGNED_SHORT_1_5_5_5_REV 0x8366
 #define GL_UNSIGNED_SHORT_5_6_5 0x8363
-#define GL_UNSIGNED_INT_24_8 34042
 #define GL_DEPTH_COMPONENT24 0x81A6
 
 #define GL_CLAMP_TO_EDGE 0x812F
@@ -277,7 +269,6 @@ extern GLBROKENEXTENSIONFN glBrokenExtension;
 
 #define GL_TESS_CONTROL_SHADER 0x8E88
 #define GL_TESS_EVALUATION_SHADER 0x8E87
-#define GL_PATCHES 0xE
 #define GL_PATCH_VERTICES 0x8E72
 
 

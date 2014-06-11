@@ -52,22 +52,6 @@ void corange_init(const char* core_assets_path) {
   /* Starting Corange */
   debug("Starting Corange...");
   
-  /* Graphics Manager */
-  debug("Creating Graphics Manager...");
-  graphics_init();
-  
-  /* Audio Manager */
-  debug("Creating Audio Manager...");
-  audio_init();
-  
-  /* Joystick Manager */
-  debug("Creating Joystick Manager...");
-  joystick_init();
-  
-  /* Network Manager */
-  debug("Creating Network Manager...");
-  net_init();
-  
   /* Asset Manager */
   debug("Creating Asset Manager...");
   debug("Core Assets At '%s' ...", core_assets_path);
@@ -138,6 +122,22 @@ void corange_init(const char* core_assets_path) {
   ui_handler(ui_listbox, ui_listbox_new, ui_listbox_delete, ui_listbox_event, ui_listbox_update, ui_listbox_render);
   ui_handler(ui_option, ui_option_new, ui_option_delete, ui_option_event, ui_option_update, ui_option_render);
   ui_handler(ui_slider, ui_slider_new, ui_slider_delete, ui_slider_event, ui_slider_update, ui_slider_render);
+  
+  /* Graphics Manager */
+  debug("Creating Graphics Manager...");
+  graphics_init();
+  
+  /* Audio Manager */
+  debug("Creating Audio Manager...");
+  audio_init();
+  
+  /* Joystick Manager */
+  debug("Creating Joystick Manager...");
+  joystick_init();
+  
+  /* Network Manager */
+  debug("Creating Network Manager...");
+  net_init();
   
   debug("Finished!");
 }

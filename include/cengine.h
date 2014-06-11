@@ -26,12 +26,12 @@
 #include <float.h>
 
 /* SDL includes */
-#include <SDL/SDL.h>
-#include <SDL/SDL_opengl.h>
-#include <SDL/SDL_rwops.h>
-#include <SDL/SDL_mixer.h>
-#include <SDL/SDL_net.h>
-#include "SDL/SDL_local.h"
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_opengl.h>
+#include <SDL2/SDL_rwops.h>
+#include <SDL2/SDL_mixer.h>
+#include <SDL2/SDL_net.h>
+#include "SDL2/SDL_local.h"
 
 #ifndef MAX_PATH
 #define MAX_PATH 512

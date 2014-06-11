@@ -170,7 +170,12 @@ deferred_renderer* deferred_renderer_new(asset_hndl options) {
   dr->mat_instance   = asset_hndl_new(P("$CORANGE/shaders/deferred/instance.mat"));
   dr->mat_animated   = asset_hndl_new(P("$CORANGE/shaders/deferred/animated.mat"));
   dr->mat_vegetation = asset_hndl_new(P("$CORANGE/shaders/deferred/vegetation.mat"));
-  dr->mat_terrain    = asset_hndl_new(P("$CORANGE/shaders/deferred/terrain.mat"));
+  
+  dr->mat_terrain = option_graphics_asset(asset_hndl_ptr(&dr->options), "terrain",
+    asset_hndl_new(P("$CORANGE/shaders/deferred/terrain.mat")),
+    asset_hndl_new(P("$CORANGE/shaders/deferred/terrain.mat")),
+    asset_hndl_new(P("$CORANGE/shaders/deferred/terrain_low.mat")));
+  
   dr->mat_clear      = asset_hndl_new(P("$CORANGE/shaders/deferred/clear.mat"));
   dr->mat_ssao       = asset_hndl_new(P("$CORANGE/shaders/deferred/ssao.mat"));
   dr->mat_tonemap    = asset_hndl_new(P("$CORANGE/shaders/deferred/tonemap.mat"));
@@ -267,7 +272,7 @@ deferred_renderer* deferred_renderer_new(asset_hndl options) {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, dr->gdepth_texture, 0);
-  
+
   /* SSAO Buffer */
   
   int ssaowidth  = width  / option_graphics_int(asset_hndl_ptr(&dr->options), "ssao", 1, 2, 4);
@@ -311,7 +316,7 @@ deferred_renderer* deferred_renderer_new(asset_hndl options) {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, dr->hdr_texture, 0);
-  
+
   /* LDR front buffer */
   
   glGenFramebuffers(1, &dr->ldr_front_fbo);
@@ -330,7 +335,7 @@ deferred_renderer* deferred_renderer_new(asset_hndl options) {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, dr->ldr_front_texture, 0);
-    
+ 
   /* LDR back buffer */
   
   glGenFramebuffers(1, &dr->ldr_back_fbo);
@@ -349,7 +354,7 @@ deferred_renderer* deferred_renderer_new(asset_hndl options) {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, dr->ldr_back_texture, 0);
-  
+
   /* Shadow Buffers */
   
   int shadow_width  = option_graphics_int(asset_hndl_ptr(&dr->options), "shadows", 4096, 2048, 1024);
@@ -1243,9 +1248,14 @@ static void render_instance(deferred_renderer* dr, instance_object* io) {
 
 static void render_vegetation(deferred_renderer* dr, instance_object* io) {
   
-  if (config_int(asset_hndl_ptr(&dr->options), "vegetation") == 0) return;  
-  
   if (sphere_outside_box(io->bound, dr->camera_frustum)) { return; }  
+  
+  float fade = option_graphics_float(asset_hndl_ptr(&dr->options), "vegetation",
+        1.0,
+        saturate(4.0 - 0.03 * vec3_dist(io->bound.center, dr->camera->position)),
+        saturate(2.0 - 0.05 * vec3_dist(io->bound.center, dr->camera->position)));
+  
+  if (fade == 0.0) { return; }
   
   if (config_bool(asset_hndl_ptr(&dr->options), "render_colmeshes")) {
     if (!file_isloaded(io->collision_body.path)) {
@@ -1265,6 +1275,7 @@ static void render_vegetation(deferred_renderer* dr, instance_object* io) {
   shader_program_set_float(shader, "clip_near", dr->camera_near);
   shader_program_set_float(shader, "clip_far",  dr->camera_far);
   shader_program_set_float(shader, "time", dr->time);
+  shader_program_set_float(shader, "fade", fade);
   
   for(int i=0; i < r->num_surfaces; i++) {
     
@@ -1449,6 +1460,8 @@ static void render_landscape(deferred_renderer* dr, landscape* l) {
     }
   }
   
+  int quality = config_int(asset_hndl_ptr(&dr->options), "terrain");
+  
   shader_program* shader = material_first_program(asset_hndl_ptr(&dr->mat_terrain));
   
   shader_program_enable(shader);
@@ -1458,26 +1471,36 @@ static void render_landscape(deferred_renderer* dr, landscape* l) {
   shader_program_set_mat4(shader, "proj", dr->camera_proj);
   shader_program_set_float(shader, "clip_near", dr->camera_near);
   shader_program_set_float(shader, "clip_far",  dr->camera_far);
-  shader_program_set_float(shader, "size_x", l->size_x);
-  shader_program_set_float(shader, "size_y", l->size_y);
+  
+  if (quality != 0) {
+    shader_program_set_float(shader, "size_x", l->size_x);
+    shader_program_set_float(shader, "size_y", l->size_y);
+  }
   
   if (config_bool(asset_hndl_ptr(&dr->options), "render_white")) {
     shader_program_set_texture(shader, "ground0", 0, dr->tex_grey);
-    shader_program_set_texture(shader, "ground1", 1, dr->tex_grey);
-    shader_program_set_texture(shader, "ground2", 2, dr->tex_grey);
-    shader_program_set_texture(shader, "ground3", 3, dr->tex_grey);
+    if (quality != 0) {
+      shader_program_set_texture(shader, "ground1", 1, dr->tex_grey);
+      shader_program_set_texture(shader, "ground2", 2, dr->tex_grey);
+      shader_program_set_texture(shader, "ground3", 3, dr->tex_grey);
+    }
   } else {
     shader_program_set_texture(shader, "ground0", 0, l->ground0);
-    shader_program_set_texture(shader, "ground1", 1, l->ground1);
-    shader_program_set_texture(shader, "ground2", 2, l->ground2);
-    shader_program_set_texture(shader, "ground3", 3, l->ground3);
+    if (quality != 0) {
+      shader_program_set_texture(shader, "ground1", 1, l->ground1);
+      shader_program_set_texture(shader, "ground2", 2, l->ground2);
+      shader_program_set_texture(shader, "ground3", 3, l->ground3);
+    }
   }
   
   shader_program_set_texture(shader, "ground0_nm", 4, l->ground0_nm);
-  shader_program_set_texture(shader, "ground1_nm", 5, l->ground1_nm);
-  shader_program_set_texture(shader, "ground2_nm", 6, l->ground2_nm);
-  shader_program_set_texture(shader, "ground3_nm", 7, l->ground3_nm);
-  shader_program_set_texture(shader, "attribmap", 8, l->attribmap);
+  
+  if (quality != 0) {
+    shader_program_set_texture(shader, "ground1_nm", 5, l->ground1_nm);
+    shader_program_set_texture(shader, "ground2_nm", 6, l->ground2_nm);
+    shader_program_set_texture(shader, "ground3_nm", 7, l->ground3_nm);
+    shader_program_set_texture(shader, "attribmap", 8, l->attribmap);
+  }
   
   if (unlikely(l->blobtree == NULL)) { error("Landscape blobtree must be generated!"); }
   

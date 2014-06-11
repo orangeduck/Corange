@@ -7,17 +7,17 @@ PLATFORM = $(shell uname)
 
 ifeq ($(findstring Linux,$(PLATFORM)),Linux)
 	OUT=$(DEMO)
-	LFLAGS= -lcorange -lGL -lSDLmain -lSDL -lSDL_net -lSDL_mixer
+	LFLAGS= -lcorange -lGL -lSDL2main -lSDL2 -lSDL2_net -lSDL2_mixer
 endif
 
 ifeq ($(findstring Darwin,$(PLATFORM)),Darwin)
 	OUT=$(DEMO)
-	LFLAGS= -lcorange -lGL -lSDLmain -lSDL -lSDL_net -lSDL_mixer
+	LFLAGS= -lcorange -lGL -lSDL2main -lSDL2 -lSDL2_net -lSDL2_mixer
 endif
 
 ifeq ($(findstring MINGW,$(PLATFORM)),MINGW)
 	OUT=$(DEMO).exe
-	LFLAGS= ../../corange.res -lcorange -lmingw32 -lSDLmain -lSDL -lSDL_net -lSDL_mixer -lopengl32
+	LFLAGS= ../../corange.res -lcorange -lmingw32 -lSDL2main -lSDL2 -lSDL2_net -lSDL2_mixer -lopengl32
 endif
 
 $(OUT): renderers.c

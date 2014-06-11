@@ -13,8 +13,8 @@ int main(int argc, char **argv) {
   
   corange_init("../../assets_core");
   
-  graphics_viewport_set_dimensions(1280, 720);
   graphics_viewport_set_title("Teapot");
+  graphics_viewport_set_size(1280, 720);
   
   camera* cam = entity_new("camera", camera);
   cam->position = vec3_new(5, 5, 5);
@@ -37,7 +37,7 @@ int main(int argc, char **argv) {
       case SDL_KEYDOWN:
       case SDL_KEYUP:
         if (e.key.keysym.sym == SDLK_ESCAPE) { running = 0; }
-        if (e.key.keysym.sym == SDLK_PRINT) { graphics_viewport_screenshot(); }
+        if (e.key.keysym.sym == SDLK_PRINTSCREEN) { graphics_viewport_screenshot(); }
         if (e.key.keysym.sym == SDLK_r &&
             e.key.keysym.mod == KMOD_LCTRL) {
             asset_reload_all();
@@ -102,7 +102,7 @@ int main(int argc, char **argv) {
     glDisable(GL_DEPTH_TEST);
     ui_render();
     
-    SDL_GL_SwapBuffers();
+    graphics_swap();
     
     frame_end();
   }

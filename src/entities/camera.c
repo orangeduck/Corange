@@ -63,13 +63,8 @@ void camera_control_orbit(camera* c, SDL_Event e) {
       }
     break;
     
-    case SDL_MOUSEBUTTONDOWN:
-      if (e.button.button == SDL_BUTTON_WHEELUP) {
-        c->position = vec3_sub(c->position, vec3_normalize(c->position));
-      }
-      if (e.button.button == SDL_BUTTON_WHEELDOWN) {
-        c->position = vec3_add(c->position, vec3_normalize(c->position));
-      }
+    case SDL_MOUSEWHEEL:
+      c->position = vec3_add(c->position, vec3_mul(vec3_normalize(c->position), -e.wheel.y));
     break;
 
   }
@@ -81,28 +76,31 @@ void camera_control_orbit(camera* c, SDL_Event e) {
 
 void camera_control_freecam(camera* c, float timestep) {
 
-  Uint8* kbstate = SDL_GetKeyState(NULL);
+  const Uint8* kbstate = SDL_GetKeyboardState(NULL);
   
-  if (kbstate[SDLK_w] || kbstate[SDLK_s] || kbstate[SDLK_a] || kbstate[SDLK_d]) {
+  if (kbstate[SDL_SCANCODE_W] 
+  ||  kbstate[SDL_SCANCODE_S] 
+  ||  kbstate[SDL_SCANCODE_A] 
+  ||  kbstate[SDL_SCANCODE_D]) {
     
     vec3 cam_dir = vec3_normalize(vec3_sub(c->target, c->position));
     vec3 side_dir = vec3_normalize(vec3_cross(cam_dir, vec3_new(0,1,0)));
 
     const float speed = 100 * timestep;
     
-    if (kbstate[SDLK_w]) {
+    if (kbstate[SDL_SCANCODE_W]) {
       c->position = vec3_add(c->position, vec3_mul(cam_dir, speed));
       c->target = vec3_add(c->target, vec3_mul(cam_dir, speed));
     }
-    if (kbstate[SDLK_s]) {
+    if (kbstate[SDL_SCANCODE_S]) {
       c->position = vec3_sub(c->position, vec3_mul(cam_dir, speed));
       c->target = vec3_sub(c->target, vec3_mul(cam_dir, speed));
     }
-    if (kbstate[SDLK_d]) {
+    if (kbstate[SDL_SCANCODE_D]) {
       c->position = vec3_add(c->position, vec3_mul(side_dir, speed));
       c->target = vec3_add(c->target, vec3_mul(side_dir, speed));
     }
-    if (kbstate[SDLK_a]) {
+    if (kbstate[SDL_SCANCODE_A]) {
       c->position = vec3_sub(c->position, vec3_mul(side_dir, speed));
       c->target = vec3_sub(c->target, vec3_mul(side_dir, speed));
     }

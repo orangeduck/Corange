@@ -160,7 +160,7 @@ static void save_noise_to_file(ui_button* b, void* unused) {
   ui_spinner* save_spinner = ui_elem_get("save_spinner");
   save_spinner->color.w = 1;
   
-  save_thread = SDL_CreateThread(save_noise_to_file_thread, NULL);
+  save_thread = SDL_CreateThread(save_noise_to_file_thread, "perlin", NULL);
   
 }
 
@@ -175,7 +175,7 @@ int main(int argc, char **argv) {
   
   corange_init("../../assets_core");
   
-  graphics_viewport_set_dimensions(1280, 720);
+  graphics_viewport_set_size(1280, 720);
   graphics_viewport_set_title("Noise");
   
   folder_load(P("./"));
@@ -218,7 +218,7 @@ int main(int argc, char **argv) {
       case SDL_KEYDOWN:
       case SDL_KEYUP:
         if (event.key.keysym.sym == SDLK_ESCAPE) { running = 0; }
-        if (event.key.keysym.sym == SDLK_PRINT) { graphics_viewport_screenshot(); }
+        if (event.key.keysym.sym == SDLK_PRINTSCREEN) { graphics_viewport_screenshot(); }
         break;
       case SDL_QUIT:
         running = 0;
@@ -236,11 +236,11 @@ int main(int argc, char **argv) {
     noise_render();
     ui_render();
     
-    SDL_GL_SwapBuffers();
+    graphics_swap();
     
     frame_end();
     
-  }  
+  }
   
   SDL_WaitThread(save_thread, NULL);
   

@@ -14,8 +14,7 @@ static int mouse_right_down;
 void metaballs_init() {
   
   graphics_viewport_set_title("Metaballs");
-  graphics_viewport_set_dimensions(1280, 720);
-  graphics_set_multisamples(16);
+  graphics_viewport_set_size(1280, 720);
   
 #ifdef OPEN_GL_CPU
   kernels_init_with_cpu();
@@ -147,7 +146,7 @@ void metaballs_render() {
   
   ui_render();
   
-  SDL_GL_SwapBuffers();
+  graphics_swap();
   
 }
 
@@ -226,7 +225,7 @@ int main(int argc, char **argv) {
       case SDL_KEYDOWN:
       case SDL_KEYUP:
         if (event.key.keysym.sym == SDLK_ESCAPE) { running = 0; }
-        if (event.key.keysym.sym == SDLK_PRINT) { 
+        if (event.key.keysym.sym == SDLK_PRINTSCREEN) { 
           #ifdef VOLUME_RENDERER
           volume_renderer_write_textures();
           #endif

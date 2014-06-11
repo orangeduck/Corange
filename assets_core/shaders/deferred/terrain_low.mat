@@ -1,0 +1,2 @@
+shader vert = $CORANGE/shaders/deferred/terrain.vs
+shader frag = $CORANGE/shaders/deferred/terrain_low.fs

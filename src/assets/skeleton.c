@@ -186,6 +186,37 @@ int skeleton_joint_id(skeleton* s, char* name) {
   
 }
 
+static int SDL_RWreadline(SDL_RWops* file, char* buffer, int buffersize) {
+  
+  char c;
+  int status = 0;
+  int i = 0;
+  while(1) {
+    
+    status = SDL_RWread(file, &c, 1, 1);
+    
+    if (status == -1) return -1;
+    if (i == buffersize-1) return -1;
+    if (status == 0) break;
+    
+    buffer[i] = c;
+    i++;
+    
+    if (c == '\n') {
+      buffer[i] = '\0';
+      return i;
+    }
+  }
+  
+  if(i > 0) {
+    buffer[i] = '\0';
+    return i;
+  } else {
+    return 0;
+  }
+  
+}
+
 enum {
   STATE_LOAD_EMPTY    = 0,
   STATE_LOAD_SKELETON = 1,

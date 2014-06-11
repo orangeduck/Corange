@@ -38,8 +38,8 @@ static bool tessellation_supported;
 
 void tessellation_init() {
 
-  graphics_viewport_set_dimensions(1280, 720);
   graphics_viewport_set_title("Tessellation");
+  graphics_viewport_set_size(1280, 720);
   
   tessellation_supported = SDL_GL_ExtensionPresent("GL_ARB_tessellation_shader");
   
@@ -152,7 +152,7 @@ int main(int argc, char **argv) {
       case SDL_KEYDOWN:
       case SDL_KEYUP:
         if (event.key.keysym.sym == SDLK_ESCAPE) { running = 0; }
-        if (event.key.keysym.sym == SDLK_PRINT) { graphics_viewport_screenshot(); }
+        if (event.key.keysym.sym == SDLK_PRINTSCREEN) { graphics_viewport_screenshot(); }
         break;
       case SDL_QUIT:
         running = 0;
@@ -171,7 +171,7 @@ int main(int argc, char **argv) {
     tessellation_render();
     ui_render();
     
-    SDL_GL_SwapBuffers();
+    graphics_swap();
     
     frame_end();
     

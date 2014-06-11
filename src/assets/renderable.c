@@ -179,7 +179,7 @@ renderable_surface* renderable_surface_new(mesh* m) {
   
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
-  
+
   return s;
 }
 
@@ -250,6 +250,8 @@ renderable_surface* renderable_surface_new_rigged(mesh* m, vertex_weight* weight
   
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
+  
+  SDL_GL_CheckError();
   
   return s;
 }
@@ -364,6 +366,8 @@ renderable* bmf_load_file(char* filename) {
   
   SDL_RWclose(file);
   
+  SDL_GL_CheckError();
+  
   return r;
 }
 
@@ -420,6 +424,37 @@ void bmf_save_file(renderable* r, char* filename) {
   
   SDL_RWclose(file);
     
+}
+
+static int SDL_RWreadline(SDL_RWops* file, char* buffer, int buffersize) {
+  
+  char c;
+  int status = 0;
+  int i = 0;
+  while(1) {
+    
+    status = SDL_RWread(file, &c, 1, 1);
+    
+    if (status == -1) return -1;
+    if (i == buffersize-1) return -1;
+    if (status == 0) break;
+    
+    buffer[i] = c;
+    i++;
+    
+    if (c == '\n') {
+      buffer[i] = '\0';
+      return i;
+    }
+  }
+  
+  if(i > 0) {
+    buffer[i] = '\0';
+    return i;
+  } else {
+    return 0;
+  }
+  
 }
 
 renderable* obj_load_file(char* filename) {

@@ -179,23 +179,17 @@ void ui_textbox_event(ui_textbox* tb, SDL_Event e) {
         return;
       }
       
-      if ( e.key.keysym.unicode >= 0x80 || e.key.keysym.unicode <= 0 ) {
-        return;
-      }
+    }
+    
+    if (e.type == SDL_TEXTINPUT) {
       
-      char keypress = (char)e.key.keysym.unicode;
-
       const char* valid = "abcdefghijklmnopqrstuvwxyz"
                           "ABCDEFGHIJKLMNOPQRSTUVWXY"
                           "Z1234567890!\"$%^&*()-=_+"
-                          "[{}]:;@'~#<,>.?/\\| \0";     
+                          "[{}]:;@'~#<,>.?/\\| \0";   
       
-      for (int i = 0; i < strlen(valid)-1; i++) {
-        if (valid[i] == keypress) {
-          ui_textbox_addchar(tb, keypress);
-          return;
-        }
-      }
+      if (strlen(e.text.text) != 1 || !strchr(valid, e.text.text[0])) { return; }
+      ui_textbox_addchar(tb, e.text.text[0]);
       
     }
     
@@ -205,9 +199,9 @@ void ui_textbox_event(ui_textbox* tb, SDL_Event e) {
 
 void ui_textbox_update(ui_textbox* tb) {
   
-  Uint8* keystate = SDL_GetKeyState(NULL);
+  const Uint8* keystate = SDL_GetKeyboardState(NULL);
   
-  if (keystate[SDLK_BACKSPACE]) {
+  if (keystate[SDL_SCANCODE_BACKSPACE]) {
     
     time_delete += frame_time();
     if (time_delete > time_to_delete) {

@@ -72,6 +72,8 @@ static void material_generate_programs(material* m) {
     if (attached) { shader_program_link(me->program); }
     
   }
+  
+  SDL_GL_CheckError();
     
 }
 
@@ -102,6 +104,37 @@ material_entry* material_add_entry(material* m) {
   me->items = malloc(sizeof(material_item) * me->num_items);
   
   return me;
+}
+
+static int SDL_RWreadline(SDL_RWops* file, char* buffer, int buffersize) {
+  
+  char c;
+  int status = 0;
+  int i = 0;
+  while(1) {
+    
+    status = SDL_RWread(file, &c, 1, 1);
+    
+    if (status == -1) return -1;
+    if (i == buffersize-1) return -1;
+    if (status == 0) break;
+    
+    buffer[i] = c;
+    i++;
+    
+    if (c == '\n') {
+      buffer[i] = '\0';
+      return i;
+    }
+  }
+  
+  if(i > 0) {
+    buffer[i] = '\0';
+    return i;
+  } else {
+    return 0;
+  }
+  
 }
 
 material* mat_load_file(char* filename) {
@@ -189,12 +222,14 @@ material* mat_load_file(char* filename) {
     }
     
     material_entry_add_item(me, name, type_id, mi);
-  
+    
   }
   
   SDL_RWclose(file);
   
   material_generate_programs(m);
+  
+  SDL_GL_CheckError();
   
   return m;
 }

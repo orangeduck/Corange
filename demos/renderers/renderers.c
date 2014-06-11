@@ -6,8 +6,8 @@ deferred_renderer* dr = NULL;
 
 void renderers_init() {
   
-  graphics_viewport_set_dimensions(1280, 720);
   graphics_viewport_set_title("Renderers");
+  graphics_viewport_set_size(1280, 720);
   
   folder_load(P("./assets/podium/"));
   folder_load(P("./assets/cello/"));
@@ -164,7 +164,7 @@ int main(int argc, char **argv) {
       case SDL_KEYDOWN: break;
       case SDL_KEYUP:
         if (event.key.keysym.sym == SDLK_ESCAPE) { running = 0; }
-        if (event.key.keysym.sym == SDLK_PRINT) { graphics_viewport_screenshot(); }
+        if (event.key.keysym.sym == SDLK_PRINTSCREEN) { graphics_viewport_screenshot(); }
         if ((event.key.keysym.sym == SDLK_r) &&
             (event.key.keysym.mod == KMOD_LCTRL)) {
               asset_reload_all();
@@ -183,7 +183,7 @@ int main(int argc, char **argv) {
     
     renderers_render();
     ui_render();
-    SDL_GL_SwapBuffers(); 
+    graphics_swap(); 
     
     frame_end();
   }

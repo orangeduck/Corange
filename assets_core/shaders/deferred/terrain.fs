@@ -55,7 +55,7 @@ void main( void ) {
 	vec4 normal1 = texture2D(ground1_nm, uvs) * attrib.g;
 	vec4 normal2 = texture2D(ground2_nm, uvs) * attrib.b;
 	vec4 normal3 = texture2D(ground3_nm, uvs) * attrib.a;
-	vec4 normal = normal0 + normal1 + normal2 + normal3;
+	vec4 normal  = normal0 + normal1 + normal2 + normal3;
   
 	normal.rgb = swap_red_green_inv(normal.rgb);
   normal = mix(vec4( 0.5, 0.5, 1.0, 1.0 ), normal, bumpiness);

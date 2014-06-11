@@ -365,7 +365,8 @@ int main(int argc, char **argv) {
   
   /* Init Corange, pointing to the assets_core folder */
   corange_init("../../assets_core");
-  graphics_viewport_set_dimensions(800, 600);
+  graphics_viewport_set_title("Birdy");
+  graphics_viewport_set_size(800, 600);
 
   platformer_init();
   
@@ -384,7 +385,7 @@ int main(int argc, char **argv) {
       case SDL_KEYUP:
         /* Exit on ESCAPE and Screenshot on print screen */
         if (event.key.keysym.sym == SDLK_ESCAPE) { running = false; }
-        if (event.key.keysym.sym == SDLK_PRINT) { graphics_viewport_screenshot(); }
+        if (event.key.keysym.sym == SDLK_PRINTSCREEN) { graphics_viewport_screenshot(); }
         break;
       case SDL_QUIT:
         /* A quitting event such as pressing cross in top right corner */
@@ -404,7 +405,7 @@ int main(int argc, char **argv) {
     ui_render();
     
     /* Flip the Screen Buffer. We've finished with this frame. */
-    SDL_GL_SwapBuffers(); 
+    graphics_swap(); 
     
     /* This allows us to fix the framerate to 60 fps, even on my laptop with vsync broken */
     frame_end();

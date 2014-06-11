@@ -10,8 +10,11 @@ static int mouse_right_down;
 
 static bool toggle_freecam = true;
 static bool loading_assets = false;
+static SDL_GLContext* load_context = NULL;
 
 static int load_assets(void* unused) {
+  
+  graphics_context_current(load_context);
   
   folder_load(P("./assets/terrain/"));
   folder_load(P("./assets/vegetation/"));
@@ -46,13 +49,14 @@ static int load_assets(void* unused) {
   freecam->active = true;
   
   loading_assets = false;
+  graphics_context_delete(load_context);
   return 1;
 }
 
 void scotland_init() {
   
-  graphics_viewport_set_dimensions(1280, 720);
   graphics_viewport_set_title("Scotland");
+  graphics_viewport_set_size(1280, 720);
   
   ui_button* loading = ui_elem_new("loading", ui_button);
   ui_button_move(loading, vec2_new(graphics_viewport_width() / 2 - 40,graphics_viewport_height() / 2 - 13));
@@ -93,7 +97,8 @@ void scotland_init() {
   ui_button_set_onclick(freecam, on_freecam);
   
   loading_assets = true;
-  SDL_Thread* load_thread = SDL_GL_CreateThread(load_assets, NULL);
+  load_context = graphics_context_new();
+  SDL_Thread* load_thread = SDL_CreateThread(load_assets, "loading", NULL);
   
   /* New Camera and light */
   
@@ -238,7 +243,7 @@ int main(int argc, char **argv) {
       case SDL_KEYDOWN:
       case SDL_KEYUP:
         if (event.key.keysym.sym == SDLK_ESCAPE) { running = false; }
-        if (event.key.keysym.sym == SDLK_PRINT) { graphics_viewport_screenshot(); }
+        if (event.key.keysym.sym == SDLK_PRINTSCREEN) { graphics_viewport_screenshot(); }
         break;
       case SDL_QUIT:
         running = false;
@@ -270,7 +275,7 @@ int main(int argc, char **argv) {
       ui_render();
     }
     
-    SDL_GL_SwapBuffers(); 
+    graphics_swap(); 
     
     frame_end();
   }

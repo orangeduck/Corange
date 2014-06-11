@@ -1,2 +1,2 @@
 shader vert = $CORANGE/shaders/deferred/vegetation.vs
-shader frag = $CORANGE/shaders/deferred/static.fs
+shader frag = $CORANGE/shaders/deferred/vegetation.fs

@@ -569,6 +569,8 @@ texture* dds_load_file( char* filename ) {
   
   SDL_RWclose(f);
   
+  SDL_GL_CheckError();
+  
   return t;
   
 }

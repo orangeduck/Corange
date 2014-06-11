@@ -92,9 +92,8 @@ void ui_listbox_event(ui_listbox* lb, SDL_Event e) {
   
   if (!lb->active) { return; }
   
-  if (e.type == SDL_MOUSEBUTTONDOWN && ui_rectangle_contains_point(lb->back, vec2_new(e.motion.x, e.motion.y))) {
-    if (e.button.button == SDL_BUTTON_WHEELUP)   { lb->scroll = clamp(lb->scroll-1, 0, lb->num_items); move_text_items(lb); }
-    if (e.button.button == SDL_BUTTON_WHEELDOWN) { lb->scroll = clamp(lb->scroll+1, 0, lb->num_items); move_text_items(lb); }
+  if (e.type == SDL_MOUSEWHEEL && ui_rectangle_contains_point(lb->back, vec2_new(e.motion.x, e.motion.y))) {
+    lb->scroll = clamp(lb->scroll+1*e.wheel.y, 0, lb->num_items); move_text_items(lb);
   }
   
   if (e.type == SDL_MOUSEBUTTONUP && e.button.button == SDL_BUTTON_LEFT) {

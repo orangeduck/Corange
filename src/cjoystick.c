@@ -21,7 +21,7 @@ void joystick_init() {
     if (sticks[i] == NULL) {
       error("Couldn't open joystick %i!", i);
     } else {
-      debug("JoyStick %i (%s) loaded.", i, SDL_JoystickName(i));
+      debug("JoyStick %i (%s) loaded.", i, SDL_JoystickName(sticks[i]));
     }
   }
   

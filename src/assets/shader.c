@@ -32,7 +32,9 @@ static shader* load_shader_file(char* filename, GLenum type) {
   if (compile_error == GL_FALSE) {
     error("Compiler Error on Shader %s.", filename);
   }
-    
+  
+  SDL_GL_CheckError();
+  
   return new_shader;
 }
 
@@ -57,11 +59,9 @@ shader* tes_load_file(char* filename) {
 }
 
 shader_program* shader_program_new() {
-
   shader_program* program = malloc(sizeof(shader_program));  
   *program = glCreateProgram();
   return program;
-
 }
 
 GLuint shader_program_handle(shader_program* p) {
@@ -96,15 +96,17 @@ void shader_program_attach_shader(shader_program* program, shader* shader) {
   glAttachShader(shader_program_handle(program), shader_handle(shader));
   
   shader_program_print_log(program);
-    
+  SDL_GL_CheckError();  
 }
 
 void shader_program_link(shader_program* program) {
 
+  /*
   GLint count = -1;
   glGetIntegerv(GL_MAX_GEOMETRY_OUTPUT_VERTICES, &count);
   glProgramParameteri(shader_program_handle(program), GL_GEOMETRY_VERTICES_OUT, count);
-
+  */
+  
   glLinkProgram(shader_program_handle(program));
   
   shader_program_print_log(program);
@@ -114,7 +116,8 @@ void shader_program_link(shader_program* program) {
   if (!is_linked) {
     error("Error linking shader program!");
   }
-    
+  
+  SDL_GL_CheckError();
 }
 
 bool shader_program_has_shader(shader_program* p, shader* s) {
@@ -180,7 +183,6 @@ void shader_delete(shader* shader) {
 }
 
 GLint shader_program_get_attribute(shader_program* p, char* name) {
-
   GLint attr = glGetAttribLocation(shader_program_handle(p), name);
   if (attr == -1) {
     error("Shader has no attribute called '%s'", name);
@@ -188,7 +190,6 @@ GLint shader_program_get_attribute(shader_program* p, char* name) {
   } else {
     return attr;
   }
-  
 }
 
 void shader_program_enable(shader_program* p) {
