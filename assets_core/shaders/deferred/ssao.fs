@@ -44,10 +44,6 @@ float difference_occlusion(float difference, float clip_near, float clip_far) {
 #define SAMPLES 6
 #define TILE 10.0
 
-#define SAMPLE_SPHERE vec3[6]( \
-    vec3(-0.00,  0.02, -0.03), vec3( 0.35, -0.04,  0.31), vec3( 0.66, -0.32,  0.53), \
-    vec3(-0.04, -0.04,  0.01), vec3( 0.24, -0.22,  0.89), vec3(-0.09,  0.10, -0.54))
-
 void main() {
   
   vec3  pixel  = texture2D(positions_texture, fTexcoord).rgb;
@@ -60,22 +56,30 @@ void main() {
     abs(normal.z) * texture2D(random_texture, pixel.xy * TILE).rgb;
   random = normalize(random * 2.0 - 1.0);
 
-  vec3 position = vec3(fTexcoord, depth);
+  vec3 position = vec3(fTexcoord, depth);  
+  float radius_depth = RADIUS / depth;
   
-  float radius_depth = RADIUS/depth;
+  vec3 ray0 = radius_depth * reflect(vec3(-0.00,  0.02, -0.03), random);
+  vec3 ray1 = radius_depth * reflect(vec3( 0.35, -0.04,  0.31), random);
+  vec3 ray2 = radius_depth * reflect(vec3( 0.66, -0.32,  0.53), random);
+  vec3 ray3 = radius_depth * reflect(vec3(-0.04, -0.04,  0.01), random);
+  vec3 ray4 = radius_depth * reflect(vec3( 0.24, -0.22,  0.89), random);
+  vec3 ray5 = radius_depth * reflect(vec3(-0.09,  0.10, -0.54), random);
+  
+  vec3 projected0 = position + sign(dot(ray0, normal)) * ray0 * vec3(width, height, 0);
+  vec3 projected1 = position + sign(dot(ray1, normal)) * ray1 * vec3(width, height, 0);
+  vec3 projected2 = position + sign(dot(ray2, normal)) * ray2 * vec3(width, height, 0);
+  vec3 projected3 = position + sign(dot(ray3, normal)) * ray3 * vec3(width, height, 0);
+  vec3 projected4 = position + sign(dot(ray4, normal)) * ray4 * vec3(width, height, 0);
+  vec3 projected5 = position + sign(dot(ray5, normal)) * ray5 * vec3(width, height, 0);
+
   float occlusion = 0.0;
-  
-  for (int i = 0; i < SAMPLES; i++) {
-  
-    vec3 ray = radius_depth * reflect(SAMPLE_SPHERE[i], random);
-    vec3 projected = position + sign(dot(ray,normal)) * ray * vec3(width, height, 0);
-    
-    float occ_depth = texture2D(depth_texture, projected.xy).r;
-    float difference = depth - occ_depth;
-    
-    occlusion += difference_occlusion(difference, clip_near, clip_far);
-    
-  }
+  occlusion += difference_occlusion(depth - texture2D(depth_texture, projected0.xy).r, clip_near, clip_far);
+  occlusion += difference_occlusion(depth - texture2D(depth_texture, projected1.xy).r, clip_near, clip_far);
+  occlusion += difference_occlusion(depth - texture2D(depth_texture, projected2.xy).r, clip_near, clip_far);
+  occlusion += difference_occlusion(depth - texture2D(depth_texture, projected3.xy).r, clip_near, clip_far);
+  occlusion += difference_occlusion(depth - texture2D(depth_texture, projected4.xy).r, clip_near, clip_far);
+  occlusion += difference_occlusion(depth - texture2D(depth_texture, projected5.xy).r, clip_near, clip_far);
   
   float ao = STRENGTH * occlusion * (1.0 / float(SAMPLES));
   float total = 1.0 - clamp(ao + BASE, 0.0, 1.0);

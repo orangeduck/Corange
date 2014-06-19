@@ -4,9 +4,9 @@
 #include <stdbool.h>
 #include <limits.h>
 
-#include "SDL/SDL.h"
-#include "SDL/SDL_opengl.h"
-#include "SDL/SDL_thread.h"
+#include "SDL2/SDL.h"
+#include "SDL2/SDL_opengl.h"
+#include "SDL2/SDL_thread.h"
 
 #ifdef MAX_PATH
   // Do Nothing
