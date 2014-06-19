@@ -34,11 +34,13 @@ void ui_button_delete(ui_button* b);
 void ui_button_move(ui_button* b, vec2 pos);
 void ui_button_resize(ui_button* b, vec2 size);
 void ui_button_set_label(ui_button* b, char* label);
+void ui_button_set_label_color(ui_button* b, vec4 color);
 void ui_button_set_font(ui_button* b, asset_hndl f);
 void ui_button_set_onclick(ui_button* b, void(*onclick)(ui_button*, void*));
 void ui_button_set_onclick_data(ui_button* b, void* data);
 void ui_button_set_active(ui_button* b, bool active);
 void ui_button_set_enabled(ui_button* b, bool enabled);
+void ui_button_set_texture(ui_button* b, asset_hndl tex, int width, int height, bool tile);
 void ui_button_disable(ui_button* b);
 void ui_button_enable(ui_button* b);
 

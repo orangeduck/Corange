@@ -154,10 +154,10 @@ void ui_rectangle_render(ui_rectangle* r) {
   } else {
   
     rect_texcoords[0]  = 0; rect_texcoords[1]  = 0; 
-    rect_texcoords[2]  = 1; rect_texcoords[3]  = 0; 
+    rect_texcoords[2]  = 0; rect_texcoords[3]  = 1; 
     rect_texcoords[4]  = 1; rect_texcoords[5]  = 1; 
     rect_texcoords[6]  = 0; rect_texcoords[7]  = 0; 
-    rect_texcoords[8]  = 0; rect_texcoords[9]  = 1; 
+    rect_texcoords[8]  = 1; rect_texcoords[9]  = 0; 
     rect_texcoords[10] = 1; rect_texcoords[11] = 1; 
   
   }

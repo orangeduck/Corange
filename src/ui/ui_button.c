@@ -18,6 +18,9 @@ ui_button* ui_button_new() {
     ui_style_current->box_back_border_size,
     ui_style_current->box_back_border_color);
   ui_rectangle_set_glitch(b->back, ui_style_current->box_glitch);
+  ui_rectangle_blend(b->back, 
+    ui_style_current->box_blend_src,
+    ui_style_current->box_blend_dst);
   
   b->label = ui_text_new_string("Button1");
   ui_text_move(b->label, ui_rectangle_center(b->back));
@@ -92,6 +95,11 @@ void ui_button_set_label(ui_button* b, char* label) {
   ui_text_draw_string(b->label, label);
 }
 
+void ui_button_set_label_color(ui_button* b, vec4 color) {
+  b->label->color = color;
+  ui_text_draw(b->label);
+}
+
 void ui_button_set_onclick(ui_button* b, void(*onclick)(ui_button*, void*)) {
   b->onclick = onclick;
 }
@@ -107,6 +115,11 @@ void ui_button_set_active(ui_button* b, bool active) {
 void ui_button_set_enabled(ui_button* b, bool enabled) {
   b->enabled = enabled;
 }
+
+void ui_button_set_texture(ui_button* b, asset_hndl tex, int width, int height, bool tile) {
+  ui_rectangle_set_texture(b->back, tex, width, height, tile);
+}
+
 
 vec2 ui_button_position(ui_button* b) {
   return ui_rectangle_position(b->back);

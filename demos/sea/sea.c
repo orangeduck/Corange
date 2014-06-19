@@ -119,12 +119,13 @@ void sea_update() {
   /* Collision Detection and response routine */
   
   collision collision_test_ellipsoid(void* x, vec3* position, vec3* velocity) {
-    collision mcol = ellipsoid_collide_mesh(test_ellipsoid, *velocity, test_cmesh, test_cmesh_world, test_cmesh_world_normal);
-    collision pcol = ellipsoid_collide_point(test_ellipsoid, *velocity, test_point);
-    return collision_merge(mcol, pcol);
+    return ellipsoid_collide_mesh(test_ellipsoid, *velocity, test_cmesh, test_cmesh_world, test_cmesh_world_normal);
   }
   
-  collision_response_slide(NULL, &test_ellipsoid.center, &test_velocity, collision_test_ellipsoid);
+  deferred_renderer_add(g_dr, render_object_ellipsoid(test_ellipsoid));
+  deferred_renderer_add(g_dr, render_object_static(entity_get("corvette")));
+  
+  collision_response_slide(g_dr, &test_ellipsoid.center, &test_velocity, collision_test_ellipsoid);
   
   /* End */
   
@@ -133,8 +134,8 @@ void sea_update() {
 void sea_render() {
   
   //deferred_renderer_add(g_dr, render_object_cmesh(test_cmesh, test_cmesh_trans));
-  deferred_renderer_add(g_dr, render_object_ellipsoid(test_ellipsoid));
-  deferred_renderer_add(g_dr, render_object_static(entity_get("corvette")));
+  //deferred_renderer_add(g_dr, render_object_ellipsoid(test_ellipsoid));
+  //deferred_renderer_add(g_dr, render_object_static(entity_get("corvette")));
   deferred_renderer_render(g_dr);
   
 }
@@ -183,7 +184,7 @@ void sea_event(SDL_Event e) {
     return sphere_collide_mesh(sphere_new(*position, 0.25), *velocity, test_cmesh, test_cmesh_world, test_cmesh_world_normal);
   }
   
-  collision_response_slide(NULL, &c->position, &velocity, collision_camera);
+  collision_response_slide(g_dr, &c->position, &velocity, collision_camera);
   
 }
 

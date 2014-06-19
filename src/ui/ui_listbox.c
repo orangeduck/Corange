@@ -72,7 +72,7 @@ ui_text* ui_listbox_add_item(ui_listbox* lb, char* item) {
   
   ui_text* entry = ui_text_new();
   ui_text_draw_string(entry, item);
-  ui_text_set_color(entry, vec4_light_grey());
+  ui_text_set_color(entry, ui_style_current->box_text_color);
   lb->items[lb->num_items-1] = entry;
   
   move_text_items(lb);

@@ -408,9 +408,7 @@ deferred_renderer* deferred_renderer_new(asset_hndl options) {
   /* Objects */
   dr->render_objects_num = 0;
   dr->render_objects = NULL;
-  
-  glTexEnvf(GL_TEXTURE_FILTER_CONTROL, GL_TEXTURE_LOD_BIAS, option_graphics_float(asset_hndl_ptr(&dr->options), "lod_bias", -1.0, 0.0, 1.0));
-  
+    
   SDL_GL_CheckError();
   SDL_GL_CheckFrameBuffer();
   
@@ -2602,6 +2600,9 @@ void deferred_renderer_render(deferred_renderer* dr) {
   
   //timer t = timer_start(0, "Rendering Start");
   
+  glTexEnvf(GL_TEXTURE_FILTER_CONTROL, GL_TEXTURE_LOD_BIAS, 
+    option_graphics_float(asset_hndl_ptr(&dr->options), "lod_bias", -1.0, 0.0, 1.0));
+  
   render_shadows(dr);   //glFlush(); t = timer_split(t, "Shadow");
   render_clear(dr);     //glFlush(); t = timer_split(t, "Clear");
   render_gbuffer(dr);   //glFlush(); t = timer_split(t, "GBuffer");
@@ -2615,6 +2616,8 @@ void deferred_renderer_render(deferred_renderer* dr) {
   render_post1(dr);     //glFlush(); t = timer_split(t, "Post1");
   
   //timer_stop(t, "Rendering End");
+
+  glTexEnvf(GL_TEXTURE_FILTER_CONTROL, GL_TEXTURE_LOD_BIAS, 0.0);
   
   dr->render_objects_num = 0;
   dr->dyn_lights_num = 0;

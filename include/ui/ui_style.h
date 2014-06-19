@@ -15,6 +15,8 @@ typedef struct {
   int   box_back_border_size;
   vec4  box_back_border_color;
   float box_glitch;
+  int   box_blend_src;
+  int   box_blend_dst;
   
   vec4 box_text_color;
   vec4 box_label_color;

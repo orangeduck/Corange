@@ -1,4 +1,5 @@
 #include "cphysics.h"
+#include "rendering/deferred_renderer.h"
 
 vec3 vec3_gravity() {
   return vec3_new(0, -9.81, 0);
@@ -468,7 +469,9 @@ void collision_response_slide(void* x, vec3* position, vec3* velocity, collision
   int count = 0;
   while (col.collided) {
     
-    if (count++ == 5) {
+    //deferred_renderer_add(x, render_object_line(*position, vec3_add(*position, col.norm), vec3_red(), count+1));
+    
+    if (count++ == 10) {
       *velocity = vec3_zero();
       break;
     }
@@ -484,6 +487,8 @@ void collision_response_slide(void* x, vec3* position, vec3* velocity, collision
     float len = max(vec3_length(fwrd) - 0.001, 0.0);
     vec3 move = vec3_add(*position, vec3_mul(vec3_normalize(fwrd), len));    
     vec3 proj = vec3_project(vec3_mul(*velocity, (1-col.time)), col.norm);
+
+    //deferred_renderer_add(x, render_object_line(*position, vec3_add(*position, vec3_normalize(proj)), vec3_green(), count+1));
     
     *position = move;
     *velocity = proj;

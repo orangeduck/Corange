@@ -4,8 +4,7 @@
 
 static sphere ctri_bound(ctri t) {
   
-  vec3 center = vec3_add(vec3_add(t.a, t.b), t.c);
-  center = vec3_div(center, 3);
+  vec3 center = vec3_div(vec3_add(vec3_add(t.a, t.b), t.c), 3);
   
   float radius = 0;
   radius = max(radius, vec3_dist_sqrd(t.a, center));
