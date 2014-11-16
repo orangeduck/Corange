@@ -59,6 +59,7 @@ void graphics_init() {
 }
 
 SDL_GLContext* graphics_context_new() {
+  SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
   return SDL_GL_CreateContext(screen);
 }
 
@@ -68,7 +69,6 @@ void graphics_context_delete(SDL_GLContext* context) {
 
 void graphics_context_current(SDL_GLContext* context) {
   SDL_GL_MakeCurrent(screen, context);
-  SDL_GL_LoadExtensions();
 }
 
 void graphics_set_antialiasing(int quality) {

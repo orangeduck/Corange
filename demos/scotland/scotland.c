@@ -10,11 +10,11 @@ static int mouse_right_down;
 
 static bool toggle_freecam = true;
 static bool loading_assets = false;
-static SDL_GLContext* load_context = NULL;
+//static SDL_GLContext* load_context = NULL;
 
 static int load_assets(void* unused) {
   
-  graphics_context_current(load_context);
+  //graphics_context_current(load_context);
   
   folder_load(P("./assets/terrain/"));
   folder_load(P("./assets/vegetation/"));
@@ -49,7 +49,7 @@ static int load_assets(void* unused) {
   freecam->active = true;
   
   loading_assets = false;
-  graphics_context_delete(load_context);
+  //graphics_context_delete(load_context);
   return 1;
 }
 
@@ -97,8 +97,10 @@ void scotland_init() {
   ui_button_set_onclick(freecam, on_freecam);
   
   loading_assets = true;
-  load_context = graphics_context_new();
-  SDL_Thread* load_thread = SDL_CreateThread(load_assets, "loading", NULL);
+  //load_context = graphics_context_new();
+  //SDL_Thread* load_thread = SDL_CreateThread(load_assets, "loading", NULL);
+  
+  load_assets(NULL);
   
   /* New Camera and light */
   
