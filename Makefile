@@ -5,7 +5,7 @@ SRC = $(wildcard src/*.c) $(wildcard src/*/*.c)
 OBJ = $(addprefix obj/,$(notdir $(SRC:.c=.o)))
 
 CFLAGS = -I ./include -std=gnu99 -Wall -Werror -Wno-unused -O3 -g
-LFLAGS = -lSDL2main -lSDL2 -lSDL2_mixer -lSDL2_net -shared -g
+LFLAGS = -lSDL2 -lSDL2_mixer -lSDL2_net -shared -g
 
 PLATFORM = $(shell uname)
 
