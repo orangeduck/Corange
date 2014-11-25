@@ -1,4 +1,0 @@
-shader vertex = $CORANGE/shaders/forward/terrain.vs
-shader fragment = $CORANGE/shaders/forward/terrain.fs
-shader colors = $CORANGE/shaders/colors.fs
-shader fog = $CORANGE/shaders/fog.fs

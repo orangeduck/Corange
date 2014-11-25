@@ -41,8 +41,8 @@ void main() {
   vec4 position = inv_view * inv_proj * vec4(position_clip, 1);
   position = position / position.w;
   
-  vec4 color    = texture2D(diffuse_texture,   fTexcoord);
-  vec4 normals  = texture2D(normals_texture,   fTexcoord);
+  vec4 color   = texture2D(diffuse_texture, fTexcoord);
+  vec4 normals = texture2D(normals_texture, fTexcoord);
 	
   vec3  albedo = color.rgb;
   float spec   = color.a;
@@ -59,7 +59,7 @@ void main() {
   vec3 light_half = normalize(light_dir + eye_dir);
   
   float n_dot_l = max(dot(normal, light_dir), 0.0);
-  float n_dot_h = spec * ((glossiness+2) / (2 * 3.141)) * pow(max(dot(normal, light_half), 0.0), glossiness);
+  float n_dot_h = spec * ((glossiness+2) / (2 * 3.141)) * max(pow(max(dot(normal, light_half), 0.0), glossiness), 0.0);
   
   vec3 ambient  = light_power * light_ambient  * albedo;
   vec3 diffuse  = light_power * light_diffuse  * albedo * n_dot_l;

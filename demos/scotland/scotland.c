@@ -1,7 +1,7 @@
 
 #include "corange.h"
 
-static deferred_renderer* g_dr;
+static renderer* g_dr;
 
 static int mouse_x;
 static int mouse_y;
@@ -112,10 +112,10 @@ void scotland_init() {
   
   asset_hndl opt_graphics = asset_hndl_new_load(P("./assets/graphics.cfg"));
   
-  g_dr = deferred_renderer_new(opt_graphics);
-  deferred_renderer_set_camera(g_dr, cam);
-  deferred_renderer_set_tod(g_dr, 0.15, 0);
-  deferred_renderer_set_sea_enabled(g_dr, false);
+  g_dr = renderer_new(opt_graphics);
+  renderer_set_camera(g_dr, cam);
+  renderer_set_tod(g_dr, 0.15, 0);
+  renderer_set_sea_enabled(g_dr, false);
   
 }
 
@@ -212,13 +212,13 @@ void scotland_render() {
   
   //texture_write_to_file(shadow_mapper_depth_texture(), "shadow_depth.tga");
   
-  deferred_renderer_add(g_dr, render_object_landscape(world));
-  deferred_renderer_render(g_dr);
+  renderer_add(g_dr, render_object_landscape(world));
+  renderer_render(g_dr);
   
 }
 
 void scotland_finish() {
-  deferred_renderer_delete(g_dr);
+  renderer_delete(g_dr);
 }
 
 int main(int argc, char **argv) {

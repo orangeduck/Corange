@@ -1,5 +1,4 @@
 #include "cphysics.h"
-#include "rendering/deferred_renderer.h"
 
 vec3 vec3_gravity() {
   return vec3_new(0, -9.81, 0);
@@ -151,10 +150,6 @@ collision point_collide_edge(vec3 p, vec3 v, vec3 e0, vec3 e1) {
 }
 
 collision point_collide_face(vec3 p, vec3 v, ctri ct) {
-
-  if (vec3_dot(ct.norm, v) > 0) {
-    ct.norm = vec3_neg(ct.norm);
-  }
   
   float angle = vec3_dot(ct.norm, v);
   float dist  = vec3_dot(ct.norm, vec3_sub(p, ct.a)); 
@@ -163,7 +158,8 @@ collision point_collide_face(vec3 p, vec3 v, ctri ct) {
   float t1 = -dist / angle;
   float t = FLT_MAX;
   
-  if (between_or(t0, 0, 1) && between_or(t1, 0, 1)) { t = min(t0, t1); }
+  if (between_or(t0, 0, 1) 
+  &&  between_or(t1, 0, 1)) { t = min(t0, t1); }
   else if (between_or(t0, 0, 1)) { t = t0; }
   else if (between_or(t1, 0, 1)) { t = t1; } 
   else { return collision_none(); }
@@ -242,10 +238,6 @@ collision sphere_collide_face(sphere s, vec3 v, ctri ct) {
   
   //if (unlikely(sphere_intersects_face(s, ct.a, ct.b, ct.c, ct.norm))) { error("Collision Sphere Inside Mesh Face!"); }
   
-  if (vec3_dot(ct.norm, v) > 0) {
-    ct.norm = vec3_neg(ct.norm);
-  }
-  
   float angle = vec3_dot(ct.norm, v);
   float dist  = vec3_dot(ct.norm, vec3_sub(s.center, ct.a)); 
   
@@ -253,7 +245,8 @@ collision sphere_collide_face(sphere s, vec3 v, ctri ct) {
   float t1 = (-s.radius - dist) / angle;
   float t = FLT_MAX;
   
-  if (between_or(t0, 0, 1) && between_or(t1, 0, 1)) { t = min(t0, t1); }
+  if (between_or(t0, 0, 1)
+  &&  between_or(t1, 0, 1)) { t = min(t0, t1); }
   else if (between_or(t0, 0, 1)) { t = t0; }
   else if (between_or(t1, 0, 1)) { t = t1; } 
   else { return collision_none(); }
@@ -271,7 +264,7 @@ collision sphere_collide_face(sphere s, vec3 v, ctri ct) {
 
 collision sphere_collide_edge(sphere s, vec3 v, vec3 e0, vec3 e1) {
   
-  //if (unlikely(!line_outside_sphere(s, e0, e1))) { error("Collision Sphere Inside Mesh Edge!"); }
+  //Wif (unlikely(!line_outside_sphere(s, e0, e1))) { error("Collision Sphere Inside Mesh Edge!"); }
   
   vec3 x0 = vec3_sub(e0, s.center);
   vec3 x1 = vec3_sub(e1, s.center);
@@ -469,26 +462,20 @@ void collision_response_slide(void* x, vec3* position, vec3* velocity, collision
   int count = 0;
   while (col.collided) {
     
-    //deferred_renderer_add(x, render_object_line(*position, vec3_add(*position, col.norm), vec3_red(), count+1));
+    //renderer_add(x, render_object_line(*position, vec3_add(*position, col.norm), vec3_red(), count+1));
     
-    if (count++ == 10) {
-      *velocity = vec3_zero();
-      break;
-    }
-    
-    if (vec3_length(*velocity) < 0.001) {
+    if (count++ == 100) {
       *velocity = vec3_zero();
       break;
     }
     
     vec3 fwrd = vec3_mul(*velocity, col.time);
-    vec3 dest = vec3_add(*position, fwrd);
     
-    float len = max(vec3_length(fwrd) - 0.001, 0.0);
-    vec3 move = vec3_add(*position, vec3_mul(vec3_normalize(fwrd), len));    
-    vec3 proj = vec3_project(vec3_mul(*velocity, (1-col.time)), col.norm);
-
-    //deferred_renderer_add(x, render_object_line(*position, vec3_add(*position, vec3_normalize(proj)), vec3_green(), count+1));
+    float len = max(vec3_length(fwrd) - 0.001, 0.0) / vec3_length(fwrd);
+    vec3 move = vec3_add(*position, vec3_mul(fwrd, len));
+    vec3 proj = vec3_project(vec3_mul(*velocity, (1.0-col.time)), col.norm);
+    
+    //renderer_add(x, render_object_line(*position, vec3_add(*position, vec3_normalize(proj)), vec3_green(), count+1));
     
     *position = move;
     *velocity = proj;

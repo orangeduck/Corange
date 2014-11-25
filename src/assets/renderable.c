@@ -983,7 +983,7 @@ renderable* smd_load_file(char* filename) {
           &l1_id, &l1_amount, &l2_id, &l2_amount, &l3_id, &l3_amount) > 9) {
         
         if (num_links > 3) {
-          //warning("Loading file '%s'. More than 3 bones rigged to vertex. Ignoring other bones", filename);
+          //warning("Loading file '%s'. More than 3 bones rigged to vertex (%i). Ignoring other bones", filename, num_links);
           num_links = 3;
         }
         
@@ -1011,19 +1011,48 @@ renderable* smd_load_file(char* filename) {
           vertex_list_push_back(vert_list, vert);
           
           vertex_weight vw;
-          if (num_links == 3) {
-            vw.bone_ids[0] = l1_id; vw.bone_ids[1] = l2_id; vw.bone_ids[2] = l3_id;
-            vw.bone_weights[0] = l1_amount; vw.bone_weights[1] = l2_amount; vw.bone_weights[2] = l3_amount;
-          } else if (num_links == 2) {
-            vw.bone_ids[0] = l1_id; vw.bone_ids[1] = l2_id; vw.bone_ids[2] = 0;
-            vw.bone_weights[0] = l1_amount; vw.bone_weights[1] = l2_amount; vw.bone_weights[2] = 0;
-          } else if (num_links == 1) {
-            vw.bone_ids[0] = l1_id; vw.bone_ids[1] = 0; vw.bone_ids[2] = 0;
-            vw.bone_weights[0] = 1; vw.bone_weights[1] = 0; vw.bone_weights[2] = 0;
-          } else {
-            warning("Loading file %s. Unrigged vertex!", filename);
-            vw.bone_ids[0] = 0; vw.bone_ids[1] = 0; vw.bone_ids[2] = 0;
-            vw.bone_weights[0] = 1; vw.bone_weights[1] = 0; vw.bone_weights[2] = 0;
+          switch (num_links) {
+            case 3:
+              vw.bone_ids[0] = l1_id;
+              vw.bone_ids[1] = l2_id;
+              vw.bone_ids[2] = l3_id;
+              vw.bone_weights[0] = l1_amount;
+              vw.bone_weights[1] = l2_amount;
+              vw.bone_weights[2] = l3_amount;
+            break;
+            case 2:
+              vw.bone_ids[0] = l1_id;
+              vw.bone_ids[1] = l2_id;
+              vw.bone_ids[2] = 0;
+              vw.bone_weights[0] = l1_amount;
+              vw.bone_weights[1] = l2_amount;
+              vw.bone_weights[2] = 0;
+            break;
+            case 1:
+              vw.bone_ids[0] = l1_id;
+              vw.bone_ids[1] = 0;
+              vw.bone_ids[2] = 0;
+              vw.bone_weights[0] = 1;
+              vw.bone_weights[1] = 0;
+              vw.bone_weights[2] = 0;
+            break;
+            default:
+              warning("Loading file %s. Unrigged vertex!", filename);
+              vw.bone_ids[0] = 0;
+              vw.bone_ids[1] = 0;
+              vw.bone_ids[2] = 0;
+              vw.bone_weights[0] = 1;
+              vw.bone_weights[1] = 0;
+              vw.bone_weights[2] = 0;
+            break;
+          }
+          
+          float total = vw.bone_weights[0] + vw.bone_weights[1] + vw.bone_weights[2];
+          
+          if (total != 0) {
+            vw.bone_weights[0] /= total;
+            vw.bone_weights[1] /= total;
+            vw.bone_weights[2] /= total;
           }
           
           while(vert_pos >= allocated_weights) {

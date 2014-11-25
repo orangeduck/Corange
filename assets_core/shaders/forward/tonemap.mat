@@ -1,3 +1,0 @@
-shader vertex = $CORANGE/shaders/forward/tonemap.vs
-shader fragment = $CORANGE/shaders/forward/tonemap.fs
-shader colors = $CORANGE/shaders/colors.fs

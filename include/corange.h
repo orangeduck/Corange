@@ -85,7 +85,8 @@ void corange_finish();
 
 /* Rendering */
 
-#include "rendering/deferred_renderer.h"
+#include "rendering/sky.h"
+#include "rendering/renderer.h"
 
 /* Data Structures */
 

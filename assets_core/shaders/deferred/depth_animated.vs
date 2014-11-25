@@ -32,8 +32,8 @@ void main() {
               quat_duals[int(vBone_indicies.y)] * vBone_weights.y +
               quat_duals[int(vBone_indicies.z)] * vBone_weights.z;
   
-  real = real / length(real);
   dual = dual / length(real);
+  real = real / length(real);
   
   vec3 blendpos = quat_dual_mul_pos(real, dual, vPosition);
   

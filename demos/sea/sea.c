@@ -7,7 +7,7 @@ static int mouse_y;
 static int mouse_down;
 static int mouse_right_down;
 
-static deferred_renderer* g_dr;
+static renderer* g_dr;
 
 static ellipsoid test_ellipsoid;
 static vec3 test_velocity;
@@ -29,10 +29,10 @@ void sea_init() {
   
   asset_hndl opt_graphics = asset_hndl_new_load(P("./assets/graphics.cfg"));
   
-  g_dr = deferred_renderer_new(opt_graphics);
-  deferred_renderer_set_camera(g_dr, cam);
-  deferred_renderer_set_tod(g_dr, 0.15, 0);
-  deferred_renderer_set_sea_enabled(g_dr, true);
+  g_dr = renderer_new(opt_graphics);
+  renderer_set_camera(g_dr, cam);
+  renderer_set_tod(g_dr, 0.15, 0);
+  renderer_set_sea_enabled(g_dr, true);
   
   folder_load(P("./assets/corvette/"));
   
@@ -57,6 +57,8 @@ void sea_init() {
   test_cmesh_world_normal = static_object_world_normal(s_corvette);
   
   test_point = vec3_new(5, 5, 5);
+
+  s_corvette->collision_body = asset_hndl_new(P("./assets/corvette/corvette.col"));
   
 }
 
@@ -122,8 +124,8 @@ void sea_update() {
     return ellipsoid_collide_mesh(test_ellipsoid, *velocity, test_cmesh, test_cmesh_world, test_cmesh_world_normal);
   }
   
-  deferred_renderer_add(g_dr, render_object_ellipsoid(test_ellipsoid));
-  deferred_renderer_add(g_dr, render_object_static(entity_get("corvette")));
+  renderer_add(g_dr, render_object_ellipsoid(test_ellipsoid));
+  renderer_add(g_dr, render_object_static(entity_get("corvette")));
   
   collision_response_slide(g_dr, &test_ellipsoid.center, &test_velocity, collision_test_ellipsoid);
   
@@ -133,10 +135,10 @@ void sea_update() {
 
 void sea_render() {
   
-  //deferred_renderer_add(g_dr, render_object_cmesh(test_cmesh, test_cmesh_trans));
-  //deferred_renderer_add(g_dr, render_object_ellipsoid(test_ellipsoid));
-  //deferred_renderer_add(g_dr, render_object_static(entity_get("corvette")));
-  deferred_renderer_render(g_dr);
+  //renderer_add(g_dr, render_object_cmesh(test_cmesh, test_cmesh_trans));
+  //renderer_add(g_dr, render_object_ellipsoid(test_ellipsoid));
+  //renderer_add(g_dr, render_object_static(entity_get("corvette")));
+  renderer_render(g_dr);
   
 }
 
@@ -189,7 +191,7 @@ void sea_event(SDL_Event e) {
 }
 
 void sea_finish() {
-  deferred_renderer_delete(g_dr);
+  renderer_delete(g_dr);
 }
 
 int main(int argc, char **argv) {

@@ -1,8 +1,4 @@
 submaterial corvette_rudder
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/corvette_rudder.dds
 texture bump_map = ./assets/corvette/corvette_rudder_nm.dds
 texture spec_map = ./assets/corvette/corvette_rudder_s.dds
@@ -13,10 +9,6 @@ float specular_level = 2.0
 int material = 3
 
 submaterial rigging_board
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/rigging_board.dds
 texture bump_map = ./assets/corvette/rigging_board_nm.dds
 texture spec_map = ./assets/corvette/rigging_board_s.dds
@@ -27,10 +19,6 @@ float specular_level = 2.0
 int material = 2
 
 submaterial rigging_board
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/rigging_board.dds
 texture bump_map = ./assets/corvette/rigging_board_nm.dds
 texture spec_map = ./assets/corvette/rigging_board_s.dds
@@ -41,10 +29,6 @@ float specular_level = 2.0
 int material = 2
 
 submaterial anchor_port
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/anchor_port.dds
 texture bump_map = ./assets/corvette/anchor_port_nm.dds
 texture spec_map = ./assets/corvette/anchor_port_s.dds
@@ -55,10 +39,6 @@ float specular_level = 2.0
 int material = 3
 
 submaterial ship_loader_hook
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/ship_loader_hook.dds
 texture bump_map = ./assets/corvette/ship_loader_hook_nm.dds
 texture spec_map = ./assets/corvette/ship_loader_hook_s.dds
@@ -69,10 +49,6 @@ float specular_level = 2.0
 int material = 3
 
 submaterial rope
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/rope.dds
 texture bump_map = ./assets/corvette/rope_nm.dds
 texture spec_map = ./assets/corvette/rope_s.dds
@@ -83,10 +59,6 @@ float specular_level = 2.0
 int material = 2
 
 submaterial corvette_mast
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/corvette_mast.dds
 texture bump_map = ./assets/corvette/corvette_mast_nm.dds
 texture spec_map = ./assets/corvette/corvette_mast_s.dds
@@ -97,10 +69,6 @@ float specular_level = 2.0
 int material = 3
 
 submaterial corvette_mast
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/corvette_mast.dds
 texture bump_map = ./assets/corvette/corvette_mast_nm.dds
 texture spec_map = ./assets/corvette/corvette_mast_s.dds
@@ -111,10 +79,6 @@ float specular_level = 2.0
 int material = 3
 
 submaterial corvette_banister
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/corvette_banister.dds
 texture bump_map = ./assets/corvette/corvette_banister_nm.dds
 texture spec_map = ./assets/corvette/corvette_banister_s.dds
@@ -125,10 +89,6 @@ float specular_level = 2.0
 int material = 2
 
 submaterial corvette_banister
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/corvette_banister.dds
 texture bump_map = ./assets/corvette/corvette_banister_nm.dds
 texture spec_map = ./assets/corvette/corvette_banister_s.dds
@@ -139,10 +99,6 @@ float specular_level = 2.0
 int material = 2
 
 submaterial captains_wheel
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/captains_wheel.dds
 texture bump_map = ./assets/corvette/captains_wheel_nm.dds
 texture spec_map = ./assets/corvette/captains_wheel_s.dds
@@ -153,10 +109,6 @@ float specular_level = 2.0
 int material = 3
 
 submaterial corvette_rigging
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/corvette_rigging.dds
 texture bump_map = ./assets/corvette/corvette_rigging_nm.dds
 texture spec_map = ./assets/corvette/corvette_rigging_s.dds
@@ -167,10 +119,6 @@ float specular_level = 2.0
 int material = 3
 
 submaterial corvette_rigging
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/corvette_rigging.dds
 texture bump_map = ./assets/corvette/corvette_rigging_nm.dds
 texture spec_map = ./assets/corvette/corvette_rigging_s.dds
@@ -181,10 +129,6 @@ float specular_level = 2.0
 int material = 3
 
 submaterial corvette_rigging
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/corvette_rigging.dds
 texture bump_map = ./assets/corvette/corvette_rigging_nm.dds
 texture spec_map = ./assets/corvette/corvette_rigging_s.dds
@@ -195,10 +139,6 @@ float specular_level = 2.0
 int material = 3
 
 submaterial ship_ladder
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/ship_ladder.dds
 texture bump_map = ./assets/corvette/ship_ladder_nm.dds
 texture spec_map = ./assets/corvette/black.dds
@@ -209,10 +149,6 @@ float specular_level = 2.0
 int material = 2
 
 submaterial corvette_figurehead
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/corvette_figurehead.dds
 texture bump_map = ./assets/corvette/corvette_figurehead_nm.dds
 texture spec_map = ./assets/corvette/corvette_figurehead_s.dds
@@ -223,10 +159,6 @@ float specular_level = 2.0
 int material = 3
 
 submaterial black_rope
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/black_rope.dds
 texture bump_map = ./assets/corvette/rope_nm.dds
 texture spec_map = ./assets/corvette/rope_s.dds
@@ -237,10 +169,6 @@ float specular_level = 2.0
 int material = 2
 
 submaterial rigging_bits
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/rigging_bits.dds
 texture bump_map = ./assets/corvette/rigging_bits_nm.dds
 texture spec_map = ./assets/corvette/black.dds
@@ -251,10 +179,6 @@ float specular_level = 2.0
 int material = 3
 
 submaterial rope
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/rope.dds
 texture bump_map = ./assets/corvette/rope_nm.dds
 texture spec_map = ./assets/corvette/rope_s.dds
@@ -265,10 +189,6 @@ float specular_level = 2.0
 int material = 2
 
 submaterial wire
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/wire.dds
 texture bump_map = ./assets/corvette/wire_nm.dds
 texture spec_map = ./assets/corvette/wire_s.dds
@@ -279,10 +199,6 @@ float specular_level = 2.0
 int material = 3
 
 submaterial black_rope
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/black_rope.dds
 texture bump_map = ./assets/corvette/rope_nm.dds
 texture spec_map = ./assets/corvette/rope_s.dds
@@ -293,10 +209,6 @@ float specular_level = 2.0
 int material = 2
 
 submaterial rigging_bits
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/rigging_bits.dds
 texture bump_map = ./assets/corvette/rigging_bits_nm.dds
 texture spec_map = ./assets/corvette/black.dds
@@ -307,10 +219,6 @@ float specular_level = 2.0
 int material = 3
 
 submaterial rope
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/rope.dds
 texture bump_map = ./assets/corvette/rope_nm.dds
 texture spec_map = ./assets/corvette/rope_s.dds
@@ -321,10 +229,6 @@ float specular_level = 2.0
 int material = 2
 
 submaterial wire
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/wire.dds
 texture bump_map = ./assets/corvette/wire_nm.dds
 texture spec_map = ./assets/corvette/wire_s.dds
@@ -335,10 +239,6 @@ float specular_level = 2.0
 int material = 3
 
 submaterial black_rope
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/black_rope.dds
 texture bump_map = ./assets/corvette/rope_nm.dds
 texture spec_map = ./assets/corvette/rope_s.dds
@@ -349,10 +249,6 @@ float specular_level = 2.0
 int material = 2
 
 submaterial rigging_bits
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/rigging_bits.dds
 texture bump_map = ./assets/corvette/rigging_bits_nm.dds
 texture spec_map = ./assets/corvette/black.dds
@@ -363,10 +259,6 @@ float specular_level = 2.0
 int material = 3
 
 submaterial rope
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/rope.dds
 texture bump_map = ./assets/corvette/rope_nm.dds
 texture spec_map = ./assets/corvette/rope_s.dds
@@ -377,10 +269,6 @@ float specular_level = 2.0
 int material = 2
 
 submaterial wire
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/wire.dds
 texture bump_map = ./assets/corvette/wire_nm.dds
 texture spec_map = ./assets/corvette/wire_s.dds
@@ -391,10 +279,6 @@ float specular_level = 2.0
 int material = 3
 
 submaterial black_rope
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/black_rope.dds
 texture bump_map = ./assets/corvette/rope_nm.dds
 texture spec_map = ./assets/corvette/rope_s.dds
@@ -405,10 +289,6 @@ float specular_level = 2.0
 int material = 2
 
 submaterial rigging_bits
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/rigging_bits.dds
 texture bump_map = ./assets/corvette/rigging_bits_nm.dds
 texture spec_map = ./assets/corvette/black.dds
@@ -419,10 +299,6 @@ float specular_level = 2.0
 int material = 3
 
 submaterial rope
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/rope.dds
 texture bump_map = ./assets/corvette/rope_nm.dds
 texture spec_map = ./assets/corvette/rope_s.dds
@@ -433,10 +309,6 @@ float specular_level = 2.0
 int material = 2
 
 submaterial wire
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/wire.dds
 texture bump_map = ./assets/corvette/wire_nm.dds
 texture spec_map = ./assets/corvette/wire_s.dds
@@ -447,10 +319,6 @@ float specular_level = 2.0
 int material = 3
 
 submaterial black_rope
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/black_rope.dds
 texture bump_map = ./assets/corvette/rope_nm.dds
 texture spec_map = ./assets/corvette/rope_s.dds
@@ -461,10 +329,6 @@ float specular_level = 2.0
 int material = 2
 
 submaterial rigging_bits
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/rigging_bits.dds
 texture bump_map = ./assets/corvette/rigging_bits_nm.dds
 texture spec_map = ./assets/corvette/black.dds
@@ -475,10 +339,6 @@ float specular_level = 2.0
 int material = 3
 
 submaterial rope
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/rope.dds
 texture bump_map = ./assets/corvette/rope_nm.dds
 texture spec_map = ./assets/corvette/rope_s.dds
@@ -489,10 +349,6 @@ float specular_level = 2.0
 int material = 2
 
 submaterial wire
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/wire.dds
 texture bump_map = ./assets/corvette/wire_nm.dds
 texture spec_map = ./assets/corvette/wire_s.dds
@@ -503,10 +359,6 @@ float specular_level = 2.0
 int material = 3
 
 submaterial black_rope
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/black_rope.dds
 texture bump_map = ./assets/corvette/rope_nm.dds
 texture spec_map = ./assets/corvette/rope_s.dds
@@ -517,10 +369,6 @@ float specular_level = 2.0
 int material = 2
 
 submaterial rigging_bits
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/rigging_bits.dds
 texture bump_map = ./assets/corvette/rigging_bits_nm.dds
 texture spec_map = ./assets/corvette/black.dds
@@ -531,10 +379,6 @@ float specular_level = 2.0
 int material = 3
 
 submaterial rope
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/rope.dds
 texture bump_map = ./assets/corvette/rope_nm.dds
 texture spec_map = ./assets/corvette/rope_s.dds
@@ -545,10 +389,6 @@ float specular_level = 2.0
 int material = 2
 
 submaterial wire
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/wire.dds
 texture bump_map = ./assets/corvette/wire_nm.dds
 texture spec_map = ./assets/corvette/wire_s.dds
@@ -559,10 +399,6 @@ float specular_level = 2.0
 int material = 3
 
 submaterial furled_sails
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/furled_sails.dds
 texture bump_map = ./assets/corvette/furled_sails_nm.dds
 texture spec_map = ./assets/corvette/furled_sails_s.dds
@@ -573,10 +409,6 @@ float specular_level = 2.0
 int material = 3
 
 submaterial mast_cross_beam
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/mast_cross_beam.dds
 texture bump_map = ./assets/corvette/mast_cross_beam_nm.dds
 texture spec_map = ./assets/corvette/black.dds
@@ -587,10 +419,6 @@ float specular_level = 2.0
 int material = 2
 
 submaterial furled_sails
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/furled_sails.dds
 texture bump_map = ./assets/corvette/furled_sails_nm.dds
 texture spec_map = ./assets/corvette/furled_sails_s.dds
@@ -601,10 +429,6 @@ float specular_level = 2.0
 int material = 3
 
 submaterial mast_cross_beam
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/mast_cross_beam.dds
 texture bump_map = ./assets/corvette/mast_cross_beam_nm.dds
 texture spec_map = ./assets/corvette/black.dds
@@ -615,10 +439,6 @@ float specular_level = 2.0
 int material = 2
 
 submaterial furled_sails
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/furled_sails.dds
 texture bump_map = ./assets/corvette/furled_sails_nm.dds
 texture spec_map = ./assets/corvette/furled_sails_s.dds
@@ -629,10 +449,6 @@ float specular_level = 2.0
 int material = 3
 
 submaterial mast_cross_beam
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/mast_cross_beam.dds
 texture bump_map = ./assets/corvette/mast_cross_beam_nm.dds
 texture spec_map = ./assets/corvette/black.dds
@@ -643,10 +459,6 @@ float specular_level = 2.0
 int material = 2
 
 submaterial furled_sails
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/furled_sails.dds
 texture bump_map = ./assets/corvette/furled_sails_nm.dds
 texture spec_map = ./assets/corvette/furled_sails_s.dds
@@ -657,10 +469,6 @@ float specular_level = 2.0
 int material = 3
 
 submaterial mast_cross_beam
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/mast_cross_beam.dds
 texture bump_map = ./assets/corvette/mast_cross_beam_nm.dds
 texture spec_map = ./assets/corvette/black.dds
@@ -671,10 +479,6 @@ float specular_level = 2.0
 int material = 2
 
 submaterial corvette_mast
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/corvette_mast.dds
 texture bump_map = ./assets/corvette/corvette_mast_nm.dds
 texture spec_map = ./assets/corvette/corvette_mast_s.dds
@@ -685,10 +489,6 @@ float specular_level = 2.0
 int material = 3
 
 submaterial corvette_front_mast
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/corvette_front_mast.dds
 texture bump_map = ./assets/corvette/corvette_front_mast_nm.dds
 texture spec_map = ./assets/corvette/corvette_front_mast_s.dds
@@ -699,10 +499,6 @@ float specular_level = 2.0
 int material = 3
 
 submaterial corvette_decoration
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/corvette_decoration.dds
 texture bump_map = ./assets/corvette/corvette_decoration_nm.dds
 texture spec_map = ./assets/corvette/corvette_decoration_s.dds
@@ -713,10 +509,6 @@ float specular_level = 2.0
 int material = 3
 
 submaterial captains_wheel
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/captains_wheel.dds
 texture bump_map = ./assets/corvette/captains_wheel_nm.dds
 texture spec_map = ./assets/corvette/captains_wheel_s.dds
@@ -727,10 +519,6 @@ float specular_level = 2.0
 int material = 3
 
 submaterial ship_ladder
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/ship_ladder.dds
 texture bump_map = ./assets/corvette/ship_ladder_nm.dds
 texture spec_map = ./assets/corvette/black.dds
@@ -741,10 +529,6 @@ float specular_level = 2.0
 int material = 2
 
 submaterial capstan
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/capstan.dds
 texture bump_map = ./assets/corvette/capstan_nm.dds
 texture spec_map = ./assets/corvette/capstan_s.dds
@@ -755,10 +539,6 @@ float specular_level = 2.0
 int material = 3
 
 submaterial mast_turner
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/mast_turner.dds
 texture bump_map = ./assets/corvette/mast_turner_nm.dds
 texture spec_map = ./assets/corvette/mast_turner_s.dds
@@ -769,10 +549,6 @@ float specular_level = 2.0
 int material = 3
 
 submaterial anchor
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/anchor.dds
 texture bump_map = ./assets/corvette/anchor_nm.dds
 texture spec_map = ./assets/corvette/anchor_s.dds
@@ -783,10 +559,6 @@ float specular_level = 2.0
 int material = 3
 
 submaterial anchor
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/anchor.dds
 texture bump_map = ./assets/corvette/anchor_nm.dds
 texture spec_map = ./assets/corvette/anchor_s.dds
@@ -797,10 +569,6 @@ float specular_level = 2.0
 int material = 3
 
 submaterial ship_below_area
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/ship_below_area.dds
 texture bump_map = ./assets/corvette/ship_below_area_nm.dds
 texture spec_map = ./assets/corvette/black.dds
@@ -811,10 +579,6 @@ float specular_level = 2.0
 int material = 2
 
 submaterial ships_grate_medium
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/ships_grate_medium.dds
 texture bump_map = ./assets/corvette/ships_grate_medium_nm.dds
 texture spec_map = ./assets/corvette/black.dds
@@ -825,10 +589,6 @@ float specular_level = 2.0
 int material = 2
 
 submaterial lantern
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/lantern.dds
 texture bump_map = ./assets/corvette/lantern_nm.dds
 texture spec_map = ./assets/corvette/lantern_s.dds
@@ -839,10 +599,6 @@ float specular_level = 2.0
 int material = 3
 
 submaterial lantern_glass
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/lantern_glass.dds
 texture bump_map = ./assets/corvette/lantern_glass_nm.dds
 texture spec_map = ./assets/corvette/lantern_glass_s.dds
@@ -853,10 +609,6 @@ float specular_level = 2.0
 int material = 3
 
 submaterial ship_below_area
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/ship_below_area.dds
 texture bump_map = ./assets/corvette/ship_below_area_nm.dds
 texture spec_map = ./assets/corvette/black.dds
@@ -867,10 +619,6 @@ float specular_level = 2.0
 int material = 2
 
 submaterial ship_below_area
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/ship_below_area.dds
 texture bump_map = ./assets/corvette/ship_below_area_nm.dds
 texture spec_map = ./assets/corvette/black.dds
@@ -881,10 +629,6 @@ float specular_level = 2.0
 int material = 2
 
 submaterial corvette_hull
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/corvette_hull.dds
 texture bump_map = ./assets/corvette/corvette_hull_nm.dds
 texture spec_map = ./assets/corvette/corvette_hull_s.dds
@@ -895,10 +639,6 @@ float specular_level = 2.0
 int material = 3
 
 submaterial corvette_cabin
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/corvette_cabin.dds
 texture bump_map = ./assets/corvette/corvette_cabin_nm.dds
 texture spec_map = ./assets/corvette/corvette_cabin_s.dds
@@ -909,10 +649,6 @@ float specular_level = 2.0
 int material = 3
 
 submaterial corvette_floor
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/corvette_floor.dds
 texture bump_map = ./assets/corvette/corvette_floor_nm.dds
 texture spec_map = ./assets/corvette/corvette_floor_s.dds
@@ -923,10 +659,6 @@ float specular_level = 2.0
 int material = 3
 
 submaterial corvette_border
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/corvette_border.dds
 texture bump_map = ./assets/corvette/corvette_border_nm.dds
 texture spec_map = ./assets/corvette/corvette_border_s.dds
@@ -937,10 +669,6 @@ float specular_level = 2.0
 int material = 3
 
 submaterial corvette_rudder
-shader vertex = $CORANGE/shaders/forward/static.vs
-shader fragment = $CORANGE/shaders/forward/static.fs
-shader shadows = $CORANGE/shaders/shadows.fs
-shader colors = $CORANGE/shaders/colors.fs
 texture diffuse_map = ./assets/corvette/corvette_rudder.dds
 texture bump_map = ./assets/corvette/corvette_rudder_nm.dds
 texture spec_map = ./assets/corvette/corvette_rudder_s.dds
