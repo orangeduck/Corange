@@ -13,7 +13,6 @@
 
 #ifdef __unix__
   #include <execinfo.h>
-#define MAX_PATH 512
 #endif
 
 #ifdef _WIN32
