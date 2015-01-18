@@ -65,21 +65,21 @@ config* cfg_load_file(const char* filename) {
   
 }
 
+static void write_entry(void* x) {
+  char* val = x;
+  char* key = dict_find(c->entries, val);
+
+  SDL_RWwrite(file, key, strlen(key), 1);
+  SDL_RWwrite(file, " = ", 3, 1);
+  SDL_RWwrite(file, val, strlen(val), 1);
+  SDL_RWwrite(file, "\n", 1, 1);
+}
+
 void cfg_save_file(config* c, const char* filename) {
   
   SDL_RWops* file = SDL_RWFromFile(filename, "w");
   if(file == NULL) {
     error("Cannot load file %s", filename);
-  }
-  
-  void write_entry(void* x) {
-    char* val = x;
-    char* key = dict_find(c->entries, val);
-  
-    SDL_RWwrite(file, key, strlen(key), 1);
-    SDL_RWwrite(file, " = ", 3, 1);
-    SDL_RWwrite(file, val, strlen(val), 1);
-    SDL_RWwrite(file, "\n", 1, 1);
   }
   
   dict_map(c->entries, write_entry);
