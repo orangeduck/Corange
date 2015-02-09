@@ -11,7 +11,7 @@ PLATFORM = $(shell uname)
 
 ifeq ($(findstring Linux,$(PLATFORM)),Linux)
 	OUT=$(DEMO)
-	LFLAGS= $(LIBS) -lcorange -lGL -lSDL2 -lSDL2_mixer -lSDL2_net -lOpenCL
+	LFLAGS= $(LIBS) -lcorange -lGL -lSDL2 -lSDL2_mixer -lSDL2_net -lOpenCL -lm
 endif
 
 ifeq ($(findstring Darwin,$(PLATFORM)),Darwin)
