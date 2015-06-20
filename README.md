@@ -18,12 +18,10 @@ To compile on Windows you need MinGW and then you should be able to run "make" a
 
     make
 
-To compile on Linux you need to install SDL1.2. Then you should run "make"
+To compile on Linux you need to install SDL2. Then you should run "make"
 
-    sudo apt-get install libsdl1.2-dev
+    sudo apt-get install libsdl2-dev
     make
-		
-There is a bug in some of the current linux SDL distributions which disables the buttons on window resize. Compile the latest SDL release from source to overcome this.
 
 
 Overview
