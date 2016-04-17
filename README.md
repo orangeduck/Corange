@@ -21,6 +21,8 @@ To compile on Windows you need MinGW and then you should be able to run "make" a
 To compile on Linux you need to install SDL2. Then you should run "make"
 
     sudo apt-get install libsdl2-dev
+    sudo apt-get install libsdl2-mixer-dev
+    sudo apt-get install libsdl2-net-dev
     make
 
 
