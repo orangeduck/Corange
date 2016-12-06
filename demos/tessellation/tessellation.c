@@ -69,10 +69,9 @@ void tessellation_init() {
 
 void tesselation_event(SDL_Event event) {
   
-  camera* cam = entity_get("cam");
-  light* sun = entity_get("sun");
-  
-  camera_control_orbit(cam, event);
+  //camera* cam = entity_get("cam");
+  //light* sun = entity_get("sun");
+  //camera_control_orbit(cam, event);
   
   switch(event.type){
   
