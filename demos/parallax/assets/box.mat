@@ -1,0 +1,11 @@
+texture normal_map = ./assets/normal.tga
+texture diffuse_map = ./assets/diffuse.tga
+texture specular_map = ./assets/specular.tga
+texture parallax_map = ./assets/parallax.tga 
+
+float parallax_level = 0.3
+float specular_level = 0.7
+float bumpiness_level = 5.3
+float glossiness_level = 1.3
+
+

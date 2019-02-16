@@ -1,0 +1,2 @@
+shader vertex = ./assets/parallax.vs
+shader fragment = ./assets/parallax.fs
