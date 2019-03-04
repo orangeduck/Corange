@@ -487,11 +487,11 @@ renderable* obj_load_file(char* filename) {
   char line[1024];
   while(SDL_RWreadline(file, line, 1024)) {
     
-    char comment[512];
-    char matlib[512];
-    char object[512];
-    char group[512];
-    char material[512];
+    char comment[512 + 1];
+    char matlib[512 + 1];
+    char object[512 + 1];
+    char group[512 + 1];
+    char material[512 + 1];
     float px, py, pz, tx, ty, nx, ny, nz;
     int smoothing_group;
     int pi1, ti1, ni1, pi2, ti2, ni2, pi3, ti3, ni3;
