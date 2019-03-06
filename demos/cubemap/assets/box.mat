@@ -1,0 +1,12 @@
+submaterial room
+texture cubemap  = ./assets/home2048.dds
+
+submaterial sky 
+texture cubemap  = ./assets/SpaceSky512.dds
+
+submaterial sea 
+texture cubemap = ./assets/cube_sea.dds
+
+submaterial table
+texture cubemap = ./assets/cubetable512.dds
+

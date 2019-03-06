@@ -1,0 +1,2 @@
+shader  vertex   = ./assets/cubemap.vs
+shader  fragment = ./assets/cubemap.fs
