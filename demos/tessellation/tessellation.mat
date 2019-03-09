@@ -1,5 +1,0 @@
-shader control = ./tessellation.tcs
-shader eval = ./tessellation.tes
-shader vert = ./tessellation.vs
-shader geom = ./tessellation.gs
-shader frag = ./tessellation.fs
