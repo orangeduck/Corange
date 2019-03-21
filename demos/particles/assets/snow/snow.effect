@@ -1,0 +1,25 @@
+#snow particles effect
+
+texture    ./assets/snow/snow.tga
+texture_nm ./assets/snow/snow_nm.tga
+
+blend_src src_alpha
+blend_dst src_inv_alpha
+
+count 1000
+depth 1.5
+bumpiness_level 100.0
+thickness 0.01
+scattering 0.5
+lifetime 2
+output 500:500
+
+key time=0 rotation=5:-5 scale=(0:0.0,0:0.0,0:0.0) color=(1:1,1:1,1:1,1:1) force=(0:-10,-10:,0:-10)
+key time=1 rotation=3:9 scale=(0:0.5,0:0.5,0:0.5) color=(1:1,1:1,1:1,1:1.1) force=(0:-30,-50:0,0:-10)
+
+
+
+
+
+
+
