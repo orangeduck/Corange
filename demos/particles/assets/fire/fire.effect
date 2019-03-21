@@ -1,0 +1,16 @@
+#fire particles effect 
+
+texture    ./assets/fire/fire.tga 
+texture_nm ./assets/fire/fire_nm.tga
+blend_src src_alpha
+blend_dst src_inv_alpha
+count 1000
+depth 1.5
+bumpiness_level 0.5
+thickness 0.001
+scattering 0.1
+lifetime 2
+output 1000:1000
+
+key time=0 rotation=0.1:-0.1 scale=(0:2,0:1,0:2)    color=(0:1,0:-1,0:-5,-2:1.5) force=(80:0,0:0,0:0)
+key time=1 rotation=-0.5:0.5 scale=(5:50,5:50,5:50) color=(1:1,1:1,1:1,2.5:1)      force=(0:0,500:0,0:0)
