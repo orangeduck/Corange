@@ -91,8 +91,9 @@ void ui_listbox_resize(ui_listbox* lb, vec2 size) {
 void ui_listbox_event(ui_listbox* lb, SDL_Event e) {
   
   if (!lb->active) { return; }
-  
-  if (e.type == SDL_MOUSEWHEEL && ui_rectangle_contains_point(lb->back, vec2_new(e.motion.x, e.motion.y))) {
+  int x,y=0;
+  SDL_GetMouseState(&x,&y);
+  if (e.type == SDL_MOUSEWHEEL && ui_rectangle_contains_point(lb->back, vec2_new(x,y))) {
     lb->scroll = clamp(lb->scroll+1*e.wheel.y, 0, lb->num_items); move_text_items(lb);
   }
   
