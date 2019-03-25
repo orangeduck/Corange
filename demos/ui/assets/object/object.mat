@@ -1,0 +1,9 @@
+texture diffuse_map = ./assets/object/diffuse.tga
+texture bump_map = ./assets/object/normal.tga
+texture spec_map = ./assets/object/specular.tga
+
+float glossiness = 120
+float bumpiness = 6.5
+float specular_level = 10
+
+float alpha_test = 1

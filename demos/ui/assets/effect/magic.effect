@@ -1,0 +1,18 @@
+#magic fire particles effect 
+texture    ./assets/effect/magic.tga 
+texture_nm ./assets/effect/magic_nm.tga
+blend_src src_alpha
+blend_dst src_inv_alpha
+count 10000
+depth 0
+bumpiness_level 0.5
+thickness 0.001
+scattering 0.1
+lifetime 15
+output 1000:1000
+
+key time=0.0 rotation=0.1:-0.1 scale=(0:5,0:5,0:5) color=(0:1,0:-1,0:-5,-2:1.5) force=(1:1,25:1,0:1)
+key time=0.2 rotation=-0.5:0.5 scale=(0:10,0:10,0:10) color=(1:1,1:1,1:1,1:1)   force=(25:0,0:0,15:0)
+key time=0.3 rotation=-0.5:0.5 scale=(0:15,0:15,0:15) color=(1:1,1:1,1:1,1:1)   force=(0:0,-70:0,0:0)
+key time=0.4 rotation=-0.5:0.5 scale=(0:30,0:30,0:30) color=(1:1,1:1,1:1,1:1)   force=(50:0,50:0,-50:0)
+key time=0.5 rotation=-0.5:0.5 scale=(0:60,0:60,0:60) color=(1:1,1:1,1:1,1:1)   force=(0:0,300:0,-300:0)

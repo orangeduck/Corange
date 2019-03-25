@@ -36,7 +36,7 @@ ui_dialog* ui_dialog_new() {
   ui_button_set_label(d->left, "Left");
   
   d->right = ui_button_new();
-  ui_button_move(d->right, vec2_new(width/2 + 55, height/2 + 40)); 
+  ui_button_move(d->right, vec2_new(width/2 + 20, height/2 + 40)); 
   ui_button_resize(d->right, vec2_new(150, 40));
   ui_button_set_label(d->right, "Right");
   

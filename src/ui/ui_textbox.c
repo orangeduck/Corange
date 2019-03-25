@@ -178,7 +178,11 @@ void ui_textbox_event(ui_textbox* tb, SDL_Event e) {
         ui_textbox_addchar(tb, ' ');
         return;
       }
-      
+
+      if (e.key.keysym.sym == SDLK_RETURN) {
+        ui_textbox_addchar(tb, '\n');
+        return;
+      }
     }
     
     if (e.type == SDL_TEXTINPUT) {
