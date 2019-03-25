@@ -102,11 +102,11 @@ void graphics_set_vsync(bool vsync) {
 }
 
 void graphics_set_fullscreen(bool fullscreen) {
-
   if (fullscreen) {
     window_flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
   } else {
     window_flags &= !SDL_WINDOW_FULLSCREEN_DESKTOP;
+
   }
   
 }
