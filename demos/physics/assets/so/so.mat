@@ -1,0 +1,11 @@
+texture bump_map = ./assets/so/diffuse.tga
+texture diffuse_map = ./assets/so/diffuse.tga
+texture spec_map = ./assets/so/diffuse.tga 
+
+float specular_level = 7
+float bumpiness = 3.6
+float glossiness = 80
+
+
+
+
