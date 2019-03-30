@@ -45,7 +45,7 @@ void ui_handler_cast(int type_id,
 
 /* Create, add and get UI elements */
 #define ui_elem_new(fmt, type, ...) (type*)ui_elem_new_type_id(fmt, typeid(type), ##__VA_ARGS__)
-#define ui_elem_get_as(fmt, type, ...) ((type*)ui_elem_get_as_type_id(fmt, typeid(type), ##__VA_ARGS__));
+#define ui_elem_get_as(fmt, type, ...) ((type*)ui_elem_get_as_type_id(fmt, typeid(type), ##__VA_ARGS__))
 
 bool ui_elem_exists(char* fmt, ...);
 ui_elem* ui_elem_get(char* fmt, ...);
