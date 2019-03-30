@@ -26,7 +26,7 @@ physics_object* physics_object_new() {
   po->cast_shadows = true;
   
   po->renderable = asset_hndl_null();
-  //po->collision_body = asset_hndl_null();
+  po->collision_body = asset_hndl_null();
   
   return po;
 }

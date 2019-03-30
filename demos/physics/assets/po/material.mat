@@ -1,0 +1,14 @@
+texture diffuse_map    = ./assets/po/diffuse.tga
+texture spec_map   = ./assets/po/specular.tga 
+texture bump_map       = ./assets/po/normal.tga 
+
+float specular_level = 10
+float glossiness  = 100
+float bumpiness  = 5.5
+
+
+
+
+
+
+
