@@ -2669,42 +2669,12 @@ bool point_outside_box(vec3 point, box b) {
 
 bool point_intersects_box(vec3 point, box b) {
   
-  bool in_left   = !point_outside_plane(point, b.left);
-  bool in_right  = !point_outside_plane(point, b.right);
-  bool in_front  = !point_outside_plane(point, b.front);
-  bool in_back   = !point_outside_plane(point, b.back);
-  bool in_top    = !point_outside_plane(point, b.top);
-  bool in_bottom = !point_outside_plane(point, b.bottom);
-  
-  if (point_intersects_plane(point, b.top) && 
-    in_left && in_right && in_front && in_back) {
-    return true;
-  }
-  
-  if (point_intersects_plane(point, b.bottom) && 
-    in_left && in_right && in_front && in_back) {
-    return true;
-  }
-  
-  if (point_intersects_plane(point, b.left) &&
-      in_top && in_bottom && in_front && in_back) {
-    return true;
-  }
-  
-  if (point_intersects_plane(point, b.right) &&
-      in_top && in_bottom && in_front && in_back) {
-    return true;
-  }
-  
-  if (point_intersects_plane(point, b.front) &&
-      in_top && in_bottom && in_left && in_right) {
-    return true;
-  }
-  
-  if (point_intersects_plane(point, b.back) &&
-      in_top && in_bottom && in_left && in_right) {
-    return true;
-  }
+  if (point_intersects_plane(point, b.top)) { return true; }
+  if (point_intersects_plane(point, b.bottom)) { return true; }
+  if (point_intersects_plane(point, b.left)) { return true; }
+  if (point_intersects_plane(point, b.right)) { return true; }
+  if (point_intersects_plane(point, b.front)) { return true; }
+  if (point_intersects_plane(point, b.back)) { return true; }
   
   return false;
   
@@ -2990,41 +2960,73 @@ bool sphere_outside_box(sphere s, box b) {
 
 bool sphere_intersects_box(sphere s, box b) {
   
-  bool in_left   = !sphere_outside_plane(s, b.left);
-  bool in_right  = !sphere_outside_plane(s, b.right);
-  bool in_front  = !sphere_outside_plane(s, b.front);
-  bool in_back   = !sphere_outside_plane(s, b.back);
-  bool in_top    = !sphere_outside_plane(s, b.top);
-  bool in_bottom = !sphere_outside_plane(s, b.bottom);
+  vec3 point;
+  float radius;
   
-  if (sphere_intersects_plane(s, b.top) && 
-    in_left && in_right && in_front && in_back) {
-    return true;
+  if (sphere_intersects_plane_point(s, b.top, &point, &radius)) {
+   
+    if (plane_distance(b.left,  point) <= radius &&
+        plane_distance(b.right, point) <= radius &&
+        plane_distance(b.front, point) <= radius &&
+        plane_distance(b.back,  point) <= radius) {
+      return true;
+    }
+    
   }
   
-  if (sphere_intersects_plane(s, b.bottom) && 
-    in_left && in_right && in_front && in_back) {
-    return true;
+  if (sphere_intersects_plane_point(s, b.bottom, &point, &radius)) {
+
+    if (plane_distance(b.left,  point) <= radius &&
+        plane_distance(b.right, point) <= radius &&
+        plane_distance(b.front, point) <= radius &&
+        plane_distance(b.back,  point) <= radius) {
+      return true;
+    }
+    
   }
-  
-  if (sphere_intersects_plane(s, b.left) &&
-      in_top && in_bottom && in_front && in_back) {
-    return true;
+
+  if (sphere_intersects_plane_point(s, b.left, &point, &radius)) {
+    
+    if (plane_distance(b.top,    point) <= radius &&
+        plane_distance(b.bottom, point) <= radius &&
+        plane_distance(b.front,  point) <= radius &&
+        plane_distance(b.back,   point) <= radius) {
+      return true;
+    }
+    
   }
-  
-  if (sphere_intersects_plane(s, b.right) &&
-      in_top && in_bottom && in_front && in_back) {
-    return true;
+
+  if (sphere_intersects_plane_point(s, b.right, &point, &radius)) {
+    
+    if (plane_distance(b.top,    point) <= radius &&
+        plane_distance(b.bottom, point) <= radius &&
+        plane_distance(b.front,  point) <= radius &&
+        plane_distance(b.back,   point) <= radius) {
+      return true;
+    }
+    
   }
-  
-  if (sphere_intersects_plane(s, b.front) &&
-      in_top && in_bottom && in_left && in_right) {
-    return true;
+
+  if (sphere_intersects_plane_point(s, b.front, &point, &radius)) {
+    
+    if (plane_distance(b.top,    point) <= radius &&
+        plane_distance(b.bottom, point) <= radius &&
+        plane_distance(b.left,   point) <= radius &&
+        plane_distance(b.right,  point) <= radius) {
+      return true;
+    }
+    
   }
-  
-  if (sphere_intersects_plane(s, b.back) &&
-      in_top && in_bottom && in_left && in_right) {
-    return true;
+
+  if (sphere_intersects_plane_point(s, b.back, &point, &radius)) {
+    
+    if (plane_distance(b.top,    point) <= radius &&
+        plane_distance(b.bottom, point) <= radius &&
+        plane_distance(b.left,   point) <= radius &&
+        plane_distance(b.right,  point) <= radius) {
+      return true;
+    }
+    
   }
   
   return false;
@@ -3091,6 +3093,14 @@ bool sphere_outside_plane(sphere s, plane p) {
 
 bool sphere_intersects_plane(sphere s, plane p) {
   return fabs(plane_distance(p, s.center)) <= s.radius;
+}
+
+bool sphere_intersects_plane_point(sphere s, plane p, vec3* point, float* radius) {
+  float d = plane_distance(p, s.center);
+  vec3 proj = vec3_mul(p.direction, d);
+  *point = vec3_sub(s.center, proj);
+  *radius = sqrtf(max(s.radius * s.radius - d * d, 0));
+  return fabs(d) <= s.radius; 
 }
 
 bool sphere_swept_inside_plane(sphere s, vec3 v, plane p) {

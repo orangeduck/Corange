@@ -642,6 +642,7 @@ bool line_intersects_sphere(sphere s, vec3 start, vec3 end);
 bool sphere_inside_plane(sphere s, plane p);
 bool sphere_outside_plane(sphere s, plane p);
 bool sphere_intersects_plane(sphere s, plane p);
+bool sphere_intersects_plane_point(sphere s, plane p, vec3* point, float* radius);
 
 bool point_swept_inside_sphere(sphere s, vec3 v, vec3 point);
 bool point_swept_outside_sphere(sphere s, vec3 v, vec3 point);
