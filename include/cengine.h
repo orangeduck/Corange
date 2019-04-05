@@ -36,6 +36,10 @@
 #ifndef MAX_PATH
 #define MAX_PATH 512
 #endif
+#define ERROR_BUFFER_SIZE   2048*4
+#define DEBUG_BUFFER_SIZE   2048*4
+#define WARNING_BUFFER_SIZE 2048*4
+
 /*
 ** == File System Path ==
 */
@@ -65,28 +69,29 @@ void error_(const char*);
 void warning_(const char*);
 void debug_(const char*);
 
-char error_buf[2048];
-char error_str[2048];
 
-char warning_buf[2048];
-char warning_str[2048];
+char error_buf[ERROR_BUFFER_SIZE];
+char error_str[ERROR_BUFFER_SIZE];
 
-char debug_buf[2048];
-char debug_str[2048];
+char warning_buf[WARNING_BUFFER_SIZE];
+char warning_str[WARNING_BUFFER_SIZE];
+
+char debug_buf[DEBUG_BUFFER_SIZE];
+char debug_str[DEBUG_BUFFER_SIZE];
 
 #define error(MSG, ...) { \
-  sprintf(error_str, "[ERROR] (%s:%s:%i) ", __FILE__, __func__, __LINE__); \
-  sprintf(error_buf, MSG, ##__VA_ARGS__); strcat(error_str, error_buf); \
+  snprintf(error_str,(ERROR_BUFFER_SIZE-1), "[ERROR] (%s:%s:%i) ", __FILE__, __func__, __LINE__); \
+  snprintf(error_buf,(ERROR_BUFFER_SIZE-1), MSG, ##__VA_ARGS__); strcat(error_str, error_buf);    \
   error_(error_str); }
   
 #define warning(MSG, ...) { \
-  sprintf(warning_str, "[WARNING] (%s:%s:%i) ", __FILE__, __func__, __LINE__); \
-  sprintf(warning_buf, MSG, ##__VA_ARGS__); strcat(warning_str, warning_buf); \
+  snprintf(warning_str,(WARNING_BUFFER_SIZE-1), "[WARNING] (%s:%s:%i) ", __FILE__, __func__, __LINE__); \
+  snprintf(warning_buf,(WARNING_BUFFER_SIZE-1), MSG, ##__VA_ARGS__); strcat(warning_str, warning_buf);  \
   warning_(warning_str); }
 
 #define debug(MSG, ...) { \
-  sprintf(debug_str, "[DEBUG] (%s:%s:%i) ", __FILE__, __func__, __LINE__); \
-  sprintf(debug_buf, MSG, ##__VA_ARGS__); strcat(debug_str, debug_buf); \
+  snprintf(debug_str,(DEBUG_BUFFER_SIZE-1), "[DEBUG] (%s:%s:%i) ", __FILE__, __func__, __LINE__); \
+  snprintf(debug_buf,(DEBUG_BUFFER_SIZE-1), MSG, ##__VA_ARGS__); strcat(debug_str, debug_buf);    \
   debug_(debug_str); }
 
 #define alloc_check(PTR) { if((PTR) == NULL) { error("Out of Memory!"); } }

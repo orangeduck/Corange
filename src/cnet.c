@@ -91,8 +91,8 @@ int net_http_get(char* out, int max, char* fmt, ...) {
     return HTTP_ERR_SOCKET;
   }
   
-  char sockout[1024];
-  sprintf(sockout,
+  char sockout[1024*4];
+  snprintf(sockout,(1024*4-1),
     "GET %s HTTP/1.1\r\n"
     "Host: %s\r\n"
     "\r\n", path_buffer, host_buffer);
@@ -167,10 +167,10 @@ int net_http_upload(const char* filename, char* fmt, ...) {
   SDL_RWread(file, contents, size, 1);
   SDL_RWclose(file);
   
-  char sockbody[size + 1024];
-  char sockheaders[1024];
+  char sockbody[size + 1024 * 4];
+  char sockheaders[1024*4];
   
-  sprintf(sockbody,
+  snprintf(sockbody,((size + 1024 * 4) - 1),
     "--CorangeUploadBoundary\r\n"
     "content-disposition: form-data; name=\"corangeupload\"; filename=\"%s\"\r\n"
     "Content-Type: text/plain\r\n"
@@ -179,7 +179,7 @@ int net_http_upload(const char* filename, char* fmt, ...) {
     "--CorangeUploadBoundary--\r\n"
     "\r\n", filename, contents);
   
-  sprintf(sockheaders, 
+  snprintf(sockheaders,((1024 * 4) - 1),
     "POST %s HTTP/1.1\r\n"
     "Host: %s\r\n"
     "Content-Length: %i\r\n"
