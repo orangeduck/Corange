@@ -2018,11 +2018,20 @@ static void render_gbuffer(renderer* dr) {
 
 static void render_ssao(renderer* dr) {
   
-  if (config_int(asset_hndl_ptr(&dr->options), "ssao") == 0) return;
-  
   int width = graphics_viewport_width();
   int height = graphics_viewport_height();
-  
+
+  if (config_int(asset_hndl_ptr(&dr->options), "ssao") == 0)
+  {
+      glBindFramebuffer(GL_FRAMEBUFFER, dr->ssao_fbo);
+      glViewport(0,0, width, height);
+      glLoadIdentity();
+      glClearColor(1, 1, 1, 0);
+      glClear( GL_COLOR_BUFFER_BIT );
+      glBindFramebuffer(GL_FRAMEBUFFER, 0);
+      return;
+  }
+
   int ssaowidth  = width  * option_graphics_int(asset_hndl_ptr(&dr->options), "ssao", 1, 0.5, 0.25);
   int ssaoheight = height * option_graphics_int(asset_hndl_ptr(&dr->options), "ssao", 1, 0.5, 0.25);
   
