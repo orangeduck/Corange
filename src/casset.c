@@ -425,6 +425,10 @@ void folder_unload(fpath folder) {
         (strcmp(ent->d_name,"..") != 0)) {
     
       fpath filename = folder;
+      // If does not end in "/" then copy it.
+      if (folder.ptr[strlen(folder.ptr)-1] != '/') {
+        strcat(filename.ptr, "/");
+      }
       strcat(filename.ptr, ent->d_name);
       
       if(dict_contains(asset_dict, filename.ptr) ) {

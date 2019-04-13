@@ -847,8 +847,27 @@ static void render_shadows(renderer* dr) {
   dr->camera_inv_view = mat4_inverse(camera_view_matrix(dr->camera));
   dr->camera_inv_proj = mat4_inverse(camera_proj_matrix(dr->camera));
   
-  if (config_int(asset_hndl_ptr(&dr->options), "shadows") == 0) return;
-  
+ if (config_int(asset_hndl_ptr(&dr->options), "shadows") == 0)
+    {
+     
+      if(config_int(asset_hndl_ptr(&dr->options),"lighting") == 0) {return;};
+      dr->camera_inv_view = mat4_inverse(camera_view_matrix(dr->camera));
+      dr->camera_inv_proj = mat4_inverse(camera_proj_matrix(dr->camera));
+      for (int i = 0; i < 3; i++)
+      {
+        shadow_mapper_transforms(dr, i,&dr->shadow_view[i], &dr->shadow_proj[i],&dr->shadow_near[i], &dr->shadow_far[i]);
+        dr->shadow_frustum[i] = box_invert_depth(box_invert(frustum_box(frustum_new_camera(dr->shadow_view[i], dr->shadow_proj[i]))));
+        glBindFramebuffer(GL_FRAMEBUFFER, dr->shadows_fbo[i]);
+        glViewport( 0, 0, dr->shadows_widths[i], dr->shadows_heights[i]);
+        glClearDepth(1.0f);
+        glClearColor(0,0,0,0);
+        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_DEPTH_BUFFER_BIT);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+     }
+        return;
+    };
+
   for (int i = 0; i < 3; i++) {
     
     shadow_mapper_transforms(dr, i,
@@ -2018,11 +2037,20 @@ static void render_gbuffer(renderer* dr) {
 
 static void render_ssao(renderer* dr) {
   
-  if (config_int(asset_hndl_ptr(&dr->options), "ssao") == 0) return;
-  
   int width = graphics_viewport_width();
   int height = graphics_viewport_height();
-  
+
+  if (config_int(asset_hndl_ptr(&dr->options), "ssao") == 0)
+  {
+      glBindFramebuffer(GL_FRAMEBUFFER, dr->ssao_fbo);
+      glViewport(0,0, width, height);
+      glLoadIdentity();
+      glClearColor(1, 1, 1, 0);
+      glClear( GL_COLOR_BUFFER_BIT );
+      glBindFramebuffer(GL_FRAMEBUFFER, 0);
+      return;
+  }
+
   int ssaowidth  = width  * option_graphics_int(asset_hndl_ptr(&dr->options), "ssao", 1, 0.5, 0.25);
   int ssaoheight = height * option_graphics_int(asset_hndl_ptr(&dr->options), "ssao", 1, 0.5, 0.25);
   
