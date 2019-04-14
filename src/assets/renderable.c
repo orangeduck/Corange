@@ -495,7 +495,8 @@ renderable* obj_load_file(char* filename) {
     float px, py, pz, tx, ty, nx, ny, nz;
     int smoothing_group;
     int pi1, ti1, ni1, pi2, ti2, ni2, pi3, ti3, ni3;
-    
+    int po1, po2, po3, po4, po5, po6, po7, po8; //for converting poligons to triangles
+
     if (sscanf(line, "# %512s", comment) == 1) {
       /* Comment, do nothing */
     }
@@ -646,7 +647,106 @@ renderable* obj_load_file(char* filename) {
       }
       
     }
-    
+   
+    else if(sscanf(line,"f %i//%i %i//%i %i//%i %i//%i",&po1,&po2,&po3,&po4,&po5,&po6,&po7,&po8) == 8)
+    {
+        /*--------------------------
+         * input:
+         * "f  a//a b//b c//c d//d"
+         *--------------------------
+         * output:
+         * "f a//a b//b c//c"
+         * "f a//a c//c d//d"
+         * -------------------------
+         */
+        for (int i = 0; i != 2; i++)
+        {
+            if(i == 0)
+            {
+                pi1 = po1;
+                ni1 = po2;
+                pi2 = po3;
+                ni2 = po4;
+                pi3 = po5;
+                ni3 = po6;
+            }
+            if(i == 1)
+            {
+                pi1 = po1;
+                ni1 = po2;
+                pi2 = po5;
+                ni2 = po6;
+                pi3 = po7;
+                ni3 = po8; 
+            };
+
+      if (active_mesh == NULL) {
+        vert_index = 0;
+        
+        vertex_hashtable_delete(vert_hashes);
+        vertex_list_delete(vert_list);
+        int_list_delete(tri_list);
+        
+        vert_list = vertex_list_new();
+        tri_list = int_list_new();
+        vert_hashes = vertex_hashtable_new(4096);
+        
+        active_mesh = malloc(sizeof(mesh));
+      }
+      
+      has_normal_data = true;
+      has_texcoord_data = false;
+      
+      /* OBJ file indicies start from one, have to subtract one */
+      pi1--; ni1--; pi2--; ni2--; pi3--; ni3--;
+      
+      vertex v1, v2, v3;
+      v1.position = vertex_list_get(vert_data, pi1).position;
+      v1.uvs = vec2_zero();
+      v1.normal = vertex_list_get(vert_data, ni1).normal;
+      
+      v2.position = vertex_list_get(vert_data, pi2).position;
+      v2.uvs = vec2_zero();
+      v2.normal = vertex_list_get(vert_data, ni2).normal;
+      
+      v3.position = vertex_list_get(vert_data, pi3).position;
+      v3.uvs = vec2_zero();
+      v3.normal = vertex_list_get(vert_data, ni3).normal;
+      
+      int v1_id = vertex_hashtable_get(vert_hashes, v1);
+      if ( v1_id == -1 ) {
+        vertex_hashtable_set(vert_hashes, v1, vert_index);
+        vertex_list_push_back(vert_list, v1);
+        int_list_push_back(tri_list, vert_index);
+        vert_index++;
+      } else {
+        int_list_push_back(tri_list, v1_id);
+      }
+      
+      int v2_id = vertex_hashtable_get(vert_hashes, v2);
+      if ( v2_id == -1 ) {
+        vertex_hashtable_set(vert_hashes, v2, vert_index);
+        vertex_list_push_back(vert_list, v2);
+        int_list_push_back(tri_list, vert_index);
+        vert_index++;
+      } else {
+        int_list_push_back(tri_list, v2_id);
+      }
+      
+      int v3_id = vertex_hashtable_get(vert_hashes, v3);
+      if ( v3_id == -1 ) {
+        vertex_hashtable_set(vert_hashes, v3, vert_index);
+        vertex_list_push_back(vert_list, v3);
+        int_list_push_back(tri_list, vert_index);
+        vert_index++;
+      } else {
+        int_list_push_back(tri_list, v3_id);
+      }
+
+        }
+
+    }
+
     else if (sscanf(line, "f %i//%i %i//%i %i//%i", &pi1, &ni1, &pi2, &ni2, &pi3, &ni3) == 6) {
       
       if (active_mesh == NULL) {
