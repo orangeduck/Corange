@@ -1,0 +1,11 @@
+texture bump_map = ./assets/textures/normal.dds
+texture diffuse_map = ./assets/textures/diffuse.dds
+texture spec_map = ./assets/textures/specular.dds 
+
+
+float glossiness = 250
+float bumpiness = 2.5
+float specular_level = 35
+
+
+

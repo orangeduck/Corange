@@ -1,0 +1,9 @@
+texture diffuse_map = ./assets/textures/red.dds
+texture bump_map = ./assets/textures/red.dds
+texture spec_map = ./assets/textures/red.dds
+
+float glossiness = 250
+float bumpiness = 2.5
+float specular_level = 35
+
+

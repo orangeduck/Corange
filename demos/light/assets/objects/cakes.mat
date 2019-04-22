@@ -1,0 +1,7 @@
+texture diffuse_map =  ./assets/textures/cakes.dds
+texture spec_map = ./assets/textures/cakes.dds
+texture bump_map =   ./assets/textures/cakes.dds
+
+float glossiness = 250;
+float bumpiness = 4.5;
+float specular_level = 35;

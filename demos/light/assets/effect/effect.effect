@@ -1,0 +1,19 @@
+texture     ./assets/effect/tex.tga
+texture_nm  ./assets/effect/tex_nm.tga
+
+blend_src src_alpha 
+blend_dst none
+count 1000
+depth 0
+bumpiness_level 10.5
+thickness 0.005
+scattering 0.1
+lifetime 3.0
+output 300:0
+
+key time=0.0 rotation=50:50 scale=(0:2,0:2,0:2) color=(10:10,1:1,1:1,1:1) force=(0:0,0:0,0:0)
+key time=0.2 rotation=10:25 scale=(0:5,0:5,0:5) color=(1:1,1:1,10:10,1:1) force=(0:0,-100:0,0:0)
+key time=0.3 rotation=10:20 scale=(0:15,0:15,0:15) color=(1:1,1:1,10:10,1:1) force=(0:0,-500:0,0:0)
+key time=0.4 rotation=80:80 scale=(0:30,0:30,0:30) color=(1:1,1:1,1:1,1:1) force=(0:0,0:0,0:0)
+key time=0.5 rotation=120:120 scale=(0:100,0:100,0:100) color=(10:10,1:1,1:1,1:1) force=(0:0,-15000:0,0:0)
+
