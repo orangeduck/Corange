@@ -861,6 +861,7 @@ image* image_tga_load_file(char* filename) {
 	
   uint16_t width, height;
   char depth;
+  char descriptor;
 	
 	/* Seek to the width */
 	SDL_RWseek(file, 12, SEEK_SET);
@@ -873,6 +874,13 @@ image* image_tga_load_file(char* filename) {
 	/* Seek to the depth */
 	SDL_RWseek(file, 16, SEEK_SET);
 	SDL_RWread(file, &depth, sizeof(char), 1);
+	
+        /* Seek to the image descriptor */
+	SDL_RWseek(file, 17, SEEK_SET);
+	SDL_RWread(file, &descriptor, sizeof(char), 1);
+	
+        /*Down left = 0 , Top left = 1*/
+        int start_coord = (descriptor  >> 5) & 1u;
   
   image* i = image_empty(width, height);
   
@@ -920,8 +928,20 @@ image* image_tga_load_file(char* filename) {
     
   free(image_data);
   
-  image_flip_vertical(i);
 
+  if(start_coord == 0)//bottom left
+  {
+    image_flip_vertical(i);
+  }
+
+  if(start_coord == 1)//top left
+  {
+     image_rotate_180(i);
+     image_flip_vertical(i);
+     image_flip_horizontal(i);
+  };
+	
+	
   return i;
   
 }
