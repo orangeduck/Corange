@@ -20,7 +20,7 @@ ifeq ($(findstring Darwin,$(PLATFORM)),Darwin)
 	DYNAMIC = libcorange.so
 	STATIC = libcorange.a
 	CFLAGS += -fPIC
-	LFLAGS += -lGL
+	LFLAGS += -framework OpenGL
 endif
 
 ifeq ($(findstring MINGW,$(PLATFORM)),MINGW)

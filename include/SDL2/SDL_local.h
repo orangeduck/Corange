@@ -112,7 +112,7 @@ typedef void (APIENTRY * GLPATCHPARAMETERFVFN)(GLenum pname, const GLfloat* valu
 
 typedef void (APIENTRY * GLBROKENEXTENSIONFN)();
 
-#ifndef __unix__
+#if !defined(__unix__) && !defined(__APPLE__)
   extern GLACTIVETEXTUREFN glActiveTexture;
   extern GLCOMPRESSEDTEXIMAGE2DFN glCompressedTexImage2D;
   extern GLTEXIMAGE3DFN glTexImage3D;

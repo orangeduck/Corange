@@ -65,6 +65,20 @@ config* cfg_load_file(const char* filename) {
   
 }
 
+// XXX: got to be a better way
+static config* current_cfg = NULL;
+static SDL_RWops* current_file = NULL;
+
+static void cfg_write_entry(void* x) {
+  char* val = x;
+  char* key = dict_find(current_cfg->entries, val);
+
+  SDL_RWwrite(current_file, key, strlen(key), 1);
+  SDL_RWwrite(current_file, " = ", 3, 1);
+  SDL_RWwrite(current_file, val, strlen(val), 1);
+  SDL_RWwrite(current_file, "\n", 1, 1);
+}
+
 void cfg_save_file(config* c, const char* filename) {
   
   SDL_RWops* file = SDL_RWFromFile(filename, "w");
@@ -72,17 +86,13 @@ void cfg_save_file(config* c, const char* filename) {
     error("Cannot load file %s", filename);
   }
   
-  void write_entry(void* x) {
-    char* val = x;
-    char* key = dict_find(c->entries, val);
+  current_cfg = c;
+  current_file = file;
   
-    SDL_RWwrite(file, key, strlen(key), 1);
-    SDL_RWwrite(file, " = ", 3, 1);
-    SDL_RWwrite(file, val, strlen(val), 1);
-    SDL_RWwrite(file, "\n", 1, 1);
-  }
+  dict_map(c->entries, cfg_write_entry);
   
-  dict_map(c->entries, write_entry);
+  current_cfg = NULL;
+  current_file = NULL;
   
   SDL_RWclose(file);
   
