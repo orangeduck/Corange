@@ -11,7 +11,7 @@
   #include <winbase.h>
 #endif
 
-#ifdef __unix__
+#if defined(__unix__) || defined(__APPLE__)
   #include <execinfo.h>
 #endif
 
@@ -21,7 +21,7 @@ void SDL_PathFullName(char* dst, const char* path) {
   GetFullPathName(path, MAX_PATH, dst, NULL);
 }
 
-#elif __unix__
+#elif defined(__unix__) || defined(__APPLE__)
 
 void SDL_PathFullName(char* dst, const char* path) {
   char* ret = realpath(path, dst);
@@ -238,7 +238,7 @@ bool SDL_GL_ExtensionFuncionLoaded(void* function) {
   }
 }
 
-#ifndef __unix__
+#if !defined(__unix__) && !defined(__APPLE__)
 GLACTIVETEXTUREFN glActiveTexture = NULL;
 GLCOMPRESSEDTEXIMAGE2DFN glCompressedTexImage2D = NULL;
 GLTEXIMAGE3DFN glTexImage3D = NULL;
@@ -364,7 +364,7 @@ void SDL_GL_LoadExtensions() {
   /* Textures */
   
   SDL_GL_LoadExtension(GLGENERATEMIPMAPFN, glGenerateMipmap);
-  #ifndef __unix__
+  #if !defined(__unix__) && !defined(__APPLE__)
   SDL_GL_LoadExtension(GLACTIVETEXTUREFN, glActiveTexture);
   SDL_GL_LoadExtension(GLCOMPRESSEDTEXIMAGE2DFN, glCompressedTexImage2D);
   SDL_GL_LoadExtension(GLTEXIMAGE3DFN, glTexImage3D);
@@ -412,6 +412,31 @@ void SDL_GL_LoadExtensions() {
 #ifdef __unix__
 
 void SDL_PrintStackTrace() {
+}
+
+#elif __APPLE__
+
+#define UNW_LOCAL_ONLY
+#include <libunwind.h>
+void SDL_PrintStackTrace() {
+    unw_cursor_t cursor; unw_context_t uc;
+    int n = 0;
+
+    unw_getcontext(&uc);
+    unw_init_local(&cursor, &uc);
+
+    while (unw_step(&cursor) > 0) {
+        unw_word_t ip, sp, off;
+
+        unw_get_reg(&cursor, UNW_REG_IP, &ip);
+        unw_get_reg(&cursor, UNW_REG_SP, &sp);
+
+        char symbol[256] = {"<unknown>"};
+        unw_get_proc_name(&cursor, symbol, sizeof(symbol), &off);
+
+        printf("#%-2d 0x%016" PRIxPTR " sp=0x%016" PRIxPTR " %s + 0x%" PRIxPTR "\n",
+               n++, (uintptr_t)ip, (uintptr_t)sp, symbol, (uintptr_t)off);
+    }
 }
 
 #elif _WIN32
