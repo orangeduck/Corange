@@ -408,7 +408,7 @@ int main(int argc, char **argv) {
     graphics_swap(); 
     
     /* This allows us to fix the framerate to 60 fps, even on my laptop with vsync broken */
-    frame_end();
+    frame_end_at_rate(60);
   }
   
   platformer_finish();
