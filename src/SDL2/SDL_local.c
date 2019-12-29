@@ -272,7 +272,7 @@ GLUNIFORMMATRIX4FVFN glUniformMatrix4fv = NULL;
 GLUNIFORM1FVFN glUniform1fv = NULL;
 GLUNIFORM2FVFN glUniform2fv = NULL;
 GLUNIFORM3FVFN glUniform3fv = NULL;
-GLUNIFORM3FVFN glUniform4fv = NULL;
+GLUNIFORM4FVFN glUniform4fv = NULL;
 GLGETSHADERIVFN glGetShaderiv = NULL;
 GLPROGRAMPARAMETERIFN glProgramParameteri = NULL;
 GLGETPROGRAMIVFN glGetProgramiv = NULL;
@@ -348,7 +348,7 @@ void SDL_GL_LoadExtensions() {
   SDL_GL_LoadExtension(GLUNIFORM1FVFN, glUniform1fv);
   SDL_GL_LoadExtension(GLUNIFORM2FVFN, glUniform2fv);
   SDL_GL_LoadExtension(GLUNIFORM3FVFN, glUniform3fv);
-  SDL_GL_LoadExtension(GLUNIFORM3FVFN, glUniform4fv);
+  SDL_GL_LoadExtension(GLUNIFORM4FVFN, glUniform4fv);
   SDL_GL_LoadExtension(GLUNIFORMMATRIX3FVFN, glUniformMatrix3fv);
   SDL_GL_LoadExtension(GLUNIFORMMATRIX4FVFN, glUniformMatrix4fv);
   
