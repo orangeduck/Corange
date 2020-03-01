@@ -1034,8 +1034,8 @@ float vec4_length(vec4 v) {
 float vec4_dist_sqrd(vec4 v1, vec4 v2) {
   return (v1.x - v2.x) * (v1.x - v2.x) + 
          (v1.y - v2.y) * (v1.y - v2.y) +
-         (v1.y - v2.z) * (v1.y - v2.z) +
-         (v1.y - v2.w) * (v1.y - v2.w);
+         (v1.z - v2.z) * (v1.z - v2.z) +
+         (v1.w - v2.w) * (v1.w - v2.w);
 }
 
 float vec4_dist(vec4 v1, vec4 v2) {
