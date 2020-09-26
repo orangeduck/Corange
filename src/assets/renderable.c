@@ -599,7 +599,7 @@ renderable* obj_load_file(char* filename) {
       has_normal_data = true;
       has_texcoord_data = true;
       
-      /* OBJ file indicies start from one, have to subtract one */
+      /* OBJ file indices start from one, have to subtract one */
       pi1--; ti1--; ni1--; pi2--; ti2--; ni2--; pi3--; ti3--; ni3--;
       
       vertex v1, v2, v3;
@@ -666,7 +666,7 @@ renderable* obj_load_file(char* filename) {
       has_normal_data = true;
       has_texcoord_data = false;
       
-      /* OBJ file indicies start from one, have to subtract one */
+      /* OBJ file indices start from one, have to subtract one */
       pi1--; ni1--; pi2--; ni2--; pi3--; ni3--;
       
       vertex v1, v2, v3;
@@ -733,7 +733,7 @@ renderable* obj_load_file(char* filename) {
       has_normal_data = false;
       has_texcoord_data = true;
       
-      /* OBJ file indicies start from one, have to subtract one */
+      /* OBJ file indices start from one, have to subtract one */
       pi1--; ti1--; pi2--; ti2--; pi3--; ti3--;
       
       vertex v1, v2, v3;
@@ -800,7 +800,7 @@ renderable* obj_load_file(char* filename) {
       has_normal_data = false;
       has_texcoord_data = false;
       
-      /* OBJ file indicies start from one, have to subtract one */
+      /* OBJ file indices start from one, have to subtract one */
       pi1--; pi2--; pi3--;
       
       vertex v1, v2, v3;
