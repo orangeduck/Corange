@@ -851,18 +851,65 @@ image* image_read_from_file(char* filename) {
   else { error("Cannot save texture to %s, unknown file extension %s. Try .tga!\n", filename, ext.ptr); return NULL; }
 }
 
+/* Bit table for rle decode */
+union char_table
+{
+    struct
+    {
+         unsigned char
+             b0:1,
+             b1:1,
+             b2:1,
+             b3:1,
+             b4:1,
+             b5:1,
+             b6:1,
+             b7:1;//signed bit for check
+    }bits;
+    unsigned char input;   //set number
+    unsigned char result;  //get number
+};
+
 image* image_tga_load_file(char* filename) {
 
   SDL_RWops* file = SDL_RWFromFile(filename, "rb");
-  
-	if (file == NULL) {
-		error("Cannot open file %s", filename);
-	}
-	
-  uint16_t width, height;
-  char depth;
-  char descriptor;
-	
+
+    if (file == NULL) {
+        error("Cannot open file %s", filename);
+    }
+
+    uint16_t width, height = 0;
+    char footer = 0;
+    char header = 18;
+    char depth  = 0;
+    char descriptor = 0;
+    char true_color_type = 0;
+    const char true_color_rle = 10;
+    const char true_color_no_rle = 2;
+
+    /* Get file size */
+    SDL_RWseek(file,0,SEEK_END);
+    long file_len = SDL_RWtell(file);
+    SDL_RWseek(file,0,SEEK_SET);
+
+    /*Get file footer offset*/
+    SDL_RWseek(file,-18,SEEK_END);
+    char footer_message[18];
+    SDL_RWread(file, footer_message, sizeof(footer_message), 1);
+    if(strstr(footer_message,"TRUEVISION-XFILE."))
+    {
+        debug("TGA Image Version 2 -> '%s'",filename);
+        footer = 26;
+    }else{
+        debug("TGA Image Veriosn 1 -> '%s'",filename);
+        footer = 0;
+    };
+    SDL_RWseek(file,0,SEEK_SET);
+
+	/* Seek to the image type */
+	SDL_RWseek(file, 2, SEEK_SET);
+	SDL_RWread(file, &true_color_type, sizeof(uint8_t), 1);
+
 	/* Seek to the width */
 	SDL_RWseek(file, 12, SEEK_SET);
 	SDL_RWread(file, &width, sizeof(uint16_t), 1);
@@ -874,33 +921,90 @@ image* image_tga_load_file(char* filename) {
 	/* Seek to the depth */
 	SDL_RWseek(file, 16, SEEK_SET);
 	SDL_RWread(file, &depth, sizeof(char), 1);
-	
-        /* Seek to the image descriptor */
+
+	/* Seek to the image descriptor */
 	SDL_RWseek(file, 17, SEEK_SET);
 	SDL_RWread(file, &descriptor, sizeof(char), 1);
-	
-        /*Down left = 0 , Top left = 1*/
-        int start_coord = (descriptor  >> 5) & 1u;
-  
+
+    /*Down left = 0 , Top left = 1*/
+    int start_coord = (descriptor  >> 5) & 1u;
+
   image* i = image_empty(width, height);
-  
   int channels;
-	if (depth == 24) {
-		channels = 3;
-	} else if (depth == 32) {
-		channels = 4;
-	} else {
-    error("Cannot load file '%s', it has depth of %i", filename, depth);
-    return NULL;
-  }
 
-	int size = height * width * channels;
-	unsigned char* image_data = malloc(sizeof(unsigned char) * size);
+    if (depth == 8){
+        channels = 1;
+        warning("file '%s', it has depth of %i duplicate channels", filename, depth);
+    } else if (depth == 16) {
+        channels = 2;
+        warning("file '%s', it has depth of %i duplicate channels", filename, depth);
+    } else if(depth == 24){
+        channels = 3;
+    } else if(depth == 32){
+        channels = 4;
+    }else{
+        error("Cannot load file '%s', it has depth of %i", filename, depth);
+        return NULL;
+    }
 
-	/* Seek to the image data. */
-	SDL_RWseek(file, 18, SEEK_SET);
-	SDL_RWread(file, image_data, sizeof(unsigned char) * size, 1);
-  SDL_RWclose(file);
+    long size = height * width * channels;
+    unsigned char * image_data = malloc(sizeof(unsigned char) * size);
+
+    /*  Decode RLE data to Image data  */
+    if(true_color_type == true_color_rle)
+    {
+        long rle_size = file_len - (header + footer);
+        char rle_byte = 1;
+        unsigned char * rle_data = malloc(sizeof(unsigned char) * rle_size);
+        SDL_RWseek(file, 18, SEEK_SET);
+        SDL_RWread(file, rle_data, sizeof(unsigned char) * rle_size, 1);
+        SDL_RWclose(file);
+        long end_rle_data   = rle_size;
+
+        unsigned char * image_data_ptr = image_data;
+
+        for (long i = 0; i < end_rle_data;)
+        {
+           /* Get RLE byte */
+           union char_table ht = {.input = rle_data[i]};
+
+           /*If Raw Packet */
+           if(ht.bits.b7 == 0)
+           {
+                /* Raw packet: just write block */
+                for (int x = 0; x != channels + (channels * ht.result); ++x)
+                {
+                     *image_data_ptr = *(rle_data + i + rle_byte + x);
+                      image_data_ptr++;
+                }
+                i += rle_byte + channels + (channels * ht.result);
+           }
+           /* If RLE Packet */
+           if(ht.bits.b7 == 1)
+           {
+             /*make positive*/
+               ht.bits.b7=0;
+               /*+1 becouse rle index 0=1,1=2...127=128*/
+               for (int j = 0; j != ht.result+1; ++j)
+               {
+                   for (int k = rle_byte; k < channels+rle_byte; ++k)
+                   {
+                         *image_data_ptr = *(rle_data+i+k);
+                          image_data_ptr++;
+                   }
+               }
+               i+=rle_byte+channels;
+           }
+
+          }
+          free(rle_data);
+
+    }else if(true_color_type == true_color_no_rle){
+        /* Seek to the image data. */
+        SDL_RWseek(file, 18, SEEK_SET);
+        SDL_RWread(file, image_data, sizeof(unsigned char) * size, 1);
+        SDL_RWclose(file);
+    }
 
   if (channels == 4) {
     
@@ -921,10 +1025,32 @@ image* image_tga_load_file(char* filename) {
       i->data[x * 4 + y * i->width * 4 + 0] = image_data[x * 3 + y * width * 3 + 2];
       i->data[x * 4 + y * i->width * 4 + 1] = image_data[x * 3 + y * width * 3 + 1];
       i->data[x * 4 + y * i->width * 4 + 2] = image_data[x * 3 + y * width * 3 + 0];
-      i->data[x * 4 + y * i->width * 4 + 3] = 0;
+      i->data[x * 4 + y * i->width * 4 + 3] = 255;
     }
     
+  }else if (channels == 2) {
+    
+    int x, y;
+    for( x = 0; x < i->width; x++)
+    for( y = 0; y < i->height; y++) {
+      i->data[x * 4 + y * i->width * 4 + 0] = image_data[x * 2 + y * width * 2 + 2];
+      i->data[x * 4 + y * i->width * 4 + 1] = image_data[x * 2 + y * width * 2 + 1];
+      i->data[x * 4 + y * i->width * 4 + 2] = image_data[x * 1 + y * width * 1 + 0];
+      i->data[x * 4 + y * i->width * 4 + 3] = 255;
+    }
+    
+  }else if (channels == 1) {
+
+    int x, y;
+    for( x = 0; x < i->width; x++)
+    for( y = 0; y < i->height; y++) {
+      i->data[x * 4 + y * i->width * 4 + 0] =  image_data[x * 1 + y * width * 1 + 2];
+      i->data[x * 4 + y * i->width * 4 + 1] =  image_data[x * 1 + y * width * 1 + 1];
+      i->data[x * 4 + y * i->width * 4 + 2] =  image_data[x * 1 + y * width * 1 + 0];
+      i->data[x * 4 + y * i->width * 4 + 3] =  255;
+    }
   }
+
     
   free(image_data);
   
