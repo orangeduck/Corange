@@ -70,14 +70,14 @@ void warning_(const char*);
 void debug_(const char*);
 
 
-char error_buf[ERROR_BUFFER_SIZE];
-char error_str[ERROR_BUFFER_SIZE];
+extern char error_buf[ERROR_BUFFER_SIZE];
+extern char error_str[ERROR_BUFFER_SIZE];
 
-char warning_buf[WARNING_BUFFER_SIZE];
-char warning_str[WARNING_BUFFER_SIZE];
+extern char warning_buf[WARNING_BUFFER_SIZE];
+extern char warning_str[WARNING_BUFFER_SIZE];
 
-char debug_buf[DEBUG_BUFFER_SIZE];
-char debug_str[DEBUG_BUFFER_SIZE];
+extern char debug_buf[DEBUG_BUFFER_SIZE];
+extern char debug_str[DEBUG_BUFFER_SIZE];
 
 #define error(MSG, ...) { \
   snprintf(error_str,(ERROR_BUFFER_SIZE-1), "[ERROR] (%s:%s:%i) ", __FILE__, __func__, __LINE__); \
