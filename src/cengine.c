@@ -1,5 +1,14 @@
 #include "cengine.h"
 
+char error_buf[ERROR_BUFFER_SIZE];
+char error_str[ERROR_BUFFER_SIZE];
+
+char warning_buf[WARNING_BUFFER_SIZE];
+char warning_str[WARNING_BUFFER_SIZE];
+
+char debug_buf[DEBUG_BUFFER_SIZE];
+char debug_str[DEBUG_BUFFER_SIZE];
+
 fpath P(const char* path) {
   fpath p;
   
