@@ -9,3 +9,5 @@ libcorange.a
 *.exe
 stdout.txt
 stderr.txt
+cmake-build-debug/*
+.idea/*
