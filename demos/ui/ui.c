@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
 
     //ui options example
     ui_elem_new("option",ui_option);
-    char * options_level[]= { "SIMPLE","NORMAL","HARDRORE"};
+    char * options_level[]= { "SIMPLE","NORMAL","HARDCORE"};
     ui_option_set_options(ui_elem_get("option"),"Options:",3,options_level);
     ui_option_move(ui_elem_get("option"),vec2_new(120,10));
     

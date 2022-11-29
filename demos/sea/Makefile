@@ -7,17 +7,17 @@ PLATFORM = $(shell uname)
 
 ifeq ($(findstring Linux,$(PLATFORM)),Linux)
 	OUT=$(DEMO)
-	LFLAGS= -lcorange -lGL -lSDL2 -lSDL2_net -lSDL2_mixer -lm
+	LFLAGS=-L../../ -lcorange -lGL -lSDL2 -lSDL2_net -lSDL2_mixer -lm
 endif
 
 ifeq ($(findstring Darwin,$(PLATFORM)),Darwin)
 	OUT=$(DEMO)
-	LFLAGS= -lcorange -framework OpenGL -lSDL2main -lSDL2 -lSDL2_net -lSDL2_mixer
+	LFLAGS=-L../../ -lcorange -framework OpenGL -lSDL2main -lSDL2 -lSDL2_net -lSDL2_mixer
 endif
 
 ifeq ($(findstring MINGW,$(PLATFORM)),MINGW)
 	OUT=$(DEMO).exe
-	LFLAGS= ../../corange.res -lcorange -lmingw32 -lSDL2main -lSDL2 -lSDL2_net -lSDL2_mixer -lopengl32
+	LFLAGS=-L../../ ../../corange.res -lcorange -lmingw32 -lSDL2main -lSDL2 -lSDL2_net -lSDL2_mixer -lopengl32
 endif
 
 $(OUT): sea.c
