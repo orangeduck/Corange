@@ -112,11 +112,7 @@ void graphics_set_fullscreen(bool fullscreen) {
 }
 
 bool graphics_get_fullscreen() {
-  if (window_flags & SDL_WINDOW_FULLSCREEN_DESKTOP) {
-    return true;
-  } else {
-    return false;
-  }
+  return (window_flags & SDL_WINDOW_FULLSCREEN_DESKTOP);
 }
 
 void graphics_viewport_set_size(int w, int h) {

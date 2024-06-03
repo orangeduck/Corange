@@ -244,7 +244,7 @@ void asset_finish() {
   
 }
 
-void asset_handler_cast(type_id type, const char* extension, void* asset_loader(const char* filename) , void asset_deleter(void* asset) ) {
+void asset_handler_cast(type_id type, const char* extension, void* (*asset_loader)(const char* filename), void (*asset_deleter)(void* asset)) {
   
   if(num_asset_handlers == MAX_ASSET_HANDLERS) {
     warning("Max number of asset handlers reached. Handler for extension '%s' not added.", extension);
@@ -252,16 +252,18 @@ void asset_handler_cast(type_id type, const char* extension, void* asset_loader(
   }
   
   asset_handler h;
-  char* c = malloc(strlen(extension) + 1);
-  strcpy(c, extension);
+  h.extension = malloc(strlen(extension) + 1);
+  if (h.extension == NULL) {
+    // Should I add a “warning” message or something?
+    return;
+  }
+  strncpy(h.extension, extension, strlen(extension) + 1); // Copy extension safely
   h.type = type;
-  h.extension = c;
   h.load_func = asset_loader;
   h.del_func = asset_deleter;
 
   asset_handlers[num_asset_handlers] = h;
   num_asset_handlers++;
-  
 }
 
 void file_load(fpath filename) {

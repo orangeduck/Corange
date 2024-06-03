@@ -34,30 +34,25 @@ int SDLNet_TCP_RecvLine(TCPsocket sock, char* data, int maxlen) {
   char c;
   int status = 0;
   int i = 0;
-  while(1) {
+  
+  while(i < maxlen - 1) {
     
     status = SDLNet_TCP_Recv(sock, &c, 1);
     
     if (status == -1) return -1;
-    if (i == maxlen-1) return -1;
     if (status == 0) break;
-    
+
     data[i] = c;
     i++;
-    
+
     if (c == '\n') {
-      data[i] = '\0';
-      return i;
+      break;
     }
   }
-  
-  if(i > 0) {
-    data[i] = '\0';
-    return i;
-  } else {
-    return 0;
-  }
-  
+
+  data[i] = '\0';
+
+  return i;
 }
 
 static char url_buffer[512];
