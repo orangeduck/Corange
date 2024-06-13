@@ -1,4 +1,4 @@
-Corange game engine
+Corange Game Engine
 ===================
 	
 Version 0.8.0
